@@ -2,7 +2,7 @@
 const CONFIG = {
   // Nome da sua liga
   leagueName: "Liga Atlântica",
-  leagueSubtitle: "Liga Pessoal de Pokémon TCG",
+  leagueSubtitle: " Liga de Pokémon TCG - FSA",
   
   // Link da sua Planilha do Google Sheets publicada na Web como CSV.
   // Deixe em branco ("") para usar os dados fictícios de demonstração (mock data).
