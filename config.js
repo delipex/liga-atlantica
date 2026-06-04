@@ -7,16 +7,16 @@ const CONFIG = {
   // Link da sua Planilha do Google Sheets publicada na Web como CSV.
   // Deixe em branco ("") para usar os dados fictícios de demonstração (mock data).
   // No final do desenvolvimento, explicaremos no guia como preencher este campo.
-  googleSheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQnu84Y1CXAqCSitGLSFAabaqoduGzGOTY96nJth05czUvgb7AP6nUcLcUHMSIMNLWBbSbflqj-tDl9/pubhtml#gid=837990513",
+  googleSheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQrKLqAbkaLT8PoWq7NfDbsz78KLsLfT3R2bZ5Ou5iZOwQwm7YhFpfjhM1lmxQPlti4a7KeQamMqwW4/pubhtml",
 
   // GIDs das abas publicadas. Necessário para links /d/e/.../pubhtml.
   publishedSheetGids: {
-    Ranking: "837990513",
-    Calendario: "294012189",
-    Campeoes: "1469582400",
-    Regras: "631705301",
-    Galeria: "982335265",
-    ScoresAntigos: "1540933884"
+    Ranking: "711743754",
+    Calendario: "795520659",
+    Campeoes: "2040464778",
+    Regras: "1560734436",
+    Galeria: "1311009323",
+    ScoresAntigos: "1809448887"
   },
   
   // Nome da aba única que guarda o arquivo histórico de scores antigos.
