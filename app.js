@@ -195,6 +195,27 @@ function safeExternalUrl(value) {
   }
 }
 
+function parseDateSafe(str) {
+  if (!str) return new Date(NaN);
+  if (/^\d{2}-\d{2}-\d{4}$/.test(str)) {
+    const [d, m, y] = str.split('-');
+    return new Date(`${y}-${m}-${d}T12:00:00`);
+  }
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+    return new Date(`${str.substring(0, 10)}T12:00:00`);
+  }
+  return new Date(str);
+}
+
+function normalizeDateISO(str) {
+  if (!str) return str;
+  if (/^\d{2}-\d{2}-\d{4}$/.test(str)) {
+    const [d, m, y] = str.split('-');
+    return `${y}-${m}-${d}`;
+  }
+  return str;
+}
+
 function safeEnergyClass(value) {
   const allowed = ['grass', 'fire', 'water', 'lightning', 'psychic', 'fighting', 'darkness', 'metal', 'dragon', 'colorless'];
   const normalized = String(value || 'colorless').toLowerCase().trim();
@@ -508,14 +529,14 @@ function getNextEventFromCalendar() {
   const now = new Date();
   const future = events.filter(e => {
     if (!e || !e.Data) return false;
-    const d = new Date(`${e.Data}T${e.Horario || '00:00'}`);
+    const d = parseDateSafe(e.Data);
     return !isNaN(d) && d >= now;
-  }).sort((a,b)=> new Date(`${a.Data}T${a.Horario||'00:00'}`)-new Date(`${b.Data}T${b.Horario||'00:00'}`));
+  }).sort((a,b) => parseDateSafe(a.Data) - parseDateSafe(b.Data));
   if (!future.length) return null;
   const e=future[0];
   return {
     title: e.Evento || 'Próximo Evento',
-    date: e.Data,
+    date: normalizeDateISO(e.Data),
     time: e.Horario || '00:00',
     location: e.Local || '',
     locationUrl: e.LinkMaps || '',
@@ -569,7 +590,8 @@ function renderDashboard() {
     
     if (eventConf && eventConf.active) {
       // Formatar data brasileira
-      const dateParts = eventConf.date.split('-');
+      const dateIso = normalizeDateISO(eventConf.date);
+      const dateParts = dateIso.split('-');
       const formattedDate = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : eventConf.date;
       
       eventContainer.innerHTML = `
@@ -699,11 +721,12 @@ function renderCalendar() {
   }
 
   // Ordenar datas cronologicamente
-  const sortedEvents = [...events].sort((a, b) => new Date(a.Data) - new Date(b.Data));
+  const sortedEvents = [...events].sort((a, b) => parseDateSafe(a.Data) - parseDateSafe(b.Data));
 
   timeline.innerHTML = sortedEvents.map(evt => {
     // Formatar data em PT-BR
-    const parts = evt.Data.split('-');
+    const iso = normalizeDateISO(evt.Data);
+    const parts = iso.split('-');
     const dateFormatted = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : evt.Data;
     
     const statusClass = ['confirmado', 'concluido', 'pendente'].includes(String(evt.Status || '').toLowerCase()) ? String(evt.Status).toLowerCase() : 'pendente';
