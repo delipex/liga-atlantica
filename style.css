@@ -2080,3 +2080,91 @@ tbody tr:nth-child(3) .row-rank {
     min-height: 160px;
   }
 }
+
+/* --- BOTÕES DE INSCRIÇÃO/CONFIRMAÇÃO DE EVENTOS --- */
+
+.btn-evento {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 1.1rem;
+  margin-top: 0.85rem;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-evento .btn-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+
+.btn-evento span {
+  white-space: nowrap;
+}
+
+.btn-evento:active {
+  transform: scale(0.97);
+}
+
+/* WhatsApp (verde claro/vibrante) */
+.btn-evento-whatsapp {
+  background: rgba(37, 211, 102, 0.1);
+  border-color: rgba(37, 211, 102, 0.32);
+  color: #25d366;
+}
+
+.btn-evento-whatsapp:hover {
+  background: #25d366;
+  color: #090a0f;
+  border-color: #25d366;
+  box-shadow: 0 0 20px rgba(37, 211, 102, 0.45);
+  transform: translateY(-2px);
+}
+
+/* Playlatam (verde-escuro teal #00695c) */
+.btn-evento-playlatam {
+  background: rgba(0, 105, 92, 0.12);
+  border-color: rgba(0, 105, 92, 0.4);
+  color: #00a993;
+}
+
+.btn-evento-playlatam:hover {
+  background: #00695c;
+  color: #ffffff;
+  border-color: #00695c;
+  box-shadow: 0 0 20px rgba(0, 105, 92, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Genérico (amarelo Pokémon do tema) */
+.btn-evento-generic {
+  background: rgba(255, 203, 5, 0.1);
+  border-color: rgba(255, 203, 5, 0.28);
+  color: var(--accent-yellow);
+}
+
+.btn-evento-generic:hover {
+  background: var(--accent-yellow);
+  color: #090a0f;
+  border-color: var(--accent-yellow);
+  box-shadow: 0 0 20px rgba(255, 203, 5, 0.4);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 500px) {
+  .btn-evento {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.9rem;
+  }
+}

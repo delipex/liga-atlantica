@@ -30,10 +30,10 @@ const MOCK_DATA = {
     { Temporada: "Temporada de Outono 2025", DataFechamento: "2025-05-31", Pos: 2, Jogador: "Mariana Costa", Categoria: "MASTER", Pontos: 22, Podio: 4, MediaColocacao: 3.1, Deck: "Gardevoir ex", TipoEnergia: "psychic" }
   ],
   Calendario: [
-    { Data: "2026-06-06", Evento: "Liga Semanal #15 - Rodada Suíça", Local: "Livraria Atlântica +", Horario: "10:00", Status: "confirmado", Descricao: "Primeira rodada de Junho. Formato Standard (Regulamento Temporal).", LinkMaps: "" },
-    { Data: "2026-06-13", Evento: "Liga Semanal #16 - Treino & Trocas", Local: "Livraria Atlântica +", Horario: "10:00", Status: "confirmado", Descricao: "Encontro casual para testar decks novos, trocar cartas e tirar dúvidas de regras.", LinkMaps: "" },
-    { Data: "2026-06-20", Evento: "Copa Atlântica de Inverno (Especial)", Local: "Livraria Atlântica +", Horario: "14:00", Status: "confirmado", Descricao: "Torneio especial de fim de semana valendo pontuação dobrada e premiação física.", LinkMaps: "" },
-    { Data: "2026-06-27", Evento: "Liga Semanal #17 - Formato Alternativo", Local: "Livraria Atlântica +", Horario: "10:00", Status: "pendente", Descricao: "Rodada casual com formato Gym Leader Challenge (apenas cartas singleton de um único tipo).", LinkMaps: "" }
+    { Data: "2026-06-06", Evento: "Liga Semanal #15 - Rodada Suíça", Local: "Livraria Atlântica +", Horario: "10:00", Status: "confirmado", Descricao: "Primeira rodada de Junho. Formato Standard (Regulamento Temporal).", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "https://chat.whatsapp.com/EpUEb62hq1bKs6iDtQ3ena" },
+    { Data: "2026-06-13", Evento: "Liga Semanal #16 - Treino & Trocas", Local: "Livraria Atlântica +", Horario: "10:00", Status: "confirmado", Descricao: "Encontro casual para testar decks novos, trocar cartas e tirar dúvidas de regras.", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "https://chat.whatsapp.com/EpUEb62hq1bKs6iDtQ3ena" },
+    { Data: "2026-06-20", Evento: "Copa Atlântica de Inverno (Especial)", Local: "Livraria Atlântica +", Horario: "14:00", Status: "confirmado", Descricao: "Torneio especial de fim de semana valendo pontuação dobrada e premiação física.", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "https://playlatam.net/tournaments/exemplo" },
+    { Data: "2026-06-27", Evento: "Liga Semanal #17 - Formato Alternativo", Local: "Livraria Atlântica +", Horario: "10:00", Status: "pendente", Descricao: "Rodada casual com formato Gym Leader Challenge (apenas cartas singleton de um único tipo).", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "" }
   ],
   Campeoes: [
     { Temporada: "Temporada de Outono 2025", Campeao: "Felipe Damasceno", Vice: "Mariana Costa", DeckCampeao: "Charizard ex", Data: "Maio/2025", FotoCampeao: "", URLDeck: "", ImagemDeck: "", ObservacaoDeck: "" },
@@ -214,6 +214,44 @@ function normalizeDateISO(str) {
     return `${y}-${m}-${d}`;
   }
   return str;
+}
+
+function detectEventLinkType(url) {
+  if (!url) return 'none';
+  const value = String(url).toLowerCase();
+  if (value.includes('whatsapp.com') || value.includes('wa.me')) return 'whatsapp';
+  if (value.includes('playlatam')) return 'playlatam';
+  return 'generic';
+}
+
+function getEventLinkIcon(type) {
+  if (type === 'whatsapp') {
+    return '<svg class="btn-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M16.03 3C8.86 3 3.04 8.82 3.04 15.99c0 2.29.6 4.52 1.74 6.49L3 29l6.68-1.75a12.92 12.92 0 0 0 6.35 1.64h.01c7.16 0 12.98-5.82 12.98-12.99C29.02 8.82 23.2 3 16.03 3Zm0 23.69h-.01c-1.9 0-3.76-.51-5.38-1.47l-.39-.23-3.96 1.04 1.06-3.86-.25-.4a10.71 10.71 0 0 1-1.65-5.78c0-5.84 4.75-10.59 10.59-10.59 2.83 0 5.49 1.1 7.49 3.1a10.53 10.53 0 0 1 3.1 7.49c0 5.84-4.75 10.7-10.6 10.7Zm5.81-7.93c-.32-.16-1.89-.93-2.18-1.04-.29-.11-.5-.16-.72.16-.21.32-.83 1.04-1.02 1.25-.19.21-.37.24-.69.08-.32-.16-1.35-.5-2.57-1.59-.95-.85-1.59-1.89-1.78-2.21-.19-.32-.02-.49.14-.65.14-.14.32-.37.48-.56.16-.19.21-.32.32-.53.11-.21.05-.4-.03-.56-.08-.16-.72-1.73-.98-2.37-.26-.62-.52-.53-.72-.54h-.61c-.21 0-.56.08-.85.4-.29.32-1.12 1.09-1.12 2.66s1.15 3.09 1.31 3.3c.16.21 2.26 3.45 5.47 4.84.77.33 1.36.53 1.83.68.77.24 1.47.21 2.02.13.62-.09 1.89-.77 2.16-1.52.27-.75.27-1.39.19-1.52-.08-.13-.29-.21-.61-.37Z"/></svg>';
+  }
+  if (type === 'playlatam') {
+    return '<svg class="btn-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 5.5 6.4 4l3 5.2-3 1.7L3 5.5Zm6.8-1.6L13.2 3l2 5.5-3 1.7-2.4-6.3Zm6.6-1L19 2l1 5.7-3 1.7-.6-6.5ZM4 12.4l3.4-1.9 1.6 5.6L6.3 19 4 12.4Zm6.8-3.8 3.4-1.9 1 5.7-3 1.7-1.4-5.5Zm6.6-3.7L20 3l.4 5.7-3 1.7v-5.5ZM2 18.6 5.5 17l1.7 4.6-3.5 1.6L2 18.6Zm7-4 3.5-1.6 1.4 4.5-3.3 1.5L9 14.6Zm6.8-3.8 3.4-1.6 1 4.5-3.3 1.5-1.1-4.4Z"/></svg>';
+  }
+  return '<svg class="btn-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm-1 7V3.5L18.5 9H13Z"/></svg>';
+}
+
+function getEventLinkConfig(url) {
+  const type = detectEventLinkType(url);
+  if (type === 'none') return null;
+  if (type === 'whatsapp') {
+    return { type, url, label: 'Confirme sua presença', icon: getEventLinkIcon('whatsapp'), className: 'btn-evento btn-evento-whatsapp' };
+  }
+  if (type === 'playlatam') {
+    return { type, url, label: 'Inscreva-se', icon: getEventLinkIcon('playlatam'), className: 'btn-evento btn-evento-playlatam' };
+  }
+  return { type, url, label: 'Inscreva-se', icon: getEventLinkIcon('generic'), className: 'btn-evento btn-evento-generic' };
+}
+
+function renderEventLinkButton(url) {
+  const config = getEventLinkConfig(url);
+  if (!config) return '';
+  const safeUrl = safeExternalUrl(config.url);
+  if (!safeUrl) return '';
+  return `<a href="${escapeHTML(safeUrl)}" target="_blank" rel="noopener noreferrer" class="${config.className}">${config.icon}<span>${escapeHTML(config.label)}</span></a>`;
 }
 
 function safeEnergyClass(value) {
@@ -541,6 +579,7 @@ function getNextEventFromCalendar() {
     location: e.Local || '',
     locationUrl: e.LinkMaps || '',
     description: e.Descricao || '',
+    signupLink: e.LinkInscricao || '',
     active: true
   };
 }
@@ -635,6 +674,8 @@ function renderDashboard() {
             <span><strong>Local:</strong> ${renderLocationLink(eventConf.location, eventConf.locationUrl || eventConf.linkMaps || eventConf.mapsUrl)}</span>
           </div>
         </div>
+
+        ${renderEventLinkButton(eventConf.signupLink)}
       `;
       // Inicializar o cronômetro do dashboard
       startCountdown();
@@ -748,6 +789,7 @@ function renderCalendar() {
           <div class="timeline-meta">
             <span>📍 <strong>Local:</strong> ${renderLocationLink(eventLocal, eventMapUrl)}</span>
           </div>
+          ${renderEventLinkButton(evt.LinkInscricao)}
         </div>
       </div>
     `;
