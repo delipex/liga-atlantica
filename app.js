@@ -272,22 +272,11 @@ function isInstagramUrl(url) {
 }
 
 function renderTimelineThumb(url, eventTitle) {
-  const initial = (eventTitle && eventTitle.length) ? eventTitle.charAt(0).toUpperCase() : '?';
-
-  if (isInstagramUrl(url)) {
-    const igUrl = safeExternalUrl(url);
-    if (!igUrl) {
-      return `<div class="timeline-thumb timeline-thumb-placeholder"><span>${escapeHTML(initial)}</span></div>`;
-    }
-    return `<div class="timeline-thumb timeline-thumb-instagram"><blockquote class="instagram-media" data-instgrm-permalink="${escapeHTML(igUrl)}" data-instgrm-version="14" data-instgrm-captioned="true"><a href="${escapeHTML(igUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(eventTitle || 'Ver no Instagram')}</a></blockquote></div>`;
-  }
-
   const safeUrl = safeExternalUrl(normalizeImageUrl(url));
   if (safeUrl) {
     return `<div class="timeline-thumb"><img src="${escapeHTML(safeUrl)}" alt="${escapeHTML(eventTitle || 'Evento')}" loading="lazy"></div>`;
   }
-
-  return `<div class="timeline-thumb timeline-thumb-placeholder"><span>${escapeHTML(initial)}</span></div>`;
+  return '';
 }
 
 function safeEnergyClass(value) {
@@ -594,7 +583,6 @@ function renderAll() {
   renderRules();
   renderChampions();
   renderGallery();
-  reprocessInstagramEmbeds();
 }
 
 
@@ -621,13 +609,6 @@ function getNextEventFromCalendar() {
   };
 }
 
-
-// --- REPROCESSAMENTO DE EMBEDS DO INSTAGRAM ---
-function reprocessInstagramEmbeds() {
-  if (window.instgrm && typeof window.instgrm.Embeds === 'object' && typeof window.instgrm.Embeds.process === 'function') {
-    try { window.instgrm.Embeds.process(); } catch (e) { /* noop */ }
-  }
-}
 
 // 1. Dashboard (Top 3 e Próximo Evento)
 function renderDashboard() {
