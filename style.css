@@ -829,41 +829,46 @@ tbody tr:nth-child(3) .row-rank {
 /* --- CALENDAR SECTION --- */
 .timeline {
   position: relative;
-  padding-left: 2rem;
+  padding-left: 1.75rem;
   margin-top: 1.5rem;
 }
 
 .timeline::before {
   content: '';
   position: absolute;
-  left: 7px;
+  left: 5px;
   top: 0;
   width: 2px;
   height: 100%;
   background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
 }
 
 .timeline-item {
   position: relative;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
 }
 
 .timeline-dot {
   position: absolute;
-  left: -2rem;
-  top: 6px;
-  width: 16px;
-  height: 16px;
+  left: -1.75rem;
+  top: 0.5rem;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: var(--bg-dark);
-  border: 2px solid var(--accent-yellow);
+  background: var(--accent-yellow);
   z-index: 2;
+  box-shadow: 0 0 0 3px var(--bg-dark);
   transition: all 0.3s ease;
 }
 
 .timeline-item:hover .timeline-dot {
-  background: var(--accent-yellow);
-  box-shadow: 0 0 10px var(--accent-yellow);
+  background: var(--accent-magenta);
+  box-shadow: 0 0 0 3px var(--bg-dark), 0 0 10px var(--accent-magenta);
 }
 
 .timeline-card {
@@ -912,9 +917,10 @@ tbody tr:nth-child(3) .row-rank {
   font-size: 0.85rem;
   color: var(--accent-yellow);
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .timeline-status {
@@ -2135,20 +2141,21 @@ tbody tr:nth-child(3) .row-rank {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  padding: 0.55rem 0.85rem;
+  padding: 0.5rem 0.85rem;
   align-self: center;
-  border-radius: var(--radius);
+  border-radius: 10px;
   border: 1px solid transparent;
   font-family: var(--font-title);
   font-weight: 600;
   font-size: 0.75rem;
   text-decoration: none;
   letter-spacing: 0.02em;
-  transition: all 0.25s ease;
+  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease;
   cursor: pointer;
   user-select: none;
   flex-shrink: 0;
   white-space: nowrap;
+  line-height: 1;
 }
 
 .btn-evento .btn-icon {
@@ -2169,42 +2176,36 @@ tbody tr:nth-child(3) .row-rank {
 /* WhatsApp (verde claro/vibrante) */
 .btn-evento-whatsapp {
   background: rgba(37, 211, 102, 0.1);
-  border-color: rgba(37, 211, 102, 0.32);
   color: #25d366;
 }
 
 .btn-evento-whatsapp:hover {
   background: #25d366;
   color: #090a0f;
-  border-color: #25d366;
   box-shadow: 0 0 12px rgba(37, 211, 102, 0.4);
 }
 
 /* Playlatam (verde-escuro teal #00695c) */
 .btn-evento-playlatam {
   background: rgba(0, 105, 92, 0.12);
-  border-color: rgba(0, 105, 92, 0.4);
   color: #00a993;
 }
 
 .btn-evento-playlatam:hover {
   background: #00695c;
   color: #ffffff;
-  border-color: #00695c;
   box-shadow: 0 0 12px rgba(0, 105, 92, 0.45);
 }
 
 /* Genérico (amarelo Pokémon do tema) */
 .btn-evento-generic {
   background: rgba(255, 203, 5, 0.1);
-  border-color: rgba(255, 203, 5, 0.28);
   color: var(--accent-yellow);
 }
 
 .btn-evento-generic:hover {
   background: var(--accent-yellow);
   color: #090a0f;
-  border-color: var(--accent-yellow);
   box-shadow: 0 0 12px rgba(255, 203, 5, 0.4);
 }
 
