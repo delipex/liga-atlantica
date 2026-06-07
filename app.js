@@ -786,8 +786,21 @@ function renderCalendar() {
     return;
   }
 
-  // Ordenar datas cronologicamente
-  const sortedEvents = [...events].sort((a, b) => parseDateSafe(a.Data) - parseDateSafe(b.Data));
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  // Filtrar eventos passados (anteriores a hoje) e ordenar cronologicamente
+  const sortedEvents = events
+    .filter(e => {
+      const d = parseDateSafe(e.Data);
+      return !isNaN(d) && d >= now;
+    })
+    .sort((a, b) => parseDateSafe(a.Data) - parseDateSafe(b.Data));
+
+  if (sortedEvents.length === 0) {
+    timeline.innerHTML = `<div style="padding:3rem;text-align:center;color:var(--text-secondary);">Nenhum torneio cadastrado no calendário.</div>`;
+    return;
+  }
 
   timeline.innerHTML = sortedEvents.map(evt => {
     // Formatar data em PT-BR

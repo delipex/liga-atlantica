@@ -875,8 +875,8 @@ tbody tr:nth-child(3) .row-rank {
 
 .timeline-thumb {
   flex-shrink: 0;
-  width: 88px;
-  height: 88px;
+  width: 128px;
+  aspect-ratio: 4 / 5;
   border-radius: var(--radius);
   overflow: hidden;
   background: rgba(255, 255, 255, 0.04);
@@ -918,9 +918,9 @@ tbody tr:nth-child(3) .row-rank {
 }
 
 .timeline-status {
-  padding: 0.18rem 0.55rem;
+  padding: 0.12rem 0.45rem;
   border-radius: var(--radius-pill);
-  font-size: 0.68rem;
+  font-size: 0.6rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -2137,7 +2137,7 @@ tbody tr:nth-child(3) .row-rank {
   gap: 0.4rem;
   padding: 0.55rem 0.85rem;
   align-self: center;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   border: 1px solid transparent;
   font-family: var(--font-title);
   font-weight: 600;
