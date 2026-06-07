@@ -30,10 +30,10 @@ const MOCK_DATA = {
     { Temporada: "Temporada de Outono 2025", DataFechamento: "2025-05-31", Pos: 2, Jogador: "Mariana Costa", Categoria: "MASTER", Pontos: 22, Podio: 4, MediaColocacao: 3.1, Deck: "Gardevoir ex", TipoEnergia: "psychic" }
   ],
   Calendario: [
-    { Data: "2026-06-06", Evento: "Liga Semanal #15 - Rodada Suíça", Local: "Livraria Atlântica +", Horario: "10:00", Status: "confirmado", Descricao: "Primeira rodada de Junho. Formato Standard (Regulamento Temporal).", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "https://chat.whatsapp.com/EpUEb62hq1bKs6iDtQ3ena" },
-    { Data: "2026-06-13", Evento: "Liga Semanal #16 - Treino & Trocas", Local: "Livraria Atlântica +", Horario: "10:00", Status: "confirmado", Descricao: "Encontro casual para testar decks novos, trocar cartas e tirar dúvidas de regras.", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "https://chat.whatsapp.com/EpUEb62hq1bKs6iDtQ3ena" },
-    { Data: "2026-06-20", Evento: "Copa Atlântica de Inverno (Especial)", Local: "Livraria Atlântica +", Horario: "14:00", Status: "confirmado", Descricao: "Torneio especial de fim de semana valendo pontuação dobrada e premiação física.", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "https://playlatam.net/tournaments/exemplo" },
-    { Data: "2026-06-27", Evento: "Liga Semanal #17 - Formato Alternativo", Local: "Livraria Atlântica +", Horario: "10:00", Status: "pendente", Descricao: "Rodada casual com formato Gym Leader Challenge (apenas cartas singleton de um único tipo).", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "" }
+    { Data: "2026-06-06", Evento: "Liga Semanal #15 - Rodada Suíça", Local: "Livraria Atlântica +", Horario: "10:00", Status: "confirmado", Descricao: "Primeira rodada de Junho. Formato Standard (Regulamento Temporal).", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "https://chat.whatsapp.com/EpUEb62hq1bKs6iDtQ3ena", Foto: "https://www.instagram.com/p/exemplo1/" },
+    { Data: "2026-06-13", Evento: "Liga Semanal #16 - Treino & Trocas", Local: "Livraria Atlântica +", Horario: "10:00", Status: "confirmado", Descricao: "Encontro casual para testar decks novos, trocar cartas e tirar dúvidas de regras.", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "https://chat.whatsapp.com/EpUEb62hq1bKs6iDtQ3ena", Foto: "" },
+    { Data: "2026-06-20", Evento: "Copa Atlântica de Inverno (Especial)", Local: "Livraria Atlântica +", Horario: "14:00", Status: "confirmado", Descricao: "Torneio especial de fim de semana valendo pontuação dobrada e premiação física.", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "https://playlatam.net/tournaments/exemplo", Foto: "" },
+    { Data: "2026-06-27", Evento: "Liga Semanal #17 - Formato Alternativo", Local: "Livraria Atlântica +", Horario: "10:00", Status: "pendente", Descricao: "Rodada casual com formato Gym Leader Challenge (apenas cartas singleton de um único tipo).", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "", Foto: "" }
   ],
   Campeoes: [
     { Temporada: "Temporada de Outono 2025", Campeao: "Felipe Damasceno", Vice: "Mariana Costa", DeckCampeao: "Charizard ex", Data: "Maio/2025", FotoCampeao: "", URLDeck: "", ImagemDeck: "", ObservacaoDeck: "" },
@@ -252,6 +252,42 @@ function renderEventLinkButton(url) {
   const safeUrl = safeExternalUrl(config.url);
   if (!safeUrl) return '';
   return `<a href="${escapeHTML(safeUrl)}" target="_blank" rel="noopener noreferrer" class="${config.className}">${config.icon}<span>${escapeHTML(config.label)}</span></a>`;
+}
+
+const STATUS_LABELS = {
+  confirmado: 'Evento Confirmado',
+  pendente: 'Aguardando Informa\u00e7\u00f5es',
+  concluido: 'Conclu\u00eddo'
+};
+
+function getStatusLabel(status) {
+  const key = String(status || '').toLowerCase();
+  return STATUS_LABELS[key] || status;
+}
+
+function isInstagramUrl(url) {
+  if (!url) return false;
+  const value = String(url).toLowerCase();
+  return value.includes('instagram.com/');
+}
+
+function renderTimelineThumb(url, eventTitle) {
+  const initial = (eventTitle && eventTitle.length) ? eventTitle.charAt(0).toUpperCase() : '?';
+
+  if (isInstagramUrl(url)) {
+    const igUrl = safeExternalUrl(url);
+    if (!igUrl) {
+      return `<div class="timeline-thumb timeline-thumb-placeholder"><span>${escapeHTML(initial)}</span></div>`;
+    }
+    return `<div class="timeline-thumb timeline-thumb-instagram"><blockquote class="instagram-media" data-instgrm-permalink="${escapeHTML(igUrl)}" data-instgrm-version="14" data-instgrm-captioned="true"><a href="${escapeHTML(igUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(eventTitle || 'Ver no Instagram')}</a></blockquote></div>`;
+  }
+
+  const safeUrl = safeExternalUrl(normalizeImageUrl(url));
+  if (safeUrl) {
+    return `<div class="timeline-thumb"><img src="${escapeHTML(safeUrl)}" alt="${escapeHTML(eventTitle || 'Evento')}" loading="lazy"></div>`;
+  }
+
+  return `<div class="timeline-thumb timeline-thumb-placeholder"><span>${escapeHTML(initial)}</span></div>`;
 }
 
 function safeEnergyClass(value) {
@@ -558,6 +594,7 @@ function renderAll() {
   renderRules();
   renderChampions();
   renderGallery();
+  reprocessInstagramEmbeds();
 }
 
 
@@ -584,6 +621,13 @@ function getNextEventFromCalendar() {
   };
 }
 
+
+// --- REPROCESSAMENTO DE EMBEDS DO INSTAGRAM ---
+function reprocessInstagramEmbeds() {
+  if (window.instgrm && typeof window.instgrm.Embeds === 'object' && typeof window.instgrm.Embeds.process === 'function') {
+    try { window.instgrm.Embeds.process(); } catch (e) { /* noop */ }
+  }
+}
 
 // 1. Dashboard (Top 3 e Próximo Evento)
 function renderDashboard() {
@@ -770,7 +814,8 @@ function renderCalendar() {
     const parts = iso.split('-');
     const dateFormatted = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : evt.Data;
     
-    const statusClass = ['confirmado', 'concluido', 'pendente'].includes(String(evt.Status || '').toLowerCase()) ? String(evt.Status).toLowerCase() : 'pendente';
+    const statusKey = ['confirmado', 'concluido', 'pendente'].includes(String(evt.Status || '').toLowerCase()) ? String(evt.Status).toLowerCase() : 'pendente';
+    const statusLabel = getStatusLabel(statusKey);
     const eventTitle = escapeHTML(evt.Evento);
     const eventDescription = escapeHTML(evt.Descricao || 'Sem descrição cadastrada para este encontro.');
     const eventLocal = evt.Local || 'Livraria Atlântica +';
@@ -780,14 +825,17 @@ function renderCalendar() {
       <div class="timeline-item">
         <div class="timeline-dot"></div>
         <div class="timeline-card">
-          <div class="timeline-date">
-            <span>${escapeHTML(dateFormatted)} às ${escapeHTML(evt.Horario || '10:00')}</span>
-            <span class="timeline-status ${statusClass}">${escapeHTML(statusClass)}</span>
-          </div>
-          <h3 class="timeline-title">${eventTitle}</h3>
-          <p class="timeline-description">${eventDescription}</p>
-          <div class="timeline-meta">
-            <span>📍 <strong>Local:</strong> ${renderLocationLink(eventLocal, eventMapUrl)}</span>
+          ${renderTimelineThumb(evt.Foto, evt.Evento)}
+          <div class="timeline-body">
+            <div class="timeline-date">
+              <span>${escapeHTML(dateFormatted)} às ${escapeHTML(evt.Horario || '10:00')}</span>
+              <span class="timeline-status ${statusKey}">${escapeHTML(statusLabel)}</span>
+            </div>
+            <h3 class="timeline-title">${eventTitle}</h3>
+            <p class="timeline-description">${eventDescription}</p>
+            <div class="timeline-meta">
+              <span>📍 <strong>Local:</strong> ${renderLocationLink(eventLocal, eventMapUrl)}</span>
+            </div>
           </div>
           ${renderEventLinkButton(evt.LinkInscricao)}
         </div>
@@ -921,7 +969,13 @@ window.toggleRule = function(index) {
 };
 
 // Temporizador Regressivo do Dashboard
+// Encerra o badge "Acontecendo Agora!" sempre às 21:30 do dia do evento.
+// Após esse horário, força re-render do dashboard para mostrar o próximo evento.
 let countdownInterval;
+let eventFinalized = false;
+const EVENT_END_HOUR = 21;
+const EVENT_END_MINUTE = 30;
+
 function startCountdown() {
   const timerEl = document.getElementById('countdown-timer');
   if (!timerEl) return;
@@ -931,14 +985,37 @@ function startCountdown() {
 
   if (isNaN(targetTime)) return;
 
+  // Calcula o horário de fim do evento (mesmo dia, 21:30 local)
+  const endTime = new Date(targetTime);
+  endTime.setHours(EVENT_END_HOUR, EVENT_END_MINUTE, 0, 0);
+
   if (countdownInterval) clearInterval(countdownInterval);
 
   function updateTimer() {
     const now = new Date().getTime();
     const difference = targetTime - now;
 
-    if (difference <= 0) {
-      clearInterval(countdownInterval);
+    // Antes do horário de início: contagem regressiva normal
+    if (difference > 0) {
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+      const dEl = document.getElementById('timer-days');
+      const hEl = document.getElementById('timer-hours');
+      const mEl = document.getElementById('timer-mins');
+      const sEl = document.getElementById('timer-secs');
+
+      if (dEl) dEl.innerText = String(days).padStart(2, '0');
+      if (hEl) hEl.innerText = String(hours).padStart(2, '0');
+      if (mEl) mEl.innerText = String(minutes).padStart(2, '0');
+      if (sEl) sEl.innerText = String(seconds).padStart(2, '0');
+      return;
+    }
+
+    // Evento já começou mas ainda não acabou (entre horário de início e 21:30)
+    if (now < endTime.getTime()) {
       const widget = document.getElementById('event-widget-content');
       if (widget) {
         const badge = widget.querySelector('.event-badge-alert');
@@ -952,20 +1029,14 @@ function startCountdown() {
       return;
     }
 
-    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-    const dEl = document.getElementById('timer-days');
-    const hEl = document.getElementById('timer-hours');
-    const mEl = document.getElementById('timer-mins');
-    const sEl = document.getElementById('timer-secs');
-
-    if (dEl) dEl.innerText = String(days).padStart(2, '0');
-    if (hEl) hEl.innerText = String(hours).padStart(2, '0');
-    if (mEl) mEl.innerText = String(minutes).padStart(2, '0');
-    if (sEl) sEl.innerText = String(seconds).padStart(2, '0');
+    // Passou das 21:30 do dia do evento: encerra e re-renderiza
+    if (!eventFinalized) {
+      eventFinalized = true;
+      clearInterval(countdownInterval);
+      if (typeof renderAll === 'function') {
+        renderAll();
+      }
+    }
   }
 
   updateTimer();
