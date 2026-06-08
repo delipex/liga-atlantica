@@ -1219,14 +1219,28 @@ tbody tr:nth-child(3) .row-rank {
 }
 
 .lightbox-close {
-  position: absolute;
-  top: -40px;
-  right: 0;
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
   color: #fff;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  background: none;
-  border: none;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 1010;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
 }
 
 .lightbox-caption {
@@ -1403,9 +1417,7 @@ tbody tr:nth-child(3) .row-rank {
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
-}
 
-@media (max-width: 768px) {
   .header .container {
     height: 70px;
   }
@@ -1467,6 +1479,25 @@ tbody tr:nth-child(3) .row-rank {
     width: 12px;
     height: 12px;
   }
+
+  /* Timeline responsivo: evita o esmagamento horizontal de imagens e botões */
+  .timeline-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  
+  .timeline-thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 220px;
+  }
+  
+  .timeline-card .btn-evento {
+    margin-left: 0;
+    margin-top: 0.25rem;
+    width: 100%;
+  }
 }
 
 @media (max-width: 500px) {
@@ -1496,6 +1527,19 @@ tbody tr:nth-child(3) .row-rank {
   .podium-card {
     padding: 0.85rem;
     border-radius: var(--radius);
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .podium-points {
+    width: 100%;
+    text-align: left;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
   
   .podium-badge {
@@ -1789,7 +1833,7 @@ tbody tr:nth-child(3) .row-rank {
   min-height: 32px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .ranking-status-group {
     width: 100%;
     justify-content: flex-start;
@@ -1925,7 +1969,7 @@ tbody tr:nth-child(3) .row-rank {
   color: var(--text-secondary);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .historical-scores-header {
     flex-direction: column;
   }
