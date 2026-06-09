@@ -366,6 +366,39 @@ function getVED(player) {
   return { v, e, d };
 }
 
+function getPlayerMedals(playerName) {
+  if (!playerName || !appData || !appData.Campeoes) return '';
+  const cleanName = playerName.trim().toLowerCase();
+  let medalsHtml = '';
+
+  appData.Campeoes.forEach(champ => {
+    if (champ.Campeao && champ.Campeao.trim().toLowerCase() === cleanName) {
+      medalsHtml += `
+        <svg class="medal-svg gold" title="Campeão" viewBox="0 0 8.4666665 8.4666669" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(0 -288.533)">
+            <path d="m4.2315243 289.45936a3.3072918 3.307292 0 0 0 -3.27060194 2.8448h2.32388834c.1726671-.35084.5304844-.59531.9467136-.59531.4162214 0 .7740439.24447.946711.59531h2.324407a3.3072918 3.307292 0 0 0 -3.271118-2.8448z"/>
+            <path d="m.9443859 293.09791a3.3072918 3.307292 0 0 0 3.2871384 2.97603 3.3072918 3.307292 0 0 0 3.2907553-2.97603h-2.2908181c-.1401445.42053-.5333312.7276-.9999372.7276-.4666139 0-.8597953-.30707-.9999398-.7276z"/>
+            <path d="m4.2315243 292.12255c-.3542506 0-.6438873.29014-.64389.64439.0000027.35425.2896394.64389.64389.64389.354248 0 .6444033-.28964.6444033-.64389s-.2901553-.64439-.6444033-.64439zm0 .26458c.2112566 0 .37982.16857.37982.37981 0 .21127-.1685634.37931-.37982.37931-.2112592 0-.3793066-.16804-.3793066-.37931 0-.21124.1680474-.37981.3793066-.37981z"/>
+          </g>
+        </svg>
+      `;
+    }
+    if (champ.Vice && champ.Vice.trim().toLowerCase() === cleanName) {
+      medalsHtml += `
+        <svg class="medal-svg silver" title="Vice-campeão" viewBox="0 0 8.4666665 8.4666669" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(0 -288.533)">
+            <path d="m4.2315243 289.45936a3.3072918 3.307292 0 0 0 -3.27060194 2.8448h2.32388834c.1726671-.35084.5304844-.59531.9467136-.59531.4162214 0 .7740439.24447.946711.59531h2.324407a3.3072918 3.307292 0 0 0 -3.271118-2.8448z"/>
+            <path d="m.9443859 293.09791a3.3072918 3.307292 0 0 0 3.2871384 2.97603 3.3072918 3.307292 0 0 0 3.2907553-2.97603h-2.2908181c-.1401445.42053-.5333312.7276-.9999372.7276-.4666139 0-.8597953-.30707-.9999398-.7276z"/>
+            <path d="m4.2315243 292.12255c-.3542506 0-.6438873.29014-.64389.64439.0000027.35425.2896394.64389.64389.64389.354248 0 .6444033-.28964.6444033-.64389s-.2901553-.64439-.6444033-.64439zm0 .26458c.2112566 0 .37982.16857.37982.37981 0 .21127-.1685634.37931-.37982.37931-.2112592 0-.3793066-.16804-.3793066-.37931 0-.21124.1680474-.37981.3793066-.37981z"/>
+          </g>
+        </svg>
+      `;
+    }
+  });
+
+  return medalsHtml ? `<span class="player-medals-wrap">${medalsHtml}</span>` : '';
+}
+
 function getPodiumCount(row) {
   const value = getFirstDefined(row, ['Podio', 'Pódio', 'Podios', 'Pódios', 'Podium']);
   return value !== undefined ? toNumber(value) : (toNumber(row.Pos, 9999) <= 4 ? 1 : 0);
@@ -816,7 +849,7 @@ function renderRankingTable(players) {
   if (!players || players.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align:center;padding:3rem;color:var(--text-secondary);">
+        <td colspan="5" style="text-align:center;padding:3rem;color:var(--text-secondary);">
           Nenhum treinador encontrado com estes termos.
         </td>
       </tr>
@@ -825,16 +858,23 @@ function renderRankingTable(players) {
   }
 
   tbody.innerHTML = players.map(player => {
-    const letter = player.Jogador ? escapeHTML(player.Jogador.charAt(0).toUpperCase()) : '?';
     const playerName = escapeHTML(player.Jogador);
+    const medals = getPlayerMedals(player.Jogador);
+
+    const v = player.Vitorias || 0;
+    const e = player.Empates || 0;
+    const d = player.Derrotas || 0;
+    const total = v + e + d;
+    const vPct = total > 0 ? (v / total) * 100 : 0;
+    const ePct = total > 0 ? (e / total) * 100 : 0;
+    const dPct = total > 0 ? (d / total) * 100 : 0;
 
     return `
       <tr onclick="openPlayerModal(${player.Pos})">
         <td class="row-rank">${player.Pos}</td>
         <td>
           <div class="player-cell">
-            <div class="player-avatar-placeholder">${letter}</div>
-            <div style="font-weight: 600; color: #fff;">${playerName}</div>
+            <div style="font-weight: 600; color: #fff;">${playerName} ${medals}</div>
           </div>
         </td>
         <td style="text-align:center; vertical-align: middle;">
@@ -844,16 +884,17 @@ function renderRankingTable(players) {
           <span class="score-cell">${toNumber(player.Pontos)} PTS</span>
         </td>
         <td style="text-align:center; vertical-align: middle;">
-          <div class="ved-container">
-            <span class="ved-badge v-badge" title="Vitórias">${player.Vitorias || 0}V</span>
-            <span class="ved-badge e-badge" title="Empates">${player.Empates || 0}E</span>
-            <span class="ved-badge d-badge" title="Derrotas">${player.Derrotas || 0}D</span>
-          </div>
-        </td>
-        <td style="text-align:center; vertical-align: middle;">
-          <div class="placement-metrics">
-            <span class="placement-pill podium">${toNumber(player.Podio)} pódio(s)</span>
-            <span class="placement-pill average">Média ${formatAveragePlacement(player.MediaColocacao)}º</span>
+          <div class="ved-display">
+            <span class="ved-text">
+              <span class="v-num">${v}V</span> · 
+              <span class="e-num">${e}E</span> · 
+              <span class="d-num">${d}D</span>
+            </span>
+            <div class="ved-bar">
+              ${v > 0 ? `<div class="ved-seg v-seg" style="width: ${vPct}%" title="Vitórias: ${v}"></div>` : ''}
+              ${e > 0 ? `<div class="ved-seg e-seg" style="width: ${ePct}%" title="Empates: ${e}"></div>` : ''}
+              ${d > 0 ? `<div class="ved-seg d-seg" style="width: ${dPct}%" title="Derrotas: ${d}"></div>` : ''}
+            </div>
           </div>
         </td>
       </tr>
@@ -1171,7 +1212,8 @@ window.openPlayerModal = function(rankPos) {
 
   // Inserir elementos no modal
   document.getElementById('modal-avatar').innerText = letter;
-  document.getElementById('modal-player-name').innerText = player.Jogador;
+  const medals = getPlayerMedals(player.Jogador);
+  document.getElementById('modal-player-name').innerHTML = `${escapeHTML(player.Jogador)} ${medals}`;
   document.getElementById('modal-player-deck').innerHTML = `
     <span class="energy-dot ${energyClass}"></span>
     <span>Deck: <strong>${escapeHTML(player.Deck || 'Não registrado')}</strong></span>

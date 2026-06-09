@@ -802,31 +802,29 @@ tbody tr:nth-child(3) .row-rank {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 42px;
-  padding: 0.25rem 0.55rem;
-  border-radius: 999px;
+  min-width: 38px;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
   font-family: var(--font-title);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.04em;
+  border: none;
 }
 
 .category-badge.category-me {
-  background: rgba(236, 72, 153, 0.12);
-  border: 1px solid rgba(236, 72, 153, 0.32);
-  color: var(--accent-magenta);
+  background: rgba(236, 72, 153, 0.08);
+  color: rgba(236, 72, 153, 0.85);
 }
 
 .category-badge.category-sr {
-  background: rgba(6, 182, 212, 0.1);
-  border: 1px solid rgba(6, 182, 212, 0.28);
-  color: var(--accent-cyan);
+  background: rgba(6, 182, 212, 0.08);
+  color: rgba(6, 182, 212, 0.85);
 }
 
 .category-badge.category-jr {
-  background: rgba(236, 72, 153, 0.1);
-  border: 1px solid rgba(236, 72, 153, 0.28);
-  color: var(--accent-magenta);
+  background: rgba(236, 72, 153, 0.08);
+  color: rgba(236, 72, 153, 0.85);
 }
 
 /* --- CALENDAR SECTION --- */
@@ -1863,6 +1861,81 @@ tbody tr:nth-child(3) .row-rank {
     padding: 0.1rem 0.3rem;
     min-width: 22px;
   }
+}
+
+/* --- V-E-D HORIZONTAL RATIO BARS --- */
+.ved-display {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ved-text {
+  font-family: var(--font-title);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.ved-bar {
+  display: flex;
+  width: 50px;
+  height: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ved-bar-empty {
+  background: rgba(255, 255, 255, 0.1);
+  width: 50px;
+  height: 4px;
+  border-radius: 999px;
+}
+
+.ved-seg {
+  height: 100%;
+}
+
+.ved-seg.v-seg {
+  background-color: #10b981;
+}
+
+.ved-seg.e-seg {
+  background-color: #f59e0b;
+}
+
+.ved-seg.d-seg {
+  background-color: #ef4444;
+}
+/* --- POKEBALL MEDALS FOR PAST CHAMPIONS/RUNNERS-UP --- */
+.player-medals-wrap {
+  display: inline-flex;
+  gap: 0.25rem;
+  vertical-align: middle;
+  margin-left: 0.4rem;
+}
+
+.medal-svg {
+  width: 17px;
+  height: 17px;
+  display: inline-block;
+  vertical-align: middle;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.medal-svg:hover {
+  transform: scale(1.25) rotate(15deg);
+}
+
+.medal-svg.gold {
+  fill: #ffcb05; /* Dourado / Amarelo Pokémon */
+}
+
+.medal-svg.silver {
+  fill: #cfd8dc; /* Prata Pokémon */
 }
 
 /* --- AJUSTE DOS CONTROLES DO RANKING --- */
