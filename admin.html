@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Organizador - Liga Atlântica</title>
+  <link rel="stylesheet" href="style.css?v=3.6">
+  <style>
+    /* Estilos específicos do Painel Administrativo */
+    .admin-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    
+    .admin-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    
+    .admin-card {
+      margin-bottom: 2rem;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+    
+    .form-group label {
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    
+    @media (max-width: 600px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .login-box {
+      max-width: 400px;
+      margin: 5rem auto;
+    }
+    
+    .dropzone {
+      border: 2px dashed rgba(255, 203, 5, 0.3);
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: var(--radius-lg);
+      padding: 3rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--accent-yellow);
+      background: rgba(255, 203, 5, 0.05);
+      box-shadow: 0 0 15px rgba(255, 203, 5, 0.1);
+    }
+    
+    .dropzone-icon {
+      font-size: 3rem;
+      color: var(--accent-yellow);
+    }
+    
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    
+    .alert-box {
+      padding: 1rem;
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .alert-success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #10b981;
+    }
+    
+    .alert-error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+    }
+    
+    .raw-textarea {
+      width: 100%;
+      height: 120px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 0.75rem;
+      color: #fff;
+      resize: vertical;
+    }
+    
+    .badge-check {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body class="bg-dark">
+
+  <!-- TELA DE LOGIN LOCAL -->
+  <div class="admin-container" id="login-screen">
+    <div class="glass-card login-box">
+      <div class="admin-header" style="margin-bottom: 1.5rem;">
+        <h2 class="section-title" style="font-size: 1.75rem;">Acesso Restrito</h2>
+        <p class="section-subtitle">Identifique-se para gerenciar o ranking</p>
+      </div>
+      
+      <div class="alert-box alert-error" id="login-error">Senha incorreta! Tente novamente.</div>
+      
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="admin-password">Senha do Painel</label>
+          <input type="password" id="admin-password" class="search-input" placeholder="Digite a senha..." required>
+        </div>
+        <button type="submit" class="btn btn-whatsapp" style="width: 100%; justify-content: center; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow);">
+          Entrar no Painel
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- PAINEL PRINCIPAL -->
+  <div class="admin-container" id="main-panel" style="display: none;">
+    <!-- Cabeçalho -->
+    <header class="admin-header">
+      <h1 class="section-title">Painel do <span class="gradient-text">Organizador</span></h1>
+      <p class="section-subtitle">Publique e atualize o ranking oficial da Liga Atlântica via arquivos .tdf</p>
+      <div style="margin-top: 1rem;">
+        <button class="btn" onclick="handleLogout()" style="padding: 0.4rem 1rem; font-size: 0.8rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.25);">
+          Sair do Painel
+        </button>
+      </div>
+    </header>
+
+    <!-- Alertas Gerais -->
+    <div class="alert-box alert-success" id="general-success"></div>
+    <div class="alert-box alert-error" id="general-error"></div>
+
+    <div class="dashboard-grid" style="grid-template-columns: minmax(280px, 320px) 1fr; gap: 2rem; align-items: start;">
+      
+      <!-- 1. Configurações de Conexão com GitHub -->
+      <section class="glass-card admin-card">
+        <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          ⚙️ Conexão GitHub
+        </h2>
+        <form id="config-form" onsubmit="saveGithubConfig(event)">
+          <div class="form-group">
+            <label for="gh-token">GitHub Token (PAT)</label>
+            <input type="password" id="gh-token" class="search-input" placeholder="ghp_..." required>
+          </div>
+          <div class="form-group">
+            <label for="gh-owner">Usuário do GitHub</label>
+            <input type="text" id="gh-owner" class="search-input" value="delipex" required>
+          </div>
+          <div class="form-group">
+            <label for="gh-repo">Nome do Repositório</label>
+            <input type="text" id="gh-repo" class="search-input" value="liga-atlantica" required>
+          </div>
+          <div class="form-group">
+            <label for="gh-branch">Branch</label>
+            <input type="text" id="gh-branch" class="search-input" value="main" required>
+          </div>
+          <div class="form-group">
+            <label for="gh-path">Caminho no Repo</label>
+            <input type="text" id="gh-path" class="search-input" value="site/ranking.tdf" required>
+          </div>
+          <button type="submit" class="btn btn-whatsapp" style="width: 100%; justify-content: center; background: rgba(255,255,255,0.05); color: #fff; border-color: var(--border-color);">
+            Salvar Configurações
+          </button>
+        </form>
+      </section>
+
+      <!-- 2. Área de Upload de Arquivo -->
+      <div>
+        <section class="glass-card admin-card">
+          <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            📤 Carregar Arquivo de Classificação (.tdf)
+          </h2>
+          
+          <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+            <div class="dropzone-icon">📄</div>
+            <div>
+              <p style="font-weight: 600; color: #fff;">Arraste o arquivo .tdf aqui ou clique para buscar</p>
+              <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Separado por tabulações (exportado do Tome/gerenciador)</p>
+            </div>
+            <input type="file" id="file-input" style="display: none;" accept=".tdf,.txt,.tsv" onchange="handleFileSelect(event)">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="raw-input">Ou cole o texto do arquivo abaixo:</label>
+            <textarea id="raw-input" class="raw-textarea" placeholder="Pos&#9;Jogador&#9;Categoria&#9;Pontos&#9;Podio&#9;MediaColocacao&#9;Deck&#9;TipoEnergia..." oninput="handleRawInput()"></textarea>
+          </div>
+        </section>
+
+        <!-- 3. Preview da Tabela antes de Publicar -->
+        <section class="glass-card admin-card" id="preview-section" style="display: none;">
+          <div class="preview-header">
+            <div>
+              <h2 style="font-size: 1.15rem; color: #fff;">👁️ Pré-visualização do Ranking</h2>
+              <p style="font-size: 0.8rem; color: var(--text-secondary);">Verifique as colunas e posições antes de enviar</p>
+            </div>
+            <div id="check-badge" class="badge-check">Estrutura Válida ✓</div>
+          </div>
+
+          <div class="table-responsive" style="max-height: 300px; overflow-y: auto; margin-bottom: 1.5rem; border: 1px solid var(--border-color); border-radius: var(--radius);">
+            <table class="ranking-table">
+              <thead>
+                <tr>
+                  <th class="row-rank">Pos</th>
+                  <th>Treinador</th>
+                  <th style="text-align:center">Cat</th>
+                  <th style="text-align:center">Pontos</th>
+                  <th style="text-align:center">Pódios</th>
+                  <th style="text-align:center">Média</th>
+                  <th>Deck</th>
+                </tr>
+              </thead>
+              <tbody id="preview-tbody">
+                <!-- Populado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+
+          <button id="btn-publish" onclick="publishRanking()" class="btn btn-whatsapp" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow);">
+            🚀 Publicar Ranking no Site
+          </button>
+        </section>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Senha local de acesso do painel
+    const ADMIN_PASSWORD = "fsa2026";
+    let activeContent = "";
+    
+    // 1. Controle de Login
+    function handleLogin(e) {
+      if (e) e.preventDefault();
+      const password = document.getElementById('admin-password').value;
+      const errorBox = document.getElementById('login-error');
+      
+      if (password === ADMIN_PASSWORD) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-panel').style.display = 'block';
+        loadSavedConfig();
+      } else {
+        errorBox.style.display = 'block';
+        document.getElementById('admin-password').value = '';
+      }
+    }
+    
+    function handleLogout() {
+      document.getElementById('login-screen').style.display = 'block';
+      document.getElementById('main-panel').style.display = 'none';
+      document.getElementById('admin-password').value = '';
+      document.getElementById('login-error').style.display = 'none';
+    }
+
+    // 2. Persistência de Chaves em localStorage
+    function saveGithubConfig(e) {
+      if (e) e.preventDefault();
+      
+      const config = {
+        token: document.getElementById('gh-token').value.trim(),
+        owner: document.getElementById('gh-owner').value.trim(),
+        repo: document.getElementById('gh-repo').value.trim(),
+        branch: document.getElementById('gh-branch').value.trim(),
+        path: document.getElementById('gh-path').value.trim()
+      };
+      
+      localStorage.setItem('gh_config', JSON.stringify(config));
+      showSuccess("Configurações do GitHub salvas com sucesso!");
+    }
+    
+    function loadSavedConfig() {
+      const saved = localStorage.getItem('gh_config');
+      if (saved) {
+        const config = JSON.parse(saved);
+        document.getElementById('gh-token').value = config.token || '';
+        document.getElementById('gh-owner').value = config.owner || 'delipex';
+        document.getElementById('gh-repo').value = config.repo || 'liga-atlantica';
+        document.getElementById('gh-branch').value = config.branch || 'main';
+        document.getElementById('gh-path').value = config.path || 'site/ranking.tdf';
+      }
+    }
+
+    // 3. Processamento e Preview de Arquivos TDF
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const text = evt.target.result;
+        document.getElementById('raw-input').value = text;
+        processTDFText(text);
+      };
+      reader.readAsText(file);
+    }
+    
+    function handleRawInput() {
+      const text = document.getElementById('raw-input').value;
+      processTDFText(text);
+    }
+    
+    // Drag and Drop Dragover / Dragenter styles
+    const dropzone = document.getElementById('dropzone');
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      }, false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+      }, false);
+    });
+    dropzone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const file = dt.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('raw-input').value = evt.target.result;
+          processTDFText(evt.target.result);
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    // Validar e renderizar preview
+    function processTDFText(text) {
+      if (!text || !text.trim()) {
+        document.getElementById('preview-section').style.display = 'none';
+        return;
+      }
+      
+      const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+      if (lines.length < 2) {
+        showError("Formato inválido. O arquivo precisa conter o cabeçalho e pelo menos 1 linha de dados.");
+        document.getElementById('preview-section').style.display = 'none';
+        return;
+      }
+      
+      const headers = lines[0].split('\t').map(h => h.trim());
+      
+      // Validação rápida de cabeçalho mínimo obrigatório
+      const required = ['Pos', 'Jogador', 'Pontos'];
+      const missing = required.filter(h => !headers.includes(h));
+      
+      if (missing.length > 0) {
+        showError(`O arquivo TDF está sem as colunas obrigatórias: ${missing.join(', ')}. Certifique-se de que a primeira linha contém os nomes corretos separados por tabulações.`);
+        document.getElementById('preview-section').style.display = 'none';
+        return;
+      }
+      
+      // Mapear linhas para objetos
+      const players = lines.slice(1).map(rowText => {
+        const row = rowText.split('\t');
+        const obj = {};
+        headers.forEach((header, index) => {
+          let val = (row[index] || '').trim();
+          if (val.startsWith('"') && val.endsWith('"')) {
+            val = val.substring(1, val.length - 1).trim();
+          }
+          obj[header] = isNaN(val) || val === '' ? val : Number(val);
+        });
+        return obj;
+      });
+      
+      // Renderizar o preview no tbody
+      const tbody = document.getElementById('preview-tbody');
+      tbody.innerHTML = players.map(p => {
+        return `
+          <tr>
+            <td class="row-rank">${p.Pos || '-'}</td>
+            <td style="font-weight: 600; color: #fff;">${escapeHTML(p.Jogador || '')}</td>
+            <td style="text-align:center;">${escapeHTML(p.Categoria || 'ME')}</td>
+            <td style="text-align:center;" class="score-cell">${p.Pontos || 0} PTS</td>
+            <td style="text-align:center;">${p.Podio ?? '-'}</td>
+            <td style="text-align:center;">${p.MediaColocacao ?? '-'}º</td>
+            <td>${escapeHTML(p.Deck || 'Não registrado')}</td>
+          </tr>
+        `;
+      }).join('');
+      
+      activeContent = text;
+      hideAlerts();
+      document.getElementById('preview-section').style.display = 'block';
+    }
+
+    // 4. Publicação direta no GitHub
+    async function publishRanking() {
+      const saved = localStorage.getItem('gh_config');
+      if (!saved) {
+        showError("Configure as credenciais do GitHub ao lado antes de publicar!");
+        return;
+      }
+      
+      const config = JSON.parse(saved);
+      if (!config.token || !config.owner || !config.repo) {
+        showError("Preencha e salve Usuário, Repositório e Token do GitHub!");
+        return;
+      }
+      
+      const btn = document.getElementById('btn-publish');
+      btn.disabled = true;
+      btn.innerText = "⏳ Publicando no GitHub...";
+      hideAlerts();
+      
+      const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
+      
+      try {
+        // Passo A: Tentar buscar o arquivo antigo para descobrir o hash SHA
+        let sha = null;
+        try {
+          const res = await fetch(url + `?ref=${config.branch}`, {
+            headers: { 'Authorization': `token ${config.token}` }
+          });
+          if (res.ok) {
+            const fileData = await res.json();
+            sha = fileData.sha;
+          }
+        } catch (e) {
+          console.log("Arquivo novo ou inexistente no repositório. Criando pela primeira vez.");
+        }
+        
+        // Passo B: Preparar o commit (conteúdo base64)
+        const base64Content = btoa(unescape(encodeURIComponent(activeContent)));
+        const payload = {
+          message: `Atualização de ranking via Painel Administrativo (${new Date().toLocaleString('pt-BR')})`,
+          content: base64Content,
+          branch: config.branch
+        };
+        if (sha) {
+          payload.sha = sha;
+        }
+        
+        // Passo C: Fazer a chamada PUT para commitar
+        const response = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${config.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || "Falha ao gravar no GitHub.");
+        }
+        
+        showSuccess("🚀 Ranking publicado com sucesso! O arquivo foi gravado no repositório. Os dados devem atualizar no site dentro de 1 minuto.");
+        window.scrollTo(0, 0);
+        
+      } catch (err) {
+        showError("Erro ao publicar: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "🚀 Publicar Ranking no Site";
+      }
+    }
+
+    // 5. Auxiliares de UI
+    function showSuccess(msg) {
+      const box = document.getElementById('general-success');
+      box.innerText = msg;
+      box.style.display = 'block';
+      document.getElementById('general-error').style.display = 'none';
+    }
+    
+    function showError(msg) {
+      const box = document.getElementById('general-error');
+      box.innerText = msg;
+      box.style.display = 'block';
+      document.getElementById('general-success').style.display = 'none';
+    }
+    
+    function hideAlerts() {
+      document.getElementById('general-success').style.display = 'none';
+      document.getElementById('general-error').style.display = 'none';
+    }
+    
+    function escapeHTML(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>

@@ -9,6 +9,21 @@ const CONFIG = {
   // No final do desenvolvimento, explicaremos no guia como preencher este campo.
   googleSheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQrKLqAbkaLT8PoWq7NfDbsz78KLsLfT3R2bZ5Ou5iZOwQwm7YhFpfjhM1lmxQPlti4a7KeQamMqwW4/pubhtml",
 
+  // Fonte de dados ativa: "sheets" (Google Sheets) ou "github" (Arquivo .tdf no GitHub)
+  // Deixe como "sheets" por enquanto. Quando quiser virar a chave da nova temporada, altere para "github".
+  // Para testar a versão do GitHub temporariamente, você pode acessar: seu-site.com/?source=github
+  dataSource: "sheets",
+
+  // Links "Raw" do GitHub para cada aba se dataSource for "github"
+  githubSources: {
+    Ranking: "https://raw.githubusercontent.com/delipex/liga-atlantica/main/site/ranking.tdf", // O painel admin.html atualizará este arquivo.
+    Calendario: "", 
+    Campeoes: "",
+    Regras: "",
+    Galeria: "",
+    ScoresAntigos: ""
+  },
+
   // GIDs das abas publicadas. Necessário para links /d/e/.../pubhtml.
   publishedSheetGids: {
     Ranking: "711743754",

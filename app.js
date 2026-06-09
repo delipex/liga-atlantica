@@ -8,6 +8,31 @@ function normalizeImageUrl(url){
   return url;
 }
 
+// Converte texto TDF (Tab Delimited File) para array de objetos JSON
+function parseTDF(tdfText) {
+  const lines = tdfText.split(/\r?\n/).filter(line => line.trim() !== '');
+  if (lines.length < 2) return [];
+
+  const headers = lines[0].split('\t').map(h => h.trim());
+  return lines.slice(1).map(rowText => {
+    const row = rowText.split('\t');
+    const obj = {};
+    headers.forEach((header, index) => {
+      let val = row[index] || '';
+      if (val.startsWith('"') && val.endsWith('"')) {
+        val = val.substring(1, val.length - 1);
+      }
+      val = val.trim();
+      if (val !== '' && !isNaN(val)) {
+        obj[header] = Number(val);
+      } else {
+        obj[header] = val;
+      }
+    });
+    return obj;
+  });
+}
+
 // Liga Atlântica de Pokémon TCG - Script Principal
 
 // --- DADOS DE DEMONSTRAÇÃO (MOCK DATA) ---
@@ -504,24 +529,45 @@ async function loadData() {
   const publishedGid = getPublishedSheetGid(sheetUrl);
   const publishedSheetGids = window.CONFIG && window.CONFIG.publishedSheetGids ? window.CONFIG.publishedSheetGids : {};
 
+  // Parâmetro de URL para testes rápidos: ?source=github ou ?source=sheets
+  const urlParams = new URLSearchParams(window.location.search);
+  const sourceParam = urlParams.get('source');
+  const dataSource = (sourceParam && ["sheets", "github"].includes(sourceParam))
+    ? sourceParam
+    : (window.CONFIG ? window.CONFIG.dataSource : "sheets");
+
+  const githubSources = window.CONFIG && window.CONFIG.githubSources ? window.CONFIG.githubSources : {};
+
   // Reseta o estado para o fallback antes de tentar buscar dados externos.
   appData = { ...MOCK_DATA };
 
   if (spreadsheetId) {
     try {
       if (statusBadge) {
-        statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#3b82f6;border-radius:50%;animation:pulse 1.5s infinite"></span> Conectando ao Sheets...`;
+        statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#3b82f6;border-radius:50%;animation:pulse 1.5s infinite"></span> Conectando...`;
         statusBadge.className = "offline-badge";
         statusBadge.style.color = "#3b82f6";
         statusBadge.style.borderColor = "rgba(59, 130, 246, 0.3)";
       }
 
       const rankingTabName = "Ranking";
-
       const historicalScoresTab = window.CONFIG && window.CONFIG.historicalScoresTab ? window.CONFIG.historicalScoresTab : "ScoresAntigos";
 
+      // 1. Definir a promessa de busca do ranking (se do GitHub TDF ou Google Sheets)
+      let rankingPromise;
+      if (dataSource === "github" && githubSources.Ranking) {
+        rankingPromise = (async () => {
+          const res = await fetch(githubSources.Ranking);
+          if (!res.ok) throw new Error("Erro ao carregar ranking TDF do GitHub.");
+          const text = await res.text();
+          return parseTDF(text);
+        })();
+      } else {
+        rankingPromise = fetchSheetTab(spreadsheetId, rankingTabName, publishedSheetGids.Ranking || publishedGid);
+      }
+
       const [ranking, partidas, scoresAntigos, calendario, campeoes, regras, galeria] = await Promise.all([
-        fetchSheetTab(spreadsheetId, rankingTabName, publishedSheetGids.Ranking || publishedGid),
+        rankingPromise,
         fetchOptionalSheetTab(spreadsheetId, "Partidas", publishedSheetGids.Partidas),
         fetchOptionalSheetTab(spreadsheetId, historicalScoresTab, publishedSheetGids[historicalScoresTab]),
         fetchOptionalSheetTab(spreadsheetId, "Calendario", publishedSheetGids.Calendario),
@@ -541,13 +587,14 @@ async function loadData() {
       isOfflineMode = false;
 
       if (statusBadge) {
-        statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#10b981;border-radius:50%"></span> Online`;
+        const sourceLabel = dataSource === "github" ? "GitHub (TDF)" : "Sheets";
+        statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#10b981;border-radius:50%"></span> Online (${sourceLabel})`;
         statusBadge.style.color = "#10b981";
         statusBadge.style.borderColor = "rgba(16, 185, 129, 0.3)";
-        statusBadge.title = "Dados carregados da planilha em tempo real";
+        statusBadge.title = `Dados carregados do ${sourceLabel} em tempo real`;
       }
     } catch (error) {
-      console.warn("Erro ao buscar dados do Google Sheets. Usando dados locais de demonstração:", error);
+      console.warn("Erro ao buscar dados remotos. Usando dados locais de demonstração:", error);
       appData.Ranking = normalizeRanking(MOCK_DATA.Ranking, []);
       appData.ScoresAntigos = normalizeHistoricalScores(MOCK_DATA.ScoresAntigos);
       isOfflineMode = true;
@@ -555,7 +602,7 @@ async function loadData() {
         statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#f59e0b;border-radius:50%"></span> Modo Demo (Local)`;
         statusBadge.style.color = "#f59e0b";
         statusBadge.style.borderColor = "rgba(245, 158, 11, 0.3)";
-        statusBadge.title = "Não foi possível conectar à planilha. Exibindo dados locais fictícios.";
+        statusBadge.title = "Não foi possível conectar à fonte de dados. Exibindo dados fictícios de demonstração.";
       }
     }
   } else {
