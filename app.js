@@ -325,9 +325,50 @@ function getFirstDefined(row, fieldNames) {
   return undefined;
 }
 
+function getVED(player) {
+  let v = getFirstDefined(player, ['Vitorias', 'Vitórias', 'Wins', 'Win']);
+  let e = getFirstDefined(player, ['Empates', 'Draws', 'Draw']);
+  let d = getFirstDefined(player, ['Derrotas', 'Losses', 'Loss']);
+
+  if (v !== undefined) v = toNumber(v);
+  if (e !== undefined) e = toNumber(e);
+  if (d !== undefined) d = toNumber(d);
+
+  const keys = Object.keys(player || {});
+  const hasKey = (k) => keys.includes(k);
+
+  if (v === undefined) {
+    if (hasKey('W')) v = toNumber(player['W']);
+    else if (hasKey('V')) v = toNumber(player['V']);
+    else v = 0;
+  }
+
+  if (e === undefined) {
+    if (hasKey('E')) {
+      e = toNumber(player['E']);
+    } else if (hasKey('D') && hasKey('L')) {
+      e = toNumber(player['D']);
+    } else {
+      e = 0;
+    }
+  }
+
+  if (d === undefined) {
+    if (hasKey('L')) {
+      d = toNumber(player['L']);
+    } else if (hasKey('D') && !hasKey('L')) {
+      d = toNumber(player['D']);
+    } else {
+      d = 0;
+    }
+  }
+
+  return { v, e, d };
+}
+
 function getPodiumCount(row) {
   const value = getFirstDefined(row, ['Podio', 'Pódio', 'Podios', 'Pódios', 'Podium']);
-  return value !== undefined ? toNumber(value) : (toNumber(row.Pos, 9999) <= 3 ? 1 : 0);
+  return value !== undefined ? toNumber(value) : (toNumber(row.Pos, 9999) <= 4 ? 1 : 0);
 }
 
 function getAveragePlacement(row) {
@@ -383,6 +424,8 @@ function normalizeRanking(rankingRows, partidasRows = []) {
       const mediaColocacao = getAveragePlacement(player);
       const categoria = normalizeCategory(player);
 
+      const { v, e, d } = getVED(player);
+
       return {
         ...player,
         Pos: toNumber(player.Pos, 0),
@@ -391,6 +434,9 @@ function normalizeRanking(rankingRows, partidasRows = []) {
         Pontos: pontos,
         Podio: podio,
         MediaColocacao: mediaColocacao,
+        Vitorias: v,
+        Empates: e,
+        Derrotas: d,
         Deck: player.Deck || 'Não registrado',
         TipoEnergia: safeEnergyClass(player.TipoEnergia)
       };
@@ -770,7 +816,7 @@ function renderRankingTable(players) {
   if (!players || players.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" style="text-align:center;padding:3rem;color:var(--text-secondary);">
+        <td colspan="6" style="text-align:center;padding:3rem;color:var(--text-secondary);">
           Nenhum treinador encontrado com estes termos.
         </td>
       </tr>
@@ -796,6 +842,13 @@ function renderRankingTable(players) {
         </td>
         <td style="text-align:center; vertical-align: middle;">
           <span class="score-cell">${toNumber(player.Pontos)} PTS</span>
+        </td>
+        <td style="text-align:center; vertical-align: middle;">
+          <div class="ved-container">
+            <span class="ved-badge v-badge" title="Vitórias">${player.Vitorias || 0}V</span>
+            <span class="ved-badge e-badge" title="Empates">${player.Empates || 0}E</span>
+            <span class="ved-badge d-badge" title="Derrotas">${player.Derrotas || 0}D</span>
+          </div>
         </td>
         <td style="text-align:center; vertical-align: middle;">
           <div class="placement-metrics">
@@ -1128,6 +1181,17 @@ window.openPlayerModal = function(rankPos) {
   document.getElementById('modal-detail-category').innerText = `${player.Categoria || 'MASTER'} (${player.CategoriaCodigo || 'ME'})`;
   document.getElementById('modal-detail-points').innerText = `${toNumber(player.Pontos)} PTS`;
   document.getElementById('modal-detail-current-placement').innerText = `${toNumber(player.Pos)}º`;
+  
+  const vedContainer = document.getElementById('modal-detail-ved');
+  if (vedContainer) {
+    vedContainer.innerHTML = `
+      <div class="ved-container" style="justify-content: flex-end;">
+        <span class="ved-badge v-badge" title="Vitórias">${player.Vitorias || 0}V</span>
+        <span class="ved-badge e-badge" title="Empates">${player.Empates || 0}E</span>
+        <span class="ved-badge d-badge" title="Derrotas">${player.Derrotas || 0}D</span>
+      </div>
+    `;
+  }
 
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';

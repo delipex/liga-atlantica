@@ -222,6 +222,13 @@
             <input type="file" id="file-input" style="display: none;" accept=".tdf,.txt,.tsv" onchange="handleFileSelect(event)">
           </div>
 
+          <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; background: rgba(255, 203, 5, 0.05); padding: 0.75rem 1rem; border-radius: var(--radius); border: 1px dashed rgba(255, 203, 5, 0.2);">
+            <input type="checkbox" id="accumulate-checkbox" checked style="width: 18px; height: 18px; cursor: pointer;">
+            <label for="accumulate-checkbox" style="font-size: 0.85rem; font-weight: 600; color: #fff; cursor: pointer; user-select: none;">
+              Acumular pontos com o ranking atual do site (Soma automática de etapas)
+            </label>
+          </div>
+
           <div class="form-group" style="margin-bottom: 0;">
             <label for="raw-input">Ou cole o texto do arquivo abaixo:</label>
             <textarea id="raw-input" class="raw-textarea" placeholder="Pos&#9;Jogador&#9;Categoria&#9;Pontos&#9;Podio&#9;MediaColocacao&#9;Deck&#9;TipoEnergia..." oninput="handleRawInput()"></textarea>
@@ -246,9 +253,9 @@
                   <th>Treinador</th>
                   <th style="text-align:center">Cat</th>
                   <th style="text-align:center">Pontos</th>
+                  <th style="text-align:center">V-E-D</th>
                   <th style="text-align:center">Pódios</th>
                   <th style="text-align:center">Média</th>
-                  <th>Deck</th>
                 </tr>
               </thead>
               <tbody id="preview-tbody">
@@ -368,6 +375,87 @@
       }
     });
 
+    // Helpers
+    function toNumber(value, fallback = 0) {
+      const normalizedValue = typeof value === 'string' ? value.replace(',', '.') : value;
+      const number = Number(normalizedValue);
+      return Number.isFinite(number) ? number : fallback;
+    }
+
+    function getFirstDefined(row, fieldNames) {
+      for (const fieldName of fieldNames) {
+        if (row && row[fieldName] !== undefined && row[fieldName] !== '') {
+          return row[fieldName];
+        }
+      }
+      return undefined;
+    }
+
+    function getVED(player) {
+      let v = getFirstDefined(player, ['Vitorias', 'Vitórias', 'Wins', 'Win']);
+      let e = getFirstDefined(player, ['Empates', 'Draws', 'Draw']);
+      let d = getFirstDefined(player, ['Derrotas', 'Losses', 'Loss']);
+
+      if (v !== undefined) v = toNumber(v);
+      if (e !== undefined) e = toNumber(e);
+      if (d !== undefined) d = toNumber(d);
+
+      const keys = Object.keys(player || {});
+      const hasKey = (k) => keys.includes(k);
+
+      if (v === undefined) {
+        if (hasKey('W')) v = toNumber(player['W']);
+        else if (hasKey('V')) v = toNumber(player['V']);
+        else v = 0;
+      }
+
+      if (e === undefined) {
+        if (hasKey('E')) {
+          e = toNumber(player['E']);
+        } else if (hasKey('D') && hasKey('L')) {
+          e = toNumber(player['D']);
+        } else {
+          e = 0;
+        }
+      }
+
+      if (d === undefined) {
+        if (hasKey('L')) {
+          d = toNumber(player['L']);
+        } else if (hasKey('D') && !hasKey('L')) {
+          d = toNumber(player['D']);
+        } else {
+          d = 0;
+        }
+      }
+
+      return { v, e, d };
+    }
+
+    function parseTDF(tdfText) {
+      const lines = tdfText.split(/\r?\n/).filter(line => line.trim() !== '');
+      if (lines.length < 2) return [];
+
+      const headers = lines[0].split('\t').map(h => h.trim());
+      return lines.slice(1).map(rowText => {
+        const row = rowText.split('\t');
+        const obj = {};
+        headers.forEach((header, index) => {
+          let val = row[index] || '';
+          if (val.startsWith('"') && val.endsWith('"')) {
+            val = val.substring(1, val.length - 1);
+          }
+          val = val.trim();
+          if (val !== '' && !isNaN(val)) {
+            obj[header] = Number(val);
+          } else {
+            obj[header] = val;
+          }
+        });
+        return obj;
+      });
+    }
+
     // Validar e renderizar preview
     function processTDFText(text) {
       if (!text || !text.trim()) {
@@ -375,51 +463,51 @@
         return;
       }
       
-      const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
-      if (lines.length < 2) {
+      const players = parseTDF(text);
+      if (players.length === 0) {
         showError("Formato inválido. O arquivo precisa conter o cabeçalho e pelo menos 1 linha de dados.");
         document.getElementById('preview-section').style.display = 'none';
         return;
       }
       
-      const headers = lines[0].split('\t').map(h => h.trim());
+      const firstPlayer = players[0];
+      const hasName = getFirstDefined(firstPlayer, ['Jogador', 'Player', 'Name']) !== undefined;
+      const hasPoints = getFirstDefined(firstPlayer, ['Pontos', 'Points', 'Pts']) !== undefined;
       
-      // Validação rápida de cabeçalho mínimo obrigatório
-      const required = ['Pos', 'Jogador', 'Pontos'];
-      const missing = required.filter(h => !headers.includes(h));
-      
-      if (missing.length > 0) {
-        showError(`O arquivo TDF está sem as colunas obrigatórias: ${missing.join(', ')}. Certifique-se de que a primeira linha contém os nomes corretos separados por tabulações.`);
+      if (!hasName || !hasPoints) {
+        showError(`O arquivo TDF está sem as colunas obrigatórias de Jogador/Nome e Pontos. Certifique-se de que a primeira linha contém os nomes corretos separados por tabulações.`);
         document.getElementById('preview-section').style.display = 'none';
         return;
       }
       
-      // Mapear linhas para objetos
-      const players = lines.slice(1).map(rowText => {
-        const row = rowText.split('\t');
-        const obj = {};
-        headers.forEach((header, index) => {
-          let val = (row[index] || '').trim();
-          if (val.startsWith('"') && val.endsWith('"')) {
-            val = val.substring(1, val.length - 1).trim();
-          }
-          obj[header] = isNaN(val) || val === '' ? val : Number(val);
-        });
-        return obj;
-      });
-      
       // Renderizar o preview no tbody
       const tbody = document.getElementById('preview-tbody');
       tbody.innerHTML = players.map(p => {
+        const playerName = getFirstDefined(p, ['Jogador', 'Player', 'Name']) || '';
+        const playerPos = getFirstDefined(p, ['Pos', 'Position', 'Placement', 'Rank']) || '-';
+        const points = getFirstDefined(p, ['Pontos', 'Points', 'Pts']) || 0;
+        const category = getFirstDefined(p, ['Categoria', 'Category', 'Cat']) || 'MASTER';
+        const podium = getFirstDefined(p, ['Podio', 'Pódio', 'Podios', 'Pódios', 'Podium']);
+        const media = getFirstDefined(p, ['MediaColocacao', 'MédiaColocação', 'Media Colocacao', 'Média Colocação', 'Media', 'Média']);
+        
+        const { v, e, d } = getVED(p);
+        
+        const resolvedPodium = podium !== undefined ? podium : (toNumber(playerPos, 999) <= 4 ? 1 : 0);
+        const resolvedMedia = media !== undefined ? media : playerPos;
+
         return `
           <tr>
-            <td class="row-rank">${p.Pos || '-'}</td>
-            <td style="font-weight: 600; color: #fff;">${escapeHTML(p.Jogador || '')}</td>
-            <td style="text-align:center;">${escapeHTML(p.Categoria || 'ME')}</td>
-            <td style="text-align:center;" class="score-cell">${p.Pontos || 0} PTS</td>
-            <td style="text-align:center;">${p.Podio ?? '-'}</td>
-            <td style="text-align:center;">${p.MediaColocacao ?? '-'}º</td>
-            <td>${escapeHTML(p.Deck || 'Não registrado')}</td>
+            <td class="row-rank">${playerPos}</td>
+            <td style="font-weight: 600; color: #fff;">${escapeHTML(playerName)}</td>
+            <td style="text-align:center;">${escapeHTML(category)}</td>
+            <td style="text-align:center;" class="score-cell">${points} PTS</td>
+            <td style="text-align:center;">
+              <span style="color: #10b981; font-weight:700;">${v}V</span> - 
+              <span style="color: #f59e0b; font-weight:700;">${e}E</span> - 
+              <span style="color: #ef4444; font-weight:700;">${d}D</span>
+            </td>
+            <td style="text-align:center;">${resolvedPodium}</td>
+            <td style="text-align:center;">${resolvedMedia !== '-' ? formatAveragePlacement(resolvedMedia) + 'º' : '-'}</td>
           </tr>
         `;
       }).join('');
@@ -427,6 +515,152 @@
       activeContent = text;
       hideAlerts();
       document.getElementById('preview-section').style.display = 'block';
+    }
+
+    function formatAveragePlacement(value) {
+      const number = toNumber(value);
+      return Number.isInteger(number) ? String(number) : number.toFixed(1).replace('.', ',');
+    }
+
+    // Helpers para Codificação Base64 UTF-8 segura
+    function encodeBase64UTF8(str) {
+      const bytes = new TextEncoder().encode(str);
+      let binary = '';
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    }
+
+    function decodeBase64UTF8(base64) {
+      const binaryString = atob(base64.replace(/\s/g, ''));
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return new TextDecoder('utf-8').decode(bytes);
+    }
+
+    // Função que acumula dados de dois arquivos TDF
+    function mergeRankings(oldTdfText, newTdfText) {
+      const oldList = parseTDF(oldTdfText);
+      const newList = parseTDF(newTdfText);
+      
+      if (newList.length === 0) return oldTdfText;
+      if (oldList.length === 0) return newTdfText;
+      
+      const playersMap = new Map();
+      
+      // Carregar ranking antigo
+      oldList.forEach(p => {
+        const playerName = getFirstDefined(p, ['Jogador', 'Player', 'Name']);
+        if (!playerName) return;
+        const nameKey = String(playerName).trim().toLowerCase();
+        
+        const { v, e, d } = getVED(p);
+        
+        playersMap.set(nameKey, {
+          Jogador: playerName,
+          Categoria: getFirstDefined(p, ['Categoria', 'Category', 'Cat']) || 'MASTER',
+          Pontos: Number(getFirstDefined(p, ['Pontos', 'Points', 'Pts'])) || 0,
+          Vitorias: v,
+          Empates: e,
+          Derrotas: d,
+          Podio: Number(getFirstDefined(p, ['Podio', 'Pódio', 'Podios', 'Pódios', 'Podium'])) || 0,
+          MediaColocacao: Number(getFirstDefined(p, ['MediaColocacao', 'MédiaColocação', 'Media Colocacao', 'Média Colocação', 'Media', 'Média'])) || 0,
+          Deck: p.Deck || 'Não registrado',
+          TipoEnergia: p.TipoEnergia || 'colorless',
+          Participacoes: Number(p.Participacoes) || 1
+        });
+      });
+      
+      // Mesclar nova semana
+      newList.forEach(p => {
+        const playerName = getFirstDefined(p, ['Jogador', 'Player', 'Name']);
+        if (!playerName) return;
+        const nameKey = String(playerName).trim().toLowerCase();
+        
+        const newPos = toNumber(getFirstDefined(p, ['Pos', 'Position', 'Placement', 'Rank']), 999);
+        const isNewPodio = newPos <= 4;
+        
+        const { v: newV, e: newE, d: newD } = getVED(p);
+        const newPts = Number(getFirstDefined(p, ['Pontos', 'Points', 'Pts'])) || 0;
+        const newCat = getFirstDefined(p, ['Categoria', 'Category', 'Cat']);
+        
+        if (playersMap.has(nameKey)) {
+          const existing = playersMap.get(nameKey);
+          const oldPart = existing.Participacoes;
+          const newPart = oldPart + 1;
+          
+          existing.Pontos += newPts;
+          if (isNewPodio) existing.Podio += 1;
+          
+          // Média de colocação
+          const oldMedia = existing.MediaColocacao || newPos;
+          existing.MediaColocacao = ((oldMedia * oldPart) + newPos) / newPart;
+          existing.Participacoes = newPart;
+          
+          // Sum V-E-D
+          existing.Vitorias += newV;
+          existing.Empates += newE;
+          existing.Derrotas += newD;
+          
+          // Mantém informações do deck antigo se a nova semana não as tiver
+          if (p.Deck && p.Deck !== 'Não registrado') existing.Deck = p.Deck;
+          if (p.TipoEnergia && p.TipoEnergia !== 'colorless') existing.TipoEnergia = p.TipoEnergia;
+          if (newCat) existing.Categoria = newCat;
+        } else {
+          // Jogador estreante
+          playersMap.set(nameKey, {
+            Jogador: playerName,
+            Categoria: newCat || 'MASTER',
+            Pontos: newPts,
+            Vitorias: newV,
+            Empates: newE,
+            Derrotas: newD,
+            Podio: isNewPodio ? 1 : 0,
+            MediaColocacao: newPos,
+            Deck: p.Deck || 'Não registrado',
+            TipoEnergia: p.TipoEnergia || 'colorless',
+            Participacoes: 1
+          });
+        }
+      });
+      
+      const mergedList = Array.from(playersMap.values());
+      
+      // Re-ordenar ranking geral acumulado
+      mergedList.sort((a, b) => {
+        if (b.Pontos !== a.Pontos) return b.Pontos - a.Pontos;
+        if (b.Podio !== a.Podio) return b.Podio - a.Podio;
+        if (a.MediaColocacao !== b.MediaColocacao) return a.MediaColocacao - b.MediaColocacao;
+        return String(a.Jogador).localeCompare(String(b.Jogador), 'pt-BR');
+      });
+      
+      const headers = ['Pos', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Deck', 'TipoEnergia', 'Participacoes'];
+      let tdfString = headers.join('\t') + '\n';
+      
+      mergedList.forEach((p, index) => {
+        const row = [
+          index + 1,
+          p.Jogador,
+          p.Categoria,
+          p.Pontos,
+          p.Vitorias,
+          p.Empates,
+          p.Derrotas,
+          p.Podio,
+          Number(p.MediaColocacao).toFixed(2),
+          p.Deck,
+          p.TipoEnergia,
+          p.Participacoes
+        ];
+        tdfString += row.join('\t') + '\n';
+      });
+      
+      return tdfString;
     }
 
     // 4. Publicação direta no GitHub
@@ -445,14 +679,17 @@
       
       const btn = document.getElementById('btn-publish');
       btn.disabled = true;
-      btn.innerText = "⏳ Publicando no GitHub...";
+      btn.innerText = "⏳ Processando e Publicando...";
       hideAlerts();
       
       const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
+      const shouldAccumulate = document.getElementById('accumulate-checkbox').checked;
       
       try {
-        // Passo A: Tentar buscar o arquivo antigo para descobrir o hash SHA
         let sha = null;
+        let oldTdfText = "";
+        
+        // Passo A: Tentar buscar o arquivo antigo
         try {
           const res = await fetch(url + `?ref=${config.branch}`, {
             headers: { 'Authorization': `token ${config.token}` }
@@ -460,15 +697,28 @@
           if (res.ok) {
             const fileData = await res.json();
             sha = fileData.sha;
+            if (shouldAccumulate && fileData.content) {
+              oldTdfText = decodeBase64UTF8(fileData.content);
+            }
           }
         } catch (e) {
-          console.log("Arquivo novo ou inexistente no repositório. Criando pela primeira vez.");
+          console.log("Arquivo anterior não encontrado no repositório. Criando ranking inicial.");
         }
         
-        // Passo B: Preparar o commit (conteúdo base64)
-        const base64Content = btoa(unescape(encodeURIComponent(activeContent)));
+        // Passo B: Decidir conteúdo a publicar (acumular ou substituir)
+        let finalContent = activeContent;
+        if (shouldAccumulate && oldTdfText) {
+          try {
+            finalContent = mergeRankings(oldTdfText, activeContent);
+          } catch (mergeErr) {
+            console.warn("Erro ao fazer merge. Publicando arquivo bruto.", mergeErr);
+          }
+        }
+        
+        // Passo C: Preparar o commit (conteúdo base64 seguro)
+        const base64Content = encodeBase64UTF8(finalContent);
         const payload = {
-          message: `Atualização de ranking via Painel Administrativo (${new Date().toLocaleString('pt-BR')})`,
+          message: `Atualização de ranking via Painel Administrativo - ${shouldAccumulate ? 'Acumulado' : 'Substituído'} (${new Date().toLocaleString('pt-BR')})`,
           content: base64Content,
           branch: config.branch
         };
@@ -476,7 +726,7 @@
           payload.sha = sha;
         }
         
-        // Passo C: Fazer a chamada PUT para commitar
+        // Passo D: Fazer a chamada PUT para commitar
         const response = await fetch(url, {
           method: 'PUT',
           headers: {
@@ -491,7 +741,11 @@
           throw new Error(data.message || "Falha ao gravar no GitHub.");
         }
         
-        showSuccess("🚀 Ranking publicado com sucesso! O arquivo foi gravado no repositório. Os dados devem atualizar no site dentro de 1 minuto.");
+        const successMsg = shouldAccumulate
+          ? "🚀 Ranking acumulado e publicado com sucesso! Os pontos desta etapa foram somados aos anteriores no GitHub."
+          : "🚀 Ranking publicado com sucesso! O arquivo anterior foi substituído por este novo.";
+          
+        showSuccess(successMsg);
         window.scrollTo(0, 0);
         
       } catch (err) {

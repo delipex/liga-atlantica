@@ -1820,6 +1820,51 @@ tbody tr:nth-child(3) .row-rank {
   }
 }
 
+/* --- V-E-D BADGES AND CONTAINER --- */
+.ved-container {
+  display: inline-flex;
+  gap: 0.25rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.ved-badge {
+  font-family: var(--font-title);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  text-align: center;
+  white-space: nowrap;
+  min-width: 28px;
+}
+
+.ved-badge.v-badge {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.ved-badge.e-badge {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.ved-badge.d-badge {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+@media (max-width: 500px) {
+  .ved-badge {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.3rem;
+    min-width: 22px;
+  }
+}
+
 /* --- AJUSTE DOS CONTROLES DO RANKING --- */
 .ranking-status-group {
   display: flex;
