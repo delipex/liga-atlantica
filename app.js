@@ -39,14 +39,14 @@ function parseTDF(tdfText) {
 // Usados se a Google Sheet não estiver configurada ou se houver erro ao carregar
 const MOCK_DATA = {
   Ranking: [
-    { Pos: 1, Jogador: "Felipe Damasceno", Categoria: "MASTER", Pontos: 27, Podio: 5, MediaColocacao: 2.4, Deck: "Charizard ex", TipoEnergia: "fire" },
-    { Pos: 2, Jogador: "Mariana Costa", Categoria: "MASTER", Pontos: 22, Podio: 4, MediaColocacao: 3.1, Deck: "Gardevoir ex", TipoEnergia: "psychic" },
-    { Pos: 3, Jogador: "Lucas Souza", Categoria: "SENIOR", Pontos: 19, Podio: 3, MediaColocacao: 3.8, Deck: "Miraidon ex", TipoEnergia: "lightning" },
-    { Pos: 4, Jogador: "Beatriz Lima", Categoria: "SENIOR", Pontos: 18, Podio: 2, MediaColocacao: 4.2, Deck: "Chien-Pao ex", TipoEnergia: "water" },
-    { Pos: 5, Jogador: "Thiago Silva", Categoria: "MASTER", Pontos: 15, Podio: 1, MediaColocacao: 5.6, Deck: "Lugia VSTAR", TipoEnergia: "colorless" },
-    { Pos: 6, Jogador: "Rodrigo Alves", Categoria: "JUNIOR", Pontos: 12, Podio: 1, MediaColocacao: 6.4, Deck: "Roaring Moon ex", TipoEnergia: "darkness" },
-    { Pos: 7, Jogador: "Gabriela Reis", Categoria: "JUNIOR", Pontos: 9, Podio: 0, MediaColocacao: 7.2, Deck: "Gholdengo ex", TipoEnergia: "metal" },
-    { Pos: 8, Jogador: "Pedro Henrique", Categoria: "SENIOR", Pontos: 4, Podio: 0, MediaColocacao: 8.5, Deck: "Regidrago VSTAR", TipoEnergia: "dragon" }
+    { Pos: 1, Jogador: "Felipe Damasceno", Categoria: "MASTER", Pontos: 27, Vitorias: 8, Empates: 1, Derrotas: 1, Podio: 5, MediaColocacao: 2.4, Deck: "Charizard ex", TipoEnergia: "fire" },
+    { Pos: 2, Jogador: "Mariana Costa", Categoria: "MASTER", Pontos: 22, Vitorias: 7, Empates: 0, Derrotas: 3, Podio: 4, MediaColocacao: 3.1, Deck: "Gardevoir ex", TipoEnergia: "psychic" },
+    { Pos: 3, Jogador: "Lucas Souza", Categoria: "SENIOR", Pontos: 19, Vitorias: 6, Empates: 1, Derrotas: 3, Podio: 3, MediaColocacao: 3.8, Deck: "Miraidon ex", TipoEnergia: "lightning" },
+    { Pos: 4, Jogador: "Beatriz Lima", Categoria: "SENIOR", Pontos: 18, Vitorias: 5, Empates: 2, Derrotas: 3, Podio: 2, MediaColocacao: 4.2, Deck: "Chien-Pao ex", TipoEnergia: "water" },
+    { Pos: 5, Jogador: "Thiago Silva", Categoria: "MASTER", Pontos: 15, Vitorias: 4, Empates: 2, Derrotas: 4, Podio: 1, MediaColocacao: 5.6, Deck: "Lugia VSTAR", TipoEnergia: "colorless" },
+    { Pos: 6, Jogador: "Rodrigo Alves", Categoria: "JUNIOR", Pontos: 12, Vitorias: 3, Empates: 2, Derrotas: 5, Podio: 1, MediaColocacao: 6.4, Deck: "Roaring Moon ex", TipoEnergia: "darkness" },
+    { Pos: 7, Jogador: "Gabriela Reis", Categoria: "JUNIOR", Pontos: 9, Vitorias: 2, Empates: 3, Derrotas: 5, Podio: 0, MediaColocacao: 7.2, Deck: "Gholdengo ex", TipoEnergia: "metal" },
+    { Pos: 8, Jogador: "Pedro Henrique", Categoria: "SENIOR", Pontos: 4, Vitorias: 1, Empates: 1, Derrotas: 8, Podio: 0, MediaColocacao: 8.5, Deck: "Regidrago VSTAR", TipoEnergia: "dragon" }
   ],
   ScoresAntigos: [
     { Temporada: "Temporada de Verão 2025", DataFechamento: "2025-02-28", Pos: 1, Jogador: "Mariana Costa", Categoria: "MASTER", Pontos: 24, Podio: 4, MediaColocacao: 2.8, Deck: "Gardevoir ex", TipoEnergia: "psychic" },
@@ -374,8 +374,8 @@ function getPlayerMedals(playerName) {
   appData.Campeoes.forEach(champ => {
     if (champ.Campeao && champ.Campeao.trim().toLowerCase() === cleanName) {
       medalsHtml += `
-        <svg class="medal-svg gold" title="Campeão" viewBox="0 0 8.4666665 8.4666669" xmlns="http://www.w3.org/2000/svg">
-          <g transform="translate(0 -288.533)">
+        <svg class="medal-svg gold" width="17" height="17" title="Campeão" viewBox="0 0 8.4666665 8.4666669" xmlns="http://www.w3.org/2000/svg">
+          <g fill="#ffcb05" transform="translate(0 -288.533)">
             <path d="m4.2315243 289.45936a3.3072918 3.307292 0 0 0 -3.27060194 2.8448h2.32388834c.1726671-.35084.5304844-.59531.9467136-.59531.4162214 0 .7740439.24447.946711.59531h2.324407a3.3072918 3.307292 0 0 0 -3.271118-2.8448z"/>
             <path d="m.9443859 293.09791a3.3072918 3.307292 0 0 0 3.2871384 2.97603 3.3072918 3.307292 0 0 0 3.2907553-2.97603h-2.2908181c-.1401445.42053-.5333312.7276-.9999372.7276-.4666139 0-.8597953-.30707-.9999398-.7276z"/>
             <path d="m4.2315243 292.12255c-.3542506 0-.6438873.29014-.64389.64439.0000027.35425.2896394.64389.64389.64389.354248 0 .6444033-.28964.6444033-.64389s-.2901553-.64439-.6444033-.64439zm0 .26458c.2112566 0 .37982.16857.37982.37981 0 .21127-.1685634.37931-.37982.37931-.2112592 0-.3793066-.16804-.3793066-.37931 0-.21124.1680474-.37981.3793066-.37981z"/>
@@ -385,8 +385,8 @@ function getPlayerMedals(playerName) {
     }
     if (champ.Vice && champ.Vice.trim().toLowerCase() === cleanName) {
       medalsHtml += `
-        <svg class="medal-svg silver" title="Vice-campeão" viewBox="0 0 8.4666665 8.4666669" xmlns="http://www.w3.org/2000/svg">
-          <g transform="translate(0 -288.533)">
+        <svg class="medal-svg silver" width="17" height="17" title="Vice-campeão" viewBox="0 0 8.4666665 8.4666669" xmlns="http://www.w3.org/2000/svg">
+          <g fill="#cfd8dc" transform="translate(0 -288.533)">
             <path d="m4.2315243 289.45936a3.3072918 3.307292 0 0 0 -3.27060194 2.8448h2.32388834c.1726671-.35084.5304844-.59531.9467136-.59531.4162214 0 .7740439.24447.946711.59531h2.324407a3.3072918 3.307292 0 0 0 -3.271118-2.8448z"/>
             <path d="m.9443859 293.09791a3.3072918 3.307292 0 0 0 3.2871384 2.97603 3.3072918 3.307292 0 0 0 3.2907553-2.97603h-2.2908181c-.1401445.42053-.5333312.7276-.9999372.7276-.4666139 0-.8597953-.30707-.9999398-.7276z"/>
             <path d="m4.2315243 292.12255c-.3542506 0-.6438873.29014-.64389.64439.0000027.35425.2896394.64389.64389.64389.354248 0 .6444033-.28964.6444033-.64389s-.2901553-.64439-.6444033-.64439zm0 .26458c.2112566 0 .37982.16857.37982.37981 0 .21127-.1685634.37931-.37982.37931-.2112592 0-.3793066-.16804-.3793066-.37931 0-.21124.1680474-.37981.3793066-.37981z"/>
