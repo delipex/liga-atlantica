@@ -1,0 +1,12 @@
+[
+  {
+    "data": "2026-06-13",
+    "tipo": "Cup",
+    "multiplicador": 2.0
+  },
+  {
+    "data": "2026-06-06",
+    "tipo": "Liga",
+    "multiplicador": 1.0
+  }
+]
