@@ -23,11 +23,32 @@
     }
     
     .form-group {
+      margin-bottom: 1rem;
+      flex: 1;
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
-      margin-bottom: 1.25rem;
     }
+    
+    .radio-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .radio-btn:hover { background: rgba(255, 255, 255, 0.1); }
+    .radio-btn:has(input:checked) {
+      background: rgba(255, 203, 5, 0.15);
+      border-color: rgba(255, 203, 5, 0.5);
+      color: #ffcb05;
+    }
+    .radio-btn input { margin: 0; accent-color: #ffcb05; }
     
     .form-group label {
       color: var(--text-secondary);
@@ -43,6 +64,19 @@
     
     @media (max-width: 600px) {
       .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(280px, 320px) 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+    
+    @media (max-width: 850px) {
+      .dashboard-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -172,66 +206,69 @@
     <div class="alert-box alert-success" id="general-success"></div>
     <div class="alert-box alert-error" id="general-error"></div>
 
-    <div class="dashboard-grid" style="grid-template-columns: minmax(280px, 320px) 1fr; gap: 2rem; align-items: start;">
+    <div class="dashboard-grid">
       
-      <!-- 1. Configurações de Conexão com GitHub (Oculto) -->
-      <section class="glass-card admin-card">
-        <details>
-          <summary style="font-size: 1.15rem; color: #fff; margin-bottom: 0.5rem; cursor: pointer; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); outline: none; user-select: none;">
-            ⚙️ Configurações Avançadas (GitHub)
-          </summary>
-          <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
-            Atenção: O token não é sincronizado entre aparelhos por segurança. Insira-o novamente caso troque de celular ou computador.
+      <!-- COLUNA ESQUERDA (Sidebar) -->
+      <div class="admin-sidebar">
+        <!-- 1. Configurações de Conexão com GitHub (Oculto) -->
+        <section class="glass-card admin-card">
+          <details>
+            <summary style="font-size: 1.15rem; color: #fff; margin-bottom: 0.5rem; cursor: pointer; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); outline: none; user-select: none;">
+              ⚙️ Configurações Avançadas (GitHub)
+            </summary>
+            <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+              Atenção: O token não é sincronizado entre aparelhos por segurança. Insira-o novamente caso troque de celular ou computador.
+            </div>
+            <form id="config-form" onsubmit="saveGithubConfig(event)">
+              <div class="form-group">
+                <label for="gh-token">GitHub Token (PAT)</label>
+                <input type="password" id="gh-token" class="search-input" placeholder="ghp_..." required>
+              </div>
+              <div class="form-group">
+                <label for="gh-owner">Usuário do GitHub</label>
+                <input type="text" id="gh-owner" class="search-input" value="delipex" required>
+              </div>
+              <div class="form-group">
+                <label for="gh-repo">Nome do Repositório</label>
+                <input type="text" id="gh-repo" class="search-input" value="liga-atlantica" required>
+              </div>
+              <div class="form-group">
+                <label for="gh-branch">Branch</label>
+                <input type="text" id="gh-branch" class="search-input" value="estetica-glass" required>
+              </div>
+              <div class="form-group">
+                <label for="gh-path">Caminho no Repo</label>
+                <input type="text" id="gh-path" class="search-input" value="site_teste/ranking.tdf" required>
+              </div>
+              <button type="submit" class="btn btn-whatsapp" style="width: 100%; justify-content: center; background: rgba(255,255,255,0.05); color: #fff; border-color: var(--border-color);">
+                Salvar Configurações
+              </button>
+            </form>
+          </details>
+        </section>
+
+        <!-- Mudar Fonte de Dados -->
+        <section class="glass-card admin-card">
+          <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            🗃️ Fonte de Dados do Site
+          </h2>
+          <div style="margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-secondary);">
+            Escolha de onde o site público deve ler o ranking (Planilha ou GitHub). Essa mudança altera o código do site permanentemente.
           </div>
-          <form id="config-form" onsubmit="saveGithubConfig(event)">
-            <div class="form-group">
-              <label for="gh-token">GitHub Token (PAT)</label>
-              <input type="password" id="gh-token" class="search-input" placeholder="ghp_..." required>
-            </div>
-            <div class="form-group">
-              <label for="gh-owner">Usuário do GitHub</label>
-              <input type="text" id="gh-owner" class="search-input" value="delipex" required>
-            </div>
-            <div class="form-group">
-              <label for="gh-repo">Nome do Repositório</label>
-              <input type="text" id="gh-repo" class="search-input" value="liga-atlantica" required>
-            </div>
-            <div class="form-group">
-              <label for="gh-branch">Branch</label>
-              <input type="text" id="gh-branch" class="search-input" value="estetica-glass" required>
-            </div>
-            <div class="form-group">
-              <label for="gh-path">Caminho no Repo</label>
-              <input type="text" id="gh-path" class="search-input" value="site_teste/ranking.tdf" required>
-            </div>
-            <button type="submit" class="btn btn-whatsapp" style="width: 100%; justify-content: center; background: rgba(255,255,255,0.05); color: #fff; border-color: var(--border-color);">
-              Salvar Configurações
-            </button>
-          </form>
-        </details>
-      </section>
+          <div class="form-group">
+            <select id="data-source-select" class="search-input select-input" style="width: 100%; box-sizing: border-box;">
+              <option value="sheets">Planilha do Google Sheets</option>
+              <option value="github">Arquivo do GitHub (.tdf)</option>
+            </select>
+          </div>
+          <button type="button" id="btn-change-source" class="btn btn-whatsapp" onclick="changeDataSource()" style="width: 100%; justify-content: center; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3);">
+            Atualizar Fonte Oficial
+          </button>
+        </section>
+      </div>
 
-      <!-- Mudar Fonte de Dados -->
-      <section class="glass-card admin-card">
-        <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-          🗃️ Fonte de Dados do Site
-        </h2>
-        <div style="margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-secondary);">
-          Escolha de onde o site público deve ler o ranking (Planilha ou GitHub). Essa mudança altera o código do site permanentemente.
-        </div>
-        <div class="form-group">
-          <select id="data-source-select" class="search-input select-input" style="width: 100%; box-sizing: border-box;">
-            <option value="sheets">Planilha do Google Sheets</option>
-            <option value="github">Arquivo do GitHub (.tdf)</option>
-          </select>
-        </div>
-        <button type="button" id="btn-change-source" class="btn btn-whatsapp" onclick="changeDataSource()" style="width: 100%; justify-content: center; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3);">
-          Atualizar Fonte Oficial
-        </button>
-      </section>
-
-      <!-- 2. Área de Upload de Arquivo -->
-      <div>
+      <!-- COLUNA DIREITA (Conteúdo Principal) -->
+      <div class="admin-main">
         <section class="glass-card admin-card">
           <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
             📤 Carregar Arquivo de Classificação (.tdf)
@@ -243,13 +280,13 @@
               <input type="date" id="event-date" class="search-input" style="width: 100%; box-sizing: border-box;" required>
             </div>
             <div class="form-group">
-              <label for="event-type">Tipo de Evento</label>
-              <select id="event-type" class="search-input select-input" style="width: 100%; box-sizing: border-box;" onchange="handleEventTypeChange()">
-                <option value="Liga">Sessão de Liga (1.0x)</option>
-                <option value="Challenge">League Challenge (1.5x)</option>
-                <option value="Cup">League Cup (2.0x)</option>
-                <option value="Personalizado">Personalizado</option>
-              </select>
+              <label>Tipo de Evento</label>
+              <div class="radio-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+                <label class="radio-btn"><input type="radio" name="event-type" value="Liga" onchange="handleEventTypeChange()" checked> Sessão de Liga (1.0x)</label>
+                <label class="radio-btn"><input type="radio" name="event-type" value="Challenge" onchange="handleEventTypeChange()"> League Challenge (1.5x)</label>
+                <label class="radio-btn"><input type="radio" name="event-type" value="Cup" onchange="handleEventTypeChange()"> League Cup (2.0x)</label>
+                <label class="radio-btn"><input type="radio" name="event-type" value="Personalizado" onchange="handleEventTypeChange()"> Personalizado</label>
+              </div>
             </div>
           </div>
           
@@ -381,7 +418,7 @@
 
     // Controle de mudança do tipo de evento
     function handleEventTypeChange() {
-      const eventType = document.getElementById('event-type').value;
+      const eventType = document.querySelector('input[name="event-type"]:checked').value;
       const multGroup = document.getElementById('multiplier-group');
       const multInput = document.getElementById('event-multiplier');
       
@@ -908,7 +945,7 @@
       }
       
       const eventDate = document.getElementById('event-date').value;
-      const eventType = document.getElementById('event-type').value;
+      const eventType = document.querySelector('input[name="event-type"]:checked').value;
       const eventMult = parseFloat(document.getElementById('event-multiplier').value) || 1.0;
       
       if (!eventDate) {
