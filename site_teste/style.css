@@ -446,6 +446,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Theme Toggle Button */
 .theme-toggle-btn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -466,6 +467,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .theme-icon {
+  position: absolute;
   width: 28px;
   height: 28px;
   transition: all 0.3s ease;
@@ -478,12 +480,26 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(0, 0, 0, 0.1);
 }
 
-[data-theme="light"] .sun-icon {
-  display: none;
+.sun-icon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.5);
+  pointer-events: none;
 }
-[data-theme="dark"] .moon-icon,
-:root:not([data-theme="light"]) .moon-icon {
-  display: none;
+.moon-icon {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+  pointer-events: auto;
+}
+
+[data-theme="light"] .sun-icon {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+  pointer-events: auto;
+}
+[data-theme="light"] .moon-icon {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.5);
+  pointer-events: none;
 }
 
 /* Holographic podium card */
