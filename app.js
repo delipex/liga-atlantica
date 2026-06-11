@@ -657,10 +657,15 @@ async function loadData() {
       let stagesPromise;
       if (dataSource === "github" && githubSources.Ranking) {
         rankingPromise = (async () => {
-          const res = await fetch(githubSources.Ranking);
-          if (!res.ok) throw new Error("Erro ao carregar ranking TDF do GitHub.");
-          const text = await res.text();
-          return parseTDF(text);
+          try {
+            const res = await fetch(githubSources.Ranking);
+            if (!res.ok) throw new Error("Erro ao carregar ranking TDF do GitHub.");
+            const text = await res.text();
+            return parseTDF(text);
+          } catch (e) {
+            console.warn("Falha ao carregar ranking.tdf", e);
+            return [];
+          }
         })();
 
         // Buscar index de etapas

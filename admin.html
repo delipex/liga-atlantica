@@ -255,11 +255,17 @@
           <div style="margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-secondary);">
             Escolha de onde o site público deve ler o ranking (Planilha ou GitHub). Essa mudança altera o código do site permanentemente.
           </div>
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="data-source-select" style="font-size: 0.85rem; color: var(--text-secondary);">Ranking Principal lido de:</label>
             <select id="data-source-select" class="search-input select-input" style="width: 100%; box-sizing: border-box;">
               <option value="sheets">Planilha do Google Sheets</option>
               <option value="github">Arquivo do GitHub (.tdf)</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label for="sheet-url-input" style="font-size: 0.85rem; color: var(--text-secondary);">Link Público do Google Sheets</label>
+            <input type="text" id="sheet-url-input" class="search-input" placeholder="https://docs.google.com/spreadsheets/.../pubhtml" style="width: 100%; box-sizing: border-box;">
+            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 0.25rem;">Cole o link de "Publicar na Web" (formato página da web).</div>
           </div>
           <button type="button" id="btn-change-source" class="btn btn-whatsapp" onclick="changeDataSource()" style="width: 100%; justify-content: center; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3);">
             Atualizar Fonte Oficial
@@ -1176,7 +1182,12 @@
         let content = decodeBase64UTF8(fileData.content);
         const sha = fileData.sha;
 
+        const newSheetUrl = document.getElementById('sheet-url-input').value.trim();
+
         content = content.replace(/dataSource:\s*["'](github|sheets)["']/g, `dataSource: "${newSource}"`);
+        if (newSheetUrl) {
+          content = content.replace(/googleSheetCsvUrl:\s*["'][^"']*["']/g, `googleSheetCsvUrl: "${newSheetUrl}"`);
+        }
 
         const commitPayload = {
           message: `Atualizando fonte de dados para ${newSource} via Painel Admin`,

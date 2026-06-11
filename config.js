@@ -16,7 +16,7 @@ const CONFIG = {
 
   // Links "Raw" do GitHub para cada aba se dataSource for "github"
   githubSources: {
-    Ranking: "https://raw.githubusercontent.com/delipex/liga-atlantica/estetica-glass/site_teste/ranking.tdf", // O painel admin.html atualizará este arquivo.
+    Ranking: "ranking.tdf", // O painel admin.html atualizará este arquivo.
     Calendario: "", 
     Campeoes: "",
     Regras: "",
