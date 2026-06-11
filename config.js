@@ -12,11 +12,11 @@ const CONFIG = {
   // Fonte de dados ativa: "sheets" (Google Sheets) ou "github" (Arquivo .tdf no GitHub)
   // Deixe como "sheets" por enquanto. Quando quiser virar a chave da nova temporada, altere para "github".
   // Para testar a versão do GitHub temporariamente, você pode acessar: seu-site.com/?source=github
-  dataSource: "sheets",
+  dataSource: "github",
 
   // Links "Raw" do GitHub para cada aba se dataSource for "github"
   githubSources: {
-    Ranking: "https://raw.githubusercontent.com/delipex/liga-atlantica/main/site/ranking.tdf", // O painel admin.html atualizará este arquivo.
+    Ranking: "https://raw.githubusercontent.com/delipex/liga-atlantica/estetica-glass/site_teste/ranking.tdf", // O painel admin.html atualizará este arquivo.
     Calendario: "", 
     Campeoes: "",
     Regras: "",

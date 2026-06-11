@@ -81,6 +81,8 @@ const MOCK_DATA = {
 
 // Armazenamento local dos dados carregados
 let appData = { ...MOCK_DATA };
+let stagesIndex = [];
+let currentRankingList = [];
 let isOfflineMode = true;
 
 // --- CONFIGURAÇÃO E EXTRAÇÃO DO GOOGLE SHEETS ---
@@ -536,6 +538,25 @@ function populateHistoricalSeasonSelector() {
   }
 }
 
+function populateStageSelector() {
+  const selector = document.getElementById('ranking-date-selector');
+  if (!selector) return;
+
+  selector.innerHTML = '<option value="general">Ranking Geral</option>';
+
+  const sortedStages = [...stagesIndex].sort((a, b) => b.data.localeCompare(a.data));
+
+  sortedStages.forEach(stage => {
+    const parts = stage.data.split('-');
+    const formattedDate = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : stage.data;
+    const typeLabel = stage.tipo ? ` (${stage.tipo})` : '';
+    const option = document.createElement('option');
+    option.value = stage.data;
+    option.textContent = `Etapa - ${formattedDate}${typeLabel}`;
+    selector.appendChild(option);
+  });
+}
+
 function renderHistoricalScores() {
   const tbody = document.getElementById('historical-scores-tbody');
   if (!tbody) return;
@@ -634,6 +655,7 @@ async function loadData() {
 
       // 1. Definir a promessa de busca do ranking (se do GitHub TDF ou Google Sheets)
       let rankingPromise;
+      let stagesPromise;
       if (dataSource === "github" && githubSources.Ranking) {
         rankingPromise = (async () => {
           const res = await fetch(githubSources.Ranking);
@@ -641,19 +663,44 @@ async function loadData() {
           const text = await res.text();
           return parseTDF(text);
         })();
+
+        // Buscar index de etapas
+        const stagesJsonUrl = githubSources.Ranking.replace('ranking.tdf', 'etapas.json');
+        stagesPromise = (async () => {
+          try {
+            const res = await fetch(stagesJsonUrl);
+            if (res.ok) return await res.json();
+          } catch (e) {
+            console.warn("etapas.json não encontrado ou falha ao carregar.");
+          }
+          return [];
+        })();
       } else {
         rankingPromise = fetchSheetTab(spreadsheetId, rankingTabName, publishedSheetGids.Ranking || publishedGid);
+        stagesPromise = (async () => {
+          try {
+            const res = await fetch('etapas.json');
+            if (res.ok) return await res.json();
+          } catch (e) {
+            console.info("etapas.json local não encontrado ou falha ao carregar.");
+          }
+          return [];
+        })();
       }
 
-      const [ranking, partidas, scoresAntigos, calendario, campeoes, regras, galeria] = await Promise.all([
+      const [ranking, partidas, scoresAntigos, calendario, campeoes, regras, galeria, loadedStages] = await Promise.all([
         rankingPromise,
         fetchOptionalSheetTab(spreadsheetId, "Partidas", publishedSheetGids.Partidas),
         fetchOptionalSheetTab(spreadsheetId, historicalScoresTab, publishedSheetGids[historicalScoresTab]),
         fetchOptionalSheetTab(spreadsheetId, "Calendario", publishedSheetGids.Calendario),
         fetchOptionalSheetTab(spreadsheetId, "Campeoes", publishedSheetGids.Campeoes),
         fetchOptionalSheetTab(spreadsheetId, "Regras", publishedSheetGids.Regras),
-        fetchOptionalSheetTab(spreadsheetId, "Galeria", publishedSheetGids.Galeria)
+        fetchOptionalSheetTab(spreadsheetId, "Galeria", publishedSheetGids.Galeria),
+        stagesPromise
       ]);
+
+      stagesIndex = loadedStages || [];
+      populateStageSelector();
 
       if (ranking && ranking.length) appData.Ranking = normalizeRanking(ranking, partidas);
       if (partidas && partidas.length) appData.Partidas = partidas;
@@ -702,6 +749,7 @@ async function loadData() {
 // --- SISTEMA DE RENDERIZAÇÃO ---
 
 function renderAll() {
+  currentRankingList = appData.Ranking;
   renderDashboard();
   renderRankingTable(appData.Ranking);
   renderHistoricalScores();
@@ -1202,9 +1250,19 @@ function closeLightbox() {
 }
 
 // Modal de Detalhes do Jogador
-window.openPlayerModal = function(rankPos) {
+window.openPlayerModal = function(playerRef) {
   const modal = document.getElementById('player-modal');
-  const player = appData.Ranking.find(p => p.Pos === rankPos);
+  let player;
+  
+  if (typeof playerRef === 'number') {
+    const listPlayer = currentRankingList.find(p => p.Pos === playerRef);
+    if (listPlayer) {
+      player = appData.Ranking.find(p => p.Jogador.trim().toLowerCase() === listPlayer.Jogador.trim().toLowerCase());
+    }
+  } else {
+    player = appData.Ranking.find(p => p.Jogador.trim().toLowerCase() === String(playerRef).trim().toLowerCase());
+  }
+  
   if (!player || !modal) return;
 
   const letter = player.Jogador ? player.Jogador.charAt(0).toUpperCase() : '?';
@@ -1233,6 +1291,40 @@ window.openPlayerModal = function(rankPos) {
         <span class="ved-badge d-badge" title="Derrotas">${player.Derrotas || 0}D</span>
       </div>
     `;
+  }
+
+  // Preencher a linha do tempo de colocações (Evolução na Temporada)
+  const timelineContainer = document.getElementById('modal-player-timeline');
+  if (timelineContainer) {
+    timelineContainer.innerHTML = '';
+    const historyStr = player.HistoricoColocacoes || '';
+    if (!historyStr) {
+      timelineContainer.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;padding:0.5rem 0;">Nenhum histórico disponível para esta temporada.</div>';
+    } else {
+      const historyArr = String(historyStr).split(';');
+      const stepsHtml = historyArr.map((pos, index) => {
+        const stageLabel = `Etapa ${index + 1}`;
+        let dateLabel = '-';
+        
+        const stageInfo = stagesIndex[index];
+        if (stageInfo && stageInfo.data) {
+          const parts = stageInfo.data.split('-');
+          dateLabel = parts.length === 3 ? `${parts[2]}/${parts[1]}` : stageInfo.data;
+        }
+        
+        const isPodiumClass = pos !== '-' && toNumber(pos) <= 4 ? 'podium' : '';
+        const posText = pos !== '-' ? `${pos}º` : '-';
+        
+        return `
+          <div class="timeline-step ${isPodiumClass}">
+            <span class="step-num">${stageLabel}</span>
+            <span class="step-pos">${posText}</span>
+            <span class="step-date">${dateLabel}</span>
+          </div>
+        `;
+      }).join('');
+      timelineContainer.innerHTML = stepsHtml;
+    }
   }
 
   modal.classList.add('active');
@@ -1388,13 +1480,95 @@ function initEvents() {
     searchInput.addEventListener('input', (e) => {
       const value = e.target.value.toLowerCase().trim();
       
-      const filtered = appData.Ranking.filter(player => {
+      const filtered = currentRankingList.filter(player => {
         const nameMatch = player.Jogador && player.Jogador.toLowerCase().includes(value);
         const deckMatch = player.Deck && player.Deck.toLowerCase().includes(value);
         return nameMatch || deckMatch;
       });
       
       renderRankingTable(filtered);
+    });
+  }
+
+  // Filtro de etapa por data
+  const rankingDateSelector = document.getElementById('ranking-date-selector');
+  if (rankingDateSelector) {
+    rankingDateSelector.addEventListener('change', async (e) => {
+      const selectedValue = e.target.value;
+      const infoBadge = document.getElementById('stage-info-badge');
+      const tbody = document.getElementById('ranking-tbody');
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const sourceParam = urlParams.get('source');
+      const dataSource = (sourceParam && ["sheets", "github"].includes(sourceParam))
+        ? sourceParam
+        : (window.CONFIG ? window.CONFIG.dataSource : "sheets");
+      const githubSources = window.CONFIG && window.CONFIG.githubSources ? window.CONFIG.githubSources : {};
+
+      if (selectedValue === 'general') {
+        if (infoBadge) infoBadge.classList.remove('active');
+        currentRankingList = appData.Ranking;
+        renderRankingTable(appData.Ranking);
+        // Limpar busca ao trocar
+        if (searchInput) searchInput.value = '';
+        return;
+      }
+
+      // Mostrar loader
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5">
+              <div class="loader"><div class="spinner"></div></div>
+            </td>
+          </tr>
+        `;
+      }
+
+      let stageTdfUrl = '';
+      if (dataSource === "github" && githubSources.Ranking) {
+        stageTdfUrl = githubSources.Ranking.replace('ranking.tdf', `etapas/${selectedValue}.tdf`);
+      } else {
+        stageTdfUrl = `etapas/${selectedValue}.tdf`;
+      }
+
+      try {
+        const res = await fetch(stageTdfUrl);
+        if (!res.ok) throw new Error("Não foi possível carregar o arquivo da etapa.");
+        const text = await res.text();
+        const stagePlayers = parseTDF(text);
+        
+        const normalized = normalizeRanking(stagePlayers, []);
+        currentRankingList = normalized;
+        renderRankingTable(normalized);
+        
+        // Limpar busca ao trocar
+        if (searchInput) searchInput.value = '';
+        
+        // Exibir info badge
+        const stageInfo = stagesIndex.find(s => s.data === selectedValue);
+        if (stageInfo && infoBadge) {
+          const parts = selectedValue.split('-');
+          const formattedDate = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : selectedValue;
+          
+          document.getElementById('stage-info-date').innerText = formattedDate;
+          document.getElementById('stage-info-type').innerText = stageInfo.tipo || 'Liga';
+          document.getElementById('stage-info-multiplier').innerText = `${stageInfo.multiplicador || 1.0}x`;
+          infoBadge.classList.add('active');
+        }
+      } catch (err) {
+        console.error(err);
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" style="text-align:center;padding:3rem;color:var(--text-secondary);">
+                Erro ao carregar dados desta etapa: ${escapeHTML(err.message)}
+              </td>
+            </tr>
+          `;
+        }
+        if (infoBadge) infoBadge.classList.remove('active');
+      }
     });
   }
 

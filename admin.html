@@ -194,11 +194,11 @@
           </div>
           <div class="form-group">
             <label for="gh-branch">Branch</label>
-            <input type="text" id="gh-branch" class="search-input" value="main" required>
+            <input type="text" id="gh-branch" class="search-input" value="estetica-glass" required>
           </div>
           <div class="form-group">
             <label for="gh-path">Caminho no Repo</label>
-            <input type="text" id="gh-path" class="search-input" value="site/ranking.tdf" required>
+            <input type="text" id="gh-path" class="search-input" value="site_teste/ranking.tdf" required>
           </div>
           <button type="submit" class="btn btn-whatsapp" style="width: 100%; justify-content: center; background: rgba(255,255,255,0.05); color: #fff; border-color: var(--border-color);">
             Salvar Configurações
@@ -212,6 +212,27 @@
           <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
             📤 Carregar Arquivo de Classificação (.tdf)
           </h2>
+          
+          <div class="form-row" style="margin-bottom: 1.5rem;">
+            <div class="form-group">
+              <label for="event-date">Data do Evento</label>
+              <input type="date" id="event-date" class="search-input" style="width: 100%; box-sizing: border-box;" required>
+            </div>
+            <div class="form-group">
+              <label for="event-type">Tipo de Evento</label>
+              <select id="event-type" class="search-input select-input" style="width: 100%; box-sizing: border-box;" onchange="handleEventTypeChange()">
+                <option value="Liga">Sessão de Liga (1.0x)</option>
+                <option value="Challenge">League Challenge (1.5x)</option>
+                <option value="Cup">League Cup (2.0x)</option>
+                <option value="Personalizado">Personalizado</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group" id="multiplier-group" style="margin-bottom: 1.5rem; display: none;">
+            <label for="event-multiplier">Multiplicador de Pontos</label>
+            <input type="number" id="event-multiplier" class="search-input" step="0.1" min="0.1" value="1.0" style="width: 100%; box-sizing: border-box;">
+          </div>
           
           <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
             <div class="dropzone-icon">📄</div>
@@ -288,6 +309,11 @@
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-panel').style.display = 'block';
         loadSavedConfig();
+        
+        // Inicializar a data do evento para hoje local
+        const todayStr = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('event-date');
+        if (dateInput) dateInput.value = todayStr;
       } else {
         errorBox.style.display = 'block';
         document.getElementById('admin-password').value = '';
@@ -324,8 +350,24 @@
         document.getElementById('gh-token').value = config.token || '';
         document.getElementById('gh-owner').value = config.owner || 'delipex';
         document.getElementById('gh-repo').value = config.repo || 'liga-atlantica';
-        document.getElementById('gh-branch').value = config.branch || 'main';
-        document.getElementById('gh-path').value = config.path || 'site/ranking.tdf';
+        document.getElementById('gh-branch').value = config.branch || 'estetica-glass';
+        document.getElementById('gh-path').value = config.path || 'site_teste/ranking.tdf';
+      }
+    }
+
+    // Controle de mudança do tipo de evento
+    function handleEventTypeChange() {
+      const eventType = document.getElementById('event-type').value;
+      const multGroup = document.getElementById('multiplier-group');
+      const multInput = document.getElementById('event-multiplier');
+      
+      if (eventType === 'Personalizado') {
+        multGroup.style.display = 'flex';
+      } else {
+        multGroup.style.display = 'none';
+        if (eventType === 'Liga') multInput.value = '1.0';
+        else if (eventType === 'Challenge') multInput.value = '1.5';
+        else if (eventType === 'Cup') multInput.value = '2.0';
       }
     }
 
@@ -543,13 +585,114 @@
       return new TextDecoder('utf-8').decode(bytes);
     }
 
+    // Função que desconta os dados de uma etapa antiga para evitar duplicação ou inconsistência
+    function rollbackStage(oldRankText, stageTdfText, oldMultiplier, stageIndex) {
+      const oldRankList = parseTDF(oldRankText);
+      const stageList = parseTDF(stageTdfText);
+      
+      const playersMap = new Map();
+      oldRankList.forEach(p => {
+        const playerName = getFirstDefined(p, ['Jogador', 'Player', 'Name']);
+        if (!playerName) return;
+        const nameKey = String(playerName).trim().toLowerCase();
+        
+        const { v, e, d } = getVED(p);
+        playersMap.set(nameKey, {
+          Jogador: playerName,
+          Categoria: getFirstDefined(p, ['Categoria', 'Category', 'Cat']) || 'MASTER',
+          Pontos: Number(getFirstDefined(p, ['Pontos', 'Points', 'Pts'])) || 0,
+          Vitorias: v,
+          Empates: e,
+          Derrotas: d,
+          Podio: Number(getFirstDefined(p, ['Podio', 'Pódio', 'Podios', 'Pódios', 'Podium'])) || 0,
+          MediaColocacao: Number(getFirstDefined(p, ['MediaColocacao', 'MédiaColocação', 'Media Colocacao', 'Média Colocação', 'Media', 'Média'])) || 0,
+          Deck: p.Deck || 'Não registrado',
+          TipoEnergia: p.TipoEnergia || 'colorless',
+          Participacoes: Number(p.Participacoes) || 1,
+          HistoricoColocacoes: p.HistoricoColocacoes || ''
+        });
+      });
+      
+      stageList.forEach(sp => {
+        const playerName = getFirstDefined(sp, ['Jogador', 'Player', 'Name']);
+        if (!playerName) return;
+        const nameKey = String(playerName).trim().toLowerCase();
+        
+        if (playersMap.has(nameKey)) {
+          const p = playersMap.get(nameKey);
+          
+          const stagePts = Number(getFirstDefined(sp, ['Pontos', 'Points', 'Pts'])) || 0;
+          const { v: stageV, e: stageE, d: stageD } = getVED(sp);
+          const stagePos = toNumber(getFirstDefined(sp, ['Pos', 'Position', 'Placement', 'Rank']), 999);
+          
+          p.Pontos -= (stagePts * oldMultiplier);
+          p.Vitorias -= stageV;
+          p.Empates -= stageE;
+          p.Derrotas -= stageD;
+          p.Participacoes -= 1;
+          if (stagePos <= 4) p.Podio -= 1;
+          
+          // Definir histórico dessa etapa como '-' temporariamente
+          let historyArr = p.HistoricoColocacoes ? String(p.HistoricoColocacoes).split(';') : [];
+          if (historyArr.length > stageIndex) {
+            historyArr[stageIndex] = '-';
+          }
+          p.HistoricoColocacoes = historyArr.join(';');
+        }
+      });
+      
+      const activePlayers = Array.from(playersMap.values()).filter(p => p.Participacoes > 0);
+      
+      stageList.forEach(sp => {
+        const playerName = getFirstDefined(sp, ['Jogador', 'Player', 'Name']);
+        if (!playerName) return;
+        const nameKey = String(playerName).trim().toLowerCase();
+        
+        const matchingPlayer = activePlayers.find(ap => ap.Jogador.trim().toLowerCase() === nameKey);
+        if (matchingPlayer) {
+          const stagePos = toNumber(getFirstDefined(sp, ['Pos', 'Position', 'Placement', 'Rank']), 999);
+          const newPart = matchingPlayer.Participacoes + 1;
+          const oldPart = matchingPlayer.Participacoes;
+          if (oldPart > 0) {
+            const currentMedia = matchingPlayer.MediaColocacao;
+            matchingPlayer.MediaColocacao = ((currentMedia * newPart) - stagePos) / oldPart;
+          } else {
+            matchingPlayer.MediaColocacao = 0;
+          }
+        }
+      });
+      
+      const headers = ['Pos', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Deck', 'TipoEnergia', 'Participacoes', 'HistoricoColocacoes'];
+      let tdfString = headers.join('\t') + '\n';
+      
+      activePlayers.forEach((p, index) => {
+        const row = [
+          index + 1,
+          p.Jogador,
+          p.Categoria,
+          p.Pontos,
+          p.Vitorias,
+          p.Empates,
+          p.Derrotas,
+          p.Podio,
+          Number(p.MediaColocacao).toFixed(2),
+          p.Deck,
+          p.TipoEnergia,
+          p.Participacoes,
+          p.HistoricoColocacoes || ''
+        ];
+        tdfString += row.join('\t') + '\n';
+      });
+      
+      return tdfString;
+    }
+
     // Função que acumula dados de dois arquivos TDF
-    function mergeRankings(oldTdfText, newTdfText) {
+    function mergeRankings(oldTdfText, newTdfText, multiplier = 1.0, existingStageIdx = -1) {
       const oldList = parseTDF(oldTdfText);
       const newList = parseTDF(newTdfText);
       
       if (newList.length === 0) return oldTdfText;
-      if (oldList.length === 0) return newTdfText;
       
       const playersMap = new Map();
       
@@ -572,21 +715,35 @@
           MediaColocacao: Number(getFirstDefined(p, ['MediaColocacao', 'MédiaColocação', 'Media Colocacao', 'Média Colocação', 'Media', 'Média'])) || 0,
           Deck: p.Deck || 'Não registrado',
           TipoEnergia: p.TipoEnergia || 'colorless',
-          Participacoes: Number(p.Participacoes) || 1
+          Participacoes: Number(p.Participacoes) || 1,
+          HistoricoColocacoes: p.HistoricoColocacoes || ''
         });
       });
+      
+      // Determinar quantidade atual de etapas
+      let currentStageCount = 0;
+      playersMap.forEach(p => {
+        if (p.HistoricoColocacoes) {
+          const len = String(p.HistoricoColocacoes).split(';').length;
+          if (len > currentStageCount) currentStageCount = len;
+        }
+      });
+      
+      const playersInNewStage = new Set();
       
       // Mesclar nova semana
       newList.forEach(p => {
         const playerName = getFirstDefined(p, ['Jogador', 'Player', 'Name']);
         if (!playerName) return;
         const nameKey = String(playerName).trim().toLowerCase();
+        playersInNewStage.add(nameKey);
         
         const newPos = toNumber(getFirstDefined(p, ['Pos', 'Position', 'Placement', 'Rank']), 999);
         const isNewPodio = newPos <= 4;
         
         const { v: newV, e: newE, d: newD } = getVED(p);
         const newPts = Number(getFirstDefined(p, ['Pontos', 'Points', 'Pts'])) || 0;
+        const multipliedNewPts = newPts * multiplier;
         const newCat = getFirstDefined(p, ['Categoria', 'Category', 'Cat']);
         
         if (playersMap.has(nameKey)) {
@@ -594,7 +751,7 @@
           const oldPart = existing.Participacoes;
           const newPart = oldPart + 1;
           
-          existing.Pontos += newPts;
+          existing.Pontos += multipliedNewPts;
           if (isNewPodio) existing.Podio += 1;
           
           // Média de colocação
@@ -607,16 +764,44 @@
           existing.Empates += newE;
           existing.Derrotas += newD;
           
-          // Mantém informações do deck antigo se a nova semana não as tiver
           if (p.Deck && p.Deck !== 'Não registrado') existing.Deck = p.Deck;
           if (p.TipoEnergia && p.TipoEnergia !== 'colorless') existing.TipoEnergia = p.TipoEnergia;
           if (newCat) existing.Categoria = newCat;
+          
+          // Atualizar histórico
+          let historyArr = existing.HistoricoColocacoes ? String(existing.HistoricoColocacoes).split(';') : [];
+          if (existingStageIdx >= 0) {
+            // Substituir a etapa existente
+            while (historyArr.length <= existingStageIdx) {
+              historyArr.push('-');
+            }
+            historyArr[existingStageIdx] = newPos;
+          } else {
+            // Nova etapa: pad e append
+            while (historyArr.length < currentStageCount) {
+              historyArr.push('-');
+            }
+            historyArr.push(newPos);
+          }
+          existing.HistoricoColocacoes = historyArr.join(';');
         } else {
           // Jogador estreante
+          let historyArr = [];
+          if (existingStageIdx >= 0) {
+            historyArr = Array(existingStageIdx).fill('-');
+            historyArr[existingStageIdx] = newPos;
+            while (historyArr.length < currentStageCount) {
+              historyArr.push('-');
+            }
+          } else {
+            historyArr = Array(currentStageCount).fill('-');
+            historyArr.push(newPos);
+          }
+          
           playersMap.set(nameKey, {
             Jogador: playerName,
             Categoria: newCat || 'MASTER',
-            Pontos: newPts,
+            Pontos: multipliedNewPts,
             Vitorias: newV,
             Empates: newE,
             Derrotas: newD,
@@ -624,8 +809,28 @@
             MediaColocacao: newPos,
             Deck: p.Deck || 'Não registrado',
             TipoEnergia: p.TipoEnergia || 'colorless',
-            Participacoes: 1
+            Participacoes: 1,
+            HistoricoColocacoes: historyArr.join(';')
           });
+        }
+      });
+      
+      // Para os jogadores no banco de dados que não jogaram nesta etapa
+      playersMap.forEach((p, nameKey) => {
+        if (!playersInNewStage.has(nameKey)) {
+          let historyArr = p.HistoricoColocacoes ? String(p.HistoricoColocacoes).split(';') : [];
+          if (existingStageIdx >= 0) {
+            while (historyArr.length <= existingStageIdx) {
+              historyArr.push('-');
+            }
+            historyArr[existingStageIdx] = '-';
+          } else {
+            while (historyArr.length < currentStageCount) {
+              historyArr.push('-');
+            }
+            historyArr.push('-');
+          }
+          p.HistoricoColocacoes = historyArr.join(';');
         }
       });
       
@@ -639,7 +844,7 @@
         return String(a.Jogador).localeCompare(String(b.Jogador), 'pt-BR');
       });
       
-      const headers = ['Pos', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Deck', 'TipoEnergia', 'Participacoes'];
+      const headers = ['Pos', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Deck', 'TipoEnergia', 'Participacoes', 'HistoricoColocacoes'];
       let tdfString = headers.join('\t') + '\n';
       
       mergedList.forEach((p, index) => {
@@ -655,7 +860,8 @@
           Number(p.MediaColocacao).toFixed(2),
           p.Deck,
           p.TipoEnergia,
-          p.Participacoes
+          p.Participacoes,
+          p.HistoricoColocacoes || ''
         ];
         tdfString += row.join('\t') + '\n';
       });
@@ -674,6 +880,15 @@
       const config = JSON.parse(saved);
       if (!config.token || !config.owner || !config.repo) {
         showError("Preencha e salve Usuário, Repositório e Token do GitHub!");
+        return;
+      }
+      
+      const eventDate = document.getElementById('event-date').value;
+      const eventType = document.getElementById('event-type').value;
+      const eventMult = parseFloat(document.getElementById('event-multiplier').value) || 1.0;
+      
+      if (!eventDate) {
+        showError("Selecione a data do evento!");
         return;
       }
       
@@ -705,45 +920,161 @@
           console.log("Arquivo anterior não encontrado no repositório. Criando ranking inicial.");
         }
         
-        // Passo B: Decidir conteúdo a publicar (acumular ou substituir)
-        let finalContent = activeContent;
-        if (shouldAccumulate && oldTdfText) {
+        // Passo B: Buscar etapas.json do GitHub
+        let stagesList = [];
+        let etapasSha = null;
+        const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/site/etapas.json`;
+        try {
+          const res = await fetch(etapasUrl + `?ref=${config.branch}`, {
+            headers: { 'Authorization': `token ${config.token}` }
+          });
+          if (res.ok) {
+            const fileData = await res.json();
+            etapasSha = fileData.sha;
+            if (fileData.content) {
+              stagesList = JSON.parse(decodeBase64UTF8(fileData.content));
+            }
+          }
+        } catch (e) {
+          console.log("etapas.json não encontrado no repositório. Será criado um novo.");
+        }
+        
+        // Passo C: Verificar se a data do evento já existe
+        const existingStageIdx = stagesList.findIndex(s => s.data === eventDate);
+        let oldStageMultiplier = 1.0;
+        if (existingStageIdx >= 0) {
+          oldStageMultiplier = stagesList[existingStageIdx].multiplicador || 1.0;
+        }
+        
+        // Passo D: Se a etapa já existe e "shouldAccumulate" está marcado,
+        // a gente precisa desfazer a etapa antiga no ranking geral antes de fazer o merge!
+        let baseTdfText = oldTdfText;
+        if (shouldAccumulate && oldTdfText && existingStageIdx >= 0) {
+          const oldStageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/site/etapas/${eventDate}.tdf`;
           try {
-            finalContent = mergeRankings(oldTdfText, activeContent);
-          } catch (mergeErr) {
-            console.warn("Erro ao fazer merge. Publicando arquivo bruto.", mergeErr);
+            const res = await fetch(oldStageTdfUrl + `?ref=${config.branch}`, {
+              headers: { 'Authorization': `token ${config.token}` }
+            });
+            if (res.ok) {
+              const oldStageData = await res.json();
+              if (oldStageData.content) {
+                const oldStageTdfText = decodeBase64UTF8(oldStageData.content);
+                // Rolar de volta a etapa antiga
+                baseTdfText = rollbackStage(oldTdfText, oldStageTdfText, oldStageMultiplier, existingStageIdx);
+              }
+            }
+          } catch (err) {
+            console.warn("Falha ao carregar etapa antiga para rollback. O merge continuará sem rollback.", err);
           }
         }
         
-        // Passo C: Preparar o commit (conteúdo base64 seguro)
-        const base64Content = encodeBase64UTF8(finalContent);
-        const payload = {
-          message: `Atualização de ranking via Painel Administrativo - ${shouldAccumulate ? 'Acumulado' : 'Substituído'} (${new Date().toLocaleString('pt-BR')})`,
-          content: base64Content,
-          branch: config.branch
-        };
-        if (sha) {
-          payload.sha = sha;
+        // Passo E: Calcular o novo ranking geral consolidado
+        let finalContent = "";
+        if (shouldAccumulate && baseTdfText) {
+          try {
+            finalContent = mergeRankings(baseTdfText, activeContent, eventMult, existingStageIdx);
+          } catch (mergeErr) {
+            console.warn("Erro ao fazer merge. Publicando arquivo consolidado inicial.", mergeErr);
+            finalContent = mergeRankings("", activeContent, eventMult, -1);
+          }
+        } else {
+          finalContent = mergeRankings("", activeContent, eventMult, -1);
         }
         
-        // Passo D: Fazer a chamada PUT para commitar
-        const response = await fetch(url, {
+        // Passo F: Preparar as etapas da gravação
+        // 1. Gravar a etapa individual em site/etapas/YYYY-MM-DD.tdf (sem multiplicar pontos)
+        const stageTdfContent = mergeRankings("", activeContent, 1.0, -1);
+        const stageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/site/etapas/${eventDate}.tdf`;
+        
+        // Obter o SHA do arquivo de etapa se já existir
+        let stageSha = null;
+        try {
+          const res = await fetch(stageTdfUrl + `?ref=${config.branch}`, {
+            headers: { 'Authorization': `token ${config.token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            stageSha = data.sha;
+          }
+        } catch (e) {}
+        
+        // Commit do arquivo da etapa
+        const commitStagePayload = {
+          message: `Salvar etapa individual ${eventDate} (${eventType})`,
+          content: encodeBase64UTF8(stageTdfContent),
+          branch: config.branch
+        };
+        if (stageSha) commitStagePayload.sha = stageSha;
+        
+        const stageRes = await fetch(stageTdfUrl, {
           method: 'PUT',
           headers: {
             'Authorization': `token ${config.token}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(commitStagePayload)
         });
         
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || "Falha ao gravar no GitHub.");
+        if (!stageRes.ok) {
+          const data = await stageRes.json();
+          throw new Error("Falha ao salvar arquivo de etapa individual: " + (data.message || stageRes.statusText));
+        }
+        
+        // 2. Atualizar etapas.json
+        if (existingStageIdx >= 0) {
+          stagesList[existingStageIdx] = { data: eventDate, tipo: eventType, multiplicador: eventMult };
+        } else {
+          stagesList.push({ data: eventDate, tipo: eventType, multiplicador: eventMult });
+        }
+        // Ordenar por data crescente
+        stagesList.sort((a, b) => a.data.localeCompare(b.data));
+        
+        const commitEtapasPayload = {
+          message: `Atualizar índice de etapas (etapas.json)`,
+          content: encodeBase64UTF8(JSON.stringify(stagesList, null, 2)),
+          branch: config.branch
+        };
+        if (etapasSha) commitEtapasPayload.sha = etapasSha;
+        
+        const etapasRes = await fetch(etapasUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${config.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitEtapasPayload)
+        });
+        
+        if (!etapasRes.ok) {
+          const data = await etapasRes.json();
+          throw new Error("Falha ao salvar índice de etapas (etapas.json): " + (data.message || etapasRes.statusText));
+        }
+        
+        // 3. Gravar o ranking geral site/ranking.tdf
+        const commitRankingPayload = {
+          message: `Atualização de ranking geral - ${shouldAccumulate ? 'Acumulado' : 'Substituído'} (${new Date().toLocaleString('pt-BR')})`,
+          content: encodeBase64UTF8(finalContent),
+          branch: config.branch
+        };
+        if (sha) commitRankingPayload.sha = sha;
+        
+        const rankingRes = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${config.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitRankingPayload)
+        });
+        
+        if (!rankingRes.ok) {
+          const data = await rankingRes.json();
+          throw new Error("Falha ao salvar ranking geral: " + (data.message || rankingRes.statusText));
         }
         
         const successMsg = shouldAccumulate
-          ? "🚀 Ranking acumulado e publicado com sucesso! Os pontos desta etapa foram somados aos anteriores no GitHub."
-          : "🚀 Ranking publicado com sucesso! O arquivo anterior foi substituído por este novo.";
+          ? "🚀 Ranking acumulado e publicado com sucesso! A etapa foi salva e o ranking consolidado foi atualizado no GitHub."
+          : "🚀 Ranking publicado com sucesso! O arquivo anterior foi substituído por esta etapa.";
           
         showSuccess(successMsg);
         window.scrollTo(0, 0);

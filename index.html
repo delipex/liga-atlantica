@@ -37,6 +37,11 @@
         <a href="#rules" class="nav-link" data-target="rules">Regras</a>
         <a href="#champions" class="nav-link" data-target="champions">Campeões</a>
         <a href="#gallery" class="nav-link" data-target="gallery">Fotos</a>
+        <!-- Theme Toggle -->
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Alternar tema claro/escuro">
+          <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
       </nav>
       
       <!-- Botão Hamburguer Mobile -->
@@ -77,7 +82,10 @@ Siga-nos no Instagram
       <div class="dashboard-grid">
         <!-- Pódio (Top 3) -->
         <div class="podium-container">
-          <h2 class="podium-title">🏆 Top 3 da Temporada Atual</h2>
+          <h2 class="podium-title">
+            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+            Top 3 da Temporada Atual
+          </h2>
           <div class="podium-cards" id="podium-cards-container">
             <!-- Renderizado dinamicamente via JS -->
             <div class="loader"><div class="spinner"></div></div>
@@ -86,7 +94,10 @@ Siga-nos no Instagram
         
         <!-- Próximo Encontro / Contagem Regressiva -->
         <div class="event-widget-container">
-          <h2 class="podium-title">📅 Próximo Evento</h2>
+          <h2 class="podium-title">
+            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            Próximo Evento
+          </h2>
           <div class="glass-card event-widget" id="event-widget-content">
             <!-- Renderizado dinamicamente via JS -->
             <div class="loader"><div class="spinner"></div></div>
@@ -111,12 +122,28 @@ Siga-nos no Instagram
           <input type="text" id="search-ranking" class="search-input" placeholder="Buscar treinador ou deck...">
         </div>
         
+        <div class="selector-wrapper">
+          <select id="ranking-date-selector" class="search-input select-input">
+            <option value="general">Ranking Geral</option>
+          </select>
+        </div>
+        
         <div class="ranking-status-group">
           <div class="offline-badge" id="sheet-status-badge">
             <span style="width:6px;height:6px;background:#f59e0b;border-radius:50%"></span>
             Carregando...
           </div>
         </div>
+      </div>
+      
+      <!-- Informações da Etapa Selecionada -->
+      <div class="stage-info-badge" id="stage-info-badge">
+        <span>Você está visualizando a etapa individual de:</span>
+        <span class="stage-badge-tag" id="stage-info-date">-</span>
+        <span>• Evento:</span>
+        <span class="stage-badge-tag" id="stage-info-type">-</span>
+        <span>• Multiplicador:</span>
+        <span class="stage-badge-tag" id="stage-info-multiplier">1.0x</span>
       </div>
       
       <!-- Tabela -->
@@ -285,6 +312,11 @@ Siga-nos no Instagram
             <span class="modal-detail-value" id="modal-detail-ved">0V - 0E - 0D</span>
           </div>
         </div>
+        
+        <div class="modal-section-title">Evolução na Temporada</div>
+        <div class="modal-timeline" id="modal-player-timeline">
+          <!-- Preenchido dinamicamente via JS -->
+        </div>
       </div>
     </div>
   </div>
@@ -294,7 +326,9 @@ Siga-nos no Instagram
     <div class="modal-container champion-deck-modal-container">
       <button class="modal-close-btn" id="champion-deck-close-btn" aria-label="Fechar">✕</button>
       <div class="modal-header champion-deck-modal-header">
-        <div class="champion-deck-modal-icon">🃏</div>
+        <div class="champion-deck-modal-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px;"><rect x="2" y="5" width="14" height="15" rx="2" ry="2"></rect><path d="M6 5V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path></svg>
+        </div>
         <h2 class="modal-player-name" id="champion-deck-title">Deck campeão</h2>
         <p class="champion-deck-modal-subtitle" id="champion-deck-subtitle">Campeão da temporada</p>
       </div>
