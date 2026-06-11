@@ -12,6 +12,7 @@
   --text-muted: #64748b;
   --border-color: transparent;
   --border-color-hover: transparent;
+  --bg-overlay: rgba(5, 6, 10, 0.8);
   --accent-yellow: #ffcb05;
   --accent-yellow-dark: #dca300;
   --accent-blue: #3b82f6;
@@ -58,6 +59,7 @@
   --text-muted: #94a3b8;
   --border-color: transparent;
   --border-color-hover: transparent;
+  --bg-overlay: rgba(255, 255, 255, 0.6);
   
   --shadow-lg: 0 10px 30px -15px rgba(31, 38, 135, 0.15);
   --shadow-glow-yellow: 0 0 15px rgba(255, 203, 5, 0.4);
@@ -572,7 +574,7 @@ h1, h2, h3, h4, h5, h6 {
   flex-direction: column;
   justify-content: space-between;
   border: 1px solid var(--border-color);
-  background: linear-gradient(180deg, var(--bg-dark-card) 0%, rgba(13, 17, 30, 0.8) 100%);
+  background: var(--bg-dark-card);
 }
 
 .event-header {
@@ -617,8 +619,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .countdown-box {
   flex: 1;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius);
   padding: 0.75rem;
   text-align: center;
@@ -646,7 +648,7 @@ h1, h2, h3, h4, h5, h6 {
 .event-title {
   font-size: 1.4rem;
   margin-bottom: 0.5rem;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .event-description {
@@ -734,7 +736,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .select-input option {
-  background: #0f1119;
+  background: var(--bg-dark);
   color: var(--text-primary);
 }
 
@@ -797,7 +799,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .ranking-table th {
-  background: rgba(15, 18, 32, 0.8);
+  background: var(--bg-dark-card);
   font-family: var(--font-title);
   font-weight: 600;
   text-transform: uppercase;
@@ -810,7 +812,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .ranking-table td {
   padding: 1.25rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border-color);
   white-space: nowrap;
   vertical-align: middle;
 }
@@ -820,7 +822,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .ranking-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: var(--bg-dark-card);
   box-shadow: inset 4px 0 0 0 var(--accent-yellow);
   cursor: pointer;
 }
@@ -1094,7 +1096,7 @@ tbody tr:nth-child(3) .row-rank {
 
 .timeline-title {
   font-size: 1.25rem;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .timeline-description {
@@ -1151,7 +1153,7 @@ tbody tr:nth-child(3) .row-rank {
 
 .rule-title {
   font-size: 1.1rem;
-  color: #fff;
+  color: var(--text-primary);
   flex-grow: 1;
   font-weight: 600;
 }
@@ -1244,7 +1246,7 @@ tbody tr:nth-child(3) .row-rank {
 
 .champion-name {
   font-size: 1.5rem;
-  color: #fff;
+  color: var(--text-primary);
   font-weight: 700;
   margin-bottom: 0.5rem;
 }
@@ -1308,7 +1310,7 @@ tbody tr:nth-child(3) .row-rank {
 }
 
 .gallery-caption-title {
-  color: #fff;
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
@@ -1326,7 +1328,7 @@ tbody tr:nth-child(3) .row-rank {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.95);
+  background: var(--bg-overlay);
   backdrop-filter: blur(10px);
   z-index: 1000;
   display: none;
@@ -1363,8 +1365,8 @@ tbody tr:nth-child(3) .row-rank {
   color: #fff;
   font-size: 1.25rem;
   font-weight: 700;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-dark-card);
+  border: 1px solid var(--border-color);
   border-radius: 50%;
   width: 44px;
   height: 44px;
@@ -1395,7 +1397,7 @@ tbody tr:nth-child(3) .row-rank {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(5, 6, 10, 0.8);
+  background: var(--bg-overlay);
   backdrop-filter: blur(8px);
   z-index: 900;
   display: none;
@@ -1413,10 +1415,10 @@ tbody tr:nth-child(3) .row-rank {
 .modal-container {
   width: 90%;
   max-width: 500px;
-  background: rgba(17, 20, 34, 0.45);
+  background: var(--bg-dark-card);
   backdrop-filter: blur(32px) saturate(180%);
   -webkit-backdrop-filter: blur(32px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 203, 5, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
@@ -1476,7 +1478,7 @@ tbody tr:nth-child(3) .row-rank {
 
 .modal-player-name {
   font-size: 1.75rem;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .modal-body {
@@ -1502,7 +1504,7 @@ tbody tr:nth-child(3) .row-rank {
   font-family: var(--font-title);
   font-size: 1.5rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .modal-stat-label {
@@ -1531,7 +1533,7 @@ tbody tr:nth-child(3) .row-rank {
 }
 
 .modal-detail-value {
-  color: #fff;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -1614,7 +1616,7 @@ tbody tr:nth-child(3) .row-rank {
 /* --- FOOTER --- */
 .footer {
   border-top: 1px solid var(--border-color);
-  background: #06070a;
+  background: var(--bg-dark);
   padding: 3rem 0;
   text-align: center;
   color: var(--text-muted);
@@ -1649,7 +1651,7 @@ tbody tr:nth-child(3) .row-rank {
     left: -100%;
     width: 100%;
     height: calc(100vh - 70px);
-    background: rgba(9, 10, 15, 0.96);
+    background: var(--bg-overlay);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     flex-direction: column;
@@ -2274,7 +2276,7 @@ tbody tr:nth-child(3) .row-rank {
 }
 
 .historical-season-name {
-  color: #fff;
+  color: var(--text-primary);
   font-weight: 700;
   white-space: nowrap;
 }
