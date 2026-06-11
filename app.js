@@ -600,9 +600,8 @@ function renderHistoricalScores() {
         <td class="row-rank">${toNumber(row.Pos, '-')}</td>
         <td>
           <div class="player-cell">
-            <div class="player-avatar-placeholder historical-avatar">${letter}</div>
             <div>
-              <div style="font-weight:600;color:#fff;">${escapeHTML(row.Jogador)}</div>
+              <div style="font-weight:600;color:var(--text-primary);">${escapeHTML(row.Jogador)}</div>
               <div class="historical-deck"><span class="energy-dot ${safeEnergyClass(row.TipoEnergia)}"></span>${escapeHTML(row.Deck || 'Não registrado')}</div>
             </div>
           </div>
@@ -804,7 +803,6 @@ function renderDashboard() {
         return `
           <div class="podium-card rank-${player.Pos}" onclick="openPlayerModal(${player.Pos})">
             <div class="podium-badge">${player.Pos}</div>
-            <div class="player-avatar-placeholder" style="width:44px; height:44px; font-size:1.1rem; margin-right:1rem;">${letter}</div>
             <div class="podium-info">
               <div class="podium-player-name">${playerName}</div>
               <div class="podium-deck-info">
@@ -922,7 +920,7 @@ function renderRankingTable(players) {
         <td class="row-rank">${player.Pos}</td>
         <td>
           <div class="player-cell">
-            <div style="font-weight: 600; color: #fff;">${playerName} ${medals}</div>
+            <div style="font-weight: 600; color: var(--text-primary);">${playerName} ${medals}</div>
           </div>
         </td>
         <td style="text-align:center; vertical-align: middle;">
