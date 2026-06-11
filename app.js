@@ -1645,6 +1645,24 @@ document.addEventListener('DOMContentLoaded', () => {
   if (wTitle) wTitle.innerText = title;
   if (wSub) wSub.innerText = subtitle;
   
+  // Lógica de Troca de Tema (Light/Dark Mode)
+  const themeToggleBtn = document.getElementById('theme-toggle');
+  if (themeToggleBtn) {
+    const savedTheme = localStorage.getItem('site-theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+    
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('site-theme', newTheme);
+    });
+  }
+  
   // Iniciar Navegação e Eventos de Escuta
   initNavigation();
   initEvents();

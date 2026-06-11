@@ -174,36 +174,60 @@
 
     <div class="dashboard-grid" style="grid-template-columns: minmax(280px, 320px) 1fr; gap: 2rem; align-items: start;">
       
-      <!-- 1. Configurações de Conexão com GitHub -->
+      <!-- 1. Configurações de Conexão com GitHub (Oculto) -->
+      <section class="glass-card admin-card">
+        <details>
+          <summary style="font-size: 1.15rem; color: #fff; margin-bottom: 0.5rem; cursor: pointer; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); outline: none; user-select: none;">
+            ⚙️ Configurações Avançadas (GitHub)
+          </summary>
+          <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+            Atenção: O token não é sincronizado entre aparelhos por segurança. Insira-o novamente caso troque de celular ou computador.
+          </div>
+          <form id="config-form" onsubmit="saveGithubConfig(event)">
+            <div class="form-group">
+              <label for="gh-token">GitHub Token (PAT)</label>
+              <input type="password" id="gh-token" class="search-input" placeholder="ghp_..." required>
+            </div>
+            <div class="form-group">
+              <label for="gh-owner">Usuário do GitHub</label>
+              <input type="text" id="gh-owner" class="search-input" value="delipex" required>
+            </div>
+            <div class="form-group">
+              <label for="gh-repo">Nome do Repositório</label>
+              <input type="text" id="gh-repo" class="search-input" value="liga-atlantica" required>
+            </div>
+            <div class="form-group">
+              <label for="gh-branch">Branch</label>
+              <input type="text" id="gh-branch" class="search-input" value="estetica-glass" required>
+            </div>
+            <div class="form-group">
+              <label for="gh-path">Caminho no Repo</label>
+              <input type="text" id="gh-path" class="search-input" value="site_teste/ranking.tdf" required>
+            </div>
+            <button type="submit" class="btn btn-whatsapp" style="width: 100%; justify-content: center; background: rgba(255,255,255,0.05); color: #fff; border-color: var(--border-color);">
+              Salvar Configurações
+            </button>
+          </form>
+        </details>
+      </section>
+
+      <!-- Mudar Fonte de Dados -->
       <section class="glass-card admin-card">
         <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-          ⚙️ Conexão GitHub
+          🗃️ Fonte de Dados do Site
         </h2>
-        <form id="config-form" onsubmit="saveGithubConfig(event)">
-          <div class="form-group">
-            <label for="gh-token">GitHub Token (PAT)</label>
-            <input type="password" id="gh-token" class="search-input" placeholder="ghp_..." required>
-          </div>
-          <div class="form-group">
-            <label for="gh-owner">Usuário do GitHub</label>
-            <input type="text" id="gh-owner" class="search-input" value="delipex" required>
-          </div>
-          <div class="form-group">
-            <label for="gh-repo">Nome do Repositório</label>
-            <input type="text" id="gh-repo" class="search-input" value="liga-atlantica" required>
-          </div>
-          <div class="form-group">
-            <label for="gh-branch">Branch</label>
-            <input type="text" id="gh-branch" class="search-input" value="estetica-glass" required>
-          </div>
-          <div class="form-group">
-            <label for="gh-path">Caminho no Repo</label>
-            <input type="text" id="gh-path" class="search-input" value="site_teste/ranking.tdf" required>
-          </div>
-          <button type="submit" class="btn btn-whatsapp" style="width: 100%; justify-content: center; background: rgba(255,255,255,0.05); color: #fff; border-color: var(--border-color);">
-            Salvar Configurações
-          </button>
-        </form>
+        <div style="margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-secondary);">
+          Escolha de onde o site público deve ler o ranking (Planilha ou GitHub). Essa mudança altera o código do site permanentemente.
+        </div>
+        <div class="form-group">
+          <select id="data-source-select" class="search-input select-input" style="width: 100%; box-sizing: border-box;">
+            <option value="sheets">Planilha do Google Sheets</option>
+            <option value="github">Arquivo do GitHub (.tdf)</option>
+          </select>
+        </div>
+        <button type="button" id="btn-change-source" class="btn btn-whatsapp" onclick="changeDataSource()" style="width: 100%; justify-content: center; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3);">
+          Atualizar Fonte Oficial
+        </button>
       </section>
 
       <!-- 2. Área de Upload de Arquivo -->
@@ -1084,6 +1108,68 @@
       } finally {
         btn.disabled = false;
         btn.innerText = "🚀 Publicar Ranking no Site";
+      }
+    }
+
+    // Auxiliar para Mudar Fonte de Dados
+    async function changeDataSource() {
+      const config = getGithubConfig();
+      if (!config) return;
+
+      const newSource = document.getElementById('data-source-select').value;
+      const btn = document.getElementById('btn-change-source');
+      btn.disabled = true;
+      btn.innerText = "Atualizando...";
+      hideAlerts();
+
+      const pathParts = config.path.split('/');
+      pathParts.pop();
+      pathParts.push('config.js');
+      const configJsPath = pathParts.join('/');
+      
+      const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${configJsPath}`;
+
+      try {
+        const res = await fetch(url + `?ref=${config.branch}`, {
+          headers: { 'Authorization': `token ${config.token}` }
+        });
+        if (!res.ok) throw new Error("Não foi possível acessar o config.js no repositório. Verifique o Token e o Caminho.");
+        
+        const fileData = await res.json();
+        let content = decodeBase64UTF8(fileData.content);
+        const sha = fileData.sha;
+
+        content = content.replace(/dataSource:\s*["'](github|sheets)["']/g, `dataSource: "${newSource}"`);
+
+        const commitPayload = {
+          message: `Atualizando fonte de dados para ${newSource} via Painel Admin`,
+          content: encodeBase64UTF8(content),
+          branch: config.branch,
+          sha: sha
+        };
+
+        const putRes = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${config.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!putRes.ok) {
+          const data = await putRes.json();
+          throw new Error("Erro ao salvar config.js no GitHub: " + data.message);
+        }
+
+        const sourceName = newSource === 'sheets' ? 'Google Sheets' : 'GitHub (.tdf)';
+        showSuccess(`🚀 Sucesso! O site agora puxará os dados do ${sourceName}. Pode demorar até 1 minuto para atualizar online.`);
+        
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Atualizar Fonte Oficial";
       }
     }
 
