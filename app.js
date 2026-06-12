@@ -793,13 +793,13 @@ function renderDashboard() {
   const podiumContainer = document.getElementById('podium-cards-container');
   const eventContainer = document.getElementById('event-widget-content');
   
-  // Renderizar Top 3 do Ranking
+  // Renderizar Top 4 do Ranking
   if (podiumContainer) {
-    const top3 = appData.Ranking.slice(0, 3);
-    if (top3.length === 0) {
+    const top4 = appData.Ranking.slice(0, 4);
+    if (top4.length === 0) {
       podiumContainer.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--text-secondary)">Nenhum jogador classificado no momento.</div>`;
     } else {
-      podiumContainer.innerHTML = top3.map(player => {
+      podiumContainer.innerHTML = top4.map(player => {
         const letter = player.Jogador ? escapeHTML(player.Jogador.charAt(0).toUpperCase()) : '?';
         const energyClass = safeEnergyClass(player.TipoEnergia);
         const playerName = escapeHTML(player.Jogador);

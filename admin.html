@@ -165,7 +165,14 @@
     }
   </style>
 </head>
-<body class="bg-dark">
+<body class="bg-dark text-white font-sans antialiased">
+  
+  <!-- Fundo Animado -->
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
 
   <!-- TELA DE LOGIN LOCAL -->
   <div class="admin-container" id="login-screen">
@@ -209,15 +216,7 @@
     <div class="alert-box alert-success" id="general-success"></div>
     <div class="alert-box alert-error" id="general-error"></div>
 
-    <div class="dashboard-grid">
-      
-      <!-- COLUNA ESQUERDA (Sidebar) -->
-      <div class="admin-sidebar">
-
-      </div>
-
-      <!-- COLUNA DIREITA (Conteúdo Principal) -->
-      <div class="admin-main">
+    <div class="admin-main" style="max-width: 800px; margin: 0 auto;">
         <section class="glass-card admin-card">
           <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
             📤 Carregar Arquivo de Classificação (.tdf)
@@ -299,8 +298,6 @@
             🚀 Publicar Ranking no Site
           </button>
         </section>
-      </div>
-
     </div>
   </div>
 

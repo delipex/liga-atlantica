@@ -85,13 +85,6 @@ html {
   scroll-behavior: smooth;
   font-size: 16px;
   background-color: var(--bg-dark);
-}
-
-body {
-  font-family: var(--font-body);
-  color: var(--text-primary);
-  line-height: 1.6;
-  overflow-x: hidden;
   background: linear-gradient(
     var(--bg-gradient-1),
     var(--bg-gradient-2),
@@ -102,6 +95,15 @@ body {
   background-size: 400% 400%;
   animation: moveGradient 18s ease infinite;
   background-attachment: fixed;
+  min-height: 100vh;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  background: transparent;
   min-height: 100vh;
   position: relative;
 }
@@ -507,7 +509,7 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
   display: flex;
   align-items: center;
-  padding: 1.25rem;
+  padding: 1rem;
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--bg-dark-card);
@@ -545,6 +547,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .podium-card.rank-2:hover {
   border-color: transparent;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.15), 0 12px 40px rgba(148, 163, 184, 0.15);
 }
 
 .podium-card.rank-3 {
@@ -553,6 +556,16 @@ h1, h2, h3, h4, h5, h6 {
 }
 .podium-card.rank-3:hover {
   border-color: transparent;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.15), 0 12px 40px rgba(217, 119, 6, 0.15);
+}
+
+.podium-card.rank-4 {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, var(--bg-dark-card) 60%);
+  border-color: transparent;
+}
+.podium-card.rank-4:hover {
+  border-color: transparent;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.15), 0 12px 40px rgba(59, 130, 246, 0.15);
 }
 
 .podium-badge {
@@ -579,6 +592,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 .rank-3 .podium-badge {
   background: radial-gradient(circle, #ffedd5 0%, #c2410c 100%);
+  color: #fff;
+}
+
+.rank-4 .podium-badge {
+  background: radial-gradient(circle, #bfdbfe 0%, #3b82f6 100%);
   color: #fff;
 }
 
@@ -872,13 +890,27 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .ranking-table tbody tr {
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.3s ease;
+}
+
+/* Zebra striping for better contrast */
+.ranking-table tbody tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.15);
 }
 
 .ranking-table tbody tr:hover {
-  background-color: var(--bg-dark-card);
+  background-color: rgba(255, 255, 255, 0.1);
   box-shadow: inset 4px 0 0 0 var(--accent-yellow);
   cursor: pointer;
+}
+
+[data-theme="light"] .ranking-table tbody tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .ranking-table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.08);
 }
 
 .row-rank {
@@ -1944,12 +1976,7 @@ tbody tr:nth-child(3) .row-rank {
   height: 100vh;
   z-index: -1;
   overflow: hidden;
-  background: var(--bg-dark);
-  transition: background 0.4s ease;
-}
-
-[data-theme="light"] .bg-blobs {
-  background: var(--bg-light);
+  background: transparent;
 }
 
 .blob {
