@@ -605,7 +605,10 @@ function renderHistoricalScores() {
         <td>
           <div class="player-cell">
             <div>
-              <div style="font-weight:600;color:var(--text-primary);">${escapeHTML(row.Jogador)}</div>
+              <div style="font-weight:600;color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
+                ${escapeHTML(row.Jogador)}
+                <span class="category-badge category-${escapeHTML(row.CategoriaCodigo || 'ME').toLowerCase()}" title="${escapeHTML(row.Categoria || 'MASTER')}">${escapeHTML(row.CategoriaCodigo || 'ME')}</span>
+              </div>
               <div class="historical-deck">${getEnergyDotHTML(row.TipoEnergia)}${escapeHTML(row.Deck || 'Não registrado')}</div>
             </div>
           </div>
