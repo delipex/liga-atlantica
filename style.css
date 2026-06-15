@@ -805,6 +805,7 @@ h1, h2, h3, h4, h5, h6 {
   padding-right: 2.75rem;
   border-radius: var(--radius-pill);
   min-height: 48px;
+  color-scheme: dark;
 }
 
 .select-input option {

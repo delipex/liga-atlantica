@@ -273,10 +273,24 @@ function renderTimelineThumb(url, eventTitle) {
   return '';
 }
 
-function safeEnergyClass(value) {
+function getEnergyDotHTML(value) {
   const allowed = ['grass', 'fire', 'water', 'lightning', 'psychic', 'fighting', 'darkness', 'metal', 'dragon', 'colorless'];
-  const normalized = String(value || 'colorless').toLowerCase().trim();
-  return allowed.includes(normalized) ? normalized : 'colorless';
+  const rawValue = String(value || 'colorless').toLowerCase().trim();
+  
+  const parts = rawValue.split(/[/+|-]/).map(p => p.trim());
+  
+  if (parts.length > 1) {
+    const c1 = allowed.includes(parts[0]) ? parts[0] : 'colorless';
+    const c2 = allowed.includes(parts[1]) ? parts[1] : 'colorless';
+    return `<span class="energy-dot" style="background: linear-gradient(135deg, var(--energy-${c1}) 50%, var(--energy-${c2}) 50%); box-shadow: -2px 0 6px var(--energy-${c1}), 2px 0 6px var(--energy-${c2}); border-color: rgba(255,255,255,0.4);"></span>`;
+  }
+  
+  const normalized = allowed.includes(rawValue) ? rawValue : 'colorless';
+  return `<span class="energy-dot ${normalized}"></span>`;
+}
+
+function safeEnergyClass(value) {
+  return String(value || 'colorless').toLowerCase().trim();
 }
 
 function toNumber(value, fallback = 0) {
@@ -370,7 +384,9 @@ function getPlayerMedals(playerName) {
 
 function getPodiumCount(row) {
   const value = getFirstDefined(row, ['Podio', 'Pódio', 'Podios', 'Pódios', 'Podium']);
-  return value !== undefined ? toNumber(value) : (toNumber(row.Pos, 9999) <= 4 ? 1 : 0);
+  if (value !== undefined) return toNumber(value);
+  const pos = toNumber(row.Pos, 0);
+  return (pos > 0 && pos <= 4) ? 1 : 0;
 }
 
 function getAveragePlacement(row) {
@@ -460,7 +476,10 @@ function normalizeRanking(rankingRows, partidasRows = []) {
     .sort((a, b) => {
       if (b.Pontos !== a.Pontos) return b.Pontos - a.Pontos;
       if (b.Podio !== a.Podio) return b.Podio - a.Podio;
-      if (a.MediaColocacao !== b.MediaColocacao) return a.MediaColocacao - b.MediaColocacao;
+      
+      const mediaA = a.MediaColocacao > 0 ? a.MediaColocacao : 999999;
+      const mediaB = b.MediaColocacao > 0 ? b.MediaColocacao : 999999;
+      if (mediaA !== mediaB) return mediaA - mediaB;
       
       const posA = a.Pos > 0 ? a.Pos : 999999;
       const posB = b.Pos > 0 ? b.Pos : 999999;
@@ -565,7 +584,7 @@ function renderHistoricalScores() {
   if (!rows.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" class="historical-empty-state">
+        <td colspan="3" class="historical-empty-state">
           Nenhum score antigo encontrado. Crie a aba <strong>ScoresAntigos</strong> na planilha para alimentar esta consulta.
         </td>
       </tr>
@@ -587,17 +606,8 @@ function renderHistoricalScores() {
           <div class="player-cell">
             <div>
               <div style="font-weight:600;color:var(--text-primary);">${escapeHTML(row.Jogador)}</div>
-              <div class="historical-deck"><span class="energy-dot ${safeEnergyClass(row.TipoEnergia)}"></span>${escapeHTML(row.Deck || 'Não registrado')}</div>
+              <div class="historical-deck">${getEnergyDotHTML(row.TipoEnergia)}${escapeHTML(row.Deck || 'Não registrado')}</div>
             </div>
-          </div>
-        </td>
-        <td style="text-align:center;vertical-align:middle;">
-          <span class="score-cell">${toNumber(row.Pontos)} PTS</span>
-        </td>
-        <td style="text-align:center;vertical-align:middle;">
-          <div class="placement-metrics">
-            <span class="placement-pill podium">${toNumber(row.Podio)} pódio(s)</span>
-            <span class="placement-pill average">Média ${formatAveragePlacement(row.MediaColocacao)}º</span>
           </div>
         </td>
       </tr>
@@ -828,7 +838,6 @@ function renderDashboard() {
     } else {
       podiumContainer.innerHTML = top4.map(player => {
         const letter = player.Jogador ? escapeHTML(player.Jogador.charAt(0).toUpperCase()) : '?';
-        const energyClass = safeEnergyClass(player.TipoEnergia);
         const playerName = escapeHTML(player.Jogador);
         const playerDeck = escapeHTML(player.Deck || 'Sem deck registrado');
         
@@ -867,7 +876,7 @@ function renderDashboard() {
             <div class="podium-info">
               <div class="podium-player-name">${playerName}</div>
               <div class="podium-deck-info">
-                <span class="energy-dot ${energyClass}"></span>
+                ${getEnergyDotHTML(player.TipoEnergia)}
                 <span>${playerDeck}</span>
               </div>
             </div>
@@ -1324,14 +1333,12 @@ window.openPlayerModal = function(playerRef) {
   if (!player || !modal) return;
 
   const letter = player.Jogador ? player.Jogador.charAt(0).toUpperCase() : '?';
-  const energyClass = safeEnergyClass(player.TipoEnergia);
-
   // Inserir elementos no modal
   document.getElementById('modal-avatar').innerText = letter;
   const medals = getPlayerMedals(player.Jogador);
   document.getElementById('modal-player-name').innerHTML = `${escapeHTML(player.Jogador)} ${medals}`;
   document.getElementById('modal-player-deck').innerHTML = `
-    <span class="energy-dot ${energyClass}"></span>
+    ${getEnergyDotHTML(player.TipoEnergia)}
     <span>Deck: <strong>${escapeHTML(player.Deck || 'Não registrado')}</strong></span>
   `;
   document.getElementById('modal-stat-podiums').innerText = toNumber(player.Podio);
