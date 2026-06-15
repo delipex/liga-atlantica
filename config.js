@@ -26,12 +26,14 @@ const CONFIG = {
 
   // GIDs das abas publicadas. Necessário para links /d/e/.../pubhtml.
   publishedSheetGids: {
-    Ranking: "711743754",
+    Ranking: "0",
+    Jogadores: "711743754",
     Calendario: "795520659",
     Campeoes: "2040464778",
     Regras: "1560734436",
     Galeria: "1311009323",
-    ScoresAntigos: "1809448887"
+    ScoresAntigos: "1809448887",
+    Configuracoes: "1275325263"
   },
   
   // Nome da aba única que guarda o arquivo histórico de scores antigos.

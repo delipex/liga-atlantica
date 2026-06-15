@@ -452,18 +452,31 @@ function normalizeRanking(rankingRows, partidasRows = []) {
   if (!Array.isArray(rankingRows)) return [];
 
   const normalized = rankingRows
-    .filter(player => player && player.Jogador)
+    .filter(player => player && (player.Jogador || player.Name))
     .map(player => {
-      const pontos = player.Pontos !== undefined && player.Pontos !== '' ? toNumber(player.Pontos) : 0;
+      const playerName = player.Jogador || player.Name || "";
+      const playerNameClean = playerName.trim().toLowerCase();
+      
+      // Buscar dados extras na aba Jogadores
+      const dbPlayer = (appData.Jogadores || []).find(j => {
+        const jName = j.Jogador || j.Name || "";
+        return jName.trim().toLowerCase() === playerNameClean;
+      }) || {};
+
+      const pontosRaw = player.Pontos !== undefined && player.Pontos !== '' ? player.Pontos : player['Match Points'];
+      const pontos = pontosRaw !== undefined && pontosRaw !== '' ? toNumber(pontosRaw) : 0;
       const podio = getPodiumCount(player);
       const mediaColocacao = getAveragePlacement(player);
-      const categoria = normalizeCategory(player);
+      const categoriaOverride = dbPlayer.Categoria || '';
+      const categoria = categoriaOverride ? { label: categoriaOverride.toUpperCase(), code: categoriaOverride.substring(0,2).toUpperCase() } : normalizeCategory(player);
 
       const { v, e, d } = getVED(player);
+      const posRaw = player.Pos || player.Posicao || player.Standing || 0;
 
       return {
         ...player,
-        Pos: toNumber(player.Pos, 0),
+        Jogador: playerName,
+        Pos: toNumber(posRaw, 0),
         Categoria: categoria.label,
         CategoriaCodigo: categoria.code,
         Pontos: pontos,
@@ -472,17 +485,17 @@ function normalizeRanking(rankingRows, partidasRows = []) {
         Vitorias: v,
         Empates: e,
         Derrotas: d,
-        Deck: player.Deck || 'Não registrado',
-        TipoEnergia: safeEnergyClass(player.TipoEnergia)
+        Deck: player.Deck || dbPlayer.Deck || 'Não registrado',
+        TipoEnergia: safeEnergyClass(player.TipoEnergia || dbPlayer.TipoEnergia),
+        PosicaoFinal: dbPlayer.PosicaoFinal ? toNumber(dbPlayer.PosicaoFinal) : null
       };
+    })
+    .sort((a, b) => {
+      if (b.Pontos !== a.Pontos) return b.Pontos - a.Pontos;
+      if (b.Podio !== a.Podio) return b.Podio - a.Podio;
+      if (a.MediaColocacao !== b.MediaColocacao) return a.MediaColocacao - b.MediaColocacao;
+      return String(a.Jogador).localeCompare(String(b.Jogador), 'pt-BR');
     });
-
-  normalized.sort((a, b) => {
-    if (b.Pontos !== a.Pontos) return b.Pontos - a.Pontos;
-    if (b.Podio !== a.Podio) return b.Podio - a.Podio;
-    if (a.MediaColocacao !== b.MediaColocacao) return a.MediaColocacao - b.MediaColocacao;
-    return String(a.Jogador).localeCompare(String(b.Jogador), 'pt-BR');
-  });
 
   normalized.forEach((player, index) => {
     player.Pos = index + 1;
@@ -631,14 +644,14 @@ async function loadData() {
   // Parâmetro de URL para testes rápidos: ?source=github ou ?source=sheets
   const urlParams = new URLSearchParams(window.location.search);
   const sourceParam = urlParams.get('source');
-  const dataSource = (sourceParam && ["sheets", "github"].includes(sourceParam))
+  let dataSource = (sourceParam && ["sheets", "github"].includes(sourceParam))
     ? sourceParam
     : (window.CONFIG ? window.CONFIG.dataSource : "sheets");
 
   const githubSources = window.CONFIG && window.CONFIG.githubSources ? window.CONFIG.githubSources : {};
 
   // Reseta o estado para o fallback antes de tentar buscar dados externos.
-  appData = { ...MOCK_DATA };
+  appData = { ...MOCK_DATA, Configuracoes: { StatusPodio: 'auto' }, Jogadores: [] };
 
   if (spreadsheetId) {
     try {
@@ -649,10 +662,30 @@ async function loadData() {
         statusBadge.style.borderColor = "rgba(59, 130, 246, 0.3)";
       }
 
+      // 1. Buscar a aba de Configurações primeiro para definir dataSource
+      let configuracoes = [];
+      try {
+        const res = await fetchOptionalSheetTab(spreadsheetId, "Configuracoes", publishedSheetGids.Configuracoes);
+        if (res && res.length) configuracoes = res;
+      } catch(e) {
+        console.warn("Falha ao carregar aba Configuracoes");
+      }
+
+      configuracoes.forEach(row => {
+        const param = (row.Parametro || "").trim().toLowerCase();
+        const val = (row.Valor || "").trim();
+        if (param === "fonteranking" && !sourceParam) {
+          dataSource = val.toLowerCase() === "tdf" ? "github" : "sheets";
+        }
+        if (param === "statuspodio") {
+          appData.Configuracoes.StatusPodio = val.toLowerCase();
+        }
+      });
+
       const rankingTabName = "Ranking";
       const historicalScoresTab = window.CONFIG && window.CONFIG.historicalScoresTab ? window.CONFIG.historicalScoresTab : "ScoresAntigos";
 
-      // 1. Definir a promessa de busca do ranking (se do GitHub TDF ou Google Sheets)
+      // 2. Definir a promessa de busca do ranking (se do GitHub TDF ou Google Sheets)
       let rankingPromise;
       let stagesPromise;
       if (dataSource === "github" && githubSources.Ranking) {
@@ -692,7 +725,7 @@ async function loadData() {
         })();
       }
 
-      const [ranking, partidas, scoresAntigos, calendario, campeoes, regras, galeria, loadedStages] = await Promise.all([
+      const [ranking, partidas, scoresAntigos, calendario, campeoes, regras, galeria, loadedStages, jogadoresSheet] = await Promise.all([
         rankingPromise,
         fetchOptionalSheetTab(spreadsheetId, "Partidas", publishedSheetGids.Partidas),
         fetchOptionalSheetTab(spreadsheetId, historicalScoresTab, publishedSheetGids[historicalScoresTab]),
@@ -700,12 +733,14 @@ async function loadData() {
         fetchOptionalSheetTab(spreadsheetId, "Campeoes", publishedSheetGids.Campeoes),
         fetchOptionalSheetTab(spreadsheetId, "Regras", publishedSheetGids.Regras),
         fetchOptionalSheetTab(spreadsheetId, "Galeria", publishedSheetGids.Galeria),
-        stagesPromise
+        stagesPromise,
+        fetchOptionalSheetTab(spreadsheetId, "Jogadores", publishedSheetGids.Jogadores)
       ]);
 
       stagesIndex = loadedStages || [];
       populateStageSelector();
 
+      if (jogadoresSheet && jogadoresSheet.length) appData.Jogadores = jogadoresSheet;
       if (ranking && ranking.length) appData.Ranking = normalizeRanking(ranking, partidas);
       if (partidas && partidas.length) appData.Partidas = partidas;
       appData.ScoresAntigos = normalizeHistoricalScores(scoresAntigos || []);
@@ -795,7 +830,20 @@ function renderDashboard() {
   
   // Renderizar Top 4 do Ranking
   if (podiumContainer) {
-    const top4 = appData.Ranking.slice(0, 4);
+    let top4 = [];
+    const statusPodio = (appData.Configuracoes && appData.Configuracoes.StatusPodio) ? appData.Configuracoes.StatusPodio : 'auto';
+    
+    if (statusPodio === 'congelado' || statusPodio === 'offline') {
+       top4 = [...appData.Ranking]
+         .filter(p => p.PosicaoFinal && p.PosicaoFinal > 0)
+         .sort((a, b) => a.PosicaoFinal - b.PosicaoFinal)
+         .slice(0, 4);
+       
+       if (top4.length === 0) top4 = appData.Ranking.slice(0, 4);
+    } else {
+       top4 = appData.Ranking.slice(0, 4);
+    }
+
     if (top4.length === 0) {
       podiumContainer.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--text-secondary)">Nenhum jogador classificado no momento.</div>`;
     } else {
@@ -805,9 +853,12 @@ function renderDashboard() {
         const playerName = escapeHTML(player.Jogador);
         const playerDeck = escapeHTML(player.Deck || 'Sem deck registrado');
         
+        // Se estiver congelado, mostrar a PosicaoFinal no card. Senão, mostrar a Pos do ranking geral.
+        const cardRank = (statusPodio === 'congelado' || statusPodio === 'offline') && player.PosicaoFinal ? player.PosicaoFinal : player.Pos;
+        
         return `
-          <div class="podium-card rank-${player.Pos}" onclick="openPlayerModal(${player.Pos})">
-            <div class="podium-badge">${player.Pos}</div>
+          <div class="podium-card rank-${cardRank}" onclick="openPlayerModal(${player.Pos})">
+            <div class="podium-badge">${cardRank}</div>
             <div class="podium-info">
               <div class="podium-player-name">${playerName}</div>
               <div class="podium-deck-info">
