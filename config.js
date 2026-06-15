@@ -26,7 +26,7 @@ const CONFIG = {
 
   // GIDs das abas publicadas. Necessário para links /d/e/.../pubhtml.
   publishedSheetGids: {
-    Ranking: "0",
+    Ranking: "711743754",
     Jogadores: "711743754",
     Calendario: "795520659",
     Campeoes: "2040464778",

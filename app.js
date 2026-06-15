@@ -38,45 +38,12 @@ function parseTDF(tdfText) {
 // --- DADOS DE DEMONSTRAÇÃO (MOCK DATA) ---
 // Usados se a Google Sheet não estiver configurada ou se houver erro ao carregar
 const MOCK_DATA = {
-  Ranking: [
-    { Pos: 1, Jogador: "Felipe Damasceno", Categoria: "MASTER", Pontos: 27, Vitorias: 8, Empates: 1, Derrotas: 1, Podio: 5, MediaColocacao: 2.4, Deck: "Charizard ex", TipoEnergia: "fire" },
-    { Pos: 2, Jogador: "Mariana Costa", Categoria: "MASTER", Pontos: 22, Vitorias: 7, Empates: 0, Derrotas: 3, Podio: 4, MediaColocacao: 3.1, Deck: "Gardevoir ex", TipoEnergia: "psychic" },
-    { Pos: 3, Jogador: "Lucas Souza", Categoria: "SENIOR", Pontos: 19, Vitorias: 6, Empates: 1, Derrotas: 3, Podio: 3, MediaColocacao: 3.8, Deck: "Miraidon ex", TipoEnergia: "lightning" },
-    { Pos: 4, Jogador: "Beatriz Lima", Categoria: "SENIOR", Pontos: 18, Vitorias: 5, Empates: 2, Derrotas: 3, Podio: 2, MediaColocacao: 4.2, Deck: "Chien-Pao ex", TipoEnergia: "water" },
-    { Pos: 5, Jogador: "Thiago Silva", Categoria: "MASTER", Pontos: 15, Vitorias: 4, Empates: 2, Derrotas: 4, Podio: 1, MediaColocacao: 5.6, Deck: "Lugia VSTAR", TipoEnergia: "colorless" },
-    { Pos: 6, Jogador: "Rodrigo Alves", Categoria: "JUNIOR", Pontos: 12, Vitorias: 3, Empates: 2, Derrotas: 5, Podio: 1, MediaColocacao: 6.4, Deck: "Roaring Moon ex", TipoEnergia: "darkness" },
-    { Pos: 7, Jogador: "Gabriela Reis", Categoria: "JUNIOR", Pontos: 9, Vitorias: 2, Empates: 3, Derrotas: 5, Podio: 0, MediaColocacao: 7.2, Deck: "Gholdengo ex", TipoEnergia: "metal" },
-    { Pos: 8, Jogador: "Pedro Henrique", Categoria: "SENIOR", Pontos: 4, Vitorias: 1, Empates: 1, Derrotas: 8, Podio: 0, MediaColocacao: 8.5, Deck: "Regidrago VSTAR", TipoEnergia: "dragon" }
-  ],
-  ScoresAntigos: [
-    { Temporada: "Temporada de Verão 2025", DataFechamento: "2025-02-28", Pos: 1, Jogador: "Mariana Costa", Categoria: "MASTER", Pontos: 24, Podio: 4, MediaColocacao: 2.8, Deck: "Gardevoir ex", TipoEnergia: "psychic" },
-    { Temporada: "Temporada de Verão 2025", DataFechamento: "2025-02-28", Pos: 2, Jogador: "Thiago Silva", Categoria: "MASTER", Pontos: 21, Podio: 3, MediaColocacao: 3.5, Deck: "Lugia VSTAR", TipoEnergia: "colorless" },
-    { Temporada: "Temporada de Outono 2025", DataFechamento: "2025-05-31", Pos: 1, Jogador: "Felipe Damasceno", Categoria: "MASTER", Pontos: 27, Podio: 5, MediaColocacao: 2.4, Deck: "Charizard ex", TipoEnergia: "fire" },
-    { Temporada: "Temporada de Outono 2025", DataFechamento: "2025-05-31", Pos: 2, Jogador: "Mariana Costa", Categoria: "MASTER", Pontos: 22, Podio: 4, MediaColocacao: 3.1, Deck: "Gardevoir ex", TipoEnergia: "psychic" }
-  ],
-  Calendario: [
-    { Data: "2026-06-06", Evento: "Liga Semanal #15 - Rodada Suíça", Local: "Livraria Atlântica +", Horario: "10:00", Status: "confirmado", Descricao: "Primeira rodada de Junho. Formato Standard (Regulamento Temporal).", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "https://chat.whatsapp.com/EpUEb62hq1bKs6iDtQ3ena", Foto: "https://www.instagram.com/p/exemplo1/" },
-    { Data: "2026-06-13", Evento: "Liga Semanal #16 - Treino & Trocas", Local: "Livraria Atlântica +", Horario: "10:00", Status: "confirmado", Descricao: "Encontro casual para testar decks novos, trocar cartas e tirar dúvidas de regras.", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "https://chat.whatsapp.com/EpUEb62hq1bKs6iDtQ3ena", Foto: "" },
-    { Data: "2026-06-20", Evento: "Copa Atlântica de Inverno (Especial)", Local: "Livraria Atlântica +", Horario: "14:00", Status: "confirmado", Descricao: "Torneio especial de fim de semana valendo pontuação dobrada e premiação física.", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "https://playlatam.net/tournaments/exemplo", Foto: "" },
-    { Data: "2026-06-27", Evento: "Liga Semanal #17 - Formato Alternativo", Local: "Livraria Atlântica +", Horario: "10:00", Status: "pendente", Descricao: "Rodada casual com formato Gym Leader Challenge (apenas cartas singleton de um único tipo).", LinkMaps: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6", LinkInscricao: "", Foto: "" }
-  ],
-  Campeoes: [
-    { Temporada: "Temporada de Outono 2025", Campeao: "Felipe Damasceno", Vice: "Mariana Costa", DeckCampeao: "Charizard ex", Data: "Maio/2025", FotoCampeao: "", URLDeck: "", ImagemDeck: "", ObservacaoDeck: "" },
-    { Temporada: "Temporada de Verão 2025", Campeao: "Mariana Costa", Vice: "Thiago Silva", DeckCampeao: "Gardevoir ex", Data: "Fevereiro/2025", FotoCampeao: "", URLDeck: "", ImagemDeck: "", ObservacaoDeck: "" },
-    { Temporada: "Temporada de Primavera 2024", Campeao: "Thiago Silva", Vice: "Beatriz Lima", DeckCampeao: "Lugia VSTAR", Data: "Novembro/2024", FotoCampeao: "", URLDeck: "", ImagemDeck: "", ObservacaoDeck: "" }
-  ],
-  Regras: [
-    { Titulo: "Formato do Jogo", Descricao: "As partidas da liga oficial são jogadas no Formato Standard oficial da Pokémon Company (cartas com a marca de regulamento atual). Atualmente, marcas 'F' ou posterior." },
-    { Titulo: "Sistema de Pontuação Geral", Descricao: "A classificação considera a pontuação total dos eventos, a quantidade de pódios alcançados no Top 3 e a média de colocação obtida durante a temporada." },
-    { Titulo: "Premiação Trimestral", Descricao: "Ao final de cada temporada (3 meses), os 4 melhores treinadores no ranking disputarão um Top Cut (Playoffs) presencial para decidir o grande campeão da temporada, com premiação em boosters e acessórios." },
-    { Titulo: "Fair Play e Conduta", Descricao: "Nossa liga prioriza um ambiente saudável e acolhedor para todas as idades. Comportamentos antidesportivos, trapaças ou desrespeito resultarão em advertência ou desclassificação imediata do circuito." }
-  ],
-  Galeria: [
-    { Titulo: "Primeiro Encontro da Temporada", Descricao: "Abertura oficial com grande presença de jogadores locais no último fim de semana.", URL_Imagem: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800&auto=format&fit=crop", Data: "03/05/2025" },
-    { Titulo: "Duelo do Top Cut presencial", Descricao: "Felipe contra Mariana na final emocionante disputada carta a carta.", URL_Imagem: "https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?w=800&auto=format&fit=crop", Data: "25/05/2025" },
-    { Titulo: "Mesa de Trocas e Deckbuilding", Descricao: "Jogadores trocando cartas ultra-raras e trocando ideias de estratégias.", URL_Imagem: "https://images.unsplash.com/photo-1544654803-b69140b285a1?w=800&auto=format&fit=crop", Data: "10/05/2025" },
-    { Titulo: "Nova Coleção em Destaque", Descricao: "Galera conferindo as artes especiais das cartas recém-lançadas da nova expansão.", URL_Imagem: "https://images.unsplash.com/photo-1585338107529-13afc5f02586?w=800&auto=format&fit=crop", Data: "17/05/2025" }
-  ]
+  Ranking: [],
+  ScoresAntigos: [],
+  Calendario: [],
+  Campeoes: [],
+  Regras: [],
+  Galeria: []
 };
 
 // Armazenamento local dos dados carregados
@@ -494,6 +461,7 @@ function normalizeRanking(rankingRows, partidasRows = []) {
       if (b.Pontos !== a.Pontos) return b.Pontos - a.Pontos;
       if (b.Podio !== a.Podio) return b.Podio - a.Podio;
       if (a.MediaColocacao !== b.MediaColocacao) return a.MediaColocacao - b.MediaColocacao;
+      if (a.Pos && b.Pos && a.Pos !== b.Pos) return a.Pos - b.Pos;
       return String(a.Jogador).localeCompare(String(b.Jogador), 'pt-BR');
     });
 
@@ -565,7 +533,7 @@ function populateStageSelector() {
     const typeLabel = stage.tipo ? ` (${stage.tipo})` : '';
     const option = document.createElement('option');
     option.value = stage.data;
-    option.textContent = `Etapa - ${formattedDate}${typeLabel}`;
+    option.textContent = stage.label || `Etapa - ${formattedDate}${typeLabel}`;
     selector.appendChild(option);
   });
 }
@@ -752,11 +720,18 @@ async function loadData() {
       isOfflineMode = false;
 
       if (statusBadge) {
-        const sourceLabel = dataSource === "github" ? "GitHub (TDF)" : "Sheets";
-        statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#10b981;border-radius:50%"></span> Online (${sourceLabel})`;
-        statusBadge.style.color = "#10b981";
-        statusBadge.style.borderColor = "rgba(16, 185, 129, 0.3)";
-        statusBadge.title = `Dados carregados do ${sourceLabel} em tempo real`;
+        const isFrozen = appData.Configuracoes && (appData.Configuracoes.StatusPodio === 'offline' || appData.Configuracoes.StatusPodio === 'congelado');
+        if (isFrozen) {
+          statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#94a3b8;border-radius:50%"></span> Offline`;
+          statusBadge.style.color = "#94a3b8";
+          statusBadge.style.borderColor = "rgba(148, 163, 184, 0.3)";
+          statusBadge.title = "Temporada atual está encerrada/congelada.";
+        } else {
+          statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#10b981;border-radius:50%"></span> Online`;
+          statusBadge.style.color = "#10b981";
+          statusBadge.style.borderColor = "rgba(16, 185, 129, 0.3)";
+          statusBadge.title = "Conectado e recebendo atualizações.";
+        }
       }
     } catch (error) {
       console.warn("Erro ao buscar dados remotos. Usando dados locais de demonstração:", error);
@@ -764,10 +739,10 @@ async function loadData() {
       appData.ScoresAntigos = normalizeHistoricalScores(MOCK_DATA.ScoresAntigos);
       isOfflineMode = true;
       if (statusBadge) {
-        statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#f59e0b;border-radius:50%"></span> Modo Demo (Local)`;
-        statusBadge.style.color = "#f59e0b";
-        statusBadge.style.borderColor = "rgba(245, 158, 11, 0.3)";
-        statusBadge.title = "Não foi possível conectar à fonte de dados. Exibindo dados fictícios de demonstração.";
+        statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#ef4444;border-radius:50%"></span> Offline`;
+        statusBadge.style.color = "#ef4444";
+        statusBadge.style.borderColor = "rgba(239, 68, 68, 0.3)";
+        statusBadge.title = "Não foi possível conectar à fonte de dados.";
       }
     }
   } else {
@@ -775,10 +750,10 @@ async function loadData() {
     appData.ScoresAntigos = normalizeHistoricalScores(MOCK_DATA.ScoresAntigos);
     isOfflineMode = true;
     if (statusBadge) {
-      statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#f59e0b;border-radius:50%"></span> Modo Demo`;
-      statusBadge.style.color = "#f59e0b";
-      statusBadge.style.borderColor = "rgba(245, 158, 11, 0.3)";
-      statusBadge.title = "Nenhuma planilha configurada em config.js. Exibindo dados fictícios de demonstração.";
+      statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#ef4444;border-radius:50%"></span> Offline`;
+      statusBadge.style.color = "#ef4444";
+      statusBadge.style.borderColor = "rgba(239, 68, 68, 0.3)";
+      statusBadge.title = "Nenhuma fonte de dados configurada.";
     }
   }
 
@@ -845,7 +820,7 @@ function renderDashboard() {
     }
 
     if (top4.length === 0) {
-      podiumContainer.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--text-secondary)">Nenhum jogador classificado no momento.</div>`;
+      podiumContainer.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--text-secondary)">Aguardando as informações...</div>`;
     } else {
       podiumContainer.innerHTML = top4.map(player => {
         const letter = player.Jogador ? escapeHTML(player.Jogador.charAt(0).toUpperCase()) : '?';
@@ -952,7 +927,7 @@ function renderRankingTable(players) {
     tbody.innerHTML = `
       <tr>
         <td colspan="5" style="text-align:center;padding:3rem;color:var(--text-secondary);">
-          Nenhum treinador encontrado com estes termos.
+          Aguardando as informações...
         </td>
       </tr>
     `;
@@ -1023,8 +998,10 @@ function renderCalendar() {
 
   const events = appData.Calendario;
   
-  if (!events || events.length === 0) {
-    timeline.innerHTML = `<div style="padding:3rem;text-align:center;color:var(--text-secondary);">Nenhum torneio cadastrado no calendário.</div>`;
+  if (!appData.ScoresAntigos || appData.ScoresAntigos.length === 0) {
+    if (historicalTab) {
+      historicalTab.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--text-secondary)">Aguardando as informações...</div>`;
+    }
     return;
   }
 

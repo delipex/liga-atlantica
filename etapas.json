@@ -1,5 +1,11 @@
 [
   {
+    "data": "temporada-4",
+    "tipo": "Final",
+    "multiplicador": 1.0,
+    "label": "Temporada 4 (Final)"
+  },
+  {
     "data": "2026-06-13",
     "tipo": "Cup",
     "multiplicador": 2.0
