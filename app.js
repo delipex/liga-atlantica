@@ -435,7 +435,7 @@ function normalizeRanking(rankingRows, partidasRows = []) {
       const podio = getPodiumCount(player);
       const mediaColocacao = getAveragePlacement(player);
       const categoriaOverride = dbPlayer.Categoria || '';
-      const categoria = categoriaOverride ? { label: categoriaOverride.toUpperCase(), code: categoriaOverride.substring(0,2).toUpperCase() } : normalizeCategory(player);
+      const categoria = categoriaOverride ? normalizeCategory({ Categoria: categoriaOverride }) : normalizeCategory(player);
 
       const { v, e, d } = getVED(player);
       const posRaw = player.Pos || player.Posicao || player.Standing || 0;
@@ -461,7 +461,11 @@ function normalizeRanking(rankingRows, partidasRows = []) {
       if (b.Pontos !== a.Pontos) return b.Pontos - a.Pontos;
       if (b.Podio !== a.Podio) return b.Podio - a.Podio;
       if (a.MediaColocacao !== b.MediaColocacao) return a.MediaColocacao - b.MediaColocacao;
-      if (a.Pos && b.Pos && a.Pos !== b.Pos) return a.Pos - b.Pos;
+      
+      const posA = a.Pos > 0 ? a.Pos : 999999;
+      const posB = b.Pos > 0 ? b.Pos : 999999;
+      if (posA !== posB) return posA - posB;
+      
       return String(a.Jogador).localeCompare(String(b.Jogador), 'pt-BR');
     });
 
@@ -831,6 +835,32 @@ function renderDashboard() {
         // Se estiver congelado, mostrar a PosicaoFinal no card. Senão, mostrar a Pos do ranking geral.
         const cardRank = (statusPodio === 'congelado' || statusPodio === 'offline') && player.PosicaoFinal ? player.PosicaoFinal : player.Pos;
         
+        let pointsHtml = '';
+        if (statusPodio === 'congelado' || statusPodio === 'offline') {
+          let label = '';
+          let color = 'var(--text-secondary)';
+          if (cardRank == 1) { label = '🏆 CAMPEÃO'; color = '#fbbf24'; }
+          else if (cardRank == 2) { label = '🥈 VICE-CAMPEÃO'; color = '#cbd5e1'; }
+          else if (cardRank == 3) { label = '🥉 3º LUGAR'; color = '#b45309'; }
+          else if (cardRank == 4) { label = '🏅 4º LUGAR'; color = 'var(--text-secondary)'; }
+          else { label = `${cardRank}º LUGAR`; }
+
+          pointsHtml = `
+            <div class="podium-points" style="justify-content: center; align-items: flex-end;">
+              <div style="font-size:0.9rem; font-weight:700; color:${color}; text-transform:uppercase; text-align:right;">
+                ${label}
+              </div>
+            </div>
+          `;
+        } else {
+          pointsHtml = `
+            <div class="podium-points">
+              <div class="podium-score">${toNumber(player.Pontos)} <span style="font-size:0.75rem;font-weight:400;color:var(--text-secondary)">PTS</span></div>
+              <div class="podium-stats">${toNumber(player.Podio)} pódio(s) &bull; média ${formatAveragePlacement(player.MediaColocacao)}°</div>
+            </div>
+          `;
+        }
+        
         return `
           <div class="podium-card rank-${cardRank}" onclick="openPlayerModal(${player.Pos})">
             <div class="podium-badge">${cardRank}</div>
@@ -841,10 +871,7 @@ function renderDashboard() {
                 <span>${playerDeck}</span>
               </div>
             </div>
-            <div class="podium-points">
-              <div class="podium-score">${toNumber(player.Pontos)} <span style="font-size:0.75rem;font-weight:400;color:var(--text-secondary)">PTS</span></div>
-              <div class="podium-stats">${toNumber(player.Podio)} pódio(s) • média ${formatAveragePlacement(player.MediaColocacao)}º</div>
-            </div>
+            ${pointsHtml}
           </div>
         `;
       }).join('');
