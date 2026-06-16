@@ -1,7 +1,7 @@
-/* Importando Google Fonts: Outfit (moderna e amigável) e Space Grotesk (futurista/gamer) */
+/* Importando Google Fonts: Outfit (moderna e amigﾃ｡vel) e Space Grotesk (futurista/gamer) */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
-/* --- VARIÁVEIS DO SISTEMA DE DESIGN --- */
+/* --- VARIﾃ〃EIS DO SISTEMA DE DESIGN --- */
 :root {
   /* Default Dark Mode (Clean) */
   --bg-dark: #0f172a;
@@ -37,7 +37,7 @@
   --bg-gradient-4: #250f22;
   --bg-gradient-5: #111928;
   
-  /* Cores Temáticas de Energias Pokémon TCG */
+  /* Cores Temﾃ｡ticas de Energias Pokﾃｩmon TCG */
   --energy-grass: #78C850;
   --energy-fire: #FF4216;
   --energy-water: #1593F5;
@@ -74,7 +74,7 @@
   --accent-yellow: #dca300;
 }
 
-/* --- RESET & CONFIGS BÁSICAS --- */
+/* --- RESET & CONFIGS BﾃヾICAS --- */
 * {
   margin: 0;
   padding: 0;
@@ -188,7 +188,7 @@ button {
   padding: 0 1.5rem;
 }
 
-/* Títulos */
+/* Tﾃｭtulos */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-title);
   font-weight: 700;
@@ -237,7 +237,7 @@ h1, h2, h3, h4, h5, h6 {
   100% { background-position: 0% 50%; }
 }
 
-/* --- HEADER & NAVEGAÇÃO --- */
+/* --- HEADER & NAVEGAﾃ�グ --- */
 .header {
   position: sticky;
   top: 0;
@@ -416,7 +416,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: stretch;
 }
 
-/* Pódio */
+/* Pﾃｳdio */
 .podium-container {
   display: flex;
   flex-direction: column;
@@ -923,22 +923,30 @@ h1, h2, h3, h4, h5, h6 {
   width: 70px;
 }
 
-/* Highlights for top 3 in table */
-tbody tr:nth-child(1) .row-rank {
+/* Highlights for top 8 in table via classes instead of nth-child to preserve pagination */
+tbody tr.top-1 .row-rank,
+.rank-badge.rank-1 {
   color: #ffcb05;
   text-shadow: 0 0 10px rgba(255, 203, 5, 0.3);
 }
-tbody tr:nth-child(2) .row-rank {
+tbody tr.top-2 .row-rank,
+.rank-badge.rank-2 {
   color: #cbd5e1;
 }
-tbody tr:nth-child(3) .row-rank {
+tbody tr.top-3 .row-rank,
+.rank-badge.rank-3 {
   color: #c2410c;
 }
-tbody tr:nth-child(4) .row-rank,
-tbody tr:nth-child(5) .row-rank,
-tbody tr:nth-child(6) .row-rank,
-tbody tr:nth-child(7) .row-rank,
-tbody tr:nth-child(8) .row-rank {
+tbody tr.top-4 .row-rank,
+tbody tr.top-5 .row-rank,
+tbody tr.top-6 .row-rank,
+tbody tr.top-7 .row-rank,
+tbody tr.top-8 .row-rank,
+.rank-badge.rank-4,
+.rank-badge.rank-5,
+.rank-badge.rank-6,
+.rank-badge.rank-7,
+.rank-badge.rank-8 {
   color: #3b82f6;
 }
 
@@ -1310,7 +1318,7 @@ tbody tr:nth-child(8) .row-rank {
 }
 
 .champion-card::before {
-  content: '🏆';
+  content: '�醇';
   position: absolute;
   font-size: 5rem;
   top: -15px;
@@ -1798,7 +1806,7 @@ tbody tr:nth-child(8) .row-rank {
     height: 12px;
   }
 
-  /* Timeline responsivo: evita o esmagamento horizontal de imagens e botões */
+  /* Timeline responsivo: evita o esmagamento horizontal de imagens e botﾃｵes */
   .timeline-card {
     flex-direction: column;
     align-items: stretch;
@@ -1841,7 +1849,7 @@ tbody tr:nth-child(8) .row-rank {
     border-radius: var(--radius);
   }
   
-  /* Ajustes no pódio em celulares */
+  /* Ajustes no pﾃｳdio em celulares */
   .podium-card {
     padding: 0.85rem;
     border-radius: var(--radius);
@@ -1890,7 +1898,7 @@ tbody tr:nth-child(8) .row-rank {
     font-size: 0.7rem;
   }
   
-  /* Ajustes no cronômetro do evento */
+  /* Ajustes no cronﾃｴmetro do evento */
   .countdown-container {
     gap: 0.5rem;
     margin: 1rem 0;
@@ -1975,7 +1983,7 @@ tbody tr:nth-child(8) .row-rank {
   }
 }
 
-/* Animação Glassmorphism (Pokébolas Móveis) */
+/* Animaﾃｧﾃ｣o Glassmorphism (Pokﾃｩbolas Mﾃｳveis) */
 .bg-blobs {
   position: fixed;
   top: 0;
@@ -1999,7 +2007,7 @@ tbody tr:nth-child(8) .row-rank {
   opacity: 0.35;
 }
 
-/* Red (Pokébola superior) */
+/* Red (Pokﾃｩbola superior) */
 .blob-1 {
   width: 450px;
   height: 450px;
@@ -2069,7 +2077,7 @@ tbody tr:nth-child(8) .row-rank {
   gap: 4px;
 }
 
-/* --- BOTÕES DE REDES SOCIAIS E ACESSO RÁPIDO --- */
+/* --- BOTﾃ髭S DE REDES SOCIAIS E ACESSO Rﾃ￣IDO --- */
 .welcome-buttons {
   display: flex;
   gap: 1rem;
@@ -2130,7 +2138,7 @@ tbody tr:nth-child(8) .row-rank {
   fill: currentColor;
 }
 
-/* Efeito Hover nos ícones do Footer */
+/* Efeito Hover nos ﾃｭcones do Footer */
 .social-icon-link.whatsapp:hover {
   background: rgba(37, 211, 102, 0.1) !important;
   border-color: rgba(37, 211, 102, 0.4) !important;
@@ -2160,7 +2168,7 @@ tbody tr:nth-child(8) .row-rank {
   }
 }
 
-/* --- MÉTRICAS DE COLOCAÇÃO NO RANKING --- */
+/* --- Mﾃ欝RICAS DE COLOCAﾃ�グ NO RANKING --- */
 .placement-metrics {
   display: inline-flex;
   flex-wrap: wrap;
@@ -2311,11 +2319,11 @@ tbody tr:nth-child(8) .row-rank {
 }
 
 .medal-svg.gold {
-  fill: #ffcb05; /* Dourado / Amarelo Pokémon */
+  fill: #ffcb05; /* Dourado / Amarelo Pokﾃｩmon */
 }
 
 .medal-svg.silver {
-  fill: #cfd8dc; /* Prata Pokémon */
+  fill: #cfd8dc; /* Prata Pokﾃｩmon */
 }
 
 /* --- AJUSTE DOS CONTROLES DO RANKING --- */
@@ -2339,7 +2347,7 @@ tbody tr:nth-child(8) .row-rank {
   }
 }
 
-/* --- CORREÇÃO DO ÍCONE DO WHATSAPP --- */
+/* --- CORREﾃ�グ DO ﾃ垢ONE DO WHATSAPP --- */
 .icon-whatsapp {
   width: 20px;
   height: 20px;
@@ -2516,7 +2524,7 @@ tbody tr:nth-child(8) .row-rank {
   opacity: 0.8;
 }
 
-/* --- CAMPEÕES: FOTO E MODAL DO DECK --- */
+/* --- CAMPEﾃ髭S: FOTO E MODAL DO DECK --- */
 .champion-photo-wrap {
   position: relative;
   width: 104px;
@@ -2686,7 +2694,7 @@ tbody tr:nth-child(8) .row-rank {
   }
 }
 
-/* --- BOTÕES DE INSCRIÇÃO/CONFIRMAÇÃO DE EVENTOS --- */
+/* --- BOTﾃ髭S DE INSCRIﾃ�グ/CONFIRMAﾃ�グ DE EVENTOS --- */
 
 .btn-evento {
   display: inline-flex;
@@ -2749,7 +2757,7 @@ tbody tr:nth-child(8) .row-rank {
   box-shadow: 0 0 12px rgba(0, 105, 92, 0.45);
 }
 
-/* Genérico (amarelo Pokémon do tema) */
+/* Genﾃｩrico (amarelo Pokﾃｩmon do tema) */
 .btn-evento-generic {
   background: rgba(255, 203, 5, 0.1);
   color: var(--accent-yellow);
@@ -2769,7 +2777,7 @@ tbody tr:nth-child(8) .row-rank {
   }
 }
 
-/* Pagina��o */
+/* Pagina鈬o */
 .pagination-controls {
   display: flex;
   justify-content: center;

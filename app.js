@@ -701,6 +701,11 @@ window.changeHistoricalPage = function(delta) {
   if (newPage > totalPages) newPage = totalPages;
   if (newPage !== currentHistoricalPage) {
     renderHistoricalScores(newPage);
+    const tableEl = document.querySelector('.historical-scores-panel');
+    if (tableEl) {
+      const y = tableEl.getBoundingClientRect().top + window.scrollY - 100;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
   }
 };
 
@@ -1159,13 +1164,19 @@ function renderRankingPagination(totalPages) {
   `;
 }
 
-window.changeRankingPage = function(delta) {
+window.changeRankingPage = function(dir) {
   const totalPages = Math.ceil(filteredRankingList.length / ITEMS_PER_PAGE) || 1;
-  let newPage = currentRankingPage + delta;
+  let newPage = currentRankingPage + dir;
   if (newPage < 1) newPage = 1;
   if (newPage > totalPages) newPage = totalPages;
   if (newPage !== currentRankingPage) {
     renderRankingTable(filteredRankingList, newPage);
+    const tableEl = document.querySelector('.ranking-panel');
+    if (tableEl) {
+      // scroll so the top of the table is near the top of the screen
+      const y = tableEl.getBoundingClientRect().top + window.scrollY - 100;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
   }
 };
 
