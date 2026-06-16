@@ -1594,7 +1594,7 @@ function initNavigation() {
   // Roteamento baseado no hash da URL (Ex: site.com/#ranking)
   function handleHashRoute() {
     const hash = window.location.hash.substring(1);
-    const validSections = ['dashboard', 'ranking', 'calendar', 'rules', 'champions', 'gallery'];
+    const validSections = ['dashboard', 'ranking', 'calendar', 'rules', 'champions', 'gallery', 'metagame'];
     if (hash && validSections.includes(hash)) {
       navigateTo(hash);
     } else {
