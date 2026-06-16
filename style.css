@@ -934,6 +934,13 @@ tbody tr:nth-child(2) .row-rank {
 tbody tr:nth-child(3) .row-rank {
   color: #c2410c;
 }
+tbody tr:nth-child(4) .row-rank,
+tbody tr:nth-child(5) .row-rank,
+tbody tr:nth-child(6) .row-rank,
+tbody tr:nth-child(7) .row-rank,
+tbody tr:nth-child(8) .row-rank {
+  color: #3b82f6;
+}
 
 .player-cell {
   display: flex;
@@ -2414,6 +2421,13 @@ tbody tr:nth-child(3) .row-rank {
 .historical-select,
 .historical-search-field .search-input {
   padding-left: 1rem;
+  background-color: var(--bg-dark-card);
+  color: var(--text-primary);
+}
+
+.historical-select option {
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
 }
 
 .historical-table-wrap {
