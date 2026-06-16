@@ -438,6 +438,19 @@ function normalizeCategory(row) {
   return { code: 'ME', label: 'MASTER' };
 }
 
+function getLatestDeckFromRow(row) {
+  if (!row) return null;
+  const ignore = ['jogador', 'player', 'nome', 'posicaofinal', 'deck', 'pontos', 'categoria'];
+  const keys = Object.keys(row).filter(k => !ignore.includes(k.toLowerCase().trim()));
+  for (let i = keys.length - 1; i >= 0; i--) {
+    const val = row[keys[i]];
+    if (val && typeof val === 'string' && val.trim() !== '') {
+      return val.trim();
+    }
+  }
+  return null;
+}
+
 function normalizeRanking(rankingRows, partidasRows = []) {
   const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
   const isFrozen = window.CONFIG?.dataSource === 'sheets' || statusPodio === 'congelado' || statusPodio === 'offline';
@@ -482,7 +495,7 @@ function normalizeRanking(rankingRows, partidasRows = []) {
         Vitorias: v,
         Empates: e,
         Derrotas: d,
-        Deck: player.Deck || dbPlayer.Deck || 'Não registrado',
+        Deck: player.Deck || dbPlayer.Deck || getLatestDeckFromRow(dbPlayer) || 'Não registrado',
         TipoEnergia: safeEnergyClass(player.TipoEnergia || dbPlayer.TipoEnergia),
         PosicaoFinal: dbPlayer.PosicaoFinal ? toNumber(dbPlayer.PosicaoFinal) : null
       };
@@ -863,6 +876,10 @@ function renderDashboard() {
          .filter(p => p.PosicaoFinal && p.PosicaoFinal > 0)
          .sort((a, b) => a.PosicaoFinal - b.PosicaoFinal)
          .slice(0, 4);
+         
+       if (top4.length === 0) {
+         top4 = appData.Ranking.slice(0, 4);
+       }
     } else {
        top4 = appData.Ranking.slice(0, 4);
     }
@@ -1047,7 +1064,6 @@ function renderRankingTable(players) {
         <td class="row-rank">${rankBadge}</td>
         <td>
           <div class="player-cell">
-            <div class="player-avatar">${playerName.charAt(0).toUpperCase()}</div>
             <div>
               <div style="font-weight:600;color:var(--text-primary);">${playerName} ${medals}</div>
               <div style="font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.35rem; margin-top: 0.25rem;">
@@ -1818,7 +1834,7 @@ function getMetagameSessions() {
   const rows = appData.Metagame || [];
   if (rows.length === 0) return [];
   
-  const ignoreKeys = ['jogador', 'player', 'nome', ''];
+  const ignoreKeys = ['jogador', 'player', 'nome', '', 'posicaofinal', 'pontos', 'deck', 'categoria'];
   const allKeys = new Set();
   
   rows.forEach(row => {

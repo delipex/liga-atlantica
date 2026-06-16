@@ -34,7 +34,9 @@ const CONFIG = {
     Galeria: "1311009323",
     ScoresAntigos: "1809448887",
     Metagame: "1049757256",
-    Decks: ""
+    Decks: "1459968566",
+    Configuracoes: "1275325263",
+    Jogadores: "1049757256"
   },
   
   // Nome da aba única que guarda o arquivo histórico de scores antigos.
