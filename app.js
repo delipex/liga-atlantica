@@ -1907,9 +1907,15 @@ function renderMetagame() {
     return;
   }
   
-  // Caso contrário, mostra fixo na página (navLink) e na home (homeContainer)
+  // O link do menu (página) fica sempre ativo
   if (navLink) navLink.style.display = '';
-  if (homeContainer) homeContainer.style.display = '';
+  
+  // A section da Home pode ser desativada individualmente escrevendo "pagina" ou "page"
+  if (configVal === 'pagina' || configVal === 'page') {
+    if (homeContainer) homeContainer.style.display = 'none';
+  } else {
+    if (homeContainer) homeContainer.style.display = '';
+  }
   
   populateMetagameSeasonSelector(configVal);
   updateMetagameDisplay();
@@ -2060,7 +2066,6 @@ function updateMetagameDisplay() {
           type: 'doughnut',
           data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderColor: 'rgba(255,255,255,0.15)', borderWidth: 2, hoverOffset: 10 }] },
           options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#fff', bodyColor: '#e2e8f0', borderColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, padding: 12, displayColors: true, boxPadding: 6 } }, cutout: '68%' }
-        });
         });
       }
     }
