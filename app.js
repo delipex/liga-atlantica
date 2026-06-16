@@ -2000,7 +2000,7 @@ function updateMetagameDisplay() {
   const labels = sortedDecks.map(d => d.deck);
   const data = sortedDecks.map(d => d.count);
   const colors = ['#FF4216', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#14b8a6'];
-  const bgColors = labels.map((_, i) => colors[i % colors.length]);
+  const bgColors = labels.map((_, i) => colors[i % colors.length] + 'aa'); // 66% opacity for glass effect
 
   const renderToContainer = (targetContainer, canvasId, chartVarName) => {
     if (!targetContainer) return;
@@ -2020,8 +2020,15 @@ function updateMetagameDisplay() {
     
     targetContainer.innerHTML = `
       <div style="display:flex; flex-direction:column; gap:2rem; align-items:center;">
-        <div style="width: 100%; max-width: 350px; aspect-ratio: 1; position:relative;">
-          <canvas id="${canvasId}"></canvas>
+        <div class="glass-card" style="width: 100%; max-width: 400px; padding: 2rem; border-radius: var(--radius); display:flex; justify-content:center; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
+          <div style="width: 100%; aspect-ratio: 1; position:relative;">
+            ${sortedDecks[0] && sortedDecks[0].image ? `
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width: 55%; height: 55%; border-radius:50%; overflow:hidden; z-index:0; display:flex; align-items:center; justify-content:center; border: 2px solid rgba(255,255,255,0.1); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+              <img src="${safeExternalUrl(sortedDecks[0].image)}" style="width:100%; height:100%; object-fit:cover; opacity: 0.85;">
+            </div>
+            ` : ''}
+            <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
+          </div>
         </div>
         
         <div class="gallery-grid" style="width:100%; margin-top:2rem;">
@@ -2051,8 +2058,9 @@ function updateMetagameDisplay() {
         Chart.defaults.font.family = '"Inter", sans-serif';
         window[chartVarName] = new Chart(ctx, {
           type: 'doughnut',
-          data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderWidth: 0, hoverOffset: 10 }] },
-          options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#fff', bodyColor: '#e2e8f0', borderColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, padding: 12, displayColors: true, boxPadding: 6 } }, cutout: '65%' }
+          data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderColor: 'rgba(255,255,255,0.15)', borderWidth: 2, hoverOffset: 10 }] },
+          options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#fff', bodyColor: '#e2e8f0', borderColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, padding: 12, displayColors: true, boxPadding: 6 } }, cutout: '68%' }
+        });
         });
       }
     }
