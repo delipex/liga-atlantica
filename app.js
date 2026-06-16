@@ -2036,23 +2036,6 @@ function updateMetagameDisplay() {
             <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
           </div>
         </div>
-        
-        <div class="gallery-grid" style="width:100%; margin-top:2rem;">
-          ${sortedDecks.map(d => `
-            <div class="gallery-item glass-card" style="display:flex; flex-direction:column; align-items:center; padding:1rem; gap:1rem;">
-              ${d.image ? `<img src="${safeExternalUrl(d.image)}" alt="${escapeHTML(d.deck)}" style="width:100%; border-radius:var(--radius); object-fit:cover; aspect-ratio: 3/4;">` : `<div style="width:100%; border-radius:var(--radius); aspect-ratio: 3/4; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; color:var(--text-secondary); font-size: 0.9rem; text-align: center; padding: 1rem;">Sem Imagem</div>`}
-              <div style="text-align:center; width:100%;">
-                <h3 style="color:var(--text-primary); font-size:1.1rem; margin-bottom:0.5rem; display:flex; justify-content:center; align-items:center; gap:0.5rem;">
-                  ${getEnergyDotHTML(d.energia)}
-                  ${escapeHTML(d.deck)}
-                </h3>
-                <p style="color:var(--text-secondary); font-size:0.9rem; font-weight:600;">
-                  Usado por ${d.count} jogador(es)
-                </p>
-              </div>
-            </div>
-          `).join('')}
-        </div>
       </div>
     `;
     
