@@ -2006,7 +2006,51 @@ function updateMetagameDisplay() {
   const labels = sortedDecks.map(d => d.deck);
   const data = sortedDecks.map(d => d.count);
   const colors = ['#FF4216', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#14b8a6'];
-  const bgColors = labels.map((_, i) => colors[i % colors.length] + 'aa'); // 66% opacity for glass effect
+  const preloadedImages = sortedDecks.map(d => {
+    if (!d.image) return null;
+    const img = new Image();
+    img.src = safeExternalUrl(d.image);
+    return img;
+  });
+
+  const sliceImagePlugin = {
+    id: 'sliceImagePlugin',
+    afterDatasetDraw(chart, args, options) {
+      const ctx = chart.ctx;
+      const meta = chart.getDatasetMeta(0);
+      meta.data.forEach((arc, i) => {
+        const img = preloadedImages[i];
+        if (img && img.complete && img.naturalWidth > 0) {
+          const angle = (arc.startAngle + arc.endAngle) / 2;
+          const r = (arc.innerRadius + arc.outerRadius) / 2;
+          const x = arc.x + Math.cos(angle) * r;
+          const y = arc.y + Math.sin(angle) * r;
+          
+          const thickness = arc.outerRadius - arc.innerRadius;
+          const arcLength = (arc.endAngle - arc.startAngle) * r;
+          const size = Math.min(thickness * 0.8, arcLength * 0.8, 36);
+          
+          if (size < 12) return;
+          
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(x, y, size/2, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(img, x - size/2, y - size/2, size, size);
+          
+          ctx.beginPath();
+          ctx.arc(x, y, size/2, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          ctx.restore();
+        } else if (img) {
+          img.onload = () => chart.update();
+        }
+      });
+    }
+  };
 
   const renderToContainer = (targetContainer, canvasId, chartVarName) => {
     if (!targetContainer) return;
@@ -2029,7 +2073,7 @@ function updateMetagameDisplay() {
         <div class="glass-card" style="width: 100%; max-width: 400px; padding: 2rem; border-radius: var(--radius); display:flex; justify-content:center; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
           <div style="width: 100%; aspect-ratio: 1; position:relative;">
             ${sortedDecks[0] && sortedDecks[0].image ? `
-            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width: 55%; height: 55%; border-radius:50%; overflow:hidden; z-index:0; display:flex; align-items:center; justify-content:center; border: 2px solid rgba(255,255,255,0.1); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width: 45%; height: 45%; border-radius:50%; overflow:hidden; z-index:0; display:flex; align-items:center; justify-content:center; border: 2px solid rgba(255,255,255,0.1); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
               <img src="${safeExternalUrl(sortedDecks[0].image)}" style="width:100%; height:100%; object-fit:cover; opacity: 0.85;">
             </div>
             ` : ''}
@@ -2048,7 +2092,8 @@ function updateMetagameDisplay() {
         window[chartVarName] = new Chart(ctx, {
           type: 'doughnut',
           data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderColor: 'rgba(255,255,255,0.15)', borderWidth: 2, hoverOffset: 10 }] },
-          options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#fff', bodyColor: '#e2e8f0', borderColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, padding: 12, displayColors: true, boxPadding: 6 } }, cutout: '68%' }
+          options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#fff', bodyColor: '#e2e8f0', borderColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, padding: 12, displayColors: true, boxPadding: 6 } }, cutout: '55%' },
+          plugins: [sliceImagePlugin]
         });
       }
     }
