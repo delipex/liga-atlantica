@@ -50,6 +50,11 @@ const MOCK_DATA = {
 let appData = { ...MOCK_DATA };
 let stagesIndex = [];
 let currentRankingList = [];
+let filteredRankingList = [];
+let filteredHistoricalList = [];
+let currentRankingPage = 1;
+let currentHistoricalPage = 1;
+const ITEMS_PER_PAGE = 20;
 let isOfflineMode = true;
 
 // --- CONFIGURAÇÃO E EXTRAÇÃO DO GOOGLE SHEETS ---
@@ -603,7 +608,8 @@ function populateStageSelector() {
   });
 }
 
-function renderHistoricalScores() {
+function renderHistoricalScores(page = 1) {
+  currentHistoricalPage = page;
   const tbody = document.getElementById('historical-scores-tbody');
   if (!tbody) return;
 
@@ -623,19 +629,26 @@ function renderHistoricalScores() {
     return seasonMatch && searchMatch;
   });
 
-  if (!rows.length) {
+  filteredHistoricalList = rows;
+  const totalPages = Math.ceil(rows.length / ITEMS_PER_PAGE) || 1;
+  const startIdx = (currentHistoricalPage - 1) * ITEMS_PER_PAGE;
+  const endIdx = startIdx + ITEMS_PER_PAGE;
+  const pageRows = rows.slice(startIdx, endIdx);
+
+  if (pageRows.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="2" class="historical-empty-state">
-          Nenhum score encontrado para esta temporada.
+        <td colspan="2" style="text-align:center;padding:2rem;color:var(--text-secondary);">
+          Nenhum registro encontrado.
         </td>
       </tr>
     `;
+    renderHistoricalPagination(1);
     return;
   }
 
   let html = '';
-  rows.forEach(row => {
+  pageRows.forEach(row => {
       const letter = row.Jogador ? escapeHTML(String(row.Jogador).charAt(0).toUpperCase()) : '?';
       
       html += `
@@ -657,7 +670,39 @@ function renderHistoricalScores() {
     });
 
   tbody.innerHTML = html;
+  renderHistoricalPagination(totalPages);
 }
+
+function renderHistoricalPagination(totalPages) {
+  const container = document.getElementById('historical-pagination');
+  if (!container) return;
+  if (totalPages <= 1) {
+    container.innerHTML = '';
+    return;
+  }
+  
+  container.innerHTML = `
+    <button class="pagination-btn" ${currentHistoricalPage === 1 ? 'disabled' : ''} onclick="changeHistoricalPage(-1)">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"></path></svg>
+      Anterior
+    </button>
+    <span class="pagination-info">Página ${currentHistoricalPage} de ${totalPages}</span>
+    <button class="pagination-btn" ${currentHistoricalPage === totalPages ? 'disabled' : ''} onclick="changeHistoricalPage(1)">
+      Próxima
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg>
+    </button>
+  `;
+}
+
+window.changeHistoricalPage = function(delta) {
+  const totalPages = Math.ceil(filteredHistoricalList.length / ITEMS_PER_PAGE) || 1;
+  let newPage = currentHistoricalPage + delta;
+  if (newPage < 1) newPage = 1;
+  if (newPage > totalPages) newPage = totalPages;
+  if (newPage !== currentHistoricalPage) {
+    renderHistoricalScores(newPage);
+  }
+};
 
 // Inicializa o carregamento de dados (Sheets ou Fallback)
 async function loadData() {
@@ -1006,7 +1051,9 @@ function renderDashboard() {
 }
 
 // 2. Ranking
-function renderRankingTable(players) {
+function renderRankingTable(players, page = 1) {
+  currentRankingPage = page;
+  filteredRankingList = players;
   const tbody = document.getElementById('ranking-tbody');
   if (!tbody) return;
 
@@ -1028,10 +1075,16 @@ function renderRankingTable(players) {
         </td>
       </tr>
     `;
+    renderRankingPagination(1);
     return;
   }
+  
+  const totalPages = Math.ceil(players.length / ITEMS_PER_PAGE) || 1;
+  const startIdx = (currentRankingPage - 1) * ITEMS_PER_PAGE;
+  const endIdx = startIdx + ITEMS_PER_PAGE;
+  const pagePlayers = players.slice(startIdx, endIdx);
 
-  tbody.innerHTML = players.map((player, index) => {
+  tbody.innerHTML = pagePlayers.map((player, index) => {
     const playerName = escapeHTML(player.Jogador);
     const medals = getPlayerMedals(player.Jogador);
 
@@ -1083,7 +1136,37 @@ function renderRankingTable(players) {
       </tr>
     `;
   }).join('');
+  renderRankingPagination(totalPages);
 }
+
+function renderRankingPagination(totalPages) {
+  const container = document.getElementById('ranking-pagination');
+  if (!container) return;
+  if (totalPages <= 1) {
+    container.innerHTML = '';
+    return;
+  }
+  
+  container.innerHTML = `
+    <button class="pagination-btn" ${currentRankingPage === 1 ? 'disabled' : ''} onclick="changeRankingPage(-1)">
+      Anterior
+    </button>
+    <span class="pagination-info">Pág ${currentRankingPage} / ${totalPages}</span>
+    <button class="pagination-btn" ${currentRankingPage === totalPages ? 'disabled' : ''} onclick="changeRankingPage(1)">
+      Próxima
+    </button>
+  `;
+}
+
+window.changeRankingPage = function(delta) {
+  const totalPages = Math.ceil(filteredRankingList.length / ITEMS_PER_PAGE) || 1;
+  let newPage = currentRankingPage + delta;
+  if (newPage < 1) newPage = 1;
+  if (newPage > totalPages) newPage = totalPages;
+  if (newPage !== currentRankingPage) {
+    renderRankingTable(filteredRankingList, newPage);
+  }
+};
 
 // Cria link do local para o Google Maps quando houver URL cadastrada.
 function renderLocationLink(locationName, mapUrl) {
@@ -1621,7 +1704,7 @@ function initEvents() {
         return nameMatch || deckMatch;
       });
       
-      renderRankingTable(filtered);
+      renderRankingTable(filtered, 1);
     });
   }
 
@@ -1643,7 +1726,7 @@ function initEvents() {
       if (selectedValue === 'general') {
         if (infoBadge) infoBadge.classList.remove('active');
         currentRankingList = appData.Ranking;
-        renderRankingTable(appData.Ranking);
+        renderRankingTable(appData.Ranking, 1);
         // Limpar busca ao trocar
         if (searchInput) searchInput.value = '';
         return;
@@ -1675,7 +1758,7 @@ function initEvents() {
         
         const normalized = normalizeRanking(stagePlayers, []);
         currentRankingList = normalized;
-        renderRankingTable(normalized);
+        renderRankingTable(normalized, 1);
         
         // Limpar busca ao trocar
         if (searchInput) searchInput.value = '';
@@ -1707,14 +1790,15 @@ function initEvents() {
     });
   }
 
-  const historicalSeasonSelector = document.getElementById('historical-season-selector');
-  if (historicalSeasonSelector) {
-    historicalSeasonSelector.addEventListener('change', renderHistoricalScores);
+  // Filtros Histórico
+  const historicalSeason = document.getElementById('historical-season-selector');
+  const historicalSearch = document.getElementById('historical-player-search');
+  
+  if (historicalSeason) {
+    historicalSeason.addEventListener('change', () => { renderHistoricalScores(1); });
   }
-
-  const historicalPlayerSearch = document.getElementById('historical-player-search');
-  if (historicalPlayerSearch) {
-    historicalPlayerSearch.addEventListener('input', renderHistoricalScores);
+  if (historicalSearch) {
+    historicalSearch.addEventListener('input', () => { renderHistoricalScores(1); });
   }
 
   // Cliques para fechar Lightbox
