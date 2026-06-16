@@ -273,11 +273,18 @@ function renderTimelineThumb(url, eventTitle) {
   return '';
 }
 
+function getDeckEnergy(deckName) {
+  if (!deckName || !appData.Decks) return '';
+  const dName = String(deckName).trim().toLowerCase();
+  const deckInfo = appData.Decks.find(d => (d.Deck || '').trim().toLowerCase() === dName);
+  return deckInfo ? (deckInfo.TipoEnergia || '') : '';
+}
+
 function getEnergyDotHTML(value) {
   const allowed = ['grass', 'fire', 'water', 'lightning', 'psychic', 'fighting', 'darkness', 'metal', 'dragon', 'colorless'];
   const rawValue = String(value || 'colorless').toLowerCase().trim();
   
-  const parts = rawValue.split(/[/+|-]/).map(p => p.trim());
+  const parts = rawValue.split('+').map(p => p.trim());
   
   if (parts.length > 1) {
     const c1 = allowed.includes(parts[0]) ? parts[0] : 'colorless';
@@ -628,7 +635,7 @@ function renderHistoricalScores() {
                   ${escapeHTML(row.Jogador)}
                   <span class="category-badge category-${escapeHTML(row.CategoriaCodigo || 'ME').toLowerCase()}" title="${escapeHTML(row.Categoria || 'MASTER')}">${escapeHTML(row.CategoriaCodigo || 'ME')}</span>
                 </div>
-                <div class="historical-deck">${getEnergyDotHTML(row.TipoEnergia)}${escapeHTML(row.Deck || 'Não registrado')}</div>
+                <div class="historical-deck">${getEnergyDotHTML(getDeckEnergy(row.Deck))}${escapeHTML(row.Deck || 'Não registrado')}</div>
               </div>
             </div>
           </td>
@@ -903,7 +910,7 @@ function renderDashboard() {
             <div class="podium-info">
               <div class="podium-player-name">${playerName}</div>
               <div class="podium-deck-info">
-                ${getEnergyDotHTML(player.TipoEnergia)}
+                ${getEnergyDotHTML(getDeckEnergy(player.Deck))}
                 <span>${playerDeck}</span>
               </div>
             </div>
@@ -1044,7 +1051,7 @@ function renderRankingTable(players) {
             <div>
               <div style="font-weight:600;color:var(--text-primary);">${playerName} ${medals}</div>
               <div style="font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.35rem; margin-top: 0.25rem;">
-                ${getEnergyDotHTML(player.TipoEnergia)}
+                ${getEnergyDotHTML(getDeckEnergy(player.Deck))}
                 <span>${escapeHTML(player.Deck || 'Não registrado')}</span>
               </div>
             </div>
@@ -1385,7 +1392,7 @@ window.openPlayerModal = function(playerRef) {
   const medals = getPlayerMedals(player.Jogador);
   document.getElementById('modal-player-name').innerHTML = `${escapeHTML(player.Jogador)} ${medals}`;
   document.getElementById('modal-player-deck').innerHTML = `
-    ${getEnergyDotHTML(player.TipoEnergia)}
+    ${getEnergyDotHTML(getDeckEnergy(player.Deck))}
     <span>Deck: <strong>${escapeHTML(player.Deck || 'Não registrado')}</strong></span>
   `;
   document.getElementById('modal-stat-podiums').innerText = toNumber(player.Podio);
