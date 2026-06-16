@@ -2016,39 +2016,50 @@ function updateMetagameDisplay() {
   const sliceImagePlugin = {
     id: 'sliceImagePlugin',
     afterDatasetDraw(chart, args, options) {
-      const ctx = chart.ctx;
-      const meta = chart.getDatasetMeta(0);
-      meta.data.forEach((arc, i) => {
-        const img = preloadedImages[i];
-        if (img && img.complete && img.naturalWidth > 0) {
-          const angle = (arc.startAngle + arc.endAngle) / 2;
-          const r = (arc.innerRadius + arc.outerRadius) / 2;
-          const x = arc.x + Math.cos(angle) * r;
-          const y = arc.y + Math.sin(angle) * r;
-          
-          const thickness = arc.outerRadius - arc.innerRadius;
-          const arcLength = (arc.endAngle - arc.startAngle) * r;
-          const size = Math.min(thickness * 0.8, arcLength * 0.8, 36);
-          
-          if (size < 12) return;
-          
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(x, y, size/2, 0, Math.PI * 2);
-          ctx.closePath();
-          ctx.clip();
-          ctx.drawImage(img, x - size/2, y - size/2, size, size);
-          
-          ctx.beginPath();
-          ctx.arc(x, y, size/2, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-          ctx.restore();
-        } else if (img) {
-          img.onload = () => chart.update();
-        }
-      });
+      try {
+        const ctx = chart.ctx;
+        const meta = chart.getDatasetMeta(0);
+        meta.data.forEach((arc, i) => {
+          const img = preloadedImages[i];
+          if (img && img.complete && img.naturalWidth > 0) {
+            // Depending on Chart.js version, properties might be on arc or arc.getProps()
+            const props = arc.getProps ? arc.getProps(['x', 'y', 'startAngle', 'endAngle', 'innerRadius', 'outerRadius']) : arc;
+            const startAngle = props.startAngle || 0;
+            const endAngle = props.endAngle || 0;
+            const innerRadius = props.innerRadius || 0;
+            const outerRadius = props.outerRadius || 0;
+            
+            const angle = (startAngle + endAngle) / 2;
+            const r = (innerRadius + outerRadius) / 2;
+            const x = (props.x || 0) + Math.cos(angle) * r;
+            const y = (props.y || 0) + Math.sin(angle) * r;
+            
+            const thickness = outerRadius - innerRadius;
+            const arcLength = (endAngle - startAngle) * r;
+            const size = Math.min(thickness * 0.8, arcLength * 0.8, 36);
+            
+            if (size < 12 || isNaN(x) || isNaN(y)) return;
+            
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(x, y, size/2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(img, x - size/2, y - size/2, size, size);
+            
+            ctx.beginPath();
+            ctx.arc(x, y, size/2, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+          } else if (img) {
+            img.onload = () => chart.update();
+          }
+        });
+      } catch (err) {
+        console.error("Erro no plugin de miniatura:", err);
+      }
     }
   };
 
