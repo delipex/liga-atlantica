@@ -432,6 +432,13 @@ function normalizeCategory(row) {
 }
 
 function normalizeRanking(rankingRows, partidasRows = []) {
+  const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
+  const isFrozen = window.CONFIG?.dataSource === 'sheets' || statusPodio === 'congelado' || statusPodio === 'offline';
+  
+  if (isFrozen && appData.Jogadores && appData.Jogadores.length > 0) {
+    rankingRows = appData.Jogadores;
+  }
+
   if (!Array.isArray(rankingRows)) return [];
 
   const normalized = rankingRows
@@ -474,6 +481,13 @@ function normalizeRanking(rankingRows, partidasRows = []) {
       };
     })
     .sort((a, b) => {
+      const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
+      const isFrozen = window.CONFIG?.dataSource === 'sheets' || statusPodio === 'congelado' || statusPodio === 'offline';
+      
+      if (isFrozen) {
+        return String(a.Jogador).localeCompare(String(b.Jogador), 'pt-BR');
+      }
+
       if (b.Pontos !== a.Pontos) return b.Pontos - a.Pontos;
       if (b.Podio !== a.Podio) return b.Podio - a.Podio;
       
@@ -522,7 +536,10 @@ function normalizeHistoricalScores(rows) {
 
 function getHistoricalScoreSeasons() {
   const rows = appData.ScoresAntigos || [];
-  return [...new Set(rows.map(row => row.Temporada).filter(Boolean))];
+  const uniqueSeasons = [...new Set(rows.map(row => row.Temporada).filter(Boolean))];
+  
+  // Sort seasons descending (e.g. Temporada 4, Temporada 3...)
+  return uniqueSeasons.sort((a, b) => b.localeCompare(a, 'pt-BR', { numeric: true }));
 }
 
 function populateHistoricalSeasonSelector() {
@@ -531,13 +548,18 @@ function populateHistoricalSeasonSelector() {
 
   const currentValue = selector.value || 'all';
   const seasons = getHistoricalScoreSeasons();
+  
+  if (seasons.length === 0) {
+    selector.innerHTML = '<option value="">Nenhuma temporada</option>';
+    return;
+  }
 
-  selector.innerHTML = [
-    '<option value="all">Todas as temporadas</option>',
-    ...seasons.map(season => `<option value="${escapeHTML(season)}">${escapeHTML(season)}</option>`)
-  ].join('');
+  selector.innerHTML = seasons.map(season => `<option value="${escapeHTML(season)}">${escapeHTML(season)}</option>`).join('');
 
-  if (seasons.includes(currentValue) || currentValue === 'all') {
+  // Default to the first (most recent) season if current value is 'all' or not in the list
+  if (currentValue === 'all' || !seasons.includes(currentValue)) {
+    selector.value = seasons[0];
+  } else {
     selector.value = currentValue;
   }
 }
@@ -567,55 +589,54 @@ function renderHistoricalScores() {
 
   const selector = document.getElementById('historical-season-selector');
   const searchInput = document.getElementById('historical-player-search');
-  const selectedSeason = selector ? selector.value : 'all';
+  
+  populateHistoricalSeasonSelector();
+  
+  const selectedSeason = selector ? selector.value : '';
   const searchValue = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-  populateHistoricalSeasonSelector();
-
   const rows = (appData.ScoresAntigos || []).filter(row => {
-    const seasonMatch = selectedSeason === 'all' || row.Temporada === selectedSeason;
+    const seasonMatch = row.Temporada === selectedSeason;
     const searchMatch = !searchValue ||
       String(row.Jogador || '').toLowerCase().includes(searchValue) ||
-      String(row.Deck || '').toLowerCase().includes(searchValue) ||
-      String(row.Temporada || '').toLowerCase().includes(searchValue);
+      String(row.Deck || '').toLowerCase().includes(searchValue);
     return seasonMatch && searchMatch;
   });
 
   if (!rows.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="3" class="historical-empty-state">
-          Nenhum score antigo encontrado. Crie a aba <strong>ScoresAntigos</strong> na planilha para alimentar esta consulta.
+        <td colspan="2" class="historical-empty-state">
+          Nenhum score encontrado para esta temporada.
         </td>
       </tr>
     `;
     return;
   }
 
-  tbody.innerHTML = rows.map(row => {
-    const letter = row.Jogador ? escapeHTML(String(row.Jogador).charAt(0).toUpperCase()) : '?';
-
-    return `
-      <tr>
-        <td>
-          <div class="historical-season-name">${escapeHTML(row.Temporada)}</div>
-          <div class="historical-season-date">${escapeHTML(row.DataFechamento || '')}</div>
-        </td>
-        <td class="row-rank">${toNumber(row.Pos, '-')}</td>
-        <td>
-          <div class="player-cell">
-            <div>
-              <div style="font-weight:600;color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
-                ${escapeHTML(row.Jogador)}
-                <span class="category-badge category-${escapeHTML(row.CategoriaCodigo || 'ME').toLowerCase()}" title="${escapeHTML(row.Categoria || 'MASTER')}">${escapeHTML(row.CategoriaCodigo || 'ME')}</span>
+  let html = '';
+  rows.forEach(row => {
+      const letter = row.Jogador ? escapeHTML(String(row.Jogador).charAt(0).toUpperCase()) : '?';
+      
+      html += `
+        <tr>
+          <td class="row-rank">${toNumber(row.Pos, '-')}</td>
+          <td>
+            <div class="player-cell">
+              <div>
+                <div style="font-weight:600;color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
+                  ${escapeHTML(row.Jogador)}
+                  <span class="category-badge category-${escapeHTML(row.CategoriaCodigo || 'ME').toLowerCase()}" title="${escapeHTML(row.Categoria || 'MASTER')}">${escapeHTML(row.CategoriaCodigo || 'ME')}</span>
+                </div>
+                <div class="historical-deck">${getEnergyDotHTML(row.TipoEnergia)}${escapeHTML(row.Deck || 'Não registrado')}</div>
               </div>
-              <div class="historical-deck">${getEnergyDotHTML(row.TipoEnergia)}${escapeHTML(row.Deck || 'Não registrado')}</div>
             </div>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join('');
+          </td>
+        </tr>
+      `;
+    });
+
+  tbody.innerHTML = html;
 }
 
 // Inicializa o carregamento de dados (Sheets ou Fallback)
@@ -690,7 +711,7 @@ async function loadData() {
         const stagesJsonUrl = githubSources.Ranking.replace('ranking.tdf', 'etapas.json');
         stagesPromise = (async () => {
           try {
-            const res = await fetch(stagesJsonUrl);
+            const res = await fetch(`${stagesJsonUrl}?v=${new Date().getTime()}`);
             if (res.ok) return await res.json();
           } catch (e) {
             console.warn("etapas.json não encontrado ou falha ao carregar.");
@@ -701,7 +722,7 @@ async function loadData() {
         rankingPromise = fetchSheetTab(spreadsheetId, rankingTabName, publishedSheetGids.Ranking || publishedGid);
         stagesPromise = (async () => {
           try {
-            const res = await fetch('etapas.json');
+            const res = await fetch(`etapas.json?v=${new Date().getTime()}`);
             if (res.ok) return await res.json();
           } catch (e) {
             console.info("etapas.json local não encontrado ou falha ao carregar.");
@@ -710,7 +731,7 @@ async function loadData() {
         })();
       }
 
-      const [ranking, partidas, scoresAntigos, calendario, campeoes, regras, galeria, loadedStages, jogadoresSheet] = await Promise.all([
+      const [ranking, partidas, scoresAntigos, calendario, campeoes, regras, galeria, loadedStages, jogadoresSheet, metagame] = await Promise.all([
         rankingPromise,
         fetchOptionalSheetTab(spreadsheetId, "Partidas", publishedSheetGids.Partidas),
         fetchOptionalSheetTab(spreadsheetId, historicalScoresTab, publishedSheetGids[historicalScoresTab]),
@@ -719,7 +740,8 @@ async function loadData() {
         fetchOptionalSheetTab(spreadsheetId, "Regras", publishedSheetGids.Regras),
         fetchOptionalSheetTab(spreadsheetId, "Galeria", publishedSheetGids.Galeria),
         stagesPromise,
-        fetchOptionalSheetTab(spreadsheetId, "Jogadores", publishedSheetGids.Jogadores)
+        fetchOptionalSheetTab(spreadsheetId, "Jogadores", publishedSheetGids.Jogadores),
+        fetchOptionalSheetTab(spreadsheetId, "Metagame", publishedSheetGids.Metagame)
       ]);
 
       stagesIndex = loadedStages || [];
@@ -733,11 +755,12 @@ async function loadData() {
       if (campeoes && campeoes.length) appData.Campeoes = campeoes;
       if (regras && regras.length) appData.Regras = regras;
       if (galeria && galeria.length) appData.Galeria = galeria;
+      if (metagame && metagame.length) appData.Metagame = metagame;
 
       isOfflineMode = false;
 
       if (statusBadge) {
-        const isFrozen = appData.Configuracoes && (appData.Configuracoes.StatusPodio === 'offline' || appData.Configuracoes.StatusPodio === 'congelado');
+        const isFrozen = window.CONFIG?.dataSource === 'sheets' || (appData.Configuracoes && (appData.Configuracoes.StatusPodio === 'offline' || appData.Configuracoes.StatusPodio === 'congelado'));
         if (isFrozen) {
           statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#94a3b8;border-radius:50%"></span> Offline`;
           statusBadge.style.color = "#94a3b8";
@@ -788,6 +811,7 @@ function renderAll() {
   renderRules();
   renderChampions();
   renderGallery();
+  renderMetagame();
 }
 
 
@@ -830,8 +854,6 @@ function renderDashboard() {
          .filter(p => p.PosicaoFinal && p.PosicaoFinal > 0)
          .sort((a, b) => a.PosicaoFinal - b.PosicaoFinal)
          .slice(0, 4);
-       
-       if (top4.length === 0) top4 = appData.Ranking.slice(0, 4);
     } else {
        top4 = appData.Ranking.slice(0, 4);
     }
@@ -962,10 +984,20 @@ function renderRankingTable(players) {
   const tbody = document.getElementById('ranking-tbody');
   if (!tbody) return;
 
+  const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
+  const selector = document.getElementById('ranking-date-selector');
+  const isGeneral = !selector || selector.value === 'general';
+  const isFrozen = (window.CONFIG?.dataSource === 'sheets' || statusPodio === 'congelado' || statusPodio === 'offline') && isGeneral;
+
+  const thPontos = document.getElementById('th-pontos');
+  const thVed = document.getElementById('th-ved');
+  if (thPontos) thPontos.style.display = isFrozen ? 'none' : 'table-cell';
+  if (thVed) thVed.style.display = isFrozen ? 'none' : 'table-cell';
+
   if (!players || players.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" style="text-align:center;padding:3rem;color:var(--text-secondary);">
+        <td colspan="${isFrozen ? 3 : 5}" style="text-align:center;padding:3rem;color:var(--text-secondary);">
           Aguardando as informações...
         </td>
       </tr>
@@ -973,46 +1005,56 @@ function renderRankingTable(players) {
     return;
   }
 
-  tbody.innerHTML = players.map(player => {
+  tbody.innerHTML = players.map((player, index) => {
     const playerName = escapeHTML(player.Jogador);
     const medals = getPlayerMedals(player.Jogador);
 
     const v = player.Vitorias || 0;
     const e = player.Empates || 0;
     const d = player.Derrotas || 0;
-    const total = v + e + d;
-    const vPct = total > 0 ? (v / total) * 100 : 0;
-    const ePct = total > 0 ? (e / total) * 100 : 0;
-    const dPct = total > 0 ? (d / total) * 100 : 0;
+    
+    const rank = player.Pos;
+    const rankBadge = index < 8 ? `<div class="rank-badge rank-${rank}">${rank}</div>` : `<div class="rank-badge">${rank}</div>`;
+    const rowClass = index < 8 ? `top-${rank}` : '';
+    
+    const pontosHtml = isFrozen ? '' : `
+      <td style="text-align:center;vertical-align:middle;">
+        <span class="score-cell">${toNumber(player.Pontos)} PTS</span>
+      </td>
+    `;
+    
+    const vedHtml = isFrozen ? '' : `
+      <td style="text-align:center;vertical-align:middle;">
+        <div class="ved-container">
+          <span class="ved-badge v-badge" title="Vitórias">${v}V</span>
+          <span class="ved-badge e-badge" title="Empates">${e}E</span>
+          <span class="ved-badge d-badge" title="Derrotas">${d}D</span>
+        </div>
+      </td>
+    `;
 
     return `
-      <tr onclick="openPlayerModal(${player.Pos})">
-        <td class="row-rank">${player.Pos}</td>
+      <tr class="${rowClass}" onclick="openPlayerModal('${escapeHTML(player.Jogador)}')" style="cursor:pointer">
+        <td class="row-rank">${rankBadge}</td>
         <td>
           <div class="player-cell">
-            <div style="font-weight: 600; color: var(--text-primary);">${playerName} ${medals}</div>
-          </div>
-        </td>
-        <td style="text-align:center; vertical-align: middle;">
-          <span class="category-badge category-${escapeHTML(player.CategoriaCodigo || 'ME').toLowerCase()}" title="${escapeHTML(player.Categoria || 'MASTER')}">${escapeHTML(player.CategoriaCodigo || 'ME')}</span>
-        </td>
-        <td style="text-align:center; vertical-align: middle;">
-          <span class="score-cell">${toNumber(player.Pontos)} PTS</span>
-        </td>
-        <td style="text-align:center; vertical-align: middle;">
-          <div class="ved-display">
-            <span class="ved-text">
-              <span class="v-num">${v}V</span> · 
-              <span class="e-num">${e}E</span> · 
-              <span class="d-num">${d}D</span>
-            </span>
-            <div class="ved-bar">
-              ${v > 0 ? `<div class="ved-seg v-seg" style="width: ${vPct}%" title="Vitórias: ${v}"></div>` : ''}
-              ${e > 0 ? `<div class="ved-seg e-seg" style="width: ${ePct}%" title="Empates: ${e}"></div>` : ''}
-              ${d > 0 ? `<div class="ved-seg d-seg" style="width: ${dPct}%" title="Derrotas: ${d}"></div>` : ''}
+            <div class="player-avatar">${playerName.charAt(0).toUpperCase()}</div>
+            <div>
+              <div style="font-weight:600;color:var(--text-primary);">${playerName} ${medals}</div>
+              <div style="font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.35rem; margin-top: 0.25rem;">
+                ${getEnergyDotHTML(player.TipoEnergia)}
+                <span>${escapeHTML(player.Deck || 'Não registrado')}</span>
+              </div>
             </div>
           </div>
         </td>
+        <td style="text-align:center;vertical-align:middle;">
+          <span class="category-badge category-${escapeHTML(player.CategoriaCodigo || 'ME').toLowerCase()}" title="${escapeHTML(player.Categoria || 'MASTER')}">
+            ${escapeHTML(player.CategoriaCodigo || 'ME')}
+          </span>
+        </td>
+        ${pontosHtml}
+        ${vedHtml}
       </tr>
     `;
   }).join('');
@@ -1738,3 +1780,154 @@ document.addEventListener('DOMContentLoaded', () => {
   // Carregar dados da Planilha (ou Fallback)
   loadData();
 });
+// --- METAGAME LOGIC ---
+
+let metagameChart = null;
+
+function renderMetagame() {
+  const configVal = (appData.Configuracoes && appData.Configuracoes.ExibirMetagame) ? appData.Configuracoes.ExibirMetagame.toLowerCase().trim() : 'desativado';
+  
+  const navLink = document.getElementById('nav-metagame');
+  const homeContainer = document.getElementById('metagame-home-container');
+  
+  if (navLink) navLink.style.display = 'none';
+  if (homeContainer) homeContainer.style.display = 'none';
+  
+  if (configVal === 'pagina') {
+    if (navLink) navLink.style.display = '';
+  } else if (configVal === 'home') {
+    if (homeContainer) homeContainer.style.display = '';
+  }
+  
+  if (configVal === 'desativado') return;
+  
+  populateMetagameSeasonSelector(configVal);
+  updateMetagameDisplay(configVal);
+}
+
+function getMetagameSeasons() {
+  const rows = appData.Metagame || [];
+  const uniqueSeasons = [...new Set(rows.map(row => row.Etapa).filter(Boolean))];
+  return uniqueSeasons.sort((a, b) => b.localeCompare(a, 'pt-BR', { numeric: true }));
+}
+
+function populateMetagameSeasonSelector(configVal) {
+  const selector = document.getElementById('metagame-season-selector');
+  if (!selector) return;
+  
+  const seasons = getMetagameSeasons();
+  if (seasons.length === 0) {
+    selector.innerHTML = '<option value="">Nenhuma etapa encontrada</option>';
+    return;
+  }
+  
+  const currentValue = selector.value;
+  selector.innerHTML = seasons.map(s => `<option value="${escapeHTML(s)}">${escapeHTML(s)}</option>`).join('');
+  
+  if (!seasons.includes(currentValue)) {
+    selector.value = seasons[0];
+  } else {
+    selector.value = currentValue;
+  }
+  
+  // Update event listener
+  selector.removeEventListener('change', handleMetagameSelectorChange);
+  selector.addEventListener('change', handleMetagameSelectorChange);
+}
+
+function handleMetagameSelectorChange() {
+  const configVal = (appData.Configuracoes && appData.Configuracoes.ExibirMetagame) ? appData.Configuracoes.ExibirMetagame.toLowerCase().trim() : 'desativado';
+  updateMetagameDisplay(configVal);
+}
+
+function updateMetagameDisplay(configVal) {
+  let targetContainer;
+  let selectedSeason = '';
+  const seasons = getMetagameSeasons();
+  
+  if (configVal === 'home') {
+    targetContainer = document.getElementById('metagame-home-content');
+    selectedSeason = seasons.length > 0 ? seasons[0] : '';
+  } else {
+    targetContainer = document.getElementById('metagame-page-content');
+    const selector = document.getElementById('metagame-season-selector');
+    selectedSeason = selector ? selector.value : (seasons.length > 0 ? seasons[0] : '');
+  }
+  
+  if (!targetContainer) return;
+  
+  if (!appData.Metagame || appData.Metagame.length === 0) {
+    targetContainer.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Crie a aba "Metagame" na planilha para ver as estatísticas!</div>';
+    return;
+  }
+  
+  if (!selectedSeason) {
+    targetContainer.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Nenhuma etapa encontrada.</div>';
+    return;
+  }
+  
+  const seasonData = appData.Metagame.filter(row => row.Etapa === selectedSeason);
+  
+  if (seasonData.length === 0) {
+    targetContainer.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Nenhum dado de deck para a etapa: ${escapeHTML(selectedSeason)}</div>`;
+    return;
+  }
+  
+  const deckCounts = {};
+  seasonData.forEach(row => {
+    const deck = row.Deck || 'Desconhecido';
+    if (!deckCounts[deck]) deckCounts[deck] = { count: 0, image: row.Imagem || null, energia: row.TipoEnergia || '' };
+    deckCounts[deck].count++;
+  });
+  
+  const sortedDecks = Object.keys(deckCounts).map(key => ({
+    deck: key,
+    count: deckCounts[key].count,
+    image: deckCounts[key].image,
+    energia: deckCounts[key].energia
+  })).sort((a, b) => b.count - a.count);
+  
+  const labels = sortedDecks.map(d => d.deck);
+  const data = sortedDecks.map(d => d.count);
+  const colors = ['#FF4216', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#14b8a6'];
+  const bgColors = labels.map((_, i) => colors[i % colors.length]);
+  
+  targetContainer.innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:2rem; align-items:center;">
+      <div style="width: 100%; max-width: 350px; aspect-ratio: 1; position:relative;">
+        <canvas id="metagameChartCanvas_${configVal}"></canvas>
+      </div>
+      
+      <div class="gallery-grid" style="width:100%; margin-top:2rem;">
+        ${sortedDecks.filter(d => d.image).map(d => `
+          <div class="gallery-item glass-card" style="display:flex; flex-direction:column; align-items:center; padding:1rem; gap:1rem;">
+            <img src="${safeExternalUrl(d.image)}" alt="${escapeHTML(d.deck)}" style="width:100%; border-radius:var(--radius); object-fit:cover; aspect-ratio: 3/4;">
+            <div style="text-align:center; width:100%;">
+              <h3 style="color:var(--text-primary); font-size:1.1rem; margin-bottom:0.5rem; display:flex; justify-content:center; align-items:center; gap:0.5rem;">
+                ${d.energia ? `<div class="energy-icon energy-${escapeHTML(d.energia.toLowerCase())}"></div>` : ''}
+                ${escapeHTML(d.deck)}
+              </h3>
+              <p style="color:var(--text-secondary); font-size:0.9rem; font-weight:600;">
+                Usado por ${d.count} jogador(es)
+              </p>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  
+  const ctx = document.getElementById(`metagameChartCanvas_${configVal}`);
+  if (ctx) {
+    if (metagameChart) metagameChart.destroy();
+    if (window.Chart) {
+      Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
+      Chart.defaults.font.family = '"Inter", sans-serif';
+      metagameChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderWidth: 0, hoverOffset: 10 }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#fff', bodyColor: '#e2e8f0', borderColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, padding: 12, displayColors: true, boxPadding: 6 } }, cutout: '65%' }
+      });
+    }
+  }
+}

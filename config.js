@@ -16,24 +16,24 @@ const CONFIG = {
 
   // Links "Raw" do GitHub para cada aba se dataSource for "github"
   githubSources: {
-    Ranking: "ranking.tdf", // O painel admin.html atualizará este arquivo.
+    Ranking: "https://raw.githubusercontent.com/delipex/liga-atlantica/main/site/ranking.tdf", // O painel admin.html atualizará este arquivo.
     Calendario: "", 
     Campeoes: "",
     Regras: "",
     Galeria: "",
-    ScoresAntigos: ""
+    ScoresAntigos: "",
+    Metagame: ""
   },
 
   // GIDs das abas publicadas. Necessário para links /d/e/.../pubhtml.
   publishedSheetGids: {
     Ranking: "711743754",
-    Jogadores: "711743754",
     Calendario: "795520659",
     Campeoes: "2040464778",
     Regras: "1560734436",
     Galeria: "1311009323",
     ScoresAntigos: "1809448887",
-    Configuracoes: "1275325263"
+    Metagame: ""
   },
   
   // Nome da aba única que guarda o arquivo histórico de scores antigos.

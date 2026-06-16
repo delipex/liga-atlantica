@@ -115,6 +115,15 @@ Siga-nos no Instagram
           </div>
         </div>
       </div>
+      
+      <!-- Container do Metagame na Home (Oculto por padrão) -->
+      <div id="metagame-home-container" style="display:none; margin-top: 4rem;">
+        <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
+          <h2 class="section-title">Metagame Atual</h2>
+          <p class="section-subtitle" style="color:var(--text-secondary);">Decks mais utilizados na liga</p>
+        </div>
+        <div id="metagame-home-content"></div>
+      </div>
     </section>
 
     <!-- 2. SEÇÃO DE RANKING -->
@@ -209,14 +218,13 @@ Siga-nos no Instagram
           <table class="ranking-table historical-table">
             <thead>
               <tr>
-                <th>Temporada</th>
                 <th class="row-rank">Pos</th>
                 <th>Treinador</th>
               </tr>
             </thead>
             <tbody id="historical-scores-tbody">
               <tr>
-                <td colspan="5" style="text-align:center;padding:2rem;color:var(--text-secondary);">
+                <td colspan="2" style="text-align:center;padding:2rem;color:var(--text-secondary);">
                   Carregando histórico...
                 </td>
               </tr>
@@ -275,6 +283,33 @@ Siga-nos no Instagram
       <div class="gallery-grid" id="gallery-container">
         <!-- Renderizado dinamicamente via JS -->
         <div class="loader"><div class="spinner"></div></div>
+      </div>
+    </section>
+
+    <!-- METAGAME PAGE (SPA) -->
+    <section id="metagame" class="section hidden">
+      <div class="container">
+        <div class="section-header">
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:1rem;">
+            <div>
+              <h2 class="section-title">Metagame</h2>
+              <p class="section-subtitle" style="color:var(--text-secondary);">Estatísticas dos decks mais utilizados</p>
+            </div>
+            
+            <div class="historical-controls">
+              <div class="historical-control-field">
+                <label for="metagame-season-selector">Etapa</label>
+                <select id="metagame-season-selector" class="search-input historical-select">
+                  <option value="">Carregando...</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="metagame-page-content" style="margin-top:2rem;">
+          <!-- Chart and Gallery will be injected here -->
+        </div>
       </div>
     </section>
 
