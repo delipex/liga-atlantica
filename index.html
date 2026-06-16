@@ -7,7 +7,7 @@
   <meta name="description" content="Acompanhe a classificação, calendário, regras e galeria da Liga Atlântica de Pokémon TCG. Atualizado em tempo real.">
   
   <!-- CSS Principal -->
-  <link rel="stylesheet" href="style.css?v=4.0">
+  <link rel="stylesheet" href="style.css?v=5.0">
 </head>
 <body data-theme="dark">
   <div class="bg-blobs">
@@ -115,15 +115,6 @@ Siga-nos no Instagram
           </div>
         </div>
       </div>
-      
-      <!-- Container do Metagame na Home (Oculto por padrão) -->
-      <div id="metagame-home-container" style="display:none; margin-top: 4rem;">
-        <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
-          <h2 class="section-title">Metagame Atual</h2>
-          <p class="section-subtitle" style="color:var(--text-secondary);">Decks mais utilizados na liga</p>
-        </div>
-        <div id="metagame-home-content"></div>
-      </div>
     </section>
 
     <!-- 2. SEÇÃO DE RANKING -->
@@ -175,8 +166,8 @@ Siga-nos no Instagram
                 <th class="row-rank">Pos</th>
                 <th>Treinador</th>
                 <th style="text-align:center">Cat</th>
-                <th style="text-align:center">Pontos</th>
-                <th style="text-align:center">V-E-D</th>
+                <th style="text-align:center" id="th-pontos">Pontos</th>
+                <th style="text-align:center" id="th-ved">V-E-D</th>
               </tr>
             </thead>
             <tbody id="ranking-tbody">
@@ -283,33 +274,6 @@ Siga-nos no Instagram
       <div class="gallery-grid" id="gallery-container">
         <!-- Renderizado dinamicamente via JS -->
         <div class="loader"><div class="spinner"></div></div>
-      </div>
-    </section>
-
-    <!-- METAGAME PAGE (SPA) -->
-    <section id="metagame" class="section hidden">
-      <div class="container">
-        <div class="section-header">
-          <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:1rem;">
-            <div>
-              <h2 class="section-title">Metagame</h2>
-              <p class="section-subtitle" style="color:var(--text-secondary);">Estatísticas dos decks mais utilizados</p>
-            </div>
-            
-            <div class="historical-controls">
-              <div class="historical-control-field">
-                <label for="metagame-season-selector">Etapa</label>
-                <select id="metagame-season-selector" class="search-input historical-select">
-                  <option value="">Carregando...</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div id="metagame-page-content" style="margin-top:2rem;">
-          <!-- Chart and Gallery will be injected here -->
-        </div>
       </div>
     </section>
 
@@ -420,7 +384,7 @@ Siga-nos no Instagram
 
   <!-- ARQUIVOS DE SCRIPT -->
   <script src="config.js?v=3.0"></script>
-  <script src="app.js?v=4.0"></script>
+  <script src="app.js?v=5.0"></script>
 
 </body>
 </html>

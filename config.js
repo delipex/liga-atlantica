@@ -21,8 +21,7 @@ const CONFIG = {
     Campeoes: "",
     Regras: "",
     Galeria: "",
-    ScoresAntigos: "",
-    Metagame: ""
+    ScoresAntigos: ""
   },
 
   // GIDs das abas publicadas. Necessário para links /d/e/.../pubhtml.
@@ -32,8 +31,7 @@ const CONFIG = {
     Campeoes: "2040464778",
     Regras: "1560734436",
     Galeria: "1311009323",
-    ScoresAntigos: "1809448887",
-    Metagame: "1049757256"
+    ScoresAntigos: "1809448887"
   },
   
   // Nome da aba única que guarda o arquivo histórico de scores antigos.
