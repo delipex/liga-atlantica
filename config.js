@@ -33,7 +33,7 @@ const CONFIG = {
     Regras: "1560734436",
     Galeria: "1311009323",
     ScoresAntigos: "1809448887",
-    Metagame: ""
+    Metagame: "1049757256"
   },
   
   // Nome da aba única que guarda o arquivo histórico de scores antigos.
