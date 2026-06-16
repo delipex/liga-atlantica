@@ -1822,6 +1822,9 @@ function renderMetagame() {
     if (navLink) navLink.style.display = '';
   } else if (configVal === 'home') {
     if (homeContainer) homeContainer.style.display = '';
+  } else if (configVal === 'ambos' || configVal.includes('pagina+home') || configVal.includes('home+pagina')) {
+    if (navLink) navLink.style.display = '';
+    if (homeContainer) homeContainer.style.display = '';
   }
   
   if (configVal === 'desativado') return;
@@ -1886,6 +1889,19 @@ function updateMetagameDisplay(configVal) {
   if (configVal === 'home') {
     targetContainer = document.getElementById('metagame-home-content');
     selectedSession = 'all'; 
+  } else if (configVal === 'ambos' || configVal.includes('pagina+home') || configVal.includes('home+pagina')) {
+    // Para renderizar em ambos, precisamos focar no conteiner principal para não duplicar toda a lógica
+    // Renderizamos no container da página se estivermos na rota de metagame, caso contrário na home.
+    // Mas para facilitar, o renderMetagame principal já cuida disso.
+    // Vamos simplesmente desenhar nos dois lugares:
+    const homeContent = document.getElementById('metagame-home-content');
+    const pageContent = document.getElementById('metagame-page-content');
+    if (homeContent) {
+       homeContent.innerHTML = '';
+    }
+    targetContainer = pageContent; 
+    const selector = document.getElementById('metagame-season-selector');
+    selectedSession = selector ? selector.value : 'all';
   } else {
     targetContainer = document.getElementById('metagame-page-content');
     const selector = document.getElementById('metagame-season-selector');
