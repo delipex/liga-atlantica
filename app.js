@@ -1093,8 +1093,9 @@ function renderRankingTable(players, page = 1) {
     const d = player.Derrotas || 0;
     
     const rank = player.Pos;
-    const rankBadge = index < 8 ? `<div class="rank-badge rank-${rank}">${rank}</div>` : `<div class="rank-badge">${rank}</div>`;
-    const rowClass = index < 8 ? `top-${rank}` : '';
+    const rankNum = parseInt(rank, 10);
+    const rankBadge = rankNum <= 8 ? `<div class="rank-badge rank-${rankNum}">${rank}</div>` : `<div class="rank-badge">${rank}</div>`;
+    const rowClass = rankNum <= 8 ? `top-${rankNum}` : '';
     
     const pontosHtml = isFrozen ? '' : `
       <td style="text-align:center;vertical-align:middle;">
@@ -1890,31 +1891,28 @@ document.addEventListener('DOMContentLoaded', () => {
   loadData();
 });
 // --- METAGAME LOGIC ---
-
-let metagameChart = null;
+let metagameChartHome = null;
+let metagameChartPage = null;
 
 function renderMetagame() {
-  const configVal = (appData.Configuracoes && appData.Configuracoes.ExibirMetagame) ? appData.Configuracoes.ExibirMetagame.toLowerCase().trim() : 'desativado';
+  const configVal = (appData.Configuracoes && appData.Configuracoes.ExibirMetagame) ? appData.Configuracoes.ExibirMetagame.toLowerCase().trim() : '';
   
   const navLink = document.getElementById('nav-metagame');
   const homeContainer = document.getElementById('metagame-home-container');
   
-  if (navLink) navLink.style.display = 'none';
-  if (homeContainer) homeContainer.style.display = 'none';
-  
-  if (configVal === 'pagina') {
-    if (navLink) navLink.style.display = '';
-  } else if (configVal === 'home') {
-    if (homeContainer) homeContainer.style.display = '';
-  } else if (configVal === 'ambos' || configVal.includes('pagina+home') || configVal.includes('home+pagina')) {
-    if (navLink) navLink.style.display = '';
-    if (homeContainer) homeContainer.style.display = '';
+  // Se estiver offline ou desativado, esconde tudo.
+  if (configVal === 'offline' || configVal === 'desativado') {
+    if (navLink) navLink.style.display = 'none';
+    if (homeContainer) homeContainer.style.display = 'none';
+    return;
   }
   
-  if (configVal === 'desativado') return;
+  // Caso contrário, mostra fixo na página (navLink) e na home (homeContainer)
+  if (navLink) navLink.style.display = '';
+  if (homeContainer) homeContainer.style.display = '';
   
   populateMetagameSeasonSelector(configVal);
-  updateMetagameDisplay(configVal);
+  updateMetagameDisplay();
 }
 
 function getMetagameSessions() {
@@ -1962,70 +1960,33 @@ function populateMetagameSeasonSelector(configVal) {
 }
 
 function handleMetagameSelectorChange() {
-  const configVal = (appData.Configuracoes && appData.Configuracoes.ExibirMetagame) ? appData.Configuracoes.ExibirMetagame.toLowerCase().trim() : 'desativado';
-  updateMetagameDisplay(configVal);
+  updateMetagameDisplay();
 }
 
-function updateMetagameDisplay(configVal) {
-  let targetContainer;
-  let selectedSession = 'all';
-  
-  if (configVal === 'home') {
-    targetContainer = document.getElementById('metagame-home-content');
-    selectedSession = 'all'; 
-  } else if (configVal === 'ambos' || configVal.includes('pagina+home') || configVal.includes('home+pagina')) {
-    // Para renderizar em ambos, precisamos focar no conteiner principal para não duplicar toda a lógica
-    // Renderizamos no container da página se estivermos na rota de metagame, caso contrário na home.
-    // Mas para facilitar, o renderMetagame principal já cuida disso.
-    // Vamos simplesmente desenhar nos dois lugares:
-    const homeContent = document.getElementById('metagame-home-content');
-    const pageContent = document.getElementById('metagame-page-content');
-    if (homeContent) {
-       homeContent.innerHTML = '';
-    }
-    targetContainer = pageContent; 
-    const selector = document.getElementById('metagame-season-selector');
-    selectedSession = selector ? selector.value : 'all';
-  } else {
-    targetContainer = document.getElementById('metagame-page-content');
-    const selector = document.getElementById('metagame-season-selector');
-    selectedSession = selector ? selector.value : 'all';
-  }
-  
-  if (!targetContainer) return;
-  
-  if (!appData.Metagame || appData.Metagame.length === 0) {
-    targetContainer.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Crie as abas "Metagame" e "Decks" na planilha para ver as estatísticas!</div>';
-    return;
-  }
+function updateMetagameDisplay() {
+  const homeContent = document.getElementById('metagame-home-content');
+  const pageContent = document.getElementById('metagame-page-content');
+  const selector = document.getElementById('metagame-season-selector');
+  const selectedSession = selector ? selector.value : 'all';
   
   const sessions = getMetagameSessions();
-  if (sessions.length === 0) {
-    targetContainer.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Adicione colunas de sessões na aba Metagame.</div>';
-    return;
-  }
-  
   const deckCounts = {};
-  const columnsToCount = selectedSession === 'all' ? sessions : [selectedSession];
   
-  appData.Metagame.forEach(row => {
-    columnsToCount.forEach(col => {
-      const deckName = row[col];
-      if (deckName && typeof deckName === 'string' && deckName.trim() !== '') {
-        const dName = deckName.trim();
-        if (!deckCounts[dName]) deckCounts[dName] = 0;
-        deckCounts[dName]++;
-      }
+  if (sessions.length > 0) {
+    const columnsToCount = selectedSession === 'all' ? sessions : [selectedSession];
+    appData.Metagame.forEach(row => {
+      columnsToCount.forEach(col => {
+        const deckName = row[col];
+        if (deckName && typeof deckName === 'string' && deckName.trim() !== '') {
+          const dName = deckName.trim();
+          if (!deckCounts[dName]) deckCounts[dName] = 0;
+          deckCounts[dName]++;
+        }
+      });
     });
-  });
-  
-  if (Object.keys(deckCounts).length === 0) {
-    targetContainer.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Nenhum deck registrado ${selectedSession === 'all' ? 'no geral' : 'nesta sessão'}.</div>`;
-    return;
   }
   
   const decksTab = appData.Decks || [];
-  
   const sortedDecks = Object.keys(deckCounts).map(deckName => {
     const deckInfo = decksTab.find(d => (d.Deck || '').trim().toLowerCase() === deckName.toLowerCase());
     return {
@@ -2040,43 +2001,73 @@ function updateMetagameDisplay(configVal) {
   const data = sortedDecks.map(d => d.count);
   const colors = ['#FF4216', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#14b8a6'];
   const bgColors = labels.map((_, i) => colors[i % colors.length]);
-  
-  targetContainer.innerHTML = `
-    <div style="display:flex; flex-direction:column; gap:2rem; align-items:center;">
-      <div style="width: 100%; max-width: 350px; aspect-ratio: 1; position:relative;">
-        <canvas id="metagameChartCanvas_${configVal}"></canvas>
-      </div>
-      
-      <div class="gallery-grid" style="width:100%; margin-top:2rem;">
-        ${sortedDecks.filter(d => d.image).map(d => `
-          <div class="gallery-item glass-card" style="display:flex; flex-direction:column; align-items:center; padding:1rem; gap:1rem;">
-            <img src="${safeExternalUrl(d.image)}" alt="${escapeHTML(d.deck)}" style="width:100%; border-radius:var(--radius); object-fit:cover; aspect-ratio: 3/4;">
-            <div style="text-align:center; width:100%;">
-              <h3 style="color:var(--text-primary); font-size:1.1rem; margin-bottom:0.5rem; display:flex; justify-content:center; align-items:center; gap:0.5rem;">
-                ${getEnergyDotHTML(d.energia)}
-                ${escapeHTML(d.deck)}
-              </h3>
-              <p style="color:var(--text-secondary); font-size:0.9rem; font-weight:600;">
-                Usado por ${d.count} jogador(es)
-              </p>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-  
-  const ctx = document.getElementById(`metagameChartCanvas_${configVal}`);
-  if (ctx) {
-    if (metagameChart) metagameChart.destroy();
-    if (window.Chart) {
-      Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
-      Chart.defaults.font.family = '"Inter", sans-serif';
-      metagameChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderWidth: 0, hoverOffset: 10 }] },
-        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#fff', bodyColor: '#e2e8f0', borderColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, padding: 12, displayColors: true, boxPadding: 6 } }, cutout: '65%' }
-      });
+
+  const renderToContainer = (targetContainer, canvasId, chartVarName) => {
+    if (!targetContainer) return;
+    
+    if (!appData.Metagame || appData.Metagame.length === 0) {
+      targetContainer.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Crie as abas "Metagame" e "Decks" na planilha para ver as estatísticas!</div>';
+      return;
     }
+    if (sessions.length === 0) {
+      targetContainer.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Adicione colunas de sessões na aba Metagame.</div>';
+      return;
+    }
+    if (Object.keys(deckCounts).length === 0) {
+      targetContainer.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Nenhum deck registrado ${selectedSession === 'all' ? 'no geral' : 'nesta sessão'}.</div>`;
+      return;
+    }
+    
+    targetContainer.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:2rem; align-items:center;">
+        <div style="width: 100%; max-width: 350px; aspect-ratio: 1; position:relative;">
+          <canvas id="${canvasId}"></canvas>
+        </div>
+        
+        <div class="gallery-grid" style="width:100%; margin-top:2rem;">
+          ${sortedDecks.map(d => `
+            <div class="gallery-item glass-card" style="display:flex; flex-direction:column; align-items:center; padding:1rem; gap:1rem;">
+              ${d.image ? `<img src="${safeExternalUrl(d.image)}" alt="${escapeHTML(d.deck)}" style="width:100%; border-radius:var(--radius); object-fit:cover; aspect-ratio: 3/4;">` : `<div style="width:100%; border-radius:var(--radius); aspect-ratio: 3/4; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; color:var(--text-secondary); font-size: 0.9rem; text-align: center; padding: 1rem;">Sem Imagem</div>`}
+              <div style="text-align:center; width:100%;">
+                <h3 style="color:var(--text-primary); font-size:1.1rem; margin-bottom:0.5rem; display:flex; justify-content:center; align-items:center; gap:0.5rem;">
+                  ${getEnergyDotHTML(d.energia)}
+                  ${escapeHTML(d.deck)}
+                </h3>
+                <p style="color:var(--text-secondary); font-size:0.9rem; font-weight:600;">
+                  Usado por ${d.count} jogador(es)
+                </p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    
+    const ctx = document.getElementById(canvasId);
+    if (ctx) {
+      if (window[chartVarName]) window[chartVarName].destroy();
+      if (window.Chart) {
+        Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
+        Chart.defaults.font.family = '"Inter", sans-serif';
+        window[chartVarName] = new Chart(ctx, {
+          type: 'doughnut',
+          data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderWidth: 0, hoverOffset: 10 }] },
+          options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#fff', bodyColor: '#e2e8f0', borderColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, padding: 12, displayColors: true, boxPadding: 6 } }, cutout: '65%' }
+        });
+      }
+    }
+  };
+
+  renderToContainer(homeContent, 'metagameChartCanvas_home', 'metagameChartHome');
+  renderToContainer(pageContent, 'metagameChartCanvas_page', 'metagameChartPage');
+}
+
+function toggleHistoryCollapse() {
+  const content = document.getElementById('historical-collapse-content');
+  const btn = document.getElementById('historical-collapse-btn');
+  if (content && btn) {
+    content.classList.toggle('expanded');
+    btn.classList.toggle('expanded');
   }
 }
+

@@ -2807,3 +2807,22 @@ tbody tr:nth-child(8) .row-rank {
   color: var(--text-secondary);
   font-size: 0.9rem;
 }
+
+.collapse-content {
+  display: none;
+}
+.collapse-content.expanded {
+  display: block;
+}
+.collapse-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: transform 0.3s ease;
+  font-size: 1.2rem;
+}
+.collapse-btn.expanded {
+  transform: rotate(180deg);
+}

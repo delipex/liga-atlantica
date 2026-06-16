@@ -41,7 +41,7 @@
       <nav class="nav-menu" id="nav-menu">
         <a href="#dashboard" class="nav-link active" data-target="dashboard">Início</a>
         <a href="#ranking" class="nav-link" data-target="ranking">Ranking</a>
-        <a id="nav-metagame" href="#metagame" class="nav-link" data-target="metagame" style="display:none;">Decks</a>
+        <a id="nav-metagame" href="#metagame" class="nav-link" data-target="metagame">Decks</a>
         <a href="#calendar" class="nav-link" data-target="calendar">Calendário</a>
         <a href="#rules" class="nav-link" data-target="rules">Regras</a>
         <a href="#champions" class="nav-link" data-target="champions">Campeões</a>
@@ -120,8 +120,8 @@ Siga-nos no Instagram
         </div>
       </div>
       
-      <!-- Container do Metagame na Home (Oculto por padrão) -->
-      <div id="metagame-home-container" style="display:none; margin-top: 4rem;">
+      <!-- Container do Metagame na Home -->
+      <div id="metagame-home-container" style="margin-top: 4rem;">
         <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
           <h2 class="section-title">Metagame Atual</h2>
           <p class="section-subtitle" style="color:var(--text-secondary);">Decks mais utilizados na liga</p>
@@ -200,45 +200,52 @@ Siga-nos no Instagram
 
       <!-- Consulta de scores antigos -->
       <div class="historical-scores-panel glass-card">
-        <div class="historical-scores-header">
+        <div class="historical-scores-header" style="cursor: pointer;" onclick="toggleHistoryCollapse()">
           <div>
             <h2 class="historical-title">Consultar scores antigos</h2>
             <p class="historical-subtitle">Veja classificações finalizadas de temporadas anteriores sem mexer no ranking atual.</p>
           </div>
-          <span class="historical-badge">Histórico</span>
-        </div>
-
-        <div class="historical-controls">
-          <div class="historical-control-field">
-            <label for="historical-season-selector">Temporada</label>
-            <select id="historical-season-selector" class="search-input historical-select">
-              <option value="all">Todas as temporadas</option>
-            </select>
-          </div>
-          <div class="historical-control-field historical-search-field">
-            <label for="historical-player-search">Treinador ou deck</label>
-            <input type="text" id="historical-player-search" class="search-input" placeholder="Buscar no histórico...">
+          <div style="display:flex; align-items:center;">
+            <span class="historical-badge" style="display:flex; align-items:center; gap: 0.5rem; padding-right: 0.5rem;">
+              Histórico
+              <button id="historical-collapse-btn" class="collapse-btn" style="padding:0; margin:0; display:flex; align-items:center; color:inherit; font-size: 0.9rem;">▼</button>
+            </span>
           </div>
         </div>
 
-        <div class="table-responsive historical-table-wrap">
-          <table class="ranking-table historical-table">
-            <thead>
-              <tr>
-                <th class="row-rank">Pos</th>
-                <th>Treinador</th>
-              </tr>
-            </thead>
-            <tbody id="historical-scores-tbody">
-              <tr>
-                <td colspan="2" style="text-align:center;padding:2rem;color:var(--text-secondary);">
-                  Carregando histórico...
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div id="historical-pagination" class="pagination-controls">
-            <!-- Renderizado via JS -->
+        <div id="historical-collapse-content" class="collapse-content">
+          <div class="historical-controls">
+            <div class="historical-control-field">
+              <label for="historical-season-selector">Temporada</label>
+              <select id="historical-season-selector" class="search-input historical-select">
+                <option value="all">Todas as temporadas</option>
+              </select>
+            </div>
+            <div class="historical-control-field historical-search-field">
+              <label for="historical-player-search">Treinador ou deck</label>
+              <input type="text" id="historical-player-search" class="search-input" placeholder="Buscar no histórico...">
+            </div>
+          </div>
+
+          <div class="table-responsive historical-table-wrap">
+            <table class="ranking-table historical-table">
+              <thead>
+                <tr>
+                  <th class="row-rank">Pos</th>
+                  <th>Treinador</th>
+                </tr>
+              </thead>
+              <tbody id="historical-scores-tbody">
+                <tr>
+                  <td colspan="2" style="text-align:center;padding:2rem;color:var(--text-secondary);">
+                    Carregando histórico...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div id="historical-pagination" class="pagination-controls">
+              <!-- Renderizado via JS -->
+            </div>
           </div>
         </div>
       </div>
