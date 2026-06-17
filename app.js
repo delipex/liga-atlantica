@@ -2119,7 +2119,7 @@ function updateMetagameDisplay() {
     };
 
     const carouselClass = isHome ? 'carousel-home' : 'carousel-page';
-    const chartMaxWidth = isHome ? '500px' : '650px';
+    const chartMaxWidth = isHome ? '380px' : '450px';
 
     if (decksWithImages.length > 0) {
       const cardsHtml = decksWithImages.map((d, i) => `
@@ -2152,20 +2152,52 @@ function updateMetagameDisplay() {
       </div>
     ` : '';
 
+    const chartType = window.currentMetagameChartType || 'doughnut';
+    
+    let accordionHtml = '';
+    if (chartType === 'bar' && sortedDecks.length > 0) {
+      const maxCount = sortedDecks[0].count;
+      accordionHtml = '<div class="accordion-list">';
+      sortedDecks.forEach((deck, idx) => {
+        const relativeWidth = Math.round((deck.count / maxCount) * 100);
+        const bgStyle = window.getDeckGradientStyle ? window.getDeckGradientStyle(deck.deck) : 'background: rgba(255,255,255,0.1);';
+        const deckImage = deck.image ? `url('${safeExternalUrl(deck.image)}')` : 'none';
+        
+        accordionHtml += `
+          <div class="accordion-item" onclick="this.classList.toggle('expanded'); if(window.focusCarouselDeck) window.focusCarouselDeck('${canvasId}', '${escapeHTML(deck.deck)}')">
+            <div class="accordion-bg-image" style="background-image: ${deckImage}"></div>
+            <div class="accordion-progress" style="${bgStyle} width: ${relativeWidth}%;"></div>
+            <div class="accordion-content">
+              <div class="accordion-header">
+                <span class="accordion-rank">#${idx + 1}</span>
+                <span class="accordion-name">${escapeHTML(deck.deck)}</span>
+                <span class="accordion-percent">${deck.count} jg</span>
+              </div>
+              <div class="accordion-details">
+                <button type="button" class="btn-deck-details" onclick="event.stopPropagation(); if(window.syncCarouselToDeck) window.syncCarouselToDeck('${canvasId}', '${escapeHTML(deck.deck)}')">Focar no Carrossel</button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      accordionHtml += '</div>';
+    }
+
     const htmlContent = `
       <div style="display:flex; flex-direction:column; gap:1rem; align-items:center; width: 100%;">
         ${homeToggleHtml}
         <div class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:space-evenly; align-items:center; gap: 2rem; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
           
           <div style="flex: 1 1 ${chartMaxWidth}; width: 100%; max-width: ${chartMaxWidth}; display:flex; flex-direction:column; gap:1rem;">
+            ${chartType === 'doughnut' ? `
             <div style="position:relative; width:100%; aspect-ratio: 1; display:flex; align-items:center; justify-content:center;">
               <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
-              
               <!-- Center Name Info -->
               <div id="chart-center-text-${canvasId}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; z-index:2; width: 100%; transition:opacity 0.3s;">
                  <div id="chart-center-name-${canvasId}" style="display:inline-block; font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.7); background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 12px rgba(0,0,0,0.5);">Toque numa<br>fatia</div>
               </div>
             </div>
+            ` : accordionHtml}
           </div>
           
           <div style="flex: 1 1 350px; width: 100%; max-width: 400px;">
@@ -2176,11 +2208,16 @@ function updateMetagameDisplay() {
       </div>
     `;
     
+    if (window[chartVarName]) {
+      window[chartVarName].destroy();
+      window[chartVarName] = null;
+    }
+    
     targetContainer.innerHTML = htmlContent;
     
     const ctx = document.getElementById(canvasId);
-    if (ctx) {
-      if (window[chartVarName]) window[chartVarName].destroy();
+    const chartType = window.currentMetagameChartType || 'doughnut';
+    if (ctx && chartType === 'doughnut') {
       if (window.Chart) {
         const energyHexColors = {
           grass: '#78C850', fire: '#FF4216', water: '#1593F5', lightning: '#EBC816', 
@@ -2228,7 +2265,7 @@ function updateMetagameDisplay() {
                   window.chartIconCache[name] = img;
                 } else if (window.chartIconCache[name].complete && window.chartIconCache[name].naturalWidth > 0) {
                   const img = window.chartIconCache[name];
-                  const iconSize = 22; 
+                  const iconSize = 30; 
                   
                   ctx.drawImage(img, center.x - (iconSize/2), center.y - 8 - (iconSize/2), iconSize, iconSize);
                   yOffset = 8;
@@ -2238,16 +2275,7 @@ function updateMetagameDisplay() {
                 let line1 = words[0];
                 let line2 = words.slice(1).join(' ');
                 
-                ctx.font = "bold 7.5px 'Inter', sans-serif";
-                
-                let textW = ctx.measureText(name).width;
-                if (line2 && line2.length > 0) {
-                  textW = Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width);
-                }
-                
-                ctx.fillStyle = "rgba(0,0,0,0.4)";
-                ctx.fillRect(center.x - (textW/2) - 4, center.y - 15, textW + 8, line2 && line2.length > 0 ? 18 : 12);
-                
+                ctx.font = "bold 8.5px 'Inter', sans-serif";
                 ctx.fillStyle = "#ffffff";
                 
                 if (line2 && line2.length > 0) {
@@ -2306,7 +2334,7 @@ function updateMetagameDisplay() {
                     const centerX = (chartArea.left + chartArea.right) / 2;
                     const centerY = (chartArea.top + chartArea.bottom) / 2;
                     const outerRadius = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top) / 2;
-                    const innerRadius = outerRadius * 0.4; // matches 40% cutout approx
+                    const innerRadius = outerRadius * 0.55; // matches 55% cutout approx
                     gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
                   }
                   
@@ -2399,9 +2427,9 @@ function updateMetagameDisplay() {
               legend: { display: false }, 
               tooltip: { enabled: false } 
             }, 
-            cutout: '40%' 
+            cutout: '55%' 
           },
-          plugins: chartType === 'doughnut' ? [sliceLabelsPlugin] : []
+          plugins: [sliceLabelsPlugin]
         });
       }
     }
