@@ -1969,6 +1969,12 @@ function populateMetagameSeasonSelector(configVal) {
   
   selector.removeEventListener('change', handleMetagameSelectorChange);
   selector.addEventListener('change', handleMetagameSelectorChange);
+  
+  const chartTypeSelector = document.getElementById('metagame-chart-type');
+  if (chartTypeSelector && !chartTypeSelector.hasAttribute('data-listener')) {
+    chartTypeSelector.addEventListener('change', handleMetagameSelectorChange);
+    chartTypeSelector.setAttribute('data-listener', 'true');
+  }
 }
 
 function handleMetagameSelectorChange() {
@@ -2137,7 +2143,7 @@ function updateMetagameDisplay() {
               
               <!-- Center Name Info -->
               <div id="chart-center-text-${canvasId}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; z-index:2; width: 60%; transition:opacity 0.3s;">
-                 <div id="chart-center-name-${canvasId}" style="font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.4);">Passe o mouse<br>no gr&aacute;fico</div>
+                 <div id="chart-center-name-${canvasId}" style="font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.4);">Toque numa<br>fatia</div>
               </div>
             </div>
           </div>
@@ -2207,7 +2213,7 @@ function updateMetagameDisplay() {
                   ctx.drawImage(img, center.x - (iconSize/2), center.y - 8 - (iconSize/2), iconSize, iconSize);
                   yOffset = 8;
                 }
-              } else {
+              } else if (name.toLowerCase() === 'outros') {
                 const words = name.split(' ');
                 let line1 = words[0];
                 let line2 = words.slice(1).join(' ');
@@ -2234,8 +2240,16 @@ function updateMetagameDisplay() {
           }
         };
 
+        const chartTypeEl = document.getElementById('metagame-chart-type');
+        const chartType = chartTypeEl ? chartTypeEl.value : 'doughnut';
+        
+        if (chartType === 'bar') {
+          const centerWrap = document.getElementById('chart-center-text-' + canvasId);
+          if (centerWrap) centerWrap.style.display = 'none';
+        }
+
         window[chartVarName] = new Chart(ctx, {
-          type: 'doughnut',
+          type: chartType,
           data: { 
             labels: labels, 
             datasets: [{ 
@@ -2260,7 +2274,7 @@ function updateMetagameDisplay() {
                   const outerRadius = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top) / 2;
                   const innerRadius = outerRadius * 0.6; // 60% cutout
                   
-                  const gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
+                  const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
                   gradient.addColorStop(0, hex1 + opacity);
                   gradient.addColorStop(1, hex2 + opacity);
                   return gradient;
@@ -2273,7 +2287,35 @@ function updateMetagameDisplay() {
               hoverOffset: 10 
             }] 
           },
-          options: { 
+          options: chartType === 'bar' ? {
+            responsive: true, 
+            maintainAspectRatio: true, 
+            layout: { padding: 10 },
+            scales: {
+              y: { 
+                beginAtZero: true,
+                grid: { color: 'rgba(255,255,255,0.05)' },
+                ticks: { color: 'rgba(255,255,255,0.5)' }
+              },
+              x: {
+                grid: { display: false },
+                ticks: { color: 'rgba(255,255,255,0.8)', font: { size: 10 } }
+              }
+            },
+            plugins: { 
+              legend: { display: false }, 
+              tooltip: { 
+                enabled: true,
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                titleFont: { size: 14, family: "'Inter', sans-serif" },
+                bodyFont: { size: 13, family: "'Inter', sans-serif" },
+                padding: 12,
+                cornerRadius: 8,
+                borderColor: 'rgba(255,255,255,0.1)',
+                borderWidth: 1
+              } 
+            }
+          } : { 
             responsive: true, 
             maintainAspectRatio: true, 
             layout: { padding: 15 },
@@ -2297,9 +2339,9 @@ function updateMetagameDisplay() {
                 external: externalTooltipHandler
               } 
             }, 
-            cutout: '60%' 
+            cutout: '50%' 
           },
-          plugins: [sliceLabelsPlugin]
+          plugins: chartType === 'doughnut' ? [sliceLabelsPlugin] : []
         });
       }
     }
@@ -2380,7 +2422,7 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
   
   if (!deckName) {
     if (centerName) {
-      centerName.innerHTML = "Passe o mouse<br>no gr&aacute;fico";
+      centerName.innerHTML = "Toque numa<br>fatia";
       centerName.style.cssText = "font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.4);";
     }
     return;
@@ -2394,7 +2436,7 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
     
     centerName.style.cssText = `
       font-weight: 800; 
-      font-size: 1.25rem; 
+      font-size: 1.05rem; 
       line-height: 1.2; 
       ${bgStyle}
       -webkit-background-clip: text;
