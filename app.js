@@ -2104,7 +2104,7 @@ function updateMetagameDisplay() {
     };
 
     const carouselClass = isHome ? 'carousel-home' : 'carousel-page';
-    const chartMaxWidth = isHome ? '300px' : '500px';
+    const chartMaxWidth = isHome ? '280px' : '360px';
 
     if (decksWithImages.length > 0) {
       const cardsHtml = decksWithImages.map((d, i) => `
@@ -2176,7 +2176,7 @@ function updateMetagameDisplay() {
               const val = chart.data.datasets[0].data[index];
               const percentNum = Math.round((val / total) * 100);
               
-              if (val < 1) return;
+              if (percentNum < 3) return; // Esconde textos/imagens em fatias < 3% para no sobrepor
               
               const percent = percentNum + '%';
               const name = chart.data.labels[index];
@@ -2193,18 +2193,25 @@ function updateMetagameDisplay() {
               
               let yOffset = -7;
               
-              if (deckData && deckData.icone) {
+              if (deckData && deckData.image) {
                 if (!window.chartIconCache[name]) {
                   const img = new Image();
-                  img.src = safeExternalUrl(deckData.icone);
+                  img.src = safeExternalUrl(deckData.image);
                   img.onload = () => chart.update();
                   window.chartIconCache[name] = img;
                 } else if (window.chartIconCache[name].complete && window.chartIconCache[name].naturalWidth > 0) {
                   const img = window.chartIconCache[name];
-                  const iconSize = 22; // px size of the icon inside the slice
-                  ctx.shadowColor = 'transparent';
-                  ctx.drawImage(img, center.x - (iconSize/2), center.y - 16, iconSize, iconSize);
-                  yOffset = 8; // push percentage down further
+                  const iconSize = 24; 
+                  
+                  ctx.save();
+                  ctx.beginPath();
+                  ctx.arc(center.x, center.y - 8, iconSize / 2, 0, Math.PI * 2);
+                  ctx.clip();
+                  // As cartas so altas (aspect ratio ~0.7), desenhamos ela um pouco mais alta para no achatar
+                  ctx.drawImage(img, center.x - (iconSize/2), center.y - 8 - (iconSize/2) - 4, iconSize, iconSize * 1.4);
+                  ctx.restore();
+                  
+                  yOffset = 10;
                 }
               } else {
                 // Draw Deck Name (Full name, very small)
@@ -2252,7 +2259,12 @@ function updateMetagameDisplay() {
                 const parts = energyStr.toLowerCase().split('+').map(p => p.trim());
                 const hex1 = window.energyHexColors[parts[0]] || '#94a3b8';
                 
-                const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                const centerX = (chartArea.left + chartArea.right) / 2;
+                const centerY = (chartArea.top + chartArea.bottom) / 2;
+                const outerRadius = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top) / 2;
+                const innerRadius = outerRadius * 0.6; // 60% cutout
+                
+                const gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
                 
                 if (parts.length > 1 && window.energyHexColors[parts[1]]) {
                   const hex2 = window.energyHexColors[parts[1]];
@@ -2377,7 +2389,6 @@ window.updateCarousel = function(id) {
 };
 
 window.focusCarouselDeck = function(id, deckName, chartObj = null) {
-  const c = window.carousels[id];
   const centerTextWrap = document.getElementById('chart-center-text-' + id);
   const centerName = document.getElementById('chart-center-name-' + id);
   
@@ -2385,24 +2396,25 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
     if (centerTextWrap) centerTextWrap.style.opacity = '0';
     return;
   }
-  
-  if(c) {
-    const targetIndex = c.items.findIndex(item => item.getAttribute('data-deck') === deckName);
-    if(targetIndex !== -1 && targetIndex !== c.index) {
-       c.index = targetIndex;
-       window.updateCarousel(id);
-       
-       // reset interval
-       if(window.carouselIntervals && window.carouselIntervals[id]) {
-         clearInterval(window.carouselIntervals[id]);
-         window.carouselIntervals[id] = setInterval(() => window.moveCarousel(id, 1), 4000);
-       }
-    }
-  }
 
-  // Atualiza a nova legenda dinmica do hover no centro do grfico
+  // Atualiza a legenda no centro do grfico com a cor/gradiente do deck
   if (centerTextWrap && centerName) {
     centerName.innerHTML = escapeHTML(deckName);
+    
+    const bgStyle = window.getDeckGradientStyle ? window.getDeckGradientStyle(deckName) : 'background: white;';
+    
+    centerName.style.cssText = `
+      font-weight: 800; 
+      font-size: 1.25rem; 
+      line-height: 1.2; 
+      ${bgStyle}
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+    `;
+    
     centerTextWrap.style.opacity = '1';
   }
 };

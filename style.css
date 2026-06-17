@@ -1167,6 +1167,25 @@ tbody tr.top-8 .row-rank,
 .carousel-page .carousel-3d-stage {
   transform: translate(-50%, -50%) scale(1.15);
 }
+
+@media (max-width: 768px) {
+  .carousel-page {
+    height: 360px;
+  }
+  .carousel-page .carousel-3d-stage {
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+  .carousel-home {
+    height: 280px;
+  }
+  .carousel-home .carousel-3d-stage {
+    transform: translate(-50%, -50%) scale(0.65);
+  }
+  .glass-card {
+    padding: 1.2rem !important;
+  }
+}
+
 .carousel-3d-stage {
   width: 190px;
   height: 266px;
@@ -1413,14 +1432,16 @@ tbody tr.top-8 .row-rank,
   overflow: hidden;
 }
 
-.champion-card::before {
-  content: '�醇';
-  position: absolute;
-  font-size: 5rem;
-  top: -15px;
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: 0.08;
+.champion-card {
+  flex: 1 1 300px;
+  max-width: 350px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  /* Garante sombra fixa consistente independente da tela */
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), inset 1px 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
 .champion-trophy {
