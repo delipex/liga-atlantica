@@ -1980,9 +1980,9 @@ function populateMetagameSeasonSelector(configVal) {
 window.setMetagameChartType = function(type) {
   window.currentMetagameChartType = type;
   document.querySelectorAll('.chart-toggle-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.id === 'btn-chart-' + type);
+    btn.classList.toggle('active', btn.id === 'btn-chart-' + type || btn.id === 'btn-chart-' + type + '-home');
   });
-  renderMetagameChart();
+  updateMetagameDisplay();
 };
 
 function handleMetagameSelectorChange() {
@@ -2119,7 +2119,7 @@ function updateMetagameDisplay() {
     };
 
     const carouselClass = isHome ? 'carousel-home' : 'carousel-page';
-    const chartMaxWidth = isHome ? '280px' : '360px';
+    const chartMaxWidth = isHome ? '500px' : '650px';
 
     if (decksWithImages.length > 0) {
       const cardsHtml = decksWithImages.map((d, i) => `
@@ -2141,8 +2141,20 @@ function updateMetagameDisplay() {
       `;
     }
 
+    const homeToggleHtml = isHome ? `
+      <div class="chart-type-toggle" style="margin-bottom: 0.5rem; display: flex; align-self: flex-start;">
+        <button type="button" class="chart-toggle-btn ${window.currentMetagameChartType !== 'bar' ? 'active' : ''}" id="btn-chart-doughnut-home" onclick="window.setMetagameChartType('doughnut')" title="Gráfico de Rosca">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+        </button>
+        <button type="button" class="chart-toggle-btn ${window.currentMetagameChartType === 'bar' ? 'active' : ''}" id="btn-chart-bar-home" onclick="window.setMetagameChartType('bar')" title="Gráfico de Barras">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+        </button>
+      </div>
+    ` : '';
+
     const htmlContent = `
-      <div style="display:flex; flex-direction:column; gap:2rem; align-items:center; width: 100%;">
+      <div style="display:flex; flex-direction:column; gap:1rem; align-items:center; width: 100%;">
+        ${homeToggleHtml}
         <div class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:space-evenly; align-items:center; gap: 2rem; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
           
           <div style="flex: 1 1 ${chartMaxWidth}; width: 100%; max-width: ${chartMaxWidth}; display:flex; flex-direction:column; gap:1rem;">
@@ -2150,8 +2162,8 @@ function updateMetagameDisplay() {
               <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
               
               <!-- Center Name Info -->
-              <div id="chart-center-text-${canvasId}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; z-index:2; width: 60%; transition:opacity 0.3s;">
-                 <div id="chart-center-name-${canvasId}" style="font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.4);">Toque numa<br>fatia</div>
+              <div id="chart-center-text-${canvasId}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; z-index:2; width: 100%; transition:opacity 0.3s;">
+                 <div id="chart-center-name-${canvasId}" style="display:inline-block; font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.7); background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 12px rgba(0,0,0,0.5);">Toque numa<br>fatia</div>
               </div>
             </div>
           </div>
@@ -2318,9 +2330,14 @@ function updateMetagameDisplay() {
               if (activeElements && activeElements.length > 0) {
                 const dataIndex = activeElements[0].index;
                 const label = chart.data.labels[dataIndex];
-                if (window.syncCarouselToDeck) {
-                  window.syncCarouselToDeck(chart.canvas.id, label);
+                if (chart._lastHoveredLabel !== label) {
+                  chart._lastHoveredLabel = label;
+                  if (window.syncCarouselToDeck) {
+                    window.syncCarouselToDeck(chart.canvas.id, label);
+                  }
                 }
+              } else {
+                chart._lastHoveredLabel = null;
               }
             },
             scales: {
@@ -2346,20 +2363,26 @@ function updateMetagameDisplay() {
           } : { 
             responsive: true, 
             maintainAspectRatio: true, 
-            layout: { padding: { top: 20, bottom: 20, left: 45, right: 45 } },
+            layout: { padding: { top: 10, bottom: 10, left: 15, right: 15 } },
             onHover: (event, activeElements, chart) => {
               if (activeElements && activeElements.length > 0) {
                 const dataIndex = activeElements[0].index;
                 const label = chart.data.labels[dataIndex];
-                if (window.focusCarouselDeck) {
-                  window.focusCarouselDeck(chart.canvas.id, label, chart);
-                }
-                if (window.syncCarouselToDeck) {
-                  window.syncCarouselToDeck(chart.canvas.id, label);
+                if (chart._lastHoveredLabel !== label) {
+                  chart._lastHoveredLabel = label;
+                  if (window.focusCarouselDeck) {
+                    window.focusCarouselDeck(chart.canvas.id, label, chart);
+                  }
+                  if (window.syncCarouselToDeck) {
+                    window.syncCarouselToDeck(chart.canvas.id, label);
+                  }
                 }
               } else {
-                if (window.focusCarouselDeck) {
-                  window.focusCarouselDeck(chart.canvas.id, null, chart);
+                if (chart._lastHoveredLabel !== null) {
+                  chart._lastHoveredLabel = null;
+                  if (window.focusCarouselDeck) {
+                    window.focusCarouselDeck(chart.canvas.id, null, chart);
+                  }
                 }
               }
             },
@@ -2460,7 +2483,7 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
   if (!deckName) {
     if (centerName) {
       centerName.innerHTML = "Toque numa<br>fatia";
-      centerName.style.cssText = "font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.4);";
+      centerName.style.cssText = "display:inline-block; font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.7); background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 12px rgba(0,0,0,0.5);";
     }
     return;
   }
@@ -2472,6 +2495,7 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
     const bgStyle = window.getDeckGradientStyle ? window.getDeckGradientStyle(deckName) : 'background: white;';
     
     centerName.style.cssText = `
+      display: inline-block;
       font-weight: 800; 
       font-size: 0.9rem; 
       line-height: 1.2; 
@@ -2481,6 +2505,12 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
       background-clip: text;
       color: transparent;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+      background-color: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(4px);
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     `;
     
     centerTextWrap.style.opacity = '1';
