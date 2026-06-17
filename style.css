@@ -1160,10 +1160,10 @@ tbody tr.top-8 .row-rank,
   perspective: 1000px;
 }
 .carousel-home {
-  height: 320px;
+  height: 350px;
 }
 .carousel-home .carousel-3d-stage {
-  transform: translate(-50%, -50%) scale(0.8);
+  transform: translate(-50%, -50%) scale(0.95);
 }
 .carousel-page {
   height: 480px;
@@ -2621,9 +2621,11 @@ tbody tr.top-8 .row-rank,
   top: 0;
   left: 0;
   height: 100%;
+  width: var(--progress);
   opacity: 0.5;
   z-index: 2;
   border-radius: 12px;
+  transition: width 0.4s ease, opacity 0.4s ease;
 }
 .accordion-item.expanded .accordion-progress {
   opacity: 0.2;
@@ -2676,6 +2678,115 @@ tbody tr.top-8 .row-rank,
 .accordion-item.expanded .accordion-details {
   height: calc(120px - 48px);
   opacity: 1;
+}
+
+@media (min-width: 769px) {
+  .accordion-list {
+    flex-direction: row;
+    height: 380px;
+    max-height: 380px;
+    gap: 6px;
+    overflow: hidden;
+    padding-right: 0;
+  }
+  
+  .accordion-item {
+    flex: 1;
+    height: 100%;
+    width: auto;
+    transition: flex 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s;
+  }
+  
+  .accordion-item:hover,
+  .accordion-item.expanded {
+    flex: 10;
+    height: 100%;
+  }
+  
+  .accordion-bg-image {
+    mask-image: linear-gradient(to top, transparent, black 40%);
+    -webkit-mask-image: linear-gradient(to top, transparent, black 40%);
+  }
+
+  .accordion-progress {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: var(--progress);
+    transition: height 0.4s ease, opacity 0.4s ease;
+  }
+  
+  .accordion-content {
+    padding: 16px 8px;
+    justify-content: space-between;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .accordion-header {
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    gap: 16px;
+    transition: all 0.4s;
+  }
+  
+  .accordion-name {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    white-space: nowrap;
+    margin: auto 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  
+  .accordion-percent {
+    font-size: 0.95rem;
+    font-weight: 800;
+  }
+  
+  .accordion-details {
+    height: 0;
+    opacity: 0;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 8px;
+  }
+  
+  /* Active / Expanded states */
+  .accordion-item:hover .accordion-header,
+  .accordion-item.expanded .accordion-header {
+    flex-direction: row;
+    height: 48px;
+    padding: 0 12px;
+  }
+  
+  .accordion-item:hover .accordion-name,
+  .accordion-item.expanded .accordion-name {
+    writing-mode: horizontal-tb;
+    transform: none;
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 0;
+    flex-grow: 1;
+    margin-left: 12px;
+    text-align: left;
+  }
+  
+  .accordion-item:hover .accordion-percent,
+  .accordion-item.expanded .accordion-percent {
+    font-size: 1.4rem;
+    font-weight: 900;
+  }
+  
+  .accordion-item:hover .accordion-details,
+  .accordion-item.expanded .accordion-details {
+    height: auto;
+    opacity: 1;
+  }
 }
 
 .historical-control-field label {

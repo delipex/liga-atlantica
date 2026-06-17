@@ -1959,7 +1959,6 @@ function populateMetagameSeasonSelector(configVal) {
   } else {
     selector.value = 'all';
   }
-  
   selector.removeEventListener('change', handleMetagameSelectorChange);
   selector.addEventListener('change', handleMetagameSelectorChange);
   
@@ -1973,7 +1972,7 @@ function populateMetagameSeasonSelector(configVal) {
 window.setMetagameChartType = function(type) {
   window.currentMetagameChartType = type;
   document.querySelectorAll('.chart-toggle-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.id === 'btn-chart-' + type || btn.id === 'btn-chart-' + type + '-home');
+    btn.classList.toggle('active', btn.id.includes(type));
   });
   updateMetagameDisplay();
 };
@@ -2019,34 +2018,7 @@ function updateMetagameDisplay() {
   }).sort((a, b) => b.count - a.count);
   
   const chartType = window.currentMetagameChartType || 'doughnut';
-  let chartDecks = [];
-  if (chartType === 'doughnut') {
-    let outrosCount = 0;
-    sortedDecks.forEach(d => {
-      if (d.deck.toLowerCase() === 'outros' || d.count < 2) {
-        outrosCount += d.count;
-      } else {
-        chartDecks.push({ ...d });
-      }
-    });
-    if (outrosCount > 0) {
-      chartDecks.push({
-        deck: 'Outros',
-        count: outrosCount,
-        image: null,
-        icone: null,
-        energia: '',
-        limitless: '#'
-      });
-    }
-    chartDecks.sort((a, b) => {
-      if (a.deck === 'Outros') return 1;
-      if (b.deck === 'Outros') return -1;
-      return b.count - a.count;
-    });
-  } else {
-    chartDecks = sortedDecks;
-  }
+  const chartDecks = sortedDecks;
   
   const labels = chartDecks.map(d => d.deck);
   const data = chartDecks.map(d => d.count);
@@ -2165,16 +2137,7 @@ function updateMetagameDisplay() {
       `;
     }
 
-    const homeToggleHtml = isHome ? `
-      <div class="chart-type-toggle" style="margin-bottom: 0.5rem; display: flex; align-self: flex-start;">
-        <button type="button" class="chart-toggle-btn ${window.currentMetagameChartType !== 'bar' ? 'active' : ''}" id="btn-chart-doughnut-home" onclick="window.setMetagameChartType('doughnut')" title="Gráfico de Rosca">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
-        </button>
-        <button type="button" class="chart-toggle-btn ${window.currentMetagameChartType === 'bar' ? 'active' : ''}" id="btn-chart-bar-home" onclick="window.setMetagameChartType('bar')" title="Gráfico de Barras">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-        </button>
-      </div>
-    ` : '';
+    // Toggle button html will be generated inside the column card directly.
 
     const chartType = window.currentMetagameChartType || 'doughnut';
     
@@ -2189,9 +2152,14 @@ function updateMetagameDisplay() {
         const percentage = Math.round((deck.count / totalDecksCount) * 100);
         
         accordionHtml += `
-          <div class="accordion-item" onclick="this.classList.toggle('expanded'); if(window.focusCarouselDeck) window.focusCarouselDeck('${canvasId}', '${escapeHTML(deck.deck)}')">
+          <div class="accordion-item" onclick="
+            const isExp = this.classList.contains('expanded');
+            this.parentNode.querySelectorAll('.accordion-item').forEach(el => el.classList.remove('expanded'));
+            if (!isExp) this.classList.add('expanded');
+            if(window.focusCarouselDeck) window.focusCarouselDeck('${canvasId}', '${escapeHTML(deck.deck)}');
+          ">
             <div class="accordion-bg-image" style="background-image: ${deckImage}"></div>
-            <div class="accordion-progress" style="${bgStyle} width: ${relativeWidth}%;"></div>
+            <div class="accordion-progress" style="${bgStyle} --progress: ${relativeWidth}%;"></div>
             <div class="accordion-content">
               <div class="accordion-header">
                 <span class="accordion-rank">#${idx + 1}</span>
@@ -2208,12 +2176,22 @@ function updateMetagameDisplay() {
       accordionHtml += '</div>';
     }
 
+    const toggleHtml = `
+      <div class="chart-type-toggle" style="display: flex; align-self: flex-start; margin-top: 1rem;">
+        <button type="button" class="chart-toggle-btn ${chartType !== 'bar' ? 'active' : ''}" id="btn-chart-doughnut-${canvasId}" onclick="window.setMetagameChartType('doughnut')" title="Gráfico de Rosca">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+        </button>
+        <button type="button" class="chart-toggle-btn ${chartType === 'bar' ? 'active' : ''}" id="btn-chart-bar-${canvasId}" onclick="window.setMetagameChartType('bar')" title="Gráfico de Barras">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+        </button>
+      </div>
+    `;
+
     const htmlContent = `
-      <div style="display:flex; flex-direction:column; gap:1rem; align-items:center; width: 100%;">
-        ${homeToggleHtml}
+      <div style="display:flex; flex-direction:column; align-items:center; width: 100%;">
         <div class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:space-evenly; align-items:center; gap: 5.5rem; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
           
-          <div style="flex: 1 1 ${chartMaxWidth}; width: 100%; max-width: ${chartMaxWidth}; display:flex; flex-direction:column; gap:1rem;">
+          <div style="flex: 1 1 ${chartMaxWidth}; width: 100%; max-width: ${chartMaxWidth}; display:flex; flex-direction:column; gap:1.5rem; align-items: flex-start;">
             ${chartType === 'doughnut' ? `
             <div style="position:relative; width:100%; aspect-ratio: 1; display:flex; align-items:center; justify-content:center;">
               <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
@@ -2223,6 +2201,7 @@ function updateMetagameDisplay() {
               </div>
             </div>
             ` : accordionHtml}
+            ${toggleHtml}
           </div>
           
           <div style="flex: 1 1 350px; width: 100%; max-width: 400px;">
@@ -2285,7 +2264,7 @@ function updateMetagameDisplay() {
               
               const isOutros = name.toLowerCase() === 'outros';
               
-              if (!isOutros && deckData && deckData.icone) {
+              if (!isOutros && deckData && deckData.icone && val >= 2) {
                 const angle = (element.startAngle + element.endAngle) / 2;
                 const x0 = element.x;
                 const y0 = element.y;

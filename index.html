@@ -122,10 +122,13 @@ Siga-nos no Instagram
       
       <!-- Container do Metagame na Home -->
       <div id="metagame-home-container" style="margin-top: 4rem;">
-        <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
-          <h2 class="section-title">Metagame Atual</h2>
-          <p class="section-subtitle" style="color:var(--text-secondary);">Decks mais utilizados na liga</p>
-        </div>
+        <h2 class="podium-title" style="margin-bottom: 2rem;">
+          <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+            <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+          </svg>
+          Metagame Atual
+        </h2>
         <div id="metagame-home-content"></div>
       </div>
     </section>
@@ -315,17 +318,6 @@ Siga-nos no Instagram
             </div>
             
             <div class="historical-controls">
-              <div class="historical-control-field">
-                <label>Vis&atilde;o</label>
-                <div class="chart-type-toggle">
-                  <button type="button" class="chart-toggle-btn active" id="btn-chart-doughnut" onclick="window.setMetagameChartType('doughnut')" title="Gr&aacute;fico de Rosca">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
-                  </button>
-                  <button type="button" class="chart-toggle-btn" id="btn-chart-bar" onclick="window.setMetagameChartType('bar')" title="Gr&aacute;fico de Barras">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-                  </button>
-                </div>
-              </div>
               <div class="historical-control-field">
                 <label for="metagame-season-selector">Etapa</label>
                 <select id="metagame-season-selector" class="search-input historical-select">
