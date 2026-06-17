@@ -44,10 +44,10 @@
   --energy-lightning: #EBC816;
   --energy-psychic: #D94293;
   --energy-fighting: #C55E13;
-  --energy-darkness: #4F4747;
+  --energy-darkness: #0c4a6e;
   --energy-metal: #7E8E9E;
   --energy-dragon: #8D56FF;
-  --energy-colorless: #A8A878;
+  --energy-colorless: #e2e8f0;
 }
 
 [data-theme="light"] {
@@ -1155,6 +1155,18 @@ tbody tr.top-8 .row-rank,
   height: 400px;
   perspective: 1000px;
   overflow: hidden;
+}
+.carousel-home {
+  height: 320px;
+}
+.carousel-home .carousel-3d-stage {
+  transform: translate(-50%, -50%) scale(0.8);
+}
+.carousel-page {
+  height: 480px;
+}
+.carousel-page .carousel-3d-stage {
+  transform: translate(-50%, -50%) scale(1.15);
 }
 .carousel-3d-stage {
   width: 190px;

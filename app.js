@@ -2067,7 +2067,7 @@ function updateMetagameDisplay() {
     tooltipEl.style.top = tooltip.caretY + 'px';
   };
 
-  const renderToContainer = (targetContainer, canvasId, chartVarName) => {
+  const renderToContainer = (targetContainer, canvasId, chartVarName, isHome) => {
     if (!targetContainer) return;
     
     if (!appData.Metagame || appData.Metagame.length === 0) {
@@ -2091,8 +2091,8 @@ function updateMetagameDisplay() {
       const parts = energyStr.toLowerCase().split('+').map(p => p.trim());
       const energyHexColors = {
         grass: '#78C850', fire: '#FF4216', water: '#1593F5', lightning: '#EBC816', 
-        psychic: '#D94293', fighting: '#C55E13', darkness: '#4F4747', metal: '#7E8E9E', 
-        dragon: '#8D56FF', colorless: '#A8A878'
+        psychic: '#D94293', fighting: '#C55E13', darkness: '#0c4a6e', metal: '#7E8E9E', 
+        dragon: '#8D56FF', colorless: '#e2e8f0'
       };
       const hex1 = energyHexColors[parts[0]] || '#475569';
       if (parts.length > 1 && energyHexColors[parts[1]]) {
@@ -2102,22 +2102,26 @@ function updateMetagameDisplay() {
       return `background: ${hex1}ee;`;
     };
 
+    const carouselClass = isHome ? 'carousel-home' : 'carousel-page';
+    const chartMaxWidth = isHome ? '300px' : '500px';
+
     if (decksWithImages.length > 0) {
       const cardsHtml = decksWithImages.map((d, i) => `
         <a href="${d.limitless}" target="_blank" rel="noopener noreferrer" class="carousel-3d-item" data-index="${i}" data-deck="${escapeHTML(d.deck)}" title="Ver ${escapeHTML(d.deck)} no Limitless">
           <img src="${safeExternalUrl(d.image)}" alt="${escapeHTML(d.deck)}" loading="lazy">
-          <div class="deck-card-label" style="${window.getDeckGradientStyle(d.deck)} text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">${escapeHTML(d.deck)}</div>
+          ${isHome ? '' : `<div class="deck-card-label" style="${window.getDeckGradientStyle(d.deck)} text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">${escapeHTML(d.deck)}</div>`}
         </a>
       `).join('');
       
       carouselHtml = `
-        <div class="carousel-3d-container" id="carousel-${canvasId}">
+        <div class="carousel-3d-container ${carouselClass}" id="carousel-${canvasId}">
           <button class="carousel-nav-btn carousel-prev" onclick="moveCarousel('${canvasId}', -1)">&#10094;</button>
           <div class="carousel-3d-stage" id="stage-${canvasId}">
             ${cardsHtml}
           </div>
           <button class="carousel-nav-btn carousel-next" onclick="moveCarousel('${canvasId}', 1)">&#10095;</button>
         </div>
+        ${isHome ? '' : '<div style="font-size:0.75rem; color:rgba(255,255,255,0.4); text-align:center; margin-top:0.5rem; font-style:italic;">Clique na carta para ver o deck list completo</div>'}
       `;
     }
 
@@ -2125,11 +2129,8 @@ function updateMetagameDisplay() {
       <div style="display:flex; flex-direction:column; gap:2rem; align-items:center; width: 100%;">
         <div class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:space-evenly; align-items:center; gap: 2rem; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
           
-          <div style="flex: 1 1 350px; width: 100%; max-width: 400px; display:flex; flex-direction:column; gap:1rem;">
-            <div style="position:relative; width:100%; aspect-ratio: 1;">
-              <div id="chart-center-wrapper-${canvasId}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width: 45%; aspect-ratio: 1; height: auto; border-radius:50%; overflow:hidden; z-index:0; display:flex; align-items:center; justify-content:center; border: 2px solid rgba(255,255,255,0.1); box-shadow: inset 0 0 20px rgba(0,0,0,0.5); opacity: ${sortedDecks[0] && sortedDecks[0].image ? 1 : 0}; transition: opacity 0.3s;">
-                <img id="chart-center-img-${canvasId}" src="${sortedDecks[0] && sortedDecks[0].image ? safeExternalUrl(sortedDecks[0].image) : ''}" style="width:100%; height:100%; object-fit:cover; opacity: 0.85; transition: all 0.3s;">
-              </div>
+          <div style="flex: 1 1 ${chartMaxWidth}; width: 100%; max-width: ${chartMaxWidth}; display:flex; flex-direction:column; gap:1rem;">
+            <div style="position:relative; width:100%; aspect-ratio: 1; display:flex; align-items:center; justify-content:center;">
               <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
             </div>
             
@@ -2154,8 +2155,8 @@ function updateMetagameDisplay() {
       if (window.Chart) {
         const energyHexColors = {
           grass: '#78C850', fire: '#FF4216', water: '#1593F5', lightning: '#EBC816', 
-          psychic: '#D94293', fighting: '#C55E13', darkness: '#4F4747', metal: '#7E8E9E', 
-          dragon: '#8D56FF', colorless: '#A8A878'
+          psychic: '#D94293', fighting: '#C55E13', darkness: '#0c4a6e', metal: '#7E8E9E', 
+          dragon: '#8D56FF', colorless: '#e2e8f0'
         };
         const chartCtx = ctx.getContext('2d');
         const bgColors = sortedDecks.map(d => {
@@ -2187,22 +2188,32 @@ function updateMetagameDisplay() {
               const val = chart.data.datasets[0].data[index];
               const percentNum = Math.round((val / total) * 100);
               
-              // Oculta nmeros em fatias muito pequenas (menores que 4%)
+              // Oculta textos em fatias muito pequenas para no embolar
               if (percentNum < 4) return;
               
               const percent = percentNum + '%';
+              const name = chart.data.labels[index];
+              let shortName = name;
+              if (shortName.length > 14) shortName = shortName.substring(0, 12) + '..';
               
               const center = element.tooltipPosition();
               ctx.save();
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-              ctx.font = '500 12px "Inter", sans-serif';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               
-              ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+              ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
               ctx.shadowBlur = 4;
               
-              ctx.fillText(percent, center.x, center.y);
+              // Draw Deck Name
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+              ctx.font = '600 11px "Inter", sans-serif';
+              ctx.fillText(shortName, center.x, center.y - 7);
+              
+              // Draw Percentage
+              ctx.fillStyle = '#ffffff';
+              ctx.font = '800 13px "Inter", sans-serif';
+              ctx.fillText(percent, center.x, center.y + 8);
+              
               ctx.restore();
             });
           }
@@ -2247,8 +2258,8 @@ function updateMetagameDisplay() {
     }
   };
 
-  renderToContainer(homeContent, 'metagameChartCanvas_home', 'metagameChartHome');
-  renderToContainer(pageContent, 'metagameChartCanvas_page', 'metagameChartPage');
+  renderToContainer(homeContent, 'metagameChartCanvas_home', 'metagameChartHome', true);
+  renderToContainer(pageContent, 'metagameChartCanvas_page', 'metagameChartPage', false);
 }
 
 // 3D Carousel Global Logic
@@ -2334,19 +2345,6 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
          clearInterval(window.carouselIntervals[id]);
          window.carouselIntervals[id] = setInterval(() => window.moveCarousel(id, 1), 4000);
        }
-    }
-    
-    // Atualiza a imagem central do grfico!
-    const centerWrapper = document.getElementById('chart-center-wrapper-' + id);
-    const centerImg = document.getElementById('chart-center-img-' + id);
-    if (centerWrapper && centerImg && targetIndex !== -1) {
-      const imgElement = c.items[targetIndex].querySelector('img');
-      if (imgElement && imgElement.src && !imgElement.src.endsWith('null')) {
-        centerImg.src = imgElement.src;
-        centerWrapper.style.opacity = '1';
-      } else {
-        centerWrapper.style.opacity = '0';
-      }
     }
   }
 
