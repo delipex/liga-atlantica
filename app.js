@@ -2087,7 +2087,7 @@ function updateMetagameDisplay() {
     
     if (decksWithImages.length > 0) {
       const cardsHtml = decksWithImages.map((d, i) => `
-        <a href="${d.limitless}" target="_blank" rel="noopener noreferrer" class="carousel-3d-item" data-index="${i}" title="Ver ${escapeHTML(d.deck)} no Limitless">
+        <a href="${d.limitless}" target="_blank" rel="noopener noreferrer" class="carousel-3d-item" data-index="${i}" data-deck="${escapeHTML(d.deck)}" title="Ver ${escapeHTML(d.deck)} no Limitless">
           <img src="${safeExternalUrl(d.image)}" alt="${escapeHTML(d.deck)}" loading="lazy">
           <div class="deck-card-label">${escapeHTML(d.deck)}</div>
         </a>
@@ -2106,7 +2106,7 @@ function updateMetagameDisplay() {
 
     const htmlContent = `
       <div style="display:flex; flex-direction:column; gap:2rem; align-items:center; width: 100%;">
-        <div class="glass-card" style="width: 100%; max-width: 900px; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:center; align-items:center; gap: 2rem; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
+        <div class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:space-evenly; align-items:center; gap: 2rem; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
           
           <div style="flex: 1 1 350px; width: 100%; max-width: 400px; aspect-ratio: 1; position:relative;">
             ${sortedDecks[0] && sortedDecks[0].image ? `
@@ -2131,24 +2131,89 @@ function updateMetagameDisplay() {
     if (ctx) {
       if (window[chartVarName]) window[chartVarName].destroy();
       if (window.Chart) {
-        const bgColors = labels.map((_, i) => colors[i % colors.length] + 'aa');
+        const energyHexColors = {
+          grass: '#78C850', fire: '#FF4216', water: '#1593F5', lightning: '#EBC816', 
+          psychic: '#D94293', fighting: '#C55E13', darkness: '#4F4747', metal: '#7E8E9E', 
+          dragon: '#8D56FF', colorless: '#A8A878'
+        };
+        const chartCtx = ctx.getContext('2d');
+        const bgColors = sortedDecks.map(d => {
+          const energyStr = getDeckEnergy(d.deck);
+          if (!energyStr) return 'rgba(255, 255, 255, 0.2)';
+          
+          const parts = energyStr.toLowerCase().split('+').map(p => p.trim());
+          const hex1 = energyHexColors[parts[0]] || '#94a3b8';
+          
+          if (parts.length > 1 && energyHexColors[parts[1]]) {
+            const hex2 = energyHexColors[parts[1]];
+            const grad = chartCtx.createLinearGradient(0, 0, 0, 300);
+            grad.addColorStop(0, hex1 + 'ee');
+            grad.addColorStop(1, hex2 + 'ee');
+            return grad;
+          }
+          return hex1 + 'ee';
+        });
         Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
         Chart.defaults.font.family = '"Inter", sans-serif';
+        const sliceLabelsPlugin = {
+          id: 'sliceLabels',
+          afterDraw(chart, args, options) {
+            const ctx = chart.ctx;
+            const meta = chart.getDatasetMeta(0);
+            meta.data.forEach((element, index) => {
+              const val = chart.data.datasets[0].data[index];
+              if (val < 1) return;
+              
+              const center = element.tooltipPosition();
+              ctx.save();
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+              ctx.font = 'bold 15px "Inter", sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              
+              // Adiciona uma sombrinha sutil no texto para destacar de fundos claros
+              ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+              ctx.shadowBlur = 4;
+              
+              ctx.fillText(val + '', center.x, center.y);
+              ctx.restore();
+            });
+          }
+        };
+
         window[chartVarName] = new Chart(ctx, {
           type: 'doughnut',
           data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderColor: 'rgba(255,255,255,0.15)', borderWidth: 2, hoverOffset: 10 }] },
           options: { 
             responsive: true, 
             maintainAspectRatio: true, 
+            onHover: (event, activeElements, chart) => {
+              if (activeElements && activeElements.length > 0) {
+                const dataIndex = activeElements[0].index;
+                const label = chart.data.labels[dataIndex];
+                if (window.focusCarouselDeck) {
+                  window.focusCarouselDeck(chart.canvas.id, label);
+                }
+              }
+            },
             plugins: { 
-              legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } }, 
+              legend: { 
+                position: 'bottom', 
+                labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' },
+                onHover: (event, legendItem, legend) => {
+                  if (window.focusCarouselDeck) {
+                    window.focusCarouselDeck(legend.chart.canvas.id, legendItem.text);
+                  }
+                }
+              }, 
               tooltip: { 
                 enabled: false, 
                 external: externalTooltipHandler
               } 
             }, 
             cutout: '55%' 
-          }
+          },
+          plugins: [sliceLabelsPlugin]
         });
       }
     }
@@ -2214,13 +2279,29 @@ window.updateCarousel = function(id) {
       const direction = diff > 0 ? 1 : -1;
       const offset = Math.abs(diff);
       const rotate = 45 * direction;
-      const translateX = (90 * direction) + (10 * diff);
-      const translateZ = -100 - (offset * 40);
+      const translateX = (110 * direction) + (20 * diff);
+      const translateZ = -120 - (offset * 40);
       
       item.style.transform = `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${-rotate}deg)`;
       item.style.opacity = offset > 2 ? '0' : String(1 - (offset * 0.25));
     }
   });
+};
+
+window.focusCarouselDeck = function(id, deckName) {
+  const c = window.carousels[id];
+  if(!c) return;
+  const targetIndex = c.items.findIndex(item => item.getAttribute('data-deck') === deckName);
+  if(targetIndex !== -1 && targetIndex !== c.index) {
+     c.index = targetIndex;
+     window.updateCarousel(id);
+     
+     // reset interval
+     if(window.carouselIntervals && window.carouselIntervals[id]) {
+       clearInterval(window.carouselIntervals[id]);
+       window.carouselIntervals[id] = setInterval(() => window.moveCarousel(id, 1), 4000);
+     }
+  }
 };
 
 function toggleHistoryCollapse() {
