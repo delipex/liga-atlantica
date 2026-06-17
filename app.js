@@ -2227,15 +2227,24 @@ function updateMetagameDisplay() {
                 let line2 = words.slice(1).join(' ');
                 
                 ctx.font = "bold 7.5px 'Inter', sans-serif";
+                
+                let textW = ctx.measureText(name).width;
+                if (line2 && line2.length > 0) {
+                  textW = Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width);
+                }
+                
+                ctx.fillStyle = "rgba(0,0,0,0.4)";
+                ctx.fillRect(center.x - (textW/2) - 4, center.y - 15, textW + 8, line2 && line2.length > 0 ? 18 : 12);
+                
                 ctx.fillStyle = "#ffffff";
                 
                 if (line2 && line2.length > 0) {
-                  ctx.fillText(line1, center.x, center.y - 12);
-                  ctx.fillText(line2, center.x, center.y - 4);
+                  ctx.fillText(line1, center.x, center.y - 10);
+                  ctx.fillText(line2, center.x, center.y - 2);
                 } else {
                   ctx.fillText(name, center.x, center.y - 8);
                 }
-                yOffset = 6;
+                yOffset = 8;
               }
               
               ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
@@ -2262,6 +2271,7 @@ function updateMetagameDisplay() {
             labels: labels, 
             datasets: [{ 
               data: data, 
+              borderRadius: chartType === 'bar' ? 6 : 0,
               backgroundColor: function(context) {
                 const chart = context.chart;
                 const {ctx, chartArea} = chart;
@@ -2299,12 +2309,17 @@ function updateMetagameDisplay() {
             responsive: true, 
             maintainAspectRatio: true, 
             layout: { padding: 10 },
+            onHover: (event, activeElements, chart) => {
+              if (activeElements && activeElements.length > 0) {
+                const dataIndex = activeElements[0].index;
+                const label = chart.data.labels[dataIndex];
+                if (window.syncCarouselToDeck) {
+                  window.syncCarouselToDeck(chart.canvas.id, label);
+                }
+              }
+            },
             scales: {
-              y: { 
-                beginAtZero: true,
-                grid: { color: 'rgba(255,255,255,0.05)' },
-                ticks: { color: 'rgba(255,255,255,0.5)' }
-              },
+              y: { display: false },
               x: {
                 grid: { display: false },
                 ticks: { color: 'rgba(255,255,255,0.8)', font: { size: 10 } }
@@ -2334,6 +2349,9 @@ function updateMetagameDisplay() {
                 if (window.focusCarouselDeck) {
                   window.focusCarouselDeck(chart.canvas.id, label, chart);
                 }
+                if (window.syncCarouselToDeck) {
+                  window.syncCarouselToDeck(chart.canvas.id, label);
+                }
               } else {
                 if (window.focusCarouselDeck) {
                   window.focusCarouselDeck(chart.canvas.id, null, chart);
@@ -2353,7 +2371,7 @@ function updateMetagameDisplay() {
               legend: { display: false }, 
               tooltip: { enabled: false } 
             }, 
-            cutout: '50%' 
+            cutout: '40%' 
           },
           plugins: chartType === 'doughnut' ? [sliceLabelsPlugin] : []
         });
