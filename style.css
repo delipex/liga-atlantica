@@ -1163,10 +1163,10 @@ tbody tr.top-8 .row-rank,
   transform: translate(-50%, -50%) scale(0.8);
 }
 .carousel-page {
-  height: 520px;
+  height: 480px;
 }
 .carousel-page .carousel-3d-stage {
-  transform: translate(-50%, -50%) scale(1.35);
+  transform: translate(-50%, -50%) scale(1.15);
 }
 .carousel-3d-stage {
   width: 190px;

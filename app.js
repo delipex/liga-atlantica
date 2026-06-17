@@ -2121,7 +2121,7 @@ function updateMetagameDisplay() {
           </div>
           <button class="carousel-nav-btn carousel-next" onclick="moveCarousel('${canvasId}', 1)">&#10095;</button>
         </div>
-        ${isHome ? '' : '<div style="font-size:0.75rem; color:rgba(255,255,255,0.4); text-align:center; margin-top:0.5rem; font-style:italic;">Clique na carta para ver o deck list completo</div>'}
+        <div style="font-size:0.75rem; color:rgba(255,255,255,0.4); text-align:center; margin-top:0.5rem; font-style:italic;">Clique na carta para ver a decklist completa</div>
       `;
     }
 
@@ -2132,10 +2132,11 @@ function updateMetagameDisplay() {
           <div style="flex: 1 1 ${chartMaxWidth}; width: 100%; max-width: ${chartMaxWidth}; display:flex; flex-direction:column; gap:1rem;">
             <div style="position:relative; width:100%; aspect-ratio: 1; display:flex; align-items:center; justify-content:center;">
               <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
-            </div>
-            
-            <div id="chart-hover-info-${canvasId}" style="width: 100%; max-width: 350px; margin: 0 auto; text-align: center; padding: 0.5rem 1rem; border-radius: 8px; min-height: 38px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; color: white; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 10px rgba(0,0,0,0.2); backdrop-filter: blur(8px); transition: all 0.3s; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">
-              Passe o mouse no gráfico
+              
+              <!-- Center Name Info -->
+              <div id="chart-center-text-${canvasId}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; z-index:2; width: 55%; opacity:0; transition:opacity 0.3s;">
+                 <div id="chart-center-name-${canvasId}" style="font-weight: 800; font-size: 1.1rem; line-height: 1.2; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.8);"></div>
+              </div>
             </div>
           </div>
           
@@ -2159,33 +2160,6 @@ function updateMetagameDisplay() {
           dragon: '#8D56FF', colorless: '#e2e8f0'
         };
         const chartCtx = ctx.getContext('2d');
-        const bgColors = sortedDecks.map(d => {
-          const energyStr = getDeckEnergy(d.deck);
-          if (!energyStr) return 'rgba(255, 255, 255, 0.2)';
-          
-          const parts = energyStr.toLowerCase().split('+').map(p => p.trim());
-          const hex1 = energyHexColors[parts[0]] || '#94a3b8';
-          
-          if (parts.length > 1 && energyHexColors[parts[1]]) {
-            const hex2 = energyHexColors[parts[1]];
-            const grad = chartCtx.createLinearGradient(0, 0, 0, 300);
-            grad.addColorStop(0, hex1 + 'ee');
-            grad.addColorStop(1, hex2 + 'ee');
-            return grad;
-          }
-          
-          const darken = (hex, amt) => {
-             let r = Math.max(0, parseInt(hex.slice(1,3), 16) - amt);
-             let g = Math.max(0, parseInt(hex.slice(3,5), 16) - amt);
-             let b = Math.max(0, parseInt(hex.slice(5,7), 16) - amt);
-             return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
-          };
-          const darkHex = darken(hex1, 40);
-          const singleGrad = chartCtx.createLinearGradient(0, 0, 0, 300);
-          singleGrad.addColorStop(0, hex1 + 'ee');
-          singleGrad.addColorStop(1, darkHex + 'ee');
-          return singleGrad;
-        });
         Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
         Chart.defaults.font.family = '"Inter", sans-serif';
         const sliceLabelsPlugin = {
@@ -2203,9 +2177,6 @@ function updateMetagameDisplay() {
               
               const percent = percentNum + '%';
               const name = chart.data.labels[index];
-              const words = name.split(/[\s-]+/).filter(w => w.length > 0 && !['do', 'da', 'de'].includes(w.toLowerCase()));
-              let initials = words.map(w => w[0].toUpperCase()).join('');
-              if (initials.length > 3) initials = initials.substring(0, 3);
               
               const center = element.tooltipPosition();
               ctx.save();
@@ -2215,15 +2186,26 @@ function updateMetagameDisplay() {
               ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
               ctx.shadowBlur = 4;
               
-              // Draw Deck Initials
+              // Draw Deck Name (Full name, very small)
               ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-              ctx.font = '700 10px "Inter", sans-serif';
-              ctx.fillText(initials, center.x, center.y - 6);
+              ctx.font = '600 8.5px "Inter", sans-serif';
               
-              // Draw Percentage
-              ctx.fillStyle = '#ffffff';
-              ctx.font = '800 11px "Inter", sans-serif';
-              ctx.fillText(percent, center.x, center.y + 6);
+              const words = name.split(' ');
+              if (words.length > 1 && name.length > 12) {
+                 // Multiline
+                 ctx.fillText(words[0], center.x, center.y - 12);
+                 ctx.fillText(words.slice(1).join(' '), center.x, center.y - 3);
+                 // Draw Percentage
+                 ctx.fillStyle = '#ffffff';
+                 ctx.font = '800 10px "Inter", sans-serif';
+                 ctx.fillText(percent, center.x, center.y + 7);
+              } else {
+                 ctx.fillText(name, center.x, center.y - 7);
+                 // Draw Percentage
+                 ctx.fillStyle = '#ffffff';
+                 ctx.font = '800 10.5px "Inter", sans-serif';
+                 ctx.fillText(percent, center.x, center.y + 6);
+              }
               
               ctx.restore();
             });
@@ -2232,10 +2214,49 @@ function updateMetagameDisplay() {
 
         window[chartVarName] = new Chart(ctx, {
           type: 'doughnut',
-          data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderColor: 'rgba(255,255,255,0.15)', borderWidth: 2, hoverOffset: 10 }] },
+          data: { 
+            labels: labels, 
+            datasets: [{ 
+              data: data, 
+              backgroundColor: function(context) {
+                const chart = context.chart;
+                const {ctx, chartArea} = chart;
+                if (!chartArea) return '#475569';
+                
+                const deckName = chart.data.labels[context.dataIndex];
+                const energyStr = getDeckEnergy(deckName);
+                if (!energyStr) return 'rgba(255, 255, 255, 0.2)';
+                
+                const parts = energyStr.toLowerCase().split('+').map(p => p.trim());
+                const hex1 = energyHexColors[parts[0]] || '#94a3b8';
+                
+                const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                
+                if (parts.length > 1 && energyHexColors[parts[1]]) {
+                  const hex2 = energyHexColors[parts[1]];
+                  gradient.addColorStop(0, hex1 + 'ee');
+                  gradient.addColorStop(1, hex2 + 'ee');
+                } else {
+                  const darken = (hex, amt) => {
+                     let r = Math.max(0, parseInt(hex.slice(1,3), 16) - amt);
+                     let g = Math.max(0, parseInt(hex.slice(3,5), 16) - amt);
+                     let b = Math.max(0, parseInt(hex.slice(5,7), 16) - amt);
+                     return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
+                  };
+                  gradient.addColorStop(0, hex1 + 'ee');
+                  gradient.addColorStop(1, darken(hex1, 60) + 'ee');
+                }
+                return gradient;
+              }, 
+              borderColor: 'rgba(255,255,255,0.15)', 
+              borderWidth: 2, 
+              hoverOffset: 10 
+            }] 
+          },
           options: { 
             responsive: true, 
             maintainAspectRatio: true, 
+            layout: { padding: 15 },
             onHover: (event, activeElements, chart) => {
               if (activeElements && activeElements.length > 0) {
                 const dataIndex = activeElements[0].index;
@@ -2256,7 +2277,7 @@ function updateMetagameDisplay() {
                 external: externalTooltipHandler
               } 
             }, 
-            cutout: '75%' 
+            cutout: '60%' 
           },
           plugins: [sliceLabelsPlugin]
         });
@@ -2335,13 +2356,11 @@ window.updateCarousel = function(id) {
 
 window.focusCarouselDeck = function(id, deckName, chartObj = null) {
   const c = window.carousels[id];
-  const hoverInfo = document.getElementById('chart-hover-info-' + id);
+  const centerTextWrap = document.getElementById('chart-center-text-' + id);
+  const centerName = document.getElementById('chart-center-name-' + id);
   
   if (!deckName) {
-    if (hoverInfo) {
-      hoverInfo.style = `width: 100%; max-width: 350px; margin: 0 auto; text-align: center; padding: 0.5rem 1rem; border-radius: 8px; min-height: 38px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; color: white; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 10px rgba(0,0,0,0.2); backdrop-filter: blur(8px); transition: all 0.3s; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);`;
-      hoverInfo.innerHTML = 'Passe o mouse no gráfico';
-    }
+    if (centerTextWrap) centerTextWrap.style.opacity = '0';
     return;
   }
   
@@ -2359,21 +2378,10 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
     }
   }
 
-  // Atualiza a nova legenda dinmica do hover
-  if (hoverInfo) {
-    hoverInfo.style = `width: 100%; max-width: 350px; margin: 0 auto; text-align: center; padding: 0.5rem 1rem; border-radius: 8px; min-height: 38px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; color: white; ${window.getDeckGradientStyle(deckName)} border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.3); backdrop-filter: blur(8px); transition: all 0.3s; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);`;
-    
-    if (chartObj) {
-      const dataIndex = chartObj.data.labels.indexOf(deckName);
-      if (dataIndex !== -1) {
-        const val = chartObj.data.datasets[0].data[dataIndex];
-        const total = chartObj.data.datasets[0].data.reduce((a,b)=>a+b, 0);
-        const pct = Math.round((val/total)*100);
-        hoverInfo.innerHTML = `<span>${escapeHTML(deckName)}</span><span style="opacity:0.85; font-size:0.9em; margin-left:10px; font-weight:500;">${val} jg &bull; ${pct}%</span>`;
-        return;
-      }
-    }
-    hoverInfo.innerHTML = escapeHTML(deckName);
+  // Atualiza a nova legenda dinmica do hover no centro do grfico
+  if (centerTextWrap && centerName) {
+    centerName.innerHTML = escapeHTML(deckName);
+    centerTextWrap.style.opacity = '1';
   }
 };
 
