@@ -1148,6 +1148,71 @@ tbody tr.top-8 .row-rank,
   min-width: 0;
 }
 
+/* --- DECK MARQUEE CAROUSEL --- */
+.marquee-container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  padding: 1.5rem 0;
+  margin-top: 1rem;
+}
+.marquee-content {
+  display: inline-flex;
+  gap: 1rem;
+  animation: marquee-scroll 25s linear infinite;
+  padding-left: 1rem;
+}
+.marquee-content:hover {
+  animation-play-state: paused;
+}
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50% - 0.5rem)); }
+}
+.deck-card {
+  width: 100px;
+  height: 140px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.1);
+  text-decoration: none;
+  display: block;
+}
+.deck-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+.deck-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.4);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+.deck-card:hover img {
+  transform: scale(1.05);
+}
+.deck-card-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  text-align: center;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.2rem;
+  font-weight: 600;
+  backdrop-filter: blur(2px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .timeline-body {
   flex: 1 1 auto;
   min-width: 0;

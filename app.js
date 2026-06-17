@@ -2005,7 +2005,8 @@ function updateMetagameDisplay() {
       deck: deckName,
       count: deckCounts[deckName],
       image: deckInfo ? deckInfo.Imagem : null,
-      energia: deckInfo ? deckInfo.TipoEnergia : ''
+      energia: deckInfo ? deckInfo.TipoEnergia : '',
+      limitless: deckInfo ? (deckInfo.Limitless || deckInfo.Link || deckInfo.URL || '#') : '#'
     };
   }).sort((a, b) => b.count - a.count);
   
@@ -2081,8 +2082,7 @@ function updateMetagameDisplay() {
       targetContainer.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Nenhum deck registrado ${selectedSession === 'all' ? 'no geral' : 'nesta sessão'}.</div>`;
       return;
     }
-    
-    targetContainer.innerHTML = `
+    const chartHtml = `
       <div style="display:flex; flex-direction:column; gap:2rem; align-items:center;">
         <div class="glass-card" style="width: 100%; max-width: 400px; padding: 2rem; border-radius: var(--radius); display:flex; justify-content:center; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
           <div style="width: 100%; aspect-ratio: 1; position:relative;">
@@ -2096,6 +2096,29 @@ function updateMetagameDisplay() {
         </div>
       </div>
     `;
+
+    // Build Marquee HTML
+    const decksWithImages = sortedDecks.filter(d => d.image);
+    let marqueeHtml = '';
+    if (decksWithImages.length > 0) {
+      const renderCard = (d) => `
+        <a href="${d.limitless}" target="_blank" rel="noopener noreferrer" class="deck-card" title="Ver ${escapeHTML(d.deck)} no Limitless">
+          <img src="${safeExternalUrl(d.image)}" alt="${escapeHTML(d.deck)}" loading="lazy">
+          <div class="deck-card-label">${escapeHTML(d.deck)}</div>
+        </a>
+      `;
+      // To ensure enough width for seamless scrolling, repeat the list
+      const cardsHtml = decksWithImages.map(renderCard).join('');
+      marqueeHtml = `
+        <div class="marquee-container glass-card" style="width: 100%; max-width: 100%; margin-top: 3rem; padding: 1.5rem 0; overflow: hidden; position: relative;">
+          <div class="marquee-content">
+            ${cardsHtml}${cardsHtml}${cardsHtml}${cardsHtml}
+          </div>
+        </div>
+      `;
+    }
+    
+    targetContainer.innerHTML = chartHtml + marqueeHtml;
     
     const ctx = document.getElementById(canvasId);
     if (ctx) {

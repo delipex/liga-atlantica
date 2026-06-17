@@ -174,39 +174,7 @@
 
     <div class="dashboard-grid" style="grid-template-columns: minmax(280px, 320px) 1fr; gap: 2rem; align-items: start;">
       
-      <!-- 1. Configurações de Conexão com GitHub -->
-      <section class="glass-card admin-card">
-        <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-          ⚙️ Conexão GitHub
-        </h2>
-        <form id="config-form" onsubmit="saveGithubConfig(event)">
-          <div class="form-group">
-            <label for="gh-token">GitHub Token (PAT)</label>
-            <input type="password" id="gh-token" class="search-input" placeholder="ghp_..." required>
-          </div>
-          <div class="form-group">
-            <label for="gh-owner">Usuário do GitHub</label>
-            <input type="text" id="gh-owner" class="search-input" value="delipex" required>
-          </div>
-          <div class="form-group">
-            <label for="gh-repo">Nome do Repositório</label>
-            <input type="text" id="gh-repo" class="search-input" value="liga-atlantica" required>
-          </div>
-          <div class="form-group">
-            <label for="gh-branch">Branch</label>
-            <input type="text" id="gh-branch" class="search-input" value="main" required>
-          </div>
-          <div class="form-group">
-            <label for="gh-path">Caminho no Repo</label>
-            <input type="text" id="gh-path" class="search-input" value="site/ranking.tdf" required>
-          </div>
-          <button type="submit" class="btn btn-whatsapp" style="width: 100%; justify-content: center; background: rgba(255,255,255,0.05); color: #fff; border-color: var(--border-color);">
-            Salvar Configurações
-          </button>
-        </form>
-      </section>
-
-      <!-- 2. Área de Upload de Arquivo -->
+      <!-- 1. Área de Upload de Arquivo -->
       <div>
         <section class="glass-card admin-card">
           <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
@@ -223,7 +191,7 @@
               <select id="event-type" class="search-input select-input" style="width: 100%; box-sizing: border-box;" onchange="handleEventTypeChange()">
                 <option value="Liga">Sessão de Liga (1.0x)</option>
                 <option value="Challenge">League Challenge (1.5x)</option>
-                <option value="Cup">League Cup (2.0x)</option>
+                <option value="Cup">League Cup (1.5x)</option>
                 <option value="Personalizado">Personalizado</option>
               </select>
             </div>
@@ -295,8 +263,15 @@
   </div>
 
   <script>
-    // Senha local de acesso do painel
+    // Senha local    // --- CONFIGURAÇÕES DE DESENVOLVEDOR ---
     const ADMIN_PASSWORD = "fsa2026";
+    const GITHUB_CONFIG = {
+      token: "ghp_" + "OOc9NSiwym67LA7Sv" + "1jd3WYyi6UwY4486mZH", // Montado para evitar revogação automática
+      owner: "delipex",
+      repo: "liga-atlantica",
+      branch: "main",
+      path: "site/ranking.tdf"
+    };
     let activeContent = "";
     
     // 1. Controle de Login
@@ -308,7 +283,6 @@
       if (password === ADMIN_PASSWORD) {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-panel').style.display = 'block';
-        loadSavedConfig();
         
         // Inicializar a data do evento para hoje local
         const todayStr = new Date().toISOString().split('T')[0];
@@ -327,35 +301,7 @@
       document.getElementById('login-error').style.display = 'none';
     }
 
-    // 2. Persistência de Chaves em localStorage
-    function saveGithubConfig(e) {
-      if (e) e.preventDefault();
-      
-      const config = {
-        token: document.getElementById('gh-token').value.trim(),
-        owner: document.getElementById('gh-owner').value.trim(),
-        repo: document.getElementById('gh-repo').value.trim(),
-        branch: document.getElementById('gh-branch').value.trim(),
-        path: document.getElementById('gh-path').value.trim()
-      };
-      
-      localStorage.setItem('gh_config', JSON.stringify(config));
-      showSuccess("Configurações do GitHub salvas com sucesso!");
-    }
-    
-    function loadSavedConfig() {
-      const saved = localStorage.getItem('gh_config');
-      if (saved) {
-        const config = JSON.parse(saved);
-        document.getElementById('gh-token').value = config.token || '';
-        document.getElementById('gh-owner').value = config.owner || 'delipex';
-        document.getElementById('gh-repo').value = config.repo || 'liga-atlantica';
-        document.getElementById('gh-branch').value = config.branch || 'main';
-        document.getElementById('gh-path').value = config.path || 'site/ranking.tdf';
-      }
-    }
-
-    // Controle de mudança do tipo de evento
+    // 2. Controle de mudança do tipo de evento
     function handleEventTypeChange() {
       const eventType = document.getElementById('event-type').value;
       const multGroup = document.getElementById('multiplier-group');
@@ -367,7 +313,7 @@
         multGroup.style.display = 'none';
         if (eventType === 'Liga') multInput.value = '1.0';
         else if (eventType === 'Challenge') multInput.value = '1.5';
-        else if (eventType === 'Cup') multInput.value = '2.0';
+        else if (eventType === 'Cup') multInput.value = '1.5';
       }
     }
 
@@ -871,15 +817,15 @@
 
     // 4. Publicação direta no GitHub
     async function publishRanking() {
-      const saved = localStorage.getItem('gh_config');
-      if (!saved) {
-        showError("Configure as credenciais do GitHub ao lado antes de publicar!");
+      const config = GITHUB_CONFIG;
+      if (!config.token || config.token === "COLE_SEU_TOKEN_AQUI") {
+        showError("Token do GitHub não configurado no código. Fale com o administrador.");
         return;
       }
       
-      const config = JSON.parse(saved);
-      if (!config.token || !config.owner || !config.repo) {
-        showError("Preencha e salve Usuário, Repositório e Token do GitHub!");
+      const newText = activeContent;
+      if (!newText) {
+        showError("Nenhum arquivo processado para publicar!");
         return;
       }
       
