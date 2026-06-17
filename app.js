@@ -2005,6 +2005,7 @@ function updateMetagameDisplay() {
       deck: deckName,
       count: deckCounts[deckName],
       image: deckInfo ? deckInfo.Imagem : null,
+      icone: deckInfo ? deckInfo.Icone : null,
       energia: deckInfo ? deckInfo.TipoEnergia : '',
       limitless: deckInfo ? (deckInfo.Limitless || deckInfo.Link || deckInfo.URL || '#') : '#'
     };
@@ -2135,8 +2136,8 @@ function updateMetagameDisplay() {
               <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
               
               <!-- Center Name Info -->
-              <div id="chart-center-text-${canvasId}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; z-index:2; width: 55%; opacity:0; transition:opacity 0.3s;">
-                 <div id="chart-center-name-${canvasId}" style="font-weight: 800; font-size: 1.1rem; line-height: 1.2; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.8);"></div>
+              <div id="chart-center-text-${canvasId}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; z-index:2; width: 60%; transition:opacity 0.3s;">
+                 <div id="chart-center-name-${canvasId}" style="font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.4);">Passe o mouse<br>no gr&aacute;fico</div>
               </div>
             </div>
           </div>
@@ -2191,45 +2192,37 @@ function updateMetagameDisplay() {
               ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
               ctx.shadowBlur = 4;
               
-              let yOffset = -7;
+              let yOffset = -5;
               
-              if (deckData && deckData.image) {
+              if (deckData && deckData.icone) {
                 if (!window.chartIconCache[name]) {
                   const img = new Image();
-                  img.src = safeExternalUrl(deckData.image);
+                  img.src = safeExternalUrl(deckData.icone);
                   img.onload = () => chart.update();
                   window.chartIconCache[name] = img;
                 } else if (window.chartIconCache[name].complete && window.chartIconCache[name].naturalWidth > 0) {
                   const img = window.chartIconCache[name];
-                  const iconSize = 24; 
+                  const iconSize = 22; 
                   
-                  ctx.save();
-                  ctx.beginPath();
-                  ctx.arc(center.x, center.y - 8, iconSize / 2, 0, Math.PI * 2);
-                  ctx.clip();
-                  // As cartas so altas (aspect ratio ~0.7), desenhamos ela um pouco mais alta para no achatar
-                  ctx.drawImage(img, center.x - (iconSize/2), center.y - 8 - (iconSize/2) - 4, iconSize, iconSize * 1.4);
-                  ctx.restore();
-                  
-                  yOffset = 10;
+                  ctx.drawImage(img, center.x - (iconSize/2), center.y - 8 - (iconSize/2), iconSize, iconSize);
+                  yOffset = 8;
                 }
               } else {
-                // Draw Deck Name (Full name, very small)
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-                ctx.font = '600 8.5px "Inter", sans-serif';
-                
                 const words = name.split(' ');
-                if (words.length > 1 && name.length > 11) {
-                   ctx.fillText(words[0], center.x, center.y - 12);
-                   ctx.fillText(words.slice(1).join(' '), center.x, center.y - 3);
-                   yOffset = 7;
+                let line1 = words[0];
+                let line2 = words.slice(1).join(' ');
+                
+                ctx.font = "bold 7.5px 'Inter', sans-serif";
+                ctx.fillStyle = "#ffffff";
+                
+                if (line2 && line2.length > 0) {
+                  ctx.fillText(line1, center.x, center.y - 12);
+                  ctx.fillText(line2, center.x, center.y - 4);
                 } else {
-                   ctx.fillText(name, center.x, center.y - 7);
-                   yOffset = 6;
+                  ctx.fillText(name, center.x, center.y - 8);
                 }
               }
               
-              // Draw Percentage
               ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
               ctx.shadowBlur = 4;
               ctx.fillStyle = '#ffffff';
@@ -2258,32 +2251,25 @@ function updateMetagameDisplay() {
                 
                 const parts = energyStr.toLowerCase().split('+').map(p => p.trim());
                 const hex1 = window.energyHexColors[parts[0]] || '#94a3b8';
-                
-                const centerX = (chartArea.left + chartArea.right) / 2;
-                const centerY = (chartArea.top + chartArea.bottom) / 2;
-                const outerRadius = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top) / 2;
-                const innerRadius = outerRadius * 0.6; // 60% cutout
-                
-                const gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
+                const opacity = 'a0'; // ~62% opacidade para o efeito Glassmorphism
                 
                 if (parts.length > 1 && window.energyHexColors[parts[1]]) {
                   const hex2 = window.energyHexColors[parts[1]];
-                  gradient.addColorStop(0, hex1 + 'ee');
-                  gradient.addColorStop(1, hex2 + 'ee');
+                  const centerX = (chartArea.left + chartArea.right) / 2;
+                  const centerY = (chartArea.top + chartArea.bottom) / 2;
+                  const outerRadius = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top) / 2;
+                  const innerRadius = outerRadius * 0.6; // 60% cutout
+                  
+                  const gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
+                  gradient.addColorStop(0, hex1 + opacity);
+                  gradient.addColorStop(1, hex2 + opacity);
+                  return gradient;
                 } else {
-                  const darken = (hex, amt) => {
-                     let r = Math.max(0, parseInt(hex.slice(1,3), 16) - amt);
-                     let g = Math.max(0, parseInt(hex.slice(3,5), 16) - amt);
-                     let b = Math.max(0, parseInt(hex.slice(5,7), 16) - amt);
-                     return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
-                  };
-                  gradient.addColorStop(0, hex1 + 'ee');
-                  gradient.addColorStop(1, darken(hex1, 50) + 'ee');
+                  return hex1 + opacity;
                 }
-                return gradient;
               }, 
-              borderColor: 'rgba(255,255,255,0.15)', 
-              borderWidth: 2, 
+              borderColor: 'rgba(255,255,255,0.3)', 
+              borderWidth: 1.5, 
               hoverOffset: 10 
             }] 
           },
@@ -2393,7 +2379,10 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
   const centerName = document.getElementById('chart-center-name-' + id);
   
   if (!deckName) {
-    if (centerTextWrap) centerTextWrap.style.opacity = '0';
+    if (centerName) {
+      centerName.innerHTML = "Passe o mouse<br>no gr&aacute;fico";
+      centerName.style.cssText = "font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.4);";
+    }
     return;
   }
 
