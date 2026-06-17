@@ -2085,18 +2085,19 @@ function updateMetagameDisplay() {
     const decksWithImages = sortedDecks.filter(d => d.image);
     let carouselHtml = '';
     
+    window.energyHexColors = {
+      grass: '#78C850', fire: '#FF4216', water: '#1593F5', lightning: '#EBC816', 
+      psychic: '#D94293', fighting: '#C55E13', darkness: '#0c4a6e', metal: '#7E8E9E', 
+      dragon: '#8D56FF', colorless: '#e2e8f0'
+    };
+    
     window.getDeckGradientStyle = (deckName) => {
       const energyStr = getDeckEnergy(deckName);
       if (!energyStr) return 'background: rgba(0,0,0,0.75);';
       const parts = energyStr.toLowerCase().split('+').map(p => p.trim());
-      const energyHexColors = {
-        grass: '#78C850', fire: '#FF4216', water: '#1593F5', lightning: '#EBC816', 
-        psychic: '#D94293', fighting: '#C55E13', darkness: '#0c4a6e', metal: '#7E8E9E', 
-        dragon: '#8D56FF', colorless: '#e2e8f0'
-      };
-      const hex1 = energyHexColors[parts[0]] || '#475569';
-      if (parts.length > 1 && energyHexColors[parts[1]]) {
-        const hex2 = energyHexColors[parts[1]];
+      const hex1 = window.energyHexColors[parts[0]] || '#475569';
+      if (parts.length > 1 && window.energyHexColors[parts[1]]) {
+        const hex2 = window.energyHexColors[parts[1]];
         return `background: linear-gradient(135deg, ${hex1}ee 0%, ${hex2}ee 100%);`;
       }
       return `background: ${hex1}ee;`;
@@ -2160,6 +2161,8 @@ function updateMetagameDisplay() {
           dragon: '#8D56FF', colorless: '#e2e8f0'
         };
         const chartCtx = ctx.getContext('2d');
+        if (!window.chartIconCache) window.chartIconCache = {};
+        
         Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
         Chart.defaults.font.family = '"Inter", sans-serif';
         const sliceLabelsPlugin = {
@@ -2179,6 +2182,8 @@ function updateMetagameDisplay() {
               const name = chart.data.labels[index];
               
               const center = element.tooltipPosition();
+              const deckData = sortedDecks.find(d => d.deck === name);
+              
               ctx.save();
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
@@ -2186,26 +2191,43 @@ function updateMetagameDisplay() {
               ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
               ctx.shadowBlur = 4;
               
-              // Draw Deck Name (Full name, very small)
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-              ctx.font = '600 8.5px "Inter", sans-serif';
+              let yOffset = -7;
               
-              const words = name.split(' ');
-              if (words.length > 1 && name.length > 12) {
-                 // Multiline
-                 ctx.fillText(words[0], center.x, center.y - 12);
-                 ctx.fillText(words.slice(1).join(' '), center.x, center.y - 3);
-                 // Draw Percentage
-                 ctx.fillStyle = '#ffffff';
-                 ctx.font = '800 10px "Inter", sans-serif';
-                 ctx.fillText(percent, center.x, center.y + 7);
+              if (deckData && deckData.icone) {
+                if (!window.chartIconCache[name]) {
+                  const img = new Image();
+                  img.src = safeExternalUrl(deckData.icone);
+                  img.onload = () => chart.update();
+                  window.chartIconCache[name] = img;
+                } else if (window.chartIconCache[name].complete && window.chartIconCache[name].naturalWidth > 0) {
+                  const img = window.chartIconCache[name];
+                  const iconSize = 22; // px size of the icon inside the slice
+                  ctx.shadowColor = 'transparent';
+                  ctx.drawImage(img, center.x - (iconSize/2), center.y - 16, iconSize, iconSize);
+                  yOffset = 8; // push percentage down further
+                }
               } else {
-                 ctx.fillText(name, center.x, center.y - 7);
-                 // Draw Percentage
-                 ctx.fillStyle = '#ffffff';
-                 ctx.font = '800 10.5px "Inter", sans-serif';
-                 ctx.fillText(percent, center.x, center.y + 6);
+                // Draw Deck Name (Full name, very small)
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                ctx.font = '600 8.5px "Inter", sans-serif';
+                
+                const words = name.split(' ');
+                if (words.length > 1 && name.length > 11) {
+                   ctx.fillText(words[0], center.x, center.y - 12);
+                   ctx.fillText(words.slice(1).join(' '), center.x, center.y - 3);
+                   yOffset = 7;
+                } else {
+                   ctx.fillText(name, center.x, center.y - 7);
+                   yOffset = 6;
+                }
               }
+              
+              // Draw Percentage
+              ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+              ctx.shadowBlur = 4;
+              ctx.fillStyle = '#ffffff';
+              ctx.font = '800 11px "Inter", sans-serif';
+              ctx.fillText(percent, center.x, center.y + yOffset);
               
               ctx.restore();
             });
@@ -2228,12 +2250,12 @@ function updateMetagameDisplay() {
                 if (!energyStr) return 'rgba(255, 255, 255, 0.2)';
                 
                 const parts = energyStr.toLowerCase().split('+').map(p => p.trim());
-                const hex1 = energyHexColors[parts[0]] || '#94a3b8';
+                const hex1 = window.energyHexColors[parts[0]] || '#94a3b8';
                 
                 const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
                 
-                if (parts.length > 1 && energyHexColors[parts[1]]) {
-                  const hex2 = energyHexColors[parts[1]];
+                if (parts.length > 1 && window.energyHexColors[parts[1]]) {
+                  const hex2 = window.energyHexColors[parts[1]];
                   gradient.addColorStop(0, hex1 + 'ee');
                   gradient.addColorStop(1, hex2 + 'ee');
                 } else {
@@ -2244,7 +2266,7 @@ function updateMetagameDisplay() {
                      return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
                   };
                   gradient.addColorStop(0, hex1 + 'ee');
-                  gradient.addColorStop(1, darken(hex1, 60) + 'ee');
+                  gradient.addColorStop(1, darken(hex1, 50) + 'ee');
                 }
                 return gradient;
               }, 
