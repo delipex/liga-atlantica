@@ -1157,8 +1157,8 @@ tbody tr.top-8 .row-rank,
   overflow: hidden;
 }
 .carousel-3d-stage {
-  width: 160px;
-  height: 224px;
+  width: 190px;
+  height: 266px;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -1213,24 +1213,23 @@ tbody tr.top-8 .row-rank,
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(0,0,0,0.5);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: white;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
   width: 40px;
   height: 40px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 20;
-  backdrop-filter: blur(4px);
   transition: all 0.2s;
-  font-size: 1.2rem;
+  font-size: 2.5rem;
 }
 .carousel-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: transparent;
+  color: white;
+  transform: translateY(-50%) scale(1.15);
 }
 .carousel-prev { left: 15px; }
 .carousel-next { right: 15px; }

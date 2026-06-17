@@ -2085,11 +2085,28 @@ function updateMetagameDisplay() {
     const decksWithImages = sortedDecks.filter(d => d.image);
     let carouselHtml = '';
     
+    const getDeckGradientStyle = (deckName) => {
+      const energyStr = getDeckEnergy(deckName);
+      if (!energyStr) return 'background: rgba(0,0,0,0.75);';
+      const parts = energyStr.toLowerCase().split('+').map(p => p.trim());
+      const energyHexColors = {
+        grass: '#78C850', fire: '#FF4216', water: '#1593F5', lightning: '#EBC816', 
+        psychic: '#D94293', fighting: '#C55E13', darkness: '#4F4747', metal: '#7E8E9E', 
+        dragon: '#8D56FF', colorless: '#A8A878'
+      };
+      const hex1 = energyHexColors[parts[0]] || '#475569';
+      if (parts.length > 1 && energyHexColors[parts[1]]) {
+        const hex2 = energyHexColors[parts[1]];
+        return `background: linear-gradient(135deg, ${hex1}ee 0%, ${hex2}ee 100%);`;
+      }
+      return `background: ${hex1}ee;`;
+    };
+
     if (decksWithImages.length > 0) {
       const cardsHtml = decksWithImages.map((d, i) => `
         <a href="${d.limitless}" target="_blank" rel="noopener noreferrer" class="carousel-3d-item" data-index="${i}" data-deck="${escapeHTML(d.deck)}" title="Ver ${escapeHTML(d.deck)} no Limitless">
           <img src="${safeExternalUrl(d.image)}" alt="${escapeHTML(d.deck)}" loading="lazy">
-          <div class="deck-card-label">${escapeHTML(d.deck)}</div>
+          <div class="deck-card-label" style="${getDeckGradientStyle(d.deck)} text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">${escapeHTML(d.deck)}</div>
         </a>
       `).join('');
       
@@ -2109,11 +2126,9 @@ function updateMetagameDisplay() {
         <div class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:space-evenly; align-items:center; gap: 2rem; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
           
           <div style="flex: 1 1 350px; width: 100%; max-width: 400px; aspect-ratio: 1; position:relative;">
-            ${sortedDecks[0] && sortedDecks[0].image ? `
-            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width: 45%; height: 45%; border-radius:50%; overflow:hidden; z-index:0; display:flex; align-items:center; justify-content:center; border: 2px solid rgba(255,255,255,0.1); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
-              <img src="${safeExternalUrl(sortedDecks[0].image)}" style="width:100%; height:100%; object-fit:cover; opacity: 0.85;">
+            <div id="chart-center-wrapper-${canvasId}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width: 45%; height: 45%; border-radius:50%; overflow:hidden; z-index:0; display:flex; align-items:center; justify-content:center; border: 2px solid rgba(255,255,255,0.1); box-shadow: inset 0 0 20px rgba(0,0,0,0.5); opacity: ${sortedDecks[0] && sortedDecks[0].image ? 1 : 0}; transition: opacity 0.3s;">
+              <img id="chart-center-img-${canvasId}" src="${sortedDecks[0] && sortedDecks[0].image ? safeExternalUrl(sortedDecks[0].image) : ''}" style="width:100%; height:100%; object-fit:cover; opacity: 0.85; transition: all 0.3s;">
             </div>
-            ` : ''}
             <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
           </div>
           
@@ -2160,22 +2175,25 @@ function updateMetagameDisplay() {
           afterDraw(chart, args, options) {
             const ctx = chart.ctx;
             const meta = chart.getDatasetMeta(0);
+            const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+            
             meta.data.forEach((element, index) => {
               const val = chart.data.datasets[0].data[index];
               if (val < 1) return;
               
+              const percent = Math.round((val / total) * 100) + '%';
+              
               const center = element.tooltipPosition();
               ctx.save();
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-              ctx.font = 'bold 15px "Inter", sans-serif';
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+              ctx.font = '500 12px "Inter", sans-serif';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               
-              // Adiciona uma sombrinha sutil no texto para destacar de fundos claros
-              ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+              ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
               ctx.shadowBlur = 4;
               
-              ctx.fillText(val + '', center.x, center.y);
+              ctx.fillText(percent, center.x, center.y);
               ctx.restore();
             });
           }
@@ -2279,7 +2297,7 @@ window.updateCarousel = function(id) {
       const direction = diff > 0 ? 1 : -1;
       const offset = Math.abs(diff);
       const rotate = 45 * direction;
-      const translateX = (110 * direction) + (20 * diff);
+      const translateX = (130 * direction) + (35 * diff);
       const translateZ = -120 - (offset * 40);
       
       item.style.transform = `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${-rotate}deg)`;
@@ -2301,6 +2319,19 @@ window.focusCarouselDeck = function(id, deckName) {
        clearInterval(window.carouselIntervals[id]);
        window.carouselIntervals[id] = setInterval(() => window.moveCarousel(id, 1), 4000);
      }
+  }
+  
+  // Atualiza a imagem central do grfico!
+  const centerWrapper = document.getElementById('chart-center-wrapper-' + id);
+  const centerImg = document.getElementById('chart-center-img-' + id);
+  if (centerWrapper && centerImg && targetIndex !== -1) {
+    const imgElement = c.items[targetIndex].querySelector('img');
+    if (imgElement && imgElement.src && !imgElement.src.endsWith('null')) {
+      centerImg.src = imgElement.src;
+      centerWrapper.style.opacity = '1';
+    } else {
+      centerWrapper.style.opacity = '0';
+    }
   }
 };
 
