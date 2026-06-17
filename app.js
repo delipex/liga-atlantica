@@ -2177,7 +2177,7 @@ function updateMetagameDisplay() {
               const val = chart.data.datasets[0].data[index];
               const percentNum = Math.round((val / total) * 100);
               
-              if (percentNum < 3) return; // Esconde textos/imagens em fatias < 3% para no sobrepor
+              if (val < 1) return;
               
               const percent = percentNum + '%';
               const name = chart.data.labels[index];
