@@ -2018,8 +2018,38 @@ function updateMetagameDisplay() {
     };
   }).sort((a, b) => b.count - a.count);
   
-  const labels = sortedDecks.map(d => d.deck);
-  const data = sortedDecks.map(d => d.count);
+  const chartType = window.currentMetagameChartType || 'doughnut';
+  let chartDecks = [];
+  if (chartType === 'doughnut') {
+    let outrosCount = 0;
+    sortedDecks.forEach(d => {
+      if (d.deck.toLowerCase() === 'outros' || d.count < 2) {
+        outrosCount += d.count;
+      } else {
+        chartDecks.push({ ...d });
+      }
+    });
+    if (outrosCount > 0) {
+      chartDecks.push({
+        deck: 'Outros',
+        count: outrosCount,
+        image: null,
+        icone: null,
+        energia: '',
+        limitless: '#'
+      });
+    }
+    chartDecks.sort((a, b) => {
+      if (a.deck === 'Outros') return 1;
+      if (b.deck === 'Outros') return -1;
+      return b.count - a.count;
+    });
+  } else {
+    chartDecks = sortedDecks;
+  }
+  
+  const labels = chartDecks.map(d => d.deck);
+  const data = chartDecks.map(d => d.count);
   const colors = ['#FF4216', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#14b8a6'];
   
   const getOrCreateTooltip = (chart) => {
@@ -2087,9 +2117,10 @@ function updateMetagameDisplay() {
       return;
     }
     if (Object.keys(deckCounts).length === 0) {
-      targetContainer.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Nenhum deck registrado ${selectedSession === 'all' ? 'no geral' : 'nesta sessão'}.</div>`;
+      targetContainer.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Nenhum deck registrado nas sessões selecionadas.</div>';
       return;
     }
+    const totalDecksCount = sortedDecks.reduce((sum, d) => sum + d.count, 0) || 1;
     const decksWithImages = sortedDecks.filter(d => d.image);
     let carouselHtml = '';
     
@@ -2155,6 +2186,7 @@ function updateMetagameDisplay() {
         const relativeWidth = Math.round((deck.count / maxCount) * 100);
         const bgStyle = window.getDeckGradientStyle ? window.getDeckGradientStyle(deck.deck) : 'background: rgba(255,255,255,0.1);';
         const deckImage = deck.image ? `url('${safeExternalUrl(deck.image)}')` : 'none';
+        const percentage = Math.round((deck.count / totalDecksCount) * 100);
         
         accordionHtml += `
           <div class="accordion-item" onclick="this.classList.toggle('expanded'); if(window.focusCarouselDeck) window.focusCarouselDeck('${canvasId}', '${escapeHTML(deck.deck)}')">
@@ -2164,7 +2196,7 @@ function updateMetagameDisplay() {
               <div class="accordion-header">
                 <span class="accordion-rank">#${idx + 1}</span>
                 <span class="accordion-name">${escapeHTML(deck.deck)}</span>
-                <span class="accordion-percent">${deck.count} jg</span>
+                <span class="accordion-percent">${percentage}%</span>
               </div>
               <div class="accordion-details">
                 <button type="button" class="btn-deck-details" onclick="event.stopPropagation(); if(window.syncCarouselToDeck) window.syncCarouselToDeck('${canvasId}', '${escapeHTML(deck.deck)}')">Focar no Carrossel</button>
@@ -2179,7 +2211,7 @@ function updateMetagameDisplay() {
     const htmlContent = `
       <div style="display:flex; flex-direction:column; gap:1rem; align-items:center; width: 100%;">
         ${homeToggleHtml}
-        <div class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:space-evenly; align-items:center; gap: 2rem; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
+        <div class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:space-evenly; align-items:center; gap: 5.5rem; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
           
           <div style="flex: 1 1 ${chartMaxWidth}; width: 100%; max-width: ${chartMaxWidth}; display:flex; flex-direction:column; gap:1rem;">
             ${chartType === 'doughnut' ? `
@@ -2238,7 +2270,7 @@ function updateMetagameDisplay() {
               const name = chart.data.labels[index];
               
               const center = element.tooltipPosition();
-              const deckData = sortedDecks.find(d => d.deck === name);
+              const deckData = chartDecks.find(d => d.deck === name);
               
               ctx.save();
               ctx.textAlign = 'center';
@@ -2248,8 +2280,36 @@ function updateMetagameDisplay() {
               ctx.shadowBlur = 4;
               
               let yOffset = -5;
+              let drawX = center.x;
+              let drawY = center.y;
               
-              if (deckData && deckData.icone) {
+              const isOutros = name.toLowerCase() === 'outros';
+              
+              if (!isOutros && deckData && deckData.icone) {
+                const angle = (element.startAngle + element.endAngle) / 2;
+                const x0 = element.x;
+                const y0 = element.y;
+                const outerRadius = element.outerRadius;
+                
+                // Alternar o raio em três níveis para fatias adjacentes para evitar totalmente sobreposição dos ícones
+                const R = outerRadius + (index % 3 === 0 ? 18 : index % 3 === 1 ? 38 : 58);
+                drawX = x0 + Math.cos(angle) * R;
+                drawY = y0 + Math.sin(angle) * R;
+                
+                // Desenhar uma linha de guia sutil (leader line) da fatia até o ícone
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+                ctx.lineWidth = 1;
+                const startX = x0 + Math.cos(angle) * outerRadius;
+                const startY = y0 + Math.sin(angle) * outerRadius;
+                const endX = x0 + Math.cos(angle) * (R - 15);
+                const endY = y0 + Math.sin(angle) * (R - 15);
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+              }
+              
+              if (deckData && deckData.icone && !isOutros) {
                 if (!window.chartIconCache[name]) {
                   const img = new Image();
                   img.src = safeExternalUrl(deckData.icone);
@@ -2259,10 +2319,10 @@ function updateMetagameDisplay() {
                   const img = window.chartIconCache[name];
                   const iconSize = 30; 
                   
-                  ctx.drawImage(img, center.x - (iconSize/2), center.y - 8 - (iconSize/2), iconSize, iconSize);
+                  ctx.drawImage(img, drawX - (iconSize/2), drawY - 8 - (iconSize/2), iconSize, iconSize);
                   yOffset = 8;
                 }
-              } else if (name.toLowerCase() === 'outros') {
+              } else if (isOutros) {
                 const words = name.split(' ');
                 let line1 = words[0];
                 let line2 = words.slice(1).join(' ');
@@ -2271,10 +2331,10 @@ function updateMetagameDisplay() {
                 ctx.fillStyle = "#ffffff";
                 
                 if (line2 && line2.length > 0) {
-                  ctx.fillText(line1, center.x, center.y - 10);
-                  ctx.fillText(line2, center.x, center.y - 2);
+                  ctx.fillText(line1, drawX, drawY - 10);
+                  ctx.fillText(line2, drawX, drawY - 2);
                 } else {
-                  ctx.fillText(name, center.x, center.y - 8);
+                  ctx.fillText(name, drawX, drawY - 8);
                 }
                 yOffset = 8;
               }
@@ -2283,7 +2343,7 @@ function updateMetagameDisplay() {
               ctx.shadowBlur = 4;
               ctx.fillStyle = '#ffffff';
               ctx.font = '800 11px "Inter", sans-serif';
-              ctx.fillText(percent, center.x, center.y + yOffset);
+              ctx.fillText(percent, drawX, drawY + yOffset);
               
               ctx.restore();
             });
@@ -2377,13 +2437,20 @@ function updateMetagameDisplay() {
                 padding: 12,
                 cornerRadius: 8,
                 borderColor: 'rgba(255,255,255,0.1)',
-                borderWidth: 1
+                borderWidth: 1,
+                callbacks: {
+                  label: function(context) {
+                    const val = context.raw;
+                    const pct = Math.round((val / totalDecksCount) * 100);
+                    return ` ${pct}%`;
+                  }
+                }
               } 
             }
           } : { 
             responsive: true, 
             maintainAspectRatio: true, 
-            layout: { padding: { top: 10, bottom: 10, left: 15, right: 15 } },
+            layout: { padding: { top: 60, bottom: 60, left: 60, right: 60 } },
             onHover: (event, activeElements, chart) => {
               if (activeElements && activeElements.length > 0) {
                 const dataIndex = activeElements[0].index;
@@ -2486,9 +2553,9 @@ window.updateCarousel = function(id) {
     } else {
       const direction = diff > 0 ? 1 : -1;
       const offset = Math.abs(diff);
-      const rotate = 45 * direction;
-      const translateX = (130 * direction) + (35 * diff);
-      const translateZ = -120 - (offset * 40);
+      const rotate = 42 * direction;
+      const translateX = (100 * direction) + (20 * diff);
+      const translateZ = -110 - (offset * 35);
       
       item.style.transform = `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${-rotate}deg)`;
       item.style.opacity = offset > 2 ? '0' : String(1 - (offset * 0.25));
@@ -2496,6 +2563,19 @@ window.updateCarousel = function(id) {
   });
 };
 
+window.syncCarouselToDeck = function(id, deckName) {
+  const c = window.carousels[id];
+  if (!c || !c.items) return;
+  const targetIndex = c.items.findIndex(item => {
+    const dAttr = item.getAttribute('data-deck');
+    return dAttr && dAttr.toLowerCase() === deckName.toLowerCase();
+  });
+  if (targetIndex !== -1 && targetIndex !== c.index) {
+    c.index = targetIndex;
+    window.updateCarousel(id);
+  }
+};
+ 
 window.focusCarouselDeck = function(id, deckName, chartObj = null) {
   const centerTextWrap = document.getElementById('chart-center-text-' + id);
   const centerName = document.getElementById('chart-center-name-' + id);
