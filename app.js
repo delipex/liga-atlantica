@@ -2105,9 +2105,10 @@ function updateMetagameDisplay() {
     }
 
     const htmlContent = `
-      <div style="display:flex; flex-direction:column; gap:2rem; align-items:center;">
-        <div class="glass-card" style="width: 100%; max-width: 450px; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:column; align-items:center; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
-          <div style="width: 100%; max-width: 400px; aspect-ratio: 1; position:relative;">
+      <div style="display:flex; flex-direction:column; gap:2rem; align-items:center; width: 100%;">
+        <div class="glass-card" style="width: 100%; max-width: 900px; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:center; align-items:center; gap: 2rem; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
+          
+          <div style="flex: 1 1 350px; width: 100%; max-width: 400px; aspect-ratio: 1; position:relative;">
             ${sortedDecks[0] && sortedDecks[0].image ? `
             <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width: 45%; height: 45%; border-radius:50%; overflow:hidden; z-index:0; display:flex; align-items:center; justify-content:center; border: 2px solid rgba(255,255,255,0.1); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
               <img src="${safeExternalUrl(sortedDecks[0].image)}" style="width:100%; height:100%; object-fit:cover; opacity: 0.85;">
@@ -2115,7 +2116,11 @@ function updateMetagameDisplay() {
             ` : ''}
             <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
           </div>
-          ${carouselHtml}
+          
+          <div style="flex: 1 1 350px; width: 100%; max-width: 400px;">
+            ${carouselHtml}
+          </div>
+
         </div>
       </div>
     `;
