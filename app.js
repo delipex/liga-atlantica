@@ -2134,7 +2134,7 @@ function updateMetagameDisplay() {
               <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
             </div>
             
-            <div id="chart-hover-info-${canvasId}" style="width: 100%; text-align: center; padding: 0.85rem 1.5rem; border-radius: 12px; min-height: 54px; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(8px); transition: all 0.3s; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">
+            <div id="chart-hover-info-${canvasId}" style="width: 100%; max-width: 350px; margin: 0 auto; text-align: center; padding: 0.5rem 1rem; border-radius: 8px; min-height: 38px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; color: white; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 10px rgba(0,0,0,0.2); backdrop-filter: blur(8px); transition: all 0.3s; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">
               Passe o mouse no gráfico
             </div>
           </div>
@@ -2173,7 +2173,18 @@ function updateMetagameDisplay() {
             grad.addColorStop(1, hex2 + 'ee');
             return grad;
           }
-          return hex1 + 'ee';
+          
+          const darken = (hex, amt) => {
+             let r = Math.max(0, parseInt(hex.slice(1,3), 16) - amt);
+             let g = Math.max(0, parseInt(hex.slice(3,5), 16) - amt);
+             let b = Math.max(0, parseInt(hex.slice(5,7), 16) - amt);
+             return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
+          };
+          const darkHex = darken(hex1, 40);
+          const singleGrad = chartCtx.createLinearGradient(0, 0, 0, 300);
+          singleGrad.addColorStop(0, hex1 + 'ee');
+          singleGrad.addColorStop(1, darkHex + 'ee');
+          return singleGrad;
         });
         Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
         Chart.defaults.font.family = '"Inter", sans-serif';
@@ -2188,13 +2199,13 @@ function updateMetagameDisplay() {
               const val = chart.data.datasets[0].data[index];
               const percentNum = Math.round((val / total) * 100);
               
-              // Oculta textos em fatias muito pequenas para no embolar
-              if (percentNum < 4) return;
+              if (val < 1) return;
               
               const percent = percentNum + '%';
               const name = chart.data.labels[index];
-              let shortName = name;
-              if (shortName.length > 14) shortName = shortName.substring(0, 12) + '..';
+              const words = name.split(/[\s-]+/).filter(w => w.length > 0 && !['do', 'da', 'de'].includes(w.toLowerCase()));
+              let initials = words.map(w => w[0].toUpperCase()).join('');
+              if (initials.length > 3) initials = initials.substring(0, 3);
               
               const center = element.tooltipPosition();
               ctx.save();
@@ -2204,15 +2215,15 @@ function updateMetagameDisplay() {
               ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
               ctx.shadowBlur = 4;
               
-              // Draw Deck Name
+              // Draw Deck Initials
               ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-              ctx.font = '600 11px "Inter", sans-serif';
-              ctx.fillText(shortName, center.x, center.y - 7);
+              ctx.font = '700 10px "Inter", sans-serif';
+              ctx.fillText(initials, center.x, center.y - 6);
               
               // Draw Percentage
               ctx.fillStyle = '#ffffff';
-              ctx.font = '800 13px "Inter", sans-serif';
-              ctx.fillText(percent, center.x, center.y + 8);
+              ctx.font = '800 11px "Inter", sans-serif';
+              ctx.fillText(percent, center.x, center.y + 6);
               
               ctx.restore();
             });
@@ -2245,7 +2256,7 @@ function updateMetagameDisplay() {
                 external: externalTooltipHandler
               } 
             }, 
-            cutout: '55%' 
+            cutout: '75%' 
           },
           plugins: [sliceLabelsPlugin]
         });
@@ -2328,7 +2339,7 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
   
   if (!deckName) {
     if (hoverInfo) {
-      hoverInfo.style = `width: 100%; text-align: center; padding: 0.85rem 1.5rem; border-radius: 12px; min-height: 54px; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(8px); transition: all 0.3s; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);`;
+      hoverInfo.style = `width: 100%; max-width: 350px; margin: 0 auto; text-align: center; padding: 0.5rem 1rem; border-radius: 8px; min-height: 38px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; color: white; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 10px rgba(0,0,0,0.2); backdrop-filter: blur(8px); transition: all 0.3s; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);`;
       hoverInfo.innerHTML = 'Passe o mouse no gráfico';
     }
     return;
@@ -2350,7 +2361,7 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
 
   // Atualiza a nova legenda dinmica do hover
   if (hoverInfo) {
-    hoverInfo.style = `width: 100%; text-align: center; padding: 0.85rem 1.5rem; border-radius: 12px; min-height: 54px; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; ${window.getDeckGradientStyle(deckName)} border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.3); backdrop-filter: blur(8px); transition: all 0.3s; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);`;
+    hoverInfo.style = `width: 100%; max-width: 350px; margin: 0 auto; text-align: center; padding: 0.5rem 1rem; border-radius: 8px; min-height: 38px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; color: white; ${window.getDeckGradientStyle(deckName)} border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.3); backdrop-filter: blur(8px); transition: all 0.3s; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);`;
     
     if (chartObj) {
       const dataIndex = chartObj.data.labels.indexOf(deckName);
@@ -2358,7 +2369,7 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
         const val = chartObj.data.datasets[0].data[dataIndex];
         const total = chartObj.data.datasets[0].data.reduce((a,b)=>a+b, 0);
         const pct = Math.round((val/total)*100);
-        hoverInfo.innerHTML = `<span>${escapeHTML(deckName)}</span><span style="opacity:0.85; font-size:0.9em; margin-left:10px; font-weight:500;">${val} jogador(es) &bull; ${pct}%</span>`;
+        hoverInfo.innerHTML = `<span>${escapeHTML(deckName)}</span><span style="opacity:0.85; font-size:0.9em; margin-left:10px; font-weight:500;">${val} jg &bull; ${pct}%</span>`;
         return;
       }
     }
