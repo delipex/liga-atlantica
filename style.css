@@ -1152,7 +1152,7 @@ tbody tr.top-8 .row-rank,
 .carousel-3d-container {
   width: 100%;
   position: relative;
-  height: 350px; /* Matched chart height */
+  height: 400px;
   perspective: 1000px;
   overflow: hidden;
 }

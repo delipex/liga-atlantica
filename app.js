@@ -2085,7 +2085,7 @@ function updateMetagameDisplay() {
     const decksWithImages = sortedDecks.filter(d => d.image);
     let carouselHtml = '';
     
-    const getDeckGradientStyle = (deckName) => {
+    window.getDeckGradientStyle = (deckName) => {
       const energyStr = getDeckEnergy(deckName);
       if (!energyStr) return 'background: rgba(0,0,0,0.75);';
       const parts = energyStr.toLowerCase().split('+').map(p => p.trim());
@@ -2106,7 +2106,7 @@ function updateMetagameDisplay() {
       const cardsHtml = decksWithImages.map((d, i) => `
         <a href="${d.limitless}" target="_blank" rel="noopener noreferrer" class="carousel-3d-item" data-index="${i}" data-deck="${escapeHTML(d.deck)}" title="Ver ${escapeHTML(d.deck)} no Limitless">
           <img src="${safeExternalUrl(d.image)}" alt="${escapeHTML(d.deck)}" loading="lazy">
-          <div class="deck-card-label" style="${getDeckGradientStyle(d.deck)} text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">${escapeHTML(d.deck)}</div>
+          <div class="deck-card-label" style="${window.getDeckGradientStyle(d.deck)} text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">${escapeHTML(d.deck)}</div>
         </a>
       `).join('');
       
@@ -2125,11 +2125,17 @@ function updateMetagameDisplay() {
       <div style="display:flex; flex-direction:column; gap:2rem; align-items:center; width: 100%;">
         <div class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:space-evenly; align-items:center; gap: 2rem; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
           
-          <div style="flex: 1 1 350px; width: 100%; max-width: 400px; aspect-ratio: 1; position:relative;">
-            <div id="chart-center-wrapper-${canvasId}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width: 45%; height: 45%; border-radius:50%; overflow:hidden; z-index:0; display:flex; align-items:center; justify-content:center; border: 2px solid rgba(255,255,255,0.1); box-shadow: inset 0 0 20px rgba(0,0,0,0.5); opacity: ${sortedDecks[0] && sortedDecks[0].image ? 1 : 0}; transition: opacity 0.3s;">
-              <img id="chart-center-img-${canvasId}" src="${sortedDecks[0] && sortedDecks[0].image ? safeExternalUrl(sortedDecks[0].image) : ''}" style="width:100%; height:100%; object-fit:cover; opacity: 0.85; transition: all 0.3s;">
+          <div style="flex: 1 1 350px; width: 100%; max-width: 400px; display:flex; flex-direction:column; gap:1rem;">
+            <div style="position:relative; width:100%; aspect-ratio: 1;">
+              <div id="chart-center-wrapper-${canvasId}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width: 45%; aspect-ratio: 1; height: auto; border-radius:50%; overflow:hidden; z-index:0; display:flex; align-items:center; justify-content:center; border: 2px solid rgba(255,255,255,0.1); box-shadow: inset 0 0 20px rgba(0,0,0,0.5); opacity: ${sortedDecks[0] && sortedDecks[0].image ? 1 : 0}; transition: opacity 0.3s;">
+                <img id="chart-center-img-${canvasId}" src="${sortedDecks[0] && sortedDecks[0].image ? safeExternalUrl(sortedDecks[0].image) : ''}" style="width:100%; height:100%; object-fit:cover; opacity: 0.85; transition: all 0.3s;">
+              </div>
+              <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
             </div>
-            <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
+            
+            <div id="chart-hover-info-${canvasId}" style="width: 100%; text-align: center; padding: 0.85rem 1.5rem; border-radius: 12px; min-height: 54px; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(8px); transition: all 0.3s; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">
+              Passe o mouse no gráfico
+            </div>
           </div>
           
           <div style="flex: 1 1 350px; width: 100%; max-width: 400px;">
@@ -2179,9 +2185,12 @@ function updateMetagameDisplay() {
             
             meta.data.forEach((element, index) => {
               const val = chart.data.datasets[0].data[index];
-              if (val < 1) return;
+              const percentNum = Math.round((val / total) * 100);
               
-              const percent = Math.round((val / total) * 100) + '%';
+              // Oculta nmeros em fatias muito pequenas (menores que 4%)
+              if (percentNum < 4) return;
+              
+              const percent = percentNum + '%';
               
               const center = element.tooltipPosition();
               ctx.save();
@@ -2210,20 +2219,16 @@ function updateMetagameDisplay() {
                 const dataIndex = activeElements[0].index;
                 const label = chart.data.labels[dataIndex];
                 if (window.focusCarouselDeck) {
-                  window.focusCarouselDeck(chart.canvas.id, label);
+                  window.focusCarouselDeck(chart.canvas.id, label, chart);
+                }
+              } else {
+                if (window.focusCarouselDeck) {
+                  window.focusCarouselDeck(chart.canvas.id, null, chart);
                 }
               }
             },
             plugins: { 
-              legend: { 
-                position: 'bottom', 
-                labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' },
-                onHover: (event, legendItem, legend) => {
-                  if (window.focusCarouselDeck) {
-                    window.focusCarouselDeck(legend.chart.canvas.id, legendItem.text);
-                  }
-                }
-              }, 
+              legend: { display: false }, 
               tooltip: { 
                 enabled: false, 
                 external: externalTooltipHandler
@@ -2306,32 +2311,60 @@ window.updateCarousel = function(id) {
   });
 };
 
-window.focusCarouselDeck = function(id, deckName) {
+window.focusCarouselDeck = function(id, deckName, chartObj = null) {
   const c = window.carousels[id];
-  if(!c) return;
-  const targetIndex = c.items.findIndex(item => item.getAttribute('data-deck') === deckName);
-  if(targetIndex !== -1 && targetIndex !== c.index) {
-     c.index = targetIndex;
-     window.updateCarousel(id);
-     
-     // reset interval
-     if(window.carouselIntervals && window.carouselIntervals[id]) {
-       clearInterval(window.carouselIntervals[id]);
-       window.carouselIntervals[id] = setInterval(() => window.moveCarousel(id, 1), 4000);
-     }
+  const hoverInfo = document.getElementById('chart-hover-info-' + id);
+  
+  if (!deckName) {
+    if (hoverInfo) {
+      hoverInfo.style = `width: 100%; text-align: center; padding: 0.85rem 1.5rem; border-radius: 12px; min-height: 54px; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(8px); transition: all 0.3s; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);`;
+      hoverInfo.innerHTML = 'Passe o mouse no gráfico';
+    }
+    return;
   }
   
-  // Atualiza a imagem central do grfico!
-  const centerWrapper = document.getElementById('chart-center-wrapper-' + id);
-  const centerImg = document.getElementById('chart-center-img-' + id);
-  if (centerWrapper && centerImg && targetIndex !== -1) {
-    const imgElement = c.items[targetIndex].querySelector('img');
-    if (imgElement && imgElement.src && !imgElement.src.endsWith('null')) {
-      centerImg.src = imgElement.src;
-      centerWrapper.style.opacity = '1';
-    } else {
-      centerWrapper.style.opacity = '0';
+  if(c) {
+    const targetIndex = c.items.findIndex(item => item.getAttribute('data-deck') === deckName);
+    if(targetIndex !== -1 && targetIndex !== c.index) {
+       c.index = targetIndex;
+       window.updateCarousel(id);
+       
+       // reset interval
+       if(window.carouselIntervals && window.carouselIntervals[id]) {
+         clearInterval(window.carouselIntervals[id]);
+         window.carouselIntervals[id] = setInterval(() => window.moveCarousel(id, 1), 4000);
+       }
     }
+    
+    // Atualiza a imagem central do grfico!
+    const centerWrapper = document.getElementById('chart-center-wrapper-' + id);
+    const centerImg = document.getElementById('chart-center-img-' + id);
+    if (centerWrapper && centerImg && targetIndex !== -1) {
+      const imgElement = c.items[targetIndex].querySelector('img');
+      if (imgElement && imgElement.src && !imgElement.src.endsWith('null')) {
+        centerImg.src = imgElement.src;
+        centerWrapper.style.opacity = '1';
+      } else {
+        centerWrapper.style.opacity = '0';
+      }
+    }
+  }
+
+  // Atualiza a nova legenda dinmica do hover
+  if (hoverInfo) {
+    hoverInfo.style = `width: 100%; text-align: center; padding: 0.85rem 1.5rem; border-radius: 12px; min-height: 54px; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; ${window.getDeckGradientStyle(deckName)} border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.3); backdrop-filter: blur(8px); transition: all 0.3s; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);`;
+    
+    if (chartObj) {
+      const dataIndex = chartObj.data.labels.indexOf(deckName);
+      if (dataIndex !== -1) {
+        const val = chartObj.data.datasets[0].data[dataIndex];
+        const total = chartObj.data.datasets[0].data.reduce((a,b)=>a+b, 0);
+        const pct = Math.round((val/total)*100);
+        hoverInfo.innerHTML = `<span>${escapeHTML(deckName)}</span><span style="opacity:0.85; font-size:0.9em; margin-left:10px; font-weight:500;">${val} jogador(es) &bull; ${pct}%</span>`;
+        return;
+      }
+    }
+    hoverInfo.innerHTML = escapeHTML(deckName);
   }
 };
 
