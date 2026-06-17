@@ -1977,6 +1977,14 @@ function populateMetagameSeasonSelector(configVal) {
   }
 }
 
+window.setMetagameChartType = function(type) {
+  window.currentMetagameChartType = type;
+  document.querySelectorAll('.chart-toggle-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.id === 'btn-chart-' + type);
+  });
+  renderMetagameChart();
+};
+
 function handleMetagameSelectorChange() {
   updateMetagameDisplay();
 }
@@ -2227,6 +2235,7 @@ function updateMetagameDisplay() {
                 } else {
                   ctx.fillText(name, center.x, center.y - 8);
                 }
+                yOffset = 6;
               }
               
               ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
@@ -2240,8 +2249,7 @@ function updateMetagameDisplay() {
           }
         };
 
-        const chartTypeEl = document.getElementById('metagame-chart-type');
-        const chartType = chartTypeEl ? chartTypeEl.value : 'doughnut';
+        const chartType = window.currentMetagameChartType || 'doughnut';
         
         if (chartType === 'bar') {
           const centerWrap = document.getElementById('chart-center-text-' + canvasId);
@@ -2318,7 +2326,7 @@ function updateMetagameDisplay() {
           } : { 
             responsive: true, 
             maintainAspectRatio: true, 
-            layout: { padding: 15 },
+            layout: { padding: 30 },
             onHover: (event, activeElements, chart) => {
               if (activeElements && activeElements.length > 0) {
                 const dataIndex = activeElements[0].index;
@@ -2332,12 +2340,18 @@ function updateMetagameDisplay() {
                 }
               }
             },
+            onClick: (event, activeElements, chart) => {
+              if (activeElements && activeElements.length > 0) {
+                const dataIndex = activeElements[0].index;
+                const label = chart.data.labels[dataIndex];
+                if (window.syncCarouselToDeck) {
+                  window.syncCarouselToDeck(chart.canvas.id, label);
+                }
+              }
+            },
             plugins: { 
               legend: { display: false }, 
-              tooltip: { 
-                enabled: false, 
-                external: externalTooltipHandler
-              } 
+              tooltip: { enabled: false } 
             }, 
             cutout: '50%' 
           },
@@ -2436,7 +2450,7 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
     
     centerName.style.cssText = `
       font-weight: 800; 
-      font-size: 1.05rem; 
+      font-size: 0.9rem; 
       line-height: 1.2; 
       ${bgStyle}
       -webkit-background-clip: text;
