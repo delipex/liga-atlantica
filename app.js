@@ -1193,13 +1193,6 @@ function renderCalendar() {
   if (!timeline) return;
 
   const events = appData.Calendario;
-  
-  if (!appData.ScoresAntigos || appData.ScoresAntigos.length === 0) {
-    if (historicalTab) {
-      historicalTab.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--text-secondary)">Aguardando as informações...</div>`;
-    }
-    return;
-  }
 
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -2216,7 +2209,6 @@ function updateMetagameDisplay() {
     targetContainer.innerHTML = htmlContent;
     
     const ctx = document.getElementById(canvasId);
-    const chartType = window.currentMetagameChartType || 'doughnut';
     if (ctx && chartType === 'doughnut') {
       if (window.Chart) {
         const energyHexColors = {
