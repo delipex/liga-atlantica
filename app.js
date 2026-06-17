@@ -148,9 +148,9 @@ async function fetchSheetTab(spreadsheetId, tabName, publishedGid = '') {
     if (!publishedGid) {
       throw new Error(`Link publicado sem gid cadastrado para a aba ${tabName}`);
     }
-    url = `https://docs.google.com/spreadsheets/d/e/${spreadsheetId}/pub?gid=${encodeURIComponent(publishedGid)}&single=true&output=csv`;
+    url = `https://docs.google.com/spreadsheets/d/e/${spreadsheetId}/pub?gid=${encodeURIComponent(publishedGid)}&single=true&output=csv&t=${new Date().getTime()}`;
   } else {
-    url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
+    url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}&t=${new Date().getTime()}`;
   }
 
   const response = await fetch(url);
@@ -2082,10 +2082,32 @@ function updateMetagameDisplay() {
       targetContainer.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Nenhum deck registrado ${selectedSession === 'all' ? 'no geral' : 'nesta sessão'}.</div>`;
       return;
     }
-    const chartHtml = `
+    const decksWithImages = sortedDecks.filter(d => d.image);
+    let carouselHtml = '';
+    
+    if (decksWithImages.length > 0) {
+      const cardsHtml = decksWithImages.map((d, i) => `
+        <a href="${d.limitless}" target="_blank" rel="noopener noreferrer" class="carousel-3d-item" data-index="${i}" title="Ver ${escapeHTML(d.deck)} no Limitless">
+          <img src="${safeExternalUrl(d.image)}" alt="${escapeHTML(d.deck)}" loading="lazy">
+          <div class="deck-card-label">${escapeHTML(d.deck)}</div>
+        </a>
+      `).join('');
+      
+      carouselHtml = `
+        <div class="carousel-3d-container" id="carousel-${canvasId}">
+          <button class="carousel-nav-btn carousel-prev" onclick="moveCarousel('${canvasId}', -1)">&#10094;</button>
+          <div class="carousel-3d-stage" id="stage-${canvasId}">
+            ${cardsHtml}
+          </div>
+          <button class="carousel-nav-btn carousel-next" onclick="moveCarousel('${canvasId}', 1)">&#10095;</button>
+        </div>
+      `;
+    }
+
+    const htmlContent = `
       <div style="display:flex; flex-direction:column; gap:2rem; align-items:center;">
-        <div class="glass-card" style="width: 100%; max-width: 400px; padding: 2rem; border-radius: var(--radius); display:flex; justify-content:center; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
-          <div style="width: 100%; aspect-ratio: 1; position:relative;">
+        <div class="glass-card" style="width: 100%; max-width: 450px; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:column; align-items:center; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
+          <div style="width: 100%; max-width: 400px; aspect-ratio: 1; position:relative;">
             ${sortedDecks[0] && sortedDecks[0].image ? `
             <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width: 45%; height: 45%; border-radius:50%; overflow:hidden; z-index:0; display:flex; align-items:center; justify-content:center; border: 2px solid rgba(255,255,255,0.1); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
               <img src="${safeExternalUrl(sortedDecks[0].image)}" style="width:100%; height:100%; object-fit:cover; opacity: 0.85;">
@@ -2093,32 +2115,12 @@ function updateMetagameDisplay() {
             ` : ''}
             <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
           </div>
+          ${carouselHtml}
         </div>
       </div>
     `;
-
-    // Build Marquee HTML
-    const decksWithImages = sortedDecks.filter(d => d.image);
-    let marqueeHtml = '';
-    if (decksWithImages.length > 0) {
-      const renderCard = (d) => `
-        <a href="${d.limitless}" target="_blank" rel="noopener noreferrer" class="deck-card" title="Ver ${escapeHTML(d.deck)} no Limitless">
-          <img src="${safeExternalUrl(d.image)}" alt="${escapeHTML(d.deck)}" loading="lazy">
-          <div class="deck-card-label">${escapeHTML(d.deck)}</div>
-        </a>
-      `;
-      // To ensure enough width for seamless scrolling, repeat the list
-      const cardsHtml = decksWithImages.map(renderCard).join('');
-      marqueeHtml = `
-        <div class="marquee-container glass-card" style="width: 100%; max-width: 100%; margin-top: 3rem; padding: 1.5rem 0; overflow: hidden; position: relative;">
-          <div class="marquee-content">
-            ${cardsHtml}${cardsHtml}${cardsHtml}${cardsHtml}
-          </div>
-        </div>
-      `;
-    }
     
-    targetContainer.innerHTML = chartHtml + marqueeHtml;
+    targetContainer.innerHTML = htmlContent;
     
     const ctx = document.getElementById(canvasId);
     if (ctx) {
@@ -2145,11 +2147,76 @@ function updateMetagameDisplay() {
         });
       }
     }
+    
+    // Iniciar o carrossel aps a renderizao
+    if (decksWithImages.length > 0) {
+      setTimeout(() => window.initCarousel(canvasId), 50);
+    }
   };
 
   renderToContainer(homeContent, 'metagameChartCanvas_home', 'metagameChartHome');
   renderToContainer(pageContent, 'metagameChartCanvas_page', 'metagameChartPage');
 }
+
+// 3D Carousel Global Logic
+window.initCarousel = function(id) {
+  const stage = document.getElementById('stage-' + id);
+  if(!stage) return;
+  const items = Array.from(stage.querySelectorAll('.carousel-3d-item'));
+  if(items.length === 0) return;
+  
+  if(!window.carousels) window.carousels = {};
+  window.carousels[id] = { index: 0, items: items, length: items.length };
+  
+  window.updateCarousel(id);
+  
+  if(!window.carouselIntervals) window.carouselIntervals = {};
+  if(window.carouselIntervals[id]) clearInterval(window.carouselIntervals[id]);
+  
+  // Auto-play lento
+  window.carouselIntervals[id] = setInterval(() => window.moveCarousel(id, 1), 4000);
+  
+  const container = document.getElementById('carousel-' + id);
+  container.addEventListener('mouseenter', () => clearInterval(window.carouselIntervals[id]));
+  container.addEventListener('mouseleave', () => {
+    window.carouselIntervals[id] = setInterval(() => window.moveCarousel(id, 1), 4000);
+  });
+};
+
+window.moveCarousel = function(id, dir) {
+  const c = window.carousels[id];
+  if(!c) return;
+  c.index = (c.index + dir + c.length) % c.length;
+  window.updateCarousel(id);
+};
+
+window.updateCarousel = function(id) {
+  const c = window.carousels[id];
+  if(!c) return;
+  
+  c.items.forEach((item, i) => {
+    item.classList.remove('active');
+    
+    let diff = i - c.index;
+    if (diff > Math.floor(c.length / 2)) diff -= c.length;
+    if (diff < -Math.floor(c.length / 2)) diff += c.length;
+    
+    if (diff === 0) {
+      item.style.transform = `translateX(0) translateZ(0) scale(1)`;
+      item.style.opacity = '1';
+      item.classList.add('active');
+    } else {
+      const direction = diff > 0 ? 1 : -1;
+      const offset = Math.abs(diff);
+      const rotate = 45 * direction;
+      const translateX = (90 * direction) + (10 * diff);
+      const translateZ = -100 - (offset * 40);
+      
+      item.style.transform = `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${-rotate}deg)`;
+      item.style.opacity = offset > 2 ? '0' : String(1 - (offset * 0.25));
+    }
+  });
+};
 
 function toggleHistoryCollapse() {
   const content = document.getElementById('historical-collapse-content');

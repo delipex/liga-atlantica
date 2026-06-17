@@ -1148,71 +1148,76 @@ tbody tr.top-8 .row-rank,
   min-width: 0;
 }
 
-/* --- DECK MARQUEE CAROUSEL --- */
-.marquee-container {
+/* --- 3D DECK CAROUSEL --- */
+.carousel-3d-container {
   width: 100%;
-  overflow: hidden;
   position: relative;
-  padding: 1.5rem 0;
-  margin-top: 1rem;
+  height: 220px;
+  perspective: 1000px;
+  overflow: hidden;
+  margin-top: 2rem;
 }
-.marquee-content {
-  display: inline-flex;
-  gap: 1rem;
-  animation: marquee-scroll 25s linear infinite;
-  padding-left: 1rem;
+.carousel-3d-stage {
+  width: 120px;
+  height: 168px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transform-style: preserve-3d;
 }
-.marquee-content:hover {
-  animation-play-state: paused;
-}
-@keyframes marquee-scroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(calc(-50% - 0.5rem)); }
-}
-.deck-card {
-  width: 100px;
-  height: 140px;
-  flex-shrink: 0;
+.carousel-3d-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s ease, z-index 0s 0.3s;
   cursor: pointer;
-  position: relative;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
   text-decoration: none;
   display: block;
 }
-.deck-card img {
+.carousel-3d-item.active {
+  z-index: 10 !important;
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s ease, z-index 0s;
+  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.4);
+  border-color: rgba(16, 185, 129, 0.6);
+}
+.carousel-3d-item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s;
+  pointer-events: none;
 }
-.deck-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.4);
-  border-color: rgba(16, 185, 129, 0.5);
-}
-.deck-card:hover img {
-  transform: scale(1.05);
-}
-.deck-card-label {
+.carousel-nav-btn {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: rgba(0,0,0,0.75);
-  color: #fff;
-  text-align: center;
-  font-size: 0.75rem;
-  padding: 0.35rem 0.2rem;
-  font-weight: 600;
-  backdrop-filter: blur(2px);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 20;
+  backdrop-filter: blur(4px);
+  transition: all 0.2s;
+  font-size: 1.2rem;
 }
+.carousel-nav-btn:hover {
+  background: rgba(16, 185, 129, 0.6);
+  border-color: #10b981;
+}
+.carousel-prev { left: 15px; }
+.carousel-next { right: 15px; }
 .timeline-body {
   flex: 1 1 auto;
   min-width: 0;
