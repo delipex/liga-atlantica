@@ -2287,12 +2287,17 @@ function updateMetagameDisplay() {
                 
                 if (parts.length > 1 && window.energyHexColors[parts[1]]) {
                   const hex2 = window.energyHexColors[parts[1]];
-                  const centerX = (chartArea.left + chartArea.right) / 2;
-                  const centerY = (chartArea.top + chartArea.bottom) / 2;
-                  const outerRadius = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top) / 2;
-                  const innerRadius = outerRadius * 0.6; // 60% cutout
+                  let gradient;
+                  if (chartType === 'bar') {
+                    gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                  } else {
+                    const centerX = (chartArea.left + chartArea.right) / 2;
+                    const centerY = (chartArea.top + chartArea.bottom) / 2;
+                    const outerRadius = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top) / 2;
+                    const innerRadius = outerRadius * 0.4; // matches 40% cutout approx
+                    gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
+                  }
                   
-                  const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
                   gradient.addColorStop(0, hex1 + opacity);
                   gradient.addColorStop(1, hex2 + opacity);
                   return gradient;
@@ -2341,7 +2346,7 @@ function updateMetagameDisplay() {
           } : { 
             responsive: true, 
             maintainAspectRatio: true, 
-            layout: { padding: 30 },
+            layout: { padding: { top: 20, bottom: 20, left: 45, right: 45 } },
             onHover: (event, activeElements, chart) => {
               if (activeElements && activeElements.length > 0) {
                 const dataIndex = activeElements[0].index;
