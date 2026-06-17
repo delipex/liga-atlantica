@@ -635,14 +635,8 @@ function renderHistoricalScores(page = 1) {
   const endIdx = startIdx + ITEMS_PER_PAGE;
   const pageRows = rows.slice(startIdx, endIdx);
 
-  if (pageRows.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="2" style="text-align:center;padding:2rem;color:var(--text-secondary);">
-          Nenhum registro encontrado.
-        </td>
-      </tr>
-    `;
+  if (filteredHistoricalList.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--text-secondary);">Nenhum resultado encontrado.</td></tr>`;
     renderHistoricalPagination(1);
     return;
   }
@@ -665,6 +659,7 @@ function renderHistoricalScores(page = 1) {
               </div>
             </div>
           </td>
+          <td style="font-weight: bold; color: var(--text-primary); text-align: center;">${toNumber(row.Pontos, 0)}</td>
         </tr>
       `;
     });
@@ -2017,61 +2012,58 @@ function updateMetagameDisplay() {
   const labels = sortedDecks.map(d => d.deck);
   const data = sortedDecks.map(d => d.count);
   const colors = ['#FF4216', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#14b8a6'];
-  const preloadedImages = sortedDecks.map(d => {
-    if (!d.image) return null;
-    const img = new Image();
-    img.src = safeExternalUrl(d.image);
-    return img;
-  });
-
-  const sliceImagePlugin = {
-    id: 'sliceImagePlugin',
-    afterDatasetDraw(chart, args, options) {
-      try {
-        const ctx = chart.ctx;
-        const meta = chart.getDatasetMeta(0);
-        meta.data.forEach((arc, i) => {
-          const img = preloadedImages[i];
-          if (img && img.complete && img.naturalWidth > 0) {
-            // Depending on Chart.js version, properties might be on arc or arc.getProps()
-            const props = arc.getProps ? arc.getProps(['x', 'y', 'startAngle', 'endAngle', 'innerRadius', 'outerRadius']) : arc;
-            const startAngle = props.startAngle || 0;
-            const endAngle = props.endAngle || 0;
-            const innerRadius = props.innerRadius || 0;
-            const outerRadius = props.outerRadius || 0;
-            
-            const angle = (startAngle + endAngle) / 2;
-            const r = (innerRadius + outerRadius) / 2;
-            const x = (props.x || 0) + Math.cos(angle) * r;
-            const y = (props.y || 0) + Math.sin(angle) * r;
-            
-            const thickness = outerRadius - innerRadius;
-            const arcLength = (endAngle - startAngle) * r;
-            const size = Math.min(thickness * 0.8, arcLength * 0.8, 36);
-            
-            if (size < 12 || isNaN(x) || isNaN(y)) return;
-            
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(x, y, size/2, 0, Math.PI * 2);
-            ctx.closePath();
-            ctx.clip();
-            ctx.drawImage(img, x - size/2, y - size/2, size, size);
-            
-            ctx.beginPath();
-            ctx.arc(x, y, size/2, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-            ctx.restore();
-          } else if (img) {
-            img.onload = () => chart.update();
-          }
-        });
-      } catch (err) {
-        console.error("Erro no plugin de miniatura:", err);
-      }
+  
+  const getOrCreateTooltip = (chart) => {
+    let tooltipEl = chart.canvas.parentNode.querySelector('div.chartjs-tooltip');
+    if (!tooltipEl) {
+      tooltipEl = document.createElement('div');
+      tooltipEl.className = 'chartjs-tooltip glass-card';
+      tooltipEl.style.background = 'rgba(15, 23, 42, 0.9)';
+      tooltipEl.style.borderRadius = 'var(--radius)';
+      tooltipEl.style.color = 'white';
+      tooltipEl.style.opacity = 1;
+      tooltipEl.style.pointerEvents = 'none';
+      tooltipEl.style.position = 'absolute';
+      tooltipEl.style.transform = 'translate(-50%, 0)';
+      tooltipEl.style.transition = 'all .1s ease';
+      tooltipEl.style.zIndex = 100;
+      tooltipEl.style.padding = '10px';
+      tooltipEl.style.display = 'flex';
+      tooltipEl.style.flexDirection = 'column';
+      tooltipEl.style.alignItems = 'center';
+      tooltipEl.style.gap = '8px';
+      chart.canvas.parentNode.appendChild(tooltipEl);
     }
+    return tooltipEl;
+  };
+
+  const externalTooltipHandler = (context) => {
+    const {chart, tooltip} = context;
+    const tooltipEl = getOrCreateTooltip(chart);
+
+    if (tooltip.opacity === 0) {
+      tooltipEl.style.opacity = 0;
+      return;
+    }
+
+    if (tooltip.body) {
+      const dataIndex = tooltip.dataPoints[0].dataIndex;
+      const deckInfo = sortedDecks[dataIndex];
+      
+      let innerHtml = '';
+      if (deckInfo.image) {
+        innerHtml += `<img src="${safeExternalUrl(deckInfo.image)}" style="width: 100px; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 5px;">`;
+      }
+      innerHtml += `<div style="font-weight: bold; text-align: center;">${escapeHTML(deckInfo.deck)}</div>`;
+      innerHtml += `<div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">${deckInfo.count} jogador(es)</div>`;
+      
+      tooltipEl.innerHTML = innerHtml;
+    }
+
+    const position = context.chart.canvas.getBoundingClientRect();
+    tooltipEl.style.opacity = 1;
+    tooltipEl.style.left = tooltip.caretX + 'px';
+    tooltipEl.style.top = tooltip.caretY + 'px';
   };
 
   const renderToContainer = (targetContainer, canvasId, chartVarName) => {
@@ -2109,13 +2101,24 @@ function updateMetagameDisplay() {
     if (ctx) {
       if (window[chartVarName]) window[chartVarName].destroy();
       if (window.Chart) {
+        const bgColors = labels.map((_, i) => colors[i % colors.length] + 'aa');
         Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
         Chart.defaults.font.family = '"Inter", sans-serif';
         window[chartVarName] = new Chart(ctx, {
           type: 'doughnut',
           data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderColor: 'rgba(255,255,255,0.15)', borderWidth: 2, hoverOffset: 10 }] },
-          options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#fff', bodyColor: '#e2e8f0', borderColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, padding: 12, displayColors: true, boxPadding: 6 } }, cutout: '55%' },
-          plugins: [sliceImagePlugin]
+          options: { 
+            responsive: true, 
+            maintainAspectRatio: true, 
+            plugins: { 
+              legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } }, 
+              tooltip: { 
+                enabled: false, 
+                external: externalTooltipHandler
+              } 
+            }, 
+            cutout: '55%' 
+          }
         });
       }
     }
