@@ -2115,7 +2115,7 @@ function updateMetagameDisplay() {
     };
 
     const carouselClass = isHome ? 'carousel-home' : 'carousel-page';
-    const chartMaxWidth = isHome ? '380px' : '450px';
+    const chartMaxWidth = isHome ? '420px' : '520px';
 
     if (decksWithImages.length > 0) {
       const cardsHtml = decksWithImages.map((d, i) => `
@@ -2179,7 +2179,7 @@ function updateMetagameDisplay() {
     const chartColumnFlex = isBar ? '1 1 100%' : `1 1 ${chartMaxWidth}`;
 
     const toggleHtml = `
-      <div class="chart-type-toggle" style="display: flex; align-self: flex-start; margin-top: 1rem;">
+      <div class="chart-type-toggle" style="display: flex; align-self: center; margin-top: 1rem;">
         <button type="button" class="chart-toggle-btn ${chartType !== 'bar' ? 'active' : ''}" id="btn-chart-doughnut-${canvasId}" onclick="window.setMetagameChartType('doughnut')" title="Gráfico de Rosca">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
         </button>
@@ -2191,9 +2191,9 @@ function updateMetagameDisplay() {
 
     const htmlContent = `
       <div style="display:flex; flex-direction:column; align-items:center; width: 100%;">
-        <div class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:space-evenly; align-items:center; gap: ${isBar ? '0' : '5.5rem'}; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
+        <div class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:center; align-items:center; gap: ${isBar ? '0' : '4rem'}; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
           
-          <div style="flex: ${chartColumnFlex}; width: 100%; max-width: ${chartColumnWidth}; display:flex; flex-direction:column; gap:1.5rem; align-items: flex-start;">
+          <div style="flex: ${chartColumnFlex}; width: 100%; max-width: ${chartColumnWidth}; display:flex; flex-direction:column; gap:1.5rem; align-items: center; justify-content: center;">
             ${chartType === 'doughnut' ? `
             <div style="position:relative; width:100%; aspect-ratio: 1; display:flex; align-items:center; justify-content:center;">
               <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
@@ -2239,7 +2239,7 @@ function updateMetagameDisplay() {
         const sliceLabelsPlugin = {
           id: 'sliceLabels',
           afterDraw(chart, args, options) {
-            const ctx = chart.ctx;
+            const drawCtx = chart.ctx;
             const meta = chart.getDatasetMeta(0);
             const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
             
@@ -2251,47 +2251,37 @@ function updateMetagameDisplay() {
               
               const percent = percentNum + '%';
               const name = chart.data.labels[index];
-              
               const deckData = chartDecks.find(d => d.deck === name);
-              
-              ctx.save();
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              
-              ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-              ctx.shadowBlur = 4;
               
               const angle = (element.startAngle + element.endAngle) / 2;
               const x0 = element.x;
               const y0 = element.y;
               const outerRadius = element.outerRadius;
-              const innerRadius = outerRadius * 0.55;
+              const innerRadius = outerRadius * 0.50; // Thicker doughnut slice
               const midRadius = (innerRadius + outerRadius) / 2;
-              
-              // Position inside the slice
-              const insideX = x0 + Math.cos(angle) * midRadius;
-              const insideY = y0 + Math.sin(angle) * midRadius;
               
               const isOutros = name.toLowerCase() === 'outros';
               
-              // Draw icons outside the chart
+              // Draw outside icons and leader lines for specific decks
               if (!isOutros && deckData && deckData.icone) {
                 // 3-tier staggering to fully prevent overlaps
-                const R = outerRadius + (index % 3 === 0 ? 15 : index % 3 === 1 ? 32 : 48);
+                const R = outerRadius + (index % 3 === 0 ? 22 : index % 3 === 1 ? 46 : 70);
                 const drawX = x0 + Math.cos(angle) * R;
                 const drawY = y0 + Math.sin(angle) * R;
                 
+                drawCtx.save();
                 // Draw thin leader line
-                ctx.beginPath();
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-                ctx.lineWidth = 1;
+                drawCtx.beginPath();
+                drawCtx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+                drawCtx.lineWidth = 1;
                 const startX = x0 + Math.cos(angle) * outerRadius;
                 const startY = y0 + Math.sin(angle) * outerRadius;
-                const endX = x0 + Math.cos(angle) * (R - 13);
-                const endY = y0 + Math.sin(angle) * (R - 13);
-                ctx.moveTo(startX, startY);
-                ctx.lineTo(endX, endY);
-                ctx.stroke();
+                const endX = x0 + Math.cos(angle) * (R - 22);
+                const endY = y0 + Math.sin(angle) * (R - 22);
+                drawCtx.moveTo(startX, startY);
+                drawCtx.lineTo(endX, endY);
+                drawCtx.stroke();
+                drawCtx.restore();
 
                 if (!window.chartIconCache[name]) {
                   const img = new Image();
@@ -2300,36 +2290,52 @@ function updateMetagameDisplay() {
                   window.chartIconCache[name] = img;
                 } else if (window.chartIconCache[name].complete && window.chartIconCache[name].naturalWidth > 0) {
                   const img = window.chartIconCache[name];
-                  const iconSize = 26; 
-                  ctx.drawImage(img, drawX - (iconSize/2), drawY - (iconSize/2), iconSize, iconSize);
+                  const iconSize = 42; // Enlarged from 34px to 42px
+                  drawCtx.save();
+                  drawCtx.drawImage(img, drawX - (iconSize/2), drawY - (iconSize/2), iconSize, iconSize);
+                  drawCtx.restore();
                 }
               }
               
-              // Draw text inside the slice
-              ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-              ctx.shadowBlur = 4;
-              ctx.fillStyle = '#ffffff';
+              // Draw the percentage text INSIDE the slice for ALL decks
+              const insideX = x0 + Math.cos(angle) * midRadius;
+              const insideY = y0 + Math.sin(angle) * midRadius;
+              
+              drawCtx.save();
+              drawCtx.translate(insideX, insideY);
+              
+              // Rotate radially to maximize lateral breathing room (respirar mais lateral)
+              let textAngle = angle;
+              let normalizedAngle = textAngle % (2 * Math.PI);
+              if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
+              if (normalizedAngle > Math.PI / 2 && normalizedAngle < 1.5 * Math.PI) {
+                textAngle += Math.PI;
+              }
+              drawCtx.rotate(textAngle);
+              
+              drawCtx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+              drawCtx.shadowBlur = 4;
+              drawCtx.fillStyle = '#ffffff';
+              drawCtx.textAlign = 'center';
+              drawCtx.textBaseline = 'middle';
               
               if (isOutros) {
-                const words = name.split(' ');
-                let line1 = words[0];
-                let line2 = words.slice(1).join(' ');
-                
-                ctx.font = "bold 8.5px 'Inter', sans-serif";
-                if (line2 && line2.length > 0) {
-                  ctx.fillText(line1, insideX, insideY - 5);
-                  ctx.fillText(line2, insideX, insideY + 3);
-                } else {
-                  ctx.fillText(name, insideX, insideY - 5);
-                }
-                ctx.font = '800 10px "Inter", sans-serif';
-                ctx.fillText(percent, insideX, insideY + 7);
+                // For Outros, draw "Outros" and percent in radial lines
+                drawCtx.font = "bold 8.5px 'Inter', sans-serif";
+                drawCtx.fillText("Outros", 0, -6);
+                drawCtx.font = '800 10px "Inter", sans-serif';
+                drawCtx.fillText(percent, 0, 6);
               } else {
-                ctx.font = '800 10px "Inter", sans-serif';
-                ctx.fillText(percent, insideX, insideY);
+                // If it is a 2% or 3% deck, give it more margin by using a smaller font (9px)
+                if (percentNum <= 3) {
+                  drawCtx.font = '800 9px "Inter", sans-serif';
+                } else {
+                  drawCtx.font = '800 11px "Inter", sans-serif';
+                }
+                drawCtx.fillText(percent, 0, 0);
               }
               
-              ctx.restore();
+              drawCtx.restore();
             });
           }
         };
@@ -2370,7 +2376,7 @@ function updateMetagameDisplay() {
                     const centerX = (chartArea.left + chartArea.right) / 2;
                     const centerY = (chartArea.top + chartArea.bottom) / 2;
                     const outerRadius = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top) / 2;
-                    const innerRadius = outerRadius * 0.55; // matches 55% cutout approx
+                    const innerRadius = outerRadius * 0.50; // matches 50% cutout approx
                     gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
                   }
                   
@@ -2434,7 +2440,7 @@ function updateMetagameDisplay() {
           } : { 
             responsive: true, 
             maintainAspectRatio: true, 
-            layout: { padding: { top: 75, bottom: 75, left: 75, right: 75 } },
+            layout: { padding: { top: 110, bottom: 110, left: 110, right: 110 } },
             onHover: (event, activeElements, chart) => {
               if (activeElements && activeElements.length > 0) {
                 const dataIndex = activeElements[0].index;
@@ -2470,7 +2476,7 @@ function updateMetagameDisplay() {
               legend: { display: false }, 
               tooltip: { enabled: false } 
             }, 
-            cutout: '55%' 
+            cutout: '50%' 
           },
           plugins: [sliceLabelsPlugin]
         });
