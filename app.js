@@ -2267,8 +2267,8 @@ function updateMetagameDisplay() {
               
               const isOutros = name.toLowerCase() === 'outros';
               
-              // Draw outside icons and leader lines for specific decks
-              if (!isOutros && deckData && deckData.icone) {
+              // Draw outside icons and leader lines for major decks (>= 4% share) to prevent visual crowding
+              if (!isOutros && deckData && deckData.icone && percentNum >= 4) {
                 // 3-tier staggering to fully prevent overlaps
                 const R = outerRadius + (index % 3 === 0 ? 22 : index % 3 === 1 ? 46 : 70);
                 const drawX = x0 + Math.cos(angle) * R;
