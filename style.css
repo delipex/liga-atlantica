@@ -2607,14 +2607,17 @@ tbody tr.top-8 .row-rank,
   inset: 0;
   background-size: cover;
   background-position: center 25%;
-  opacity: 0;
-  transition: opacity 0.4s;
+  opacity: 0.25;
+  filter: grayscale(100%);
+  transition: opacity 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), filter 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
   z-index: 1;
   mask-image: linear-gradient(to right, transparent, black 40%);
   -webkit-mask-image: linear-gradient(to right, transparent, black 40%);
 }
+.accordion-item:hover .accordion-bg-image,
 .accordion-item.expanded .accordion-bg-image {
-  opacity: 0.30;
+  opacity: 0.80;
+  filter: grayscale(0%);
 }
 .accordion-progress {
   position: absolute;
@@ -2627,6 +2630,7 @@ tbody tr.top-8 .row-rank,
   border-radius: 12px;
   transition: width 0.4s ease, opacity 0.4s ease;
 }
+.accordion-item:hover .accordion-progress,
 .accordion-item.expanded .accordion-progress {
   opacity: 0.2;
 }
@@ -2634,16 +2638,11 @@ tbody tr.top-8 .row-rank,
   position: relative;
   z-index: 3;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
   padding: 0 16px;
   height: 100%;
-}
-.accordion-header {
-  display: flex;
-  align-items: center;
-  height: 48px;
-  font-weight: 600;
-  gap: 12px;
 }
 .accordion-rank {
   color: rgba(255,255,255,0.5);
@@ -2655,6 +2654,8 @@ tbody tr.top-8 .row-rank,
   color: #fff;
   font-size: 1rem;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.9);
+  margin-left: 12px;
+  text-align: left;
 }
 .accordion-percent {
   color: #fff;
@@ -2662,22 +2663,8 @@ tbody tr.top-8 .row-rank,
   font-size: 1.1rem;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 2px 4px rgba(0, 0, 0, 0.9);
 }
-.accordion-details {
-  height: 0;
-  opacity: 0;
-  overflow: hidden;
-  transition: all 0.4s;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  padding-bottom: 16px;
-}
 .accordion-item.expanded {
   height: 120px;
-}
-.accordion-item.expanded .accordion-details {
-  height: calc(120px - 48px);
-  opacity: 1;
 }
 
 @media (min-width: 769px) {
@@ -2718,18 +2705,19 @@ tbody tr.top-8 .row-rank,
   }
   
   .accordion-content {
-    padding: 16px 8px;
+    padding: 20px 8px;
+    flex-direction: column;
     justify-content: space-between;
+    align-items: center;
     width: 100%;
     box-sizing: border-box;
   }
   
-  .accordion-header {
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
-    gap: 16px;
-    transition: all 0.4s;
+  .accordion-rank {
+    color: rgba(255,255,255,0.6);
+    font-size: 1rem;
+    font-weight: 700;
+    width: auto;
   }
   
   .accordion-name {
@@ -2738,54 +2726,27 @@ tbody tr.top-8 .row-rank,
     transform: rotate(180deg);
     white-space: nowrap;
     margin: auto 0;
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-align: center;
+    flex: none;
+    transition: font-size 0.3s ease;
   }
   
   .accordion-percent {
-    font-size: 0.95rem;
-    font-weight: 800;
+    font-size: 1.05rem;
+    font-weight: 900;
   }
   
-  .accordion-details {
-    height: 0;
-    opacity: 0;
-    width: 100%;
-    justify-content: center;
-    align-items: center;
-    padding-bottom: 8px;
-  }
-  
-  /* Active / Expanded states */
-  .accordion-item:hover .accordion-header,
-  .accordion-item.expanded .accordion-header {
-    flex-direction: row;
-    height: 48px;
-    padding: 0 12px;
-  }
-  
+  /* Expanded font sizes on desktop */
   .accordion-item:hover .accordion-name,
   .accordion-item.expanded .accordion-name {
-    writing-mode: horizontal-tb;
-    transform: none;
-    font-size: 1.2rem;
-    font-weight: 800;
-    margin: 0;
-    flex-grow: 1;
-    margin-left: 12px;
-    text-align: left;
+    font-size: 1.35rem;
   }
   
   .accordion-item:hover .accordion-percent,
   .accordion-item.expanded .accordion-percent {
-    font-size: 1.4rem;
-    font-weight: 900;
-  }
-  
-  .accordion-item:hover .accordion-details,
-  .accordion-item.expanded .accordion-details {
-    height: auto;
-    opacity: 1;
+    font-size: 1.5rem;
   }
 }
 

@@ -2156,25 +2156,23 @@ function updateMetagameDisplay() {
             const isExp = this.classList.contains('expanded');
             this.parentNode.querySelectorAll('.accordion-item').forEach(el => el.classList.remove('expanded'));
             if (!isExp) this.classList.add('expanded');
-            if(window.focusCarouselDeck) window.focusCarouselDeck('${canvasId}', '${escapeHTML(deck.deck)}');
           ">
             <div class="accordion-bg-image" style="background-image: ${deckImage}"></div>
             <div class="accordion-progress" style="${bgStyle} --progress: ${relativeWidth}%;"></div>
             <div class="accordion-content">
-              <div class="accordion-header">
-                <span class="accordion-rank">#${idx + 1}</span>
-                <span class="accordion-name">${escapeHTML(deck.deck)}</span>
-                <span class="accordion-percent">${percentage}%</span>
-              </div>
-              <div class="accordion-details">
-                <button type="button" class="btn-deck-details" onclick="event.stopPropagation(); if(window.syncCarouselToDeck) window.syncCarouselToDeck('${canvasId}', '${escapeHTML(deck.deck)}')">Focar no Carrossel</button>
-              </div>
+              <span class="accordion-rank">#${idx + 1}</span>
+              <span class="accordion-name">${escapeHTML(deck.deck)}</span>
+              <span class="accordion-percent">${percentage}%</span>
             </div>
           </div>
         `;
       });
       accordionHtml += '</div>';
     }
+
+    const isBar = chartType === 'bar';
+    const chartColumnWidth = isBar ? '100%' : chartMaxWidth;
+    const chartColumnFlex = isBar ? '1 1 100%' : `1 1 ${chartMaxWidth}`;
 
     const toggleHtml = `
       <div class="chart-type-toggle" style="display: flex; align-self: flex-start; margin-top: 1rem;">
@@ -2189,9 +2187,9 @@ function updateMetagameDisplay() {
 
     const htmlContent = `
       <div style="display:flex; flex-direction:column; align-items:center; width: 100%;">
-        <div class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:space-evenly; align-items:center; gap: 5.5rem; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
+        <div class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:space-evenly; align-items:center; gap: ${isBar ? '0' : '5.5rem'}; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
           
-          <div style="flex: 1 1 ${chartMaxWidth}; width: 100%; max-width: ${chartMaxWidth}; display:flex; flex-direction:column; gap:1.5rem; align-items: flex-start;">
+          <div style="flex: ${chartColumnFlex}; width: 100%; max-width: ${chartColumnWidth}; display:flex; flex-direction:column; gap:1.5rem; align-items: flex-start;">
             ${chartType === 'doughnut' ? `
             <div style="position:relative; width:100%; aspect-ratio: 1; display:flex; align-items:center; justify-content:center;">
               <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
@@ -2204,9 +2202,11 @@ function updateMetagameDisplay() {
             ${toggleHtml}
           </div>
           
+          ${isBar ? '' : `
           <div style="flex: 1 1 350px; width: 100%; max-width: 400px;">
             ${carouselHtml}
           </div>
+          `}
 
         </div>
       </div>
@@ -2567,29 +2567,25 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
     return;
   }
 
-  // Atualiza a legenda no centro do grfico com a cor/gradiente do deck
+  // Atualiza a legenda no centro do gráfico com a cor/gradiente do deck
   if (centerTextWrap && centerName) {
     centerName.innerHTML = escapeHTML(deckName);
     
-    const bgStyle = window.getDeckGradientStyle ? window.getDeckGradientStyle(deckName) : 'background: white;';
+    const bgStyle = window.getDeckGradientStyle ? window.getDeckGradientStyle(deckName) : 'background: rgba(15, 23, 42, 0.7);';
     
     centerName.style.cssText = `
       display: inline-block;
       font-weight: 800; 
       font-size: 0.9rem; 
       line-height: 1.2; 
+      color: #ffffff;
       ${bgStyle}
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      color: transparent;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
-      background-color: rgba(15, 23, 42, 0.7);
       backdrop-filter: blur(4px);
       padding: 8px 12px;
       border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.05);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.6);
     `;
     
     centerTextWrap.style.opacity = '1';
