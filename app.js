@@ -1879,6 +1879,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const newTheme = currentTheme === 'light' ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', newTheme);
       localStorage.setItem('site-theme', newTheme);
+      // Redraw chart to update font colors according to theme
+      if (typeof updateMetagameDisplay === 'function') {
+        updateMetagameDisplay();
+      }
     });
   }
   
@@ -2234,7 +2238,8 @@ function updateMetagameDisplay() {
         const chartCtx = ctx.getContext('2d');
         if (!window.chartIconCache) window.chartIconCache = {};
         
-        Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        Chart.defaults.color = isLight ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.7)';
         Chart.defaults.font.family = '"Inter", sans-serif';
         const sliceLabelsPlugin = {
           id: 'sliceLabels',
@@ -2414,7 +2419,7 @@ function updateMetagameDisplay() {
               y: { display: false },
               x: {
                 grid: { display: false },
-                ticks: { color: 'rgba(255,255,255,0.8)', font: { size: 10 } }
+                ticks: { color: isLight ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.8)', font: { size: 10 } }
               }
             },
             plugins: { 
