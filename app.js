@@ -2154,8 +2154,12 @@ function updateMetagameDisplay() {
         accordionHtml += `
           <div class="accordion-item" onclick="
             const isExp = this.classList.contains('expanded');
-            this.parentNode.querySelectorAll('.accordion-item').forEach(el => el.classList.remove('expanded'));
-            if (!isExp) this.classList.add('expanded');
+            if (isExp || window.innerWidth > 768) {
+              window.open('${deck.limitless}', '_blank', 'noopener,noreferrer');
+            } else {
+              this.parentNode.querySelectorAll('.accordion-item').forEach(el => el.classList.remove('expanded'));
+              this.classList.add('expanded');
+            }
           ">
             <div class="accordion-bg-image" style="background-image: ${deckImage}"></div>
             <div class="accordion-progress" style="${bgStyle} --progress: ${relativeWidth}%;"></div>
@@ -2248,7 +2252,6 @@ function updateMetagameDisplay() {
               const percent = percentNum + '%';
               const name = chart.data.labels[index];
               
-              const center = element.tooltipPosition();
               const deckData = chartDecks.find(d => d.deck === name);
               
               ctx.save();
@@ -2258,37 +2261,38 @@ function updateMetagameDisplay() {
               ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
               ctx.shadowBlur = 4;
               
-              let yOffset = -5;
-              let drawX = center.x;
-              let drawY = center.y;
+              const angle = (element.startAngle + element.endAngle) / 2;
+              const x0 = element.x;
+              const y0 = element.y;
+              const outerRadius = element.outerRadius;
+              const innerRadius = outerRadius * 0.55;
+              const midRadius = (innerRadius + outerRadius) / 2;
+              
+              // Position inside the slice
+              const insideX = x0 + Math.cos(angle) * midRadius;
+              const insideY = y0 + Math.sin(angle) * midRadius;
               
               const isOutros = name.toLowerCase() === 'outros';
               
-              if (!isOutros && deckData && deckData.icone && val >= 2) {
-                const angle = (element.startAngle + element.endAngle) / 2;
-                const x0 = element.x;
-                const y0 = element.y;
-                const outerRadius = element.outerRadius;
+              // Draw icons outside the chart
+              if (!isOutros && deckData && deckData.icone) {
+                // 3-tier staggering to fully prevent overlaps
+                const R = outerRadius + (index % 3 === 0 ? 15 : index % 3 === 1 ? 32 : 48);
+                const drawX = x0 + Math.cos(angle) * R;
+                const drawY = y0 + Math.sin(angle) * R;
                 
-                // Alternar o raio em três níveis para fatias adjacentes para evitar totalmente sobreposição dos ícones
-                const R = outerRadius + (index % 3 === 0 ? 18 : index % 3 === 1 ? 38 : 58);
-                drawX = x0 + Math.cos(angle) * R;
-                drawY = y0 + Math.sin(angle) * R;
-                
-                // Desenhar uma linha de guia sutil (leader line) da fatia até o ícone
+                // Draw thin leader line
                 ctx.beginPath();
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
                 ctx.lineWidth = 1;
                 const startX = x0 + Math.cos(angle) * outerRadius;
                 const startY = y0 + Math.sin(angle) * outerRadius;
-                const endX = x0 + Math.cos(angle) * (R - 15);
-                const endY = y0 + Math.sin(angle) * (R - 15);
+                const endX = x0 + Math.cos(angle) * (R - 13);
+                const endY = y0 + Math.sin(angle) * (R - 13);
                 ctx.moveTo(startX, startY);
                 ctx.lineTo(endX, endY);
                 ctx.stroke();
-              }
-              
-              if (deckData && deckData.icone && !isOutros) {
+
                 if (!window.chartIconCache[name]) {
                   const img = new Image();
                   img.src = safeExternalUrl(deckData.icone);
@@ -2296,33 +2300,34 @@ function updateMetagameDisplay() {
                   window.chartIconCache[name] = img;
                 } else if (window.chartIconCache[name].complete && window.chartIconCache[name].naturalWidth > 0) {
                   const img = window.chartIconCache[name];
-                  const iconSize = 30; 
-                  
-                  ctx.drawImage(img, drawX - (iconSize/2), drawY - 8 - (iconSize/2), iconSize, iconSize);
-                  yOffset = 8;
+                  const iconSize = 26; 
+                  ctx.drawImage(img, drawX - (iconSize/2), drawY - (iconSize/2), iconSize, iconSize);
                 }
-              } else if (isOutros) {
+              }
+              
+              // Draw text inside the slice
+              ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+              ctx.shadowBlur = 4;
+              ctx.fillStyle = '#ffffff';
+              
+              if (isOutros) {
                 const words = name.split(' ');
                 let line1 = words[0];
                 let line2 = words.slice(1).join(' ');
                 
                 ctx.font = "bold 8.5px 'Inter', sans-serif";
-                ctx.fillStyle = "#ffffff";
-                
                 if (line2 && line2.length > 0) {
-                  ctx.fillText(line1, drawX, drawY - 10);
-                  ctx.fillText(line2, drawX, drawY - 2);
+                  ctx.fillText(line1, insideX, insideY - 5);
+                  ctx.fillText(line2, insideX, insideY + 3);
                 } else {
-                  ctx.fillText(name, drawX, drawY - 8);
+                  ctx.fillText(name, insideX, insideY - 5);
                 }
-                yOffset = 8;
+                ctx.font = '800 10px "Inter", sans-serif';
+                ctx.fillText(percent, insideX, insideY + 7);
+              } else {
+                ctx.font = '800 10px "Inter", sans-serif';
+                ctx.fillText(percent, insideX, insideY);
               }
-              
-              ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-              ctx.shadowBlur = 4;
-              ctx.fillStyle = '#ffffff';
-              ctx.font = '800 11px "Inter", sans-serif';
-              ctx.fillText(percent, drawX, drawY + yOffset);
               
               ctx.restore();
             });
@@ -2429,7 +2434,7 @@ function updateMetagameDisplay() {
           } : { 
             responsive: true, 
             maintainAspectRatio: true, 
-            layout: { padding: { top: 60, bottom: 60, left: 60, right: 60 } },
+            layout: { padding: { top: 75, bottom: 75, left: 75, right: 75 } },
             onHover: (event, activeElements, chart) => {
               if (activeElements && activeElements.length > 0) {
                 const dataIndex = activeElements[0].index;
