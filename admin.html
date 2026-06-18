@@ -133,7 +133,7 @@
 </head>
 <body class="bg-dark">
 
-  <!-- TELA DE LOGIN LOCAL -->
+  
   <div class="admin-container" id="login-screen">
     <div class="glass-card login-box">
       <div class="admin-header" style="margin-bottom: 1.5rem;">
@@ -155,26 +155,29 @@
     </div>
   </div>
 
-  <!-- PAINEL PRINCIPAL -->
+  
   <div class="admin-container" id="main-panel" style="display: none;">
-    <!-- Cabeçalho -->
+    
     <header class="admin-header">
       <h1 class="section-title">Painel do <span class="gradient-text">Organizador</span></h1>
       <p class="section-subtitle">Publique e atualize o ranking oficial da Liga Atlântica via arquivos .tdf</p>
-      <div style="margin-top: 1rem;">
+      <div style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center; align-items: center;">
         <button class="btn" onclick="handleLogout()" style="padding: 0.4rem 1rem; font-size: 0.8rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.25);">
           Sair do Painel
+        </button>
+        <button class="btn" onclick="document.getElementById('settings-modal').style.display='flex'" style="padding: 0.4rem; font-size: 1.2rem; background: transparent; border: none; cursor: pointer; color: var(--text-secondary);" title="Configurações">
+          ⚙️
         </button>
       </div>
     </header>
 
-    <!-- Alertas Gerais -->
+    
     <div class="alert-box alert-success" id="general-success"></div>
     <div class="alert-box alert-error" id="general-error"></div>
 
     <div class="dashboard-grid" style="grid-template-columns: 1fr; max-width: 800px; margin: 0 auto; gap: 2rem; align-items: start;">
       
-      <!-- 1. Área de Upload de Arquivo -->
+      
       <div>
         <section class="glass-card admin-card">
           <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
@@ -224,7 +227,7 @@
           </div>
         </section>
 
-        <!-- 3. Preview da Tabela antes de Publicar -->
+        
         <section class="glass-card admin-card" id="preview-section" style="display: none;">
           <div class="preview-header">
             <div>
@@ -248,7 +251,7 @@
                 </tr>
               </thead>
               <tbody id="preview-tbody">
-                <!-- Populado dinamicamente -->
+                
               </tbody>
             </table>
           </div>
@@ -262,29 +265,65 @@
     </div>
   </div>
 
+  
+  <div id="settings-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="glass-card" style="width: 90%; max-width: 400px; padding: 2rem; position: relative;">
+      <button onclick="document.getElementById('settings-modal').style.display='none'" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      <h3 style="color: #fff; margin-bottom: 1rem; text-align: center;">Acesso à Planilha</h3>
+      <div class="alert-box alert-error" id="settings-error" style="display: none; margin-bottom: 1rem;">Senha incorreta!</div>
+      <div class="form-group">
+        <label for="settings-password">Senha de Segurança</label>
+        <input type="password" id="settings-password" class="search-input" placeholder="Digite a senha secreta...">
+      </div>
+      <button onclick="handleSettingsLogin()" class="btn btn-whatsapp" style="width: 100%; justify-content: center; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); margin-top: 1rem;">
+        Abrir Planilha de Dados
+      </button>
+    </div>
+  </div>
+
   <script>
-    // Senha local    // --- CONFIGURAÇÕES DE DESENVOLVEDOR ---
-    const ADMIN_PASSWORD = "fsa2026";
+    const ADMIN_PW_HASH = "c58a87d9fc314bd23638269aeaef6a39dfd625d7b121f9659cade9306c855789";
+    const GOLI_PW_HASH = "49fb9f8b0989a4617b149e1182013f7062af8a0652de84aadbb58bf693b678c5";
+    const ENC_TOKEN = "011b116d7f7d555f3d325b474b5b50442d7307614057190501676b4f0f4534456906025e450c6878";
+    const ENC_SHEET_URL = "0f1b181900555f4000080c1f4714001f080802410f061e40031f16020e081a1b0a151b17480b43581e22182b2824073e363b1a355f52055f0f0d205f233502560825181042132907300a025d4a2b2a18162a08430c17060450030e0b5158475a4956525f5a5a5f5008190b59565b59504a59485a5251";
+    
     const GITHUB_CONFIG = {
-      token: "ghp_" + "OOc9NSiwym67LA7Sv" + "1jd3WYyi6UwY4486mZH", // Montado para evitar revogação automática
       owner: "delipex",
       repo: "liga-atlantica",
       branch: "main",
       path: "site/ranking.tdf"
     };
     let activeContent = "";
+    let runtimeToken = null;
     
-    // 1. Controle de Login
-    function handleLogin(e) {
+    async function sha256(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function decodeToken(encHex, key) {
+      let result = '';
+      for (let i = 0; i < encHex.length; i += 2) {
+        const byte = parseInt(encHex.substr(i, 2), 16);
+        result += String.fromCharCode(byte ^ key.charCodeAt((i/2) % key.length));
+      }
+      return result;
+    }
+
+    async function handleLogin(e) {
       if (e) e.preventDefault();
       const password = document.getElementById('admin-password').value;
       const errorBox = document.getElementById('login-error');
       
-      if (password === ADMIN_PASSWORD) {
+      const hash = await sha256(password);
+      
+      if (hash === ADMIN_PW_HASH) {
+        runtimeToken = decodeToken(ENC_TOKEN, password);
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-panel').style.display = 'block';
         
-        // Inicializar a data do evento para hoje local
         const todayStr = new Date().toISOString().split('T')[0];
         const dateInput = document.getElementById('event-date');
         if (dateInput) dateInput.value = todayStr;
@@ -294,14 +333,31 @@
       }
     }
     
+    async function handleSettingsLogin() {
+      const password = document.getElementById('settings-password').value;
+      const errorBox = document.getElementById('settings-error');
+      
+      const hash = await sha256(password);
+      if (hash === GOLI_PW_HASH) {
+        errorBox.style.display = 'none';
+        document.getElementById('settings-password').value = '';
+        document.getElementById('settings-modal').style.display = 'none';
+        const url = decodeToken(ENC_SHEET_URL, password);
+        window.open(url, '_blank');
+      } else {
+        errorBox.style.display = 'block';
+        document.getElementById('settings-password').value = '';
+      }
+    }
+    
     function handleLogout() {
+      runtimeToken = null;
       document.getElementById('login-screen').style.display = 'block';
       document.getElementById('main-panel').style.display = 'none';
       document.getElementById('admin-password').value = '';
       document.getElementById('login-error').style.display = 'none';
     }
 
-    // 2. Controle de mudança do tipo de evento
     function handleEventTypeChange() {
       const eventType = document.getElementById('event-type').value;
       const multGroup = document.getElementById('multiplier-group');
@@ -317,7 +373,6 @@
       }
     }
 
-    // 3. Processamento e Preview de Arquivos TDF
     function handleFileSelect(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -335,8 +390,7 @@
       const text = document.getElementById('raw-input').value;
       processTDFText(text);
     }
-    
-    // Drag and Drop Dragover / Dragenter styles
+
     const dropzone = document.getElementById('dropzone');
     ['dragenter', 'dragover'].forEach(eventName => {
       dropzone.addEventListener(eventName, (e) => {
@@ -363,7 +417,6 @@
       }
     });
 
-    // Helpers
     function toNumber(value, fallback = 0) {
       const normalizedValue = typeof value === 'string' ? value.replace(',', '.') : value;
       const number = Number(normalizedValue);
@@ -444,7 +497,6 @@
       });
     }
 
-    // Validar e renderizar preview
     function processTDFText(text) {
       if (!text || !text.trim()) {
         document.getElementById('preview-section').style.display = 'none';
@@ -467,8 +519,7 @@
         document.getElementById('preview-section').style.display = 'none';
         return;
       }
-      
-      // Renderizar o preview no tbody
+
       const tbody = document.getElementById('preview-tbody');
       tbody.innerHTML = players.map(p => {
         const playerName = getFirstDefined(p, ['Jogador', 'Player', 'Name']) || '';
@@ -510,7 +561,6 @@
       return Number.isInteger(number) ? String(number) : number.toFixed(1).replace('.', ',');
     }
 
-    // Helpers para Codificação Base64 UTF-8 segura
     function encodeBase64UTF8(str) {
       const bytes = new TextEncoder().encode(str);
       let binary = '';
@@ -531,7 +581,6 @@
       return new TextDecoder('utf-8').decode(bytes);
     }
 
-    // Função que desconta os dados de uma etapa antiga para evitar duplicação ou inconsistência
     function rollbackStage(oldRankText, stageTdfText, oldMultiplier, stageIndex) {
       const oldRankList = parseTDF(oldRankText);
       const stageList = parseTDF(stageTdfText);
@@ -577,8 +626,7 @@
           p.Derrotas -= stageD;
           p.Participacoes -= 1;
           if (stagePos <= 4) p.Podio -= 1;
-          
-          // Definir histórico dessa etapa como '-' temporariamente
+
           let historyArr = p.HistoricoColocacoes ? String(p.HistoricoColocacoes).split(';') : [];
           if (historyArr.length > stageIndex) {
             historyArr[stageIndex] = '-';
@@ -633,7 +681,6 @@
       return tdfString;
     }
 
-    // Função que acumula dados de dois arquivos TDF
     function mergeRankings(oldTdfText, newTdfText, multiplier = 1.0, existingStageIdx = -1) {
       const oldList = parseTDF(oldTdfText);
       const newList = parseTDF(newTdfText);
@@ -641,8 +688,7 @@
       if (newList.length === 0) return oldTdfText;
       
       const playersMap = new Map();
-      
-      // Carregar ranking antigo
+
       oldList.forEach(p => {
         const playerName = getFirstDefined(p, ['Jogador', 'Player', 'Name']);
         if (!playerName) return;
@@ -665,8 +711,7 @@
           HistoricoColocacoes: p.HistoricoColocacoes || ''
         });
       });
-      
-      // Determinar quantidade atual de etapas
+
       let currentStageCount = 0;
       playersMap.forEach(p => {
         if (p.HistoricoColocacoes) {
@@ -676,8 +721,7 @@
       });
       
       const playersInNewStage = new Set();
-      
-      // Mesclar nova semana
+
       newList.forEach(p => {
         const playerName = getFirstDefined(p, ['Jogador', 'Player', 'Name']);
         if (!playerName) return;
@@ -699,13 +743,11 @@
           
           existing.Pontos += multipliedNewPts;
           if (isNewPodio) existing.Podio += 1;
-          
-          // Média de colocação
+
           const oldMedia = existing.MediaColocacao || newPos;
           existing.MediaColocacao = ((oldMedia * oldPart) + newPos) / newPart;
           existing.Participacoes = newPart;
-          
-          // Sum V-E-D
+
           existing.Vitorias += newV;
           existing.Empates += newE;
           existing.Derrotas += newD;
@@ -713,17 +755,16 @@
           if (p.Deck && p.Deck !== 'Não registrado') existing.Deck = p.Deck;
           if (p.TipoEnergia && p.TipoEnergia !== 'colorless') existing.TipoEnergia = p.TipoEnergia;
           if (newCat) existing.Categoria = newCat;
-          
-          // Atualizar histórico
+
           let historyArr = existing.HistoricoColocacoes ? String(existing.HistoricoColocacoes).split(';') : [];
           if (existingStageIdx >= 0) {
-            // Substituir a etapa existente
+
             while (historyArr.length <= existingStageIdx) {
               historyArr.push('-');
             }
             historyArr[existingStageIdx] = newPos;
           } else {
-            // Nova etapa: pad e append
+
             while (historyArr.length < currentStageCount) {
               historyArr.push('-');
             }
@@ -731,7 +772,7 @@
           }
           existing.HistoricoColocacoes = historyArr.join(';');
         } else {
-          // Jogador estreante
+
           let historyArr = [];
           if (existingStageIdx >= 0) {
             historyArr = Array(existingStageIdx).fill('-');
@@ -760,8 +801,7 @@
           });
         }
       });
-      
-      // Para os jogadores no banco de dados que não jogaram nesta etapa
+
       playersMap.forEach((p, nameKey) => {
         if (!playersInNewStage.has(nameKey)) {
           let historyArr = p.HistoricoColocacoes ? String(p.HistoricoColocacoes).split(';') : [];
@@ -781,8 +821,7 @@
       });
       
       const mergedList = Array.from(playersMap.values());
-      
-      // Re-ordenar ranking geral acumulado
+
       mergedList.sort((a, b) => {
         if (b.Pontos !== a.Pontos) return b.Pontos - a.Pontos;
         if (b.Podio !== a.Podio) return b.Podio - a.Podio;
@@ -815,10 +854,9 @@
       return tdfString;
     }
 
-    // 4. Publicação direta no GitHub
     async function publishRanking() {
       const config = GITHUB_CONFIG;
-      if (!config.token || config.token === "COLE_SEU_TOKEN_AQUI") {
+      if (!runtimeToken) {
         showError("Token do GitHub não configurado no código. Fale com o administrador.");
         return;
       }
@@ -849,11 +887,10 @@
       try {
         let sha = null;
         let oldTdfText = "";
-        
-        // Passo A: Tentar buscar o arquivo antigo
+
         try {
           const res = await fetch(url + `?ref=${config.branch}`, {
-            headers: { 'Authorization': `token ${config.token}` }
+            headers: { 'Authorization': `token ${runtimeToken}` }
           });
           if (res.ok) {
             const fileData = await res.json();
@@ -865,14 +902,13 @@
         } catch (e) {
           console.log("Arquivo anterior não encontrado no repositório. Criando ranking inicial.");
         }
-        
-        // Passo B: Buscar etapas.json do GitHub
+
         let stagesList = [];
         let etapasSha = null;
         const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/site/etapas.json`;
         try {
           const res = await fetch(etapasUrl + `?ref=${config.branch}`, {
-            headers: { 'Authorization': `token ${config.token}` }
+            headers: { 'Authorization': `token ${runtimeToken}` }
           });
           if (res.ok) {
             const fileData = await res.json();
@@ -884,28 +920,26 @@
         } catch (e) {
           console.log("etapas.json não encontrado no repositório. Será criado um novo.");
         }
-        
-        // Passo C: Verificar se a data do evento já existe
+
         const existingStageIdx = stagesList.findIndex(s => s.data === eventDate);
         let oldStageMultiplier = 1.0;
         if (existingStageIdx >= 0) {
           oldStageMultiplier = stagesList[existingStageIdx].multiplicador || 1.0;
         }
-        
-        // Passo D: Se a etapa já existe e "shouldAccumulate" está marcado,
-        // a gente precisa desfazer a etapa antiga no ranking geral antes de fazer o merge!
+
+
         let baseTdfText = oldTdfText;
         if (shouldAccumulate && oldTdfText && existingStageIdx >= 0) {
           const oldStageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/site/etapas/${eventDate}.tdf`;
           try {
             const res = await fetch(oldStageTdfUrl + `?ref=${config.branch}`, {
-              headers: { 'Authorization': `token ${config.token}` }
+              headers: { 'Authorization': `token ${runtimeToken}` }
             });
             if (res.ok) {
               const oldStageData = await res.json();
               if (oldStageData.content) {
                 const oldStageTdfText = decodeBase64UTF8(oldStageData.content);
-                // Rolar de volta a etapa antiga
+
                 baseTdfText = rollbackStage(oldTdfText, oldStageTdfText, oldStageMultiplier, existingStageIdx);
               }
             }
@@ -913,8 +947,7 @@
             console.warn("Falha ao carregar etapa antiga para rollback. O merge continuará sem rollback.", err);
           }
         }
-        
-        // Passo E: Calcular o novo ranking geral consolidado
+
         let finalContent = "";
         if (shouldAccumulate && baseTdfText) {
           try {
@@ -926,25 +959,22 @@
         } else {
           finalContent = mergeRankings("", activeContent, eventMult, -1);
         }
-        
-        // Passo F: Preparar as etapas da gravação
-        // 1. Gravar a etapa individual em site/etapas/YYYY-MM-DD.tdf (sem multiplicar pontos)
+
+
         const stageTdfContent = mergeRankings("", activeContent, 1.0, -1);
         const stageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/site/etapas/${eventDate}.tdf`;
-        
-        // Obter o SHA do arquivo de etapa se já existir
+
         let stageSha = null;
         try {
           const res = await fetch(stageTdfUrl + `?ref=${config.branch}`, {
-            headers: { 'Authorization': `token ${config.token}` }
+            headers: { 'Authorization': `token ${runtimeToken}` }
           });
           if (res.ok) {
             const data = await res.json();
             stageSha = data.sha;
           }
         } catch (e) {}
-        
-        // Commit do arquivo da etapa
+
         const commitStagePayload = {
           message: `Salvar etapa individual ${eventDate} (${eventType})`,
           content: encodeBase64UTF8(stageTdfContent),
@@ -955,7 +985,7 @@
         const stageRes = await fetch(stageTdfUrl, {
           method: 'PUT',
           headers: {
-            'Authorization': `token ${config.token}`,
+            'Authorization': `token ${runtimeToken}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify(commitStagePayload)
@@ -965,14 +995,13 @@
           const data = await stageRes.json();
           throw new Error("Falha ao salvar arquivo de etapa individual: " + (data.message || stageRes.statusText));
         }
-        
-        // 2. Atualizar etapas.json
+
         if (existingStageIdx >= 0) {
           stagesList[existingStageIdx] = { data: eventDate, tipo: eventType, multiplicador: eventMult };
         } else {
           stagesList.push({ data: eventDate, tipo: eventType, multiplicador: eventMult });
         }
-        // Ordenar por data crescente
+
         stagesList.sort((a, b) => a.data.localeCompare(b.data));
         
         const commitEtapasPayload = {
@@ -985,7 +1014,7 @@
         const etapasRes = await fetch(etapasUrl, {
           method: 'PUT',
           headers: {
-            'Authorization': `token ${config.token}`,
+            'Authorization': `token ${runtimeToken}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify(commitEtapasPayload)
@@ -995,8 +1024,7 @@
           const data = await etapasRes.json();
           throw new Error("Falha ao salvar índice de etapas (etapas.json): " + (data.message || etapasRes.statusText));
         }
-        
-        // 3. Gravar o ranking geral site/ranking.tdf
+
         const commitRankingPayload = {
           message: `Atualização de ranking geral - ${shouldAccumulate ? 'Acumulado' : 'Substituído'} (${new Date().toLocaleString('pt-BR')})`,
           content: encodeBase64UTF8(finalContent),
@@ -1007,7 +1035,7 @@
         const rankingRes = await fetch(url, {
           method: 'PUT',
           headers: {
-            'Authorization': `token ${config.token}`,
+            'Authorization': `token ${runtimeToken}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify(commitRankingPayload)
@@ -1033,7 +1061,6 @@
       }
     }
 
-    // 5. Auxiliares de UI
     function showSuccess(msg) {
       const box = document.getElementById('general-success');
       box.innerText = msg;
@@ -1064,3 +1091,4 @@
   </script>
 </body>
 </html>
+

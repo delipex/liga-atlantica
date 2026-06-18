@@ -1,9 +1,9 @@
-/* Importando Google Fonts: Outfit (moderna e amigﾃ｡vel) e Space Grotesk (futurista/gamer) */
+
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
-/* --- VARIﾃ〃EIS DO SISTEMA DE DESIGN --- */
+
 :root {
-  /* Default Dark Mode (Clean) */
+  
   --bg-dark: #0f172a;
   --bg-dark-card: rgba(255, 255, 255, 0.03);
   --bg-dark-card-hover: rgba(255, 255, 255, 0.06);
@@ -37,7 +37,7 @@
   --bg-gradient-4: #250f22;
   --bg-gradient-5: #111928;
   
-  /* Cores Temﾃ｡ticas de Energias Pokﾃｩmon TCG */
+  
   --energy-grass: #78C850;
   --energy-fire: #FF4216;
   --energy-water: #1593F5;
@@ -74,7 +74,7 @@
   --accent-yellow: #dca300;
 }
 
-/* --- RESET & CONFIGS BﾃヾICAS --- */
+
 * {
   margin: 0;
   padding: 0;
@@ -108,7 +108,7 @@ body {
   position: relative;
 }
 
-/* Glassmorphism Background Orbs */
+
 body::before, body::after {
   content: "";
   position: fixed;
@@ -151,7 +151,7 @@ body::after {
   100% { background-position: 0% 50%; }
 }
 
-/* Sleek Scrollbar */
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -167,7 +167,7 @@ body::after {
   background: var(--accent-yellow);
 }
 
-/* --- ELEMENTOS GLOBAIS --- */
+
 a {
   text-decoration: none;
   color: inherit;
@@ -180,7 +180,7 @@ button {
   background: none;
 }
 
-/* Container */
+
 .container {
   width: 100%;
   max-width: 1200px;
@@ -188,14 +188,14 @@ button {
   padding: 0 1.5rem;
 }
 
-/* Tﾃｭtulos */
+
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-title);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 
-/* Glassmorphism Card */
+
 .glass-card {
   background: var(--bg-dark-card);
   backdrop-filter: blur(32px) saturate(200%);
@@ -218,7 +218,7 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 1px 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-/* Gradiente Text */
+
 .gradient-text {
   background: linear-gradient(135deg, var(--accent-yellow) 20%, #ff8c00 100%);
   -webkit-background-clip: text;
@@ -241,7 +241,7 @@ h1, h2, h3, h4, h5, h6 {
   100% { background-position: 0% 50%; }
 }
 
-/* --- HEADER & NAVEGAﾃ�グ --- */
+
 .header {
   position: sticky;
   top: 0;
@@ -362,7 +362,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-/* Estado ativo do menu toggle (X animado via CSS) */
+
 .menu-toggle.active span:nth-child(1) {
   transform: translateY(7px) rotate(45deg);
 }
@@ -375,14 +375,14 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(-7px) rotate(-45deg);
 }
 
-/* --- MAIN CONTAINER & SECTIONS --- */
+
 .main-content {
   padding-top: 2.5rem;
   padding-bottom: 5rem;
 }
 
 .section {
-  display: none; /* Controlado via JS */
+  display: none; 
   animation: fadeIn 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
 }
 
@@ -410,9 +410,9 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 1rem;
 }
 
-/* Yellow line removed for cleaner aesthetic */
 
-/* --- DASHBOARD SECTION --- */
+
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -420,7 +420,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: stretch;
 }
 
-/* Pﾃｳdio */
+
 .podium-container {
   display: flex;
   flex-direction: column;
@@ -450,7 +450,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--accent-yellow);
 }
 
-/* Theme Toggle Button */
+
 .theme-toggle-btn {
   position: relative;
   display: flex;
@@ -508,7 +508,7 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: none;
 }
 
-/* Holographic podium card */
+
 .podium-card {
   position: relative;
   display: flex;
@@ -638,7 +638,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-secondary);
 }
 
-/* Event Banner & Countdown */
+
 .event-widget-container {
   display: flex;
   flex-direction: column;
@@ -758,7 +758,7 @@ h1, h2, h3, h4, h5, h6 {
   fill: var(--accent-yellow);
 }
 
-/* --- RANKING SECTION --- */
+
 .ranking-controls {
   display: flex;
   justify-content: space-between;
@@ -791,7 +791,7 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 10px rgba(255, 203, 5, 0.15);
 }
 
-/* --- STAGE DATE SELECTOR & INFO BADGE --- */
+
 .selector-wrapper {
   position: relative;
   flex-grow: 1;
@@ -857,7 +857,7 @@ h1, h2, h3, h4, h5, h6 {
   fill: var(--text-secondary);
 }
 
-/* Table Card */
+
 .table-card {
   overflow: hidden;
   padding: 0;
@@ -899,7 +899,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: background-color 0.3s ease;
 }
 
-/* Zebra striping for better contrast */
+
 .ranking-table tbody tr:nth-child(even) {
   background-color: rgba(0, 0, 0, 0.15);
 }
@@ -927,7 +927,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 70px;
 }
 
-/* Highlights for top 8 in table via classes instead of nth-child to preserve pagination */
+
 tbody tr.top-1 .row-rank,
 .rank-badge.rank-1 {
   color: #ffcb05;
@@ -986,7 +986,7 @@ tbody tr.top-8 .row-rank,
   color: var(--text-primary);
 }
 
-/* Energy types inline indicators */
+
 .energy-dot {
   display: inline-block;
   width: 10px;
@@ -1075,7 +1075,7 @@ tbody tr.top-8 .row-rank,
   color: rgba(236, 72, 153, 0.85);
 }
 
-/* --- CALENDAR SECTION --- */
+
 .timeline {
   position: relative;
   padding-left: 1.75rem;
@@ -1152,7 +1152,7 @@ tbody tr.top-8 .row-rank,
   min-width: 0;
 }
 
-/* --- 3D DECK CAROUSEL --- */
+
 .carousel-3d-container {
   width: 100%;
   position: relative;
@@ -1340,7 +1340,7 @@ tbody tr.top-8 .row-rank,
   padding-top: 0.5rem;
 }
 
-/* --- RULES SECTION --- */
+
 .rules-list {
   display: flex;
   flex-direction: column;
@@ -1423,7 +1423,7 @@ tbody tr.top-8 .row-rank,
   margin: 0;
 }
 
-/* --- CHAMPIONS SECTION --- */
+
 .champions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
@@ -1449,7 +1449,7 @@ tbody tr.top-8 .row-rank,
   flex-direction: column;
   align-items: center;
   position: relative;
-  /* Garante sombra fixa consistente independente da tela */
+  
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), inset 1px 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
@@ -1498,7 +1498,7 @@ tbody tr.top-8 .row-rank,
   gap: 0.5rem;
 }
 
-/* --- GALLERY SECTION --- */
+
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
@@ -1516,7 +1516,7 @@ tbody tr.top-8 .row-rank,
 .gallery-image-wrapper {
   position: relative;
   width: 100%;
-  padding-bottom: 66.67%; /* 3:2 Ratio */
+  padding-bottom: 66.67%; 
   overflow: hidden;
   border-radius: 15px 15px 0 0;
   background: #111422;
@@ -1553,7 +1553,7 @@ tbody tr.top-8 .row-rank,
   color: var(--text-muted);
 }
 
-/* --- LIGHTBOX POPUP --- */
+
 .lightbox {
   position: fixed;
   top: 0;
@@ -1622,7 +1622,7 @@ tbody tr.top-8 .row-rank,
   font-size: 1.1rem;
 }
 
-/* --- PLAYER STATS MODAL --- */
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1770,7 +1770,7 @@ tbody tr.top-8 .row-rank,
   font-weight: 500;
 }
 
-/* --- PLAYER EVOLUTION TIMELINE --- */
+
 .modal-section-title {
   font-family: var(--font-title);
   font-size: 0.8rem;
@@ -1846,7 +1846,7 @@ tbody tr.top-8 .row-rank,
   line-height: 1.2;
 }
 
-/* --- FOOTER --- */
+
 .footer {
   border-top: 1px solid var(--border-color);
   background: var(--bg-dark);
@@ -1864,7 +1864,7 @@ tbody tr.top-8 .row-rank,
   margin-bottom: 0.5rem;
 }
 
-/* --- RESPONSIVIDADE (MOBILE & TABLET) --- */
+
 @media (max-width: 900px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
@@ -1932,7 +1932,7 @@ tbody tr.top-8 .row-rank,
     height: 12px;
   }
 
-  /* Timeline responsivo: evita o esmagamento horizontal de imagens e botﾃｵes */
+  
   .timeline-card {
     flex-direction: column;
     align-items: stretch;
@@ -1975,7 +1975,7 @@ tbody tr.top-8 .row-rank,
     border-radius: var(--radius);
   }
   
-  /* Ajustes no pﾃｳdio em celulares */
+  
   .podium-card {
     padding: 0.85rem;
     border-radius: var(--radius);
@@ -2024,7 +2024,7 @@ tbody tr.top-8 .row-rank,
     font-size: 0.7rem;
   }
   
-  /* Ajustes no cronﾃｴmetro do evento */
+  
   .countdown-container {
     gap: 0.5rem;
     margin: 1rem 0;
@@ -2047,7 +2047,7 @@ tbody tr.top-8 .row-rank,
     font-size: 1.15rem;
   }
   
-  /* Ajustes na tabela do ranking no mobile */
+  
   .ranking-table th, .ranking-table td {
     padding: 0.75rem 0.5rem;
     font-size: 0.85rem;
@@ -2062,7 +2062,7 @@ tbody tr.top-8 .row-rank,
     gap: 0.5rem;
   }
   
-  /* Ajustes no modal de detalhes em celulares */
+  
   .modal-container {
     width: 95%;
   }
@@ -2109,7 +2109,7 @@ tbody tr.top-8 .row-rank,
   }
 }
 
-/* Animaﾃｧﾃ｣o Glassmorphism (Pokﾃｩbolas Mﾃｳveis) */
+
 .bg-blobs {
   position: fixed;
   top: 0;
@@ -2133,7 +2133,7 @@ tbody tr.top-8 .row-rank,
   opacity: 0.35;
 }
 
-/* Red (Pokﾃｩbola superior) */
+
 .blob-1 {
   width: 450px;
   height: 450px;
@@ -2143,7 +2143,7 @@ tbody tr.top-8 .row-rank,
   animation-delay: 0s;
 }
 
-/* White (Centro brilhante) */
+
 .blob-2 {
   width: 550px;
   height: 550px;
@@ -2153,7 +2153,7 @@ tbody tr.top-8 .row-rank,
   animation-delay: -7s;
 }
 
-/* Blue/Dark (Para balancear as cores) */
+
 .blob-3 {
   width: 350px;
   height: 350px;
@@ -2169,7 +2169,7 @@ tbody tr.top-8 .row-rank,
   100% { transform: translate(-25vw, 15vh) scale(0.85); }
 }
 
-/* Fallback/Loader animation for sheets status */
+
 .loader {
   display: flex;
   justify-content: center;
@@ -2203,7 +2203,7 @@ tbody tr.top-8 .row-rank,
   gap: 4px;
 }
 
-/* --- BOTﾃ髭S DE REDES SOCIAIS E ACESSO Rﾃ￣IDO --- */
+
 .welcome-buttons {
   display: flex;
   gap: 1rem;
@@ -2264,7 +2264,7 @@ tbody tr.top-8 .row-rank,
   fill: currentColor;
 }
 
-/* Efeito Hover nos ﾃｭcones do Footer */
+
 .social-icon-link.whatsapp:hover {
   background: rgba(37, 211, 102, 0.1) !important;
   border-color: rgba(37, 211, 102, 0.4) !important;
@@ -2294,7 +2294,7 @@ tbody tr.top-8 .row-rank,
   }
 }
 
-/* --- Mﾃ欝RICAS DE COLOCAﾃ�グ NO RANKING --- */
+
 .placement-metrics {
   display: inline-flex;
   flex-wrap: wrap;
@@ -2332,7 +2332,7 @@ tbody tr.top-8 .row-rank,
   }
 }
 
-/* --- V-E-D BADGES AND CONTAINER --- */
+
 .ved-container {
   display: inline-flex;
   gap: 0.25rem;
@@ -2377,7 +2377,7 @@ tbody tr.top-8 .row-rank,
   }
 }
 
-/* --- V-E-D HORIZONTAL RATIO BARS --- */
+
 .ved-display {
   display: inline-flex;
   flex-direction: column;
@@ -2423,7 +2423,7 @@ tbody tr.top-8 .row-rank,
 .ved-seg.d-seg {
   background-color: #ef4444;
 }
-/* --- POKEBALL MEDALS FOR PAST CHAMPIONS/RUNNERS-UP --- */
+
 .player-medals-wrap {
   display: inline-flex;
   gap: 0.25rem;
@@ -2445,14 +2445,14 @@ tbody tr.top-8 .row-rank,
 }
 
 .medal-svg.gold {
-  fill: #ffcb05; /* Dourado / Amarelo Pokﾃｩmon */
+  fill: #ffcb05; 
 }
 
 .medal-svg.silver {
-  fill: #cfd8dc; /* Prata Pokﾃｩmon */
+  fill: #cfd8dc; 
 }
 
-/* --- AJUSTE DOS CONTROLES DO RANKING --- */
+
 .ranking-status-group {
   display: flex;
   align-items: center;
@@ -2473,7 +2473,7 @@ tbody tr.top-8 .row-rank,
   }
 }
 
-/* --- CORREﾃ�グ DO ﾃ垢ONE DO WHATSAPP --- */
+
 .icon-whatsapp {
   width: 20px;
   height: 20px;
@@ -2495,7 +2495,7 @@ tbody tr.top-8 .row-rank,
   height: 20px;
 }
 
-/* --- CONSULTA DE SCORES ANTIGOS --- */
+
 .historical-scores-panel {
   margin-top: 2rem;
   padding: 1.5rem;
@@ -2738,7 +2738,7 @@ tbody tr.top-8 .row-rank,
     font-weight: 900;
   }
   
-  /* Expanded font sizes on desktop */
+  
   .accordion-item:hover .accordion-name,
   .accordion-item.expanded .accordion-name {
     font-size: 1.35rem;
@@ -2833,7 +2833,7 @@ tbody tr.top-8 .row-rank,
 }
 
 
-/* Link do local para Google Maps */
+
 .location-map-link {
   color: var(--text-primary);
   font-weight: 600;
@@ -2854,7 +2854,7 @@ tbody tr.top-8 .row-rank,
   opacity: 0.8;
 }
 
-/* --- CAMPEﾃ髭S: FOTO E MODAL DO DECK --- */
+
 .champion-photo-wrap {
   position: relative;
   width: 104px;
@@ -3024,7 +3024,7 @@ tbody tr.top-8 .row-rank,
   }
 }
 
-/* --- BOTﾃ髭S DE INSCRIﾃ�グ/CONFIRMAﾃ�グ DE EVENTOS --- */
+
 
 .btn-evento {
   display: inline-flex;
@@ -3063,7 +3063,7 @@ tbody tr.top-8 .row-rank,
   transform: scale(0.97);
 }
 
-/* WhatsApp (verde claro/vibrante) */
+
 .btn-evento-whatsapp {
   background: rgba(37, 211, 102, 0.1);
   color: #25d366;
@@ -3075,7 +3075,7 @@ tbody tr.top-8 .row-rank,
   box-shadow: 0 0 12px rgba(37, 211, 102, 0.4);
 }
 
-/* Playlatam (verde-escuro teal #00695c) */
+
 .btn-evento-playlatam {
   background: rgba(0, 105, 92, 0.12);
   color: #00a993;
@@ -3087,7 +3087,7 @@ tbody tr.top-8 .row-rank,
   box-shadow: 0 0 12px rgba(0, 105, 92, 0.45);
 }
 
-/* Genﾃｩrico (amarelo Pokﾃｩmon do tema) */
+
 .btn-evento-generic {
   background: rgba(255, 203, 5, 0.1);
   color: var(--accent-yellow);
@@ -3107,7 +3107,7 @@ tbody tr.top-8 .row-rank,
   }
 }
 
-/* Pagina鈬o */
+
 .pagination-controls {
   display: flex;
   justify-content: center;
@@ -3164,3 +3164,4 @@ tbody tr.top-8 .row-rank,
 .collapse-btn.expanded {
   transform: rotate(180deg);
 }
+

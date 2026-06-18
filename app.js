@@ -8,7 +8,6 @@ function normalizeImageUrl(url){
   return url;
 }
 
-// Converte texto TDF (Tab Delimited File) para array de objetos JSON
 function parseTDF(tdfText) {
   const lines = tdfText.split(/\r?\n/).filter(line => line.trim() !== '');
   if (lines.length < 2) return [];
@@ -33,10 +32,8 @@ function parseTDF(tdfText) {
   });
 }
 
-// Liga Atlântica de Pokémon TCG - Script Principal
 
-// --- DADOS DE DEMONSTRAÇÃO (MOCK DATA) ---
-// Usados se a Google Sheet não estiver configurada ou se houver erro ao carregar
+
 const MOCK_DATA = {
   Ranking: [],
   ScoresAntigos: [],
@@ -46,7 +43,6 @@ const MOCK_DATA = {
   Galeria: []
 };
 
-// Armazenamento local dos dados carregados
 let appData = { ...MOCK_DATA };
 let stagesIndex = [];
 let currentRankingList = [];
@@ -57,7 +53,6 @@ let currentHistoricalPage = 1;
 const ITEMS_PER_PAGE = 20;
 let isOfflineMode = true;
 
-// --- CONFIGURAÇÃO E EXTRAÇÃO DO GOOGLE SHEETS ---
 function getSpreadsheetId(url) {
   if (!url) return null;
   const match = url.match(/\/d\/(?:e\/)?([a-zA-Z0-9-_]+)/);
@@ -70,7 +65,6 @@ function getPublishedSheetGid(url) {
   return match ? match[1] : '';
 }
 
-// Converte texto CSV para array de objetos JSON
 function parseCSV(csvText) {
   const lines = [];
   let currentLine = [];
@@ -85,7 +79,7 @@ function parseCSV(csvText) {
       if (char === '"') {
         if (nextChar === '"') {
           currentField += '"';
-          i++; // pular próximo aspa
+          i++; 
         } else {
           inQuotes = false;
         }
@@ -128,7 +122,7 @@ function parseCSV(csvText) {
     const obj = {};
     headers.forEach((header, index) => {
       let val = row[index] || '';
-      // Tentar converter números automaticamente
+
       if (val !== '' && !isNaN(val)) {
         obj[header] = Number(val);
       } else {
@@ -139,7 +133,6 @@ function parseCSV(csvText) {
   });
 }
 
-// Busca aba específica da planilha usando a API GViz
 async function fetchSheetTab(spreadsheetId, tabName, publishedGid = '') {
   const isPublishedSheet = spreadsheetId.startsWith('2PACX-');
   let url = '';
@@ -159,9 +152,6 @@ async function fetchSheetTab(spreadsheetId, tabName, publishedGid = '') {
   return parseCSV(csvText);
 }
 
-
-
-// Busca uma aba opcional sem quebrar o site caso ela ainda não exista.
 async function fetchOptionalSheetTab(spreadsheetId, tabName, publishedGid = '') {
   try {
     return await fetchSheetTab(spreadsheetId, tabName, publishedGid);
@@ -171,7 +161,6 @@ async function fetchOptionalSheetTab(spreadsheetId, tabName, publishedGid = '') 
   }
 }
 
-// Protege textos vindos da planilha antes de inserir no HTML.
 function escapeHTML(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -181,7 +170,6 @@ function escapeHTML(value) {
     .replace(/'/g, '&#039;');
 }
 
-// Garante que links externos vindos da planilha sejam seguros antes de abrir no navegador.
 function safeExternalUrl(value) {
   const url = String(value || '').trim();
   if (!url) return '';
@@ -471,8 +459,7 @@ function normalizeRanking(rankingRows, partidasRows = []) {
     .map(player => {
       const playerName = player.Jogador || player.Name || "";
       const playerNameClean = playerName.trim().toLowerCase();
-      
-      // Buscar dados extras na aba Jogadores
+
       const dbPlayer = (appData.Jogadores || []).find(j => {
         const jName = j.Jogador || j.Name || "";
         return jName.trim().toLowerCase() === playerNameClean;
@@ -562,8 +549,7 @@ function normalizeHistoricalScores(rows) {
 function getHistoricalScoreSeasons() {
   const rows = appData.ScoresAntigos || [];
   const uniqueSeasons = [...new Set(rows.map(row => row.Temporada).filter(Boolean))];
-  
-  // Sort seasons descending (e.g. Temporada 4, Temporada 3...)
+
   return uniqueSeasons.sort((a, b) => b.localeCompare(a, 'pt-BR', { numeric: true }));
 }
 
@@ -581,7 +567,6 @@ function populateHistoricalSeasonSelector() {
 
   selector.innerHTML = seasons.map(season => `<option value="${escapeHTML(season)}">${escapeHTML(season)}</option>`).join('');
 
-  // Default to the first (most recent) season if current value is 'all' or not in the list
   if (currentValue === 'all' || !seasons.includes(currentValue)) {
     selector.value = seasons[0];
   } else {
@@ -704,7 +689,6 @@ window.changeHistoricalPage = function(delta) {
   }
 };
 
-// Inicializa o carregamento de dados (Sheets ou Fallback)
 async function loadData() {
   const statusBadge = document.getElementById('sheet-status-badge');
   const sheetUrl = window.CONFIG ? window.CONFIG.googleSheetCsvUrl : "";
@@ -712,7 +696,6 @@ async function loadData() {
   const publishedGid = getPublishedSheetGid(sheetUrl);
   const publishedSheetGids = window.CONFIG && window.CONFIG.publishedSheetGids ? window.CONFIG.publishedSheetGids : {};
 
-  // Parâmetro de URL para testes rápidos: ?source=github ou ?source=sheets
   const urlParams = new URLSearchParams(window.location.search);
   const sourceParam = urlParams.get('source');
   let dataSource = (sourceParam && ["sheets", "github"].includes(sourceParam))
@@ -721,7 +704,6 @@ async function loadData() {
 
   const githubSources = window.CONFIG && window.CONFIG.githubSources ? window.CONFIG.githubSources : {};
 
-  // Reseta o estado para o fallback antes de tentar buscar dados externos.
   appData = { ...MOCK_DATA, Configuracoes: { StatusPodio: 'auto' }, Jogadores: [] };
 
   if (spreadsheetId) {
@@ -733,7 +715,6 @@ async function loadData() {
         statusBadge.style.borderColor = "rgba(59, 130, 246, 0.3)";
       }
 
-      // 1. Buscar a aba de Configurações primeiro para definir dataSource
       let configuracoes = [];
       try {
         const res = await fetchOptionalSheetTab(spreadsheetId, "Configuracoes", publishedSheetGids.Configuracoes);
@@ -756,7 +737,6 @@ async function loadData() {
       const rankingTabName = "Ranking";
       const historicalScoresTab = window.CONFIG && window.CONFIG.historicalScoresTab ? window.CONFIG.historicalScoresTab : "ScoresAntigos";
 
-      // 2. Definir a promessa de busca do ranking (se do GitHub TDF ou Google Sheets)
       let rankingPromise;
       let stagesPromise;
       if (dataSource === "github" && githubSources.Ranking) {
@@ -772,7 +752,6 @@ async function loadData() {
           }
         })();
 
-        // Buscar index de etapas
         const stagesJsonUrl = githubSources.Ranking.replace('ranking.tdf', 'etapas.json');
         stagesPromise = (async () => {
           try {
@@ -867,7 +846,6 @@ async function loadData() {
   renderAll();
 }
 
-// --- SISTEMA DE RENDERIZAÇÃO ---
 
 function renderAll() {
   currentRankingList = appData.Ranking;
@@ -881,8 +859,6 @@ function renderAll() {
   renderMetagame();
 }
 
-
-// Busca automaticamente o próximo evento futuro do calendário
 function getNextEventFromCalendar() {
   const events = appData.Calendario || [];
   const now = new Date();
@@ -905,13 +881,10 @@ function getNextEventFromCalendar() {
   };
 }
 
-
-// 1. Dashboard (Top 3 e Próximo Evento)
 function renderDashboard() {
   const podiumContainer = document.getElementById('podium-cards-container');
   const eventContainer = document.getElementById('event-widget-content');
-  
-  // Renderizar Top 4 do Ranking
+
   if (podiumContainer) {
     let top4 = [];
     const statusPodio = (appData.Configuracoes && appData.Configuracoes.StatusPodio) ? appData.Configuracoes.StatusPodio : 'auto';
@@ -936,8 +909,7 @@ function renderDashboard() {
         const letter = player.Jogador ? escapeHTML(player.Jogador.charAt(0).toUpperCase()) : '?';
         const playerName = escapeHTML(player.Jogador);
         const playerDeck = escapeHTML(player.Deck || 'Sem deck registrado');
-        
-        // Se estiver congelado, mostrar a PosicaoFinal no card. Senão, mostrar a Pos do ranking geral.
+
         const cardRank = (statusPodio === 'congelado' || statusPodio === 'offline') && player.PosicaoFinal ? player.PosicaoFinal : player.Pos;
         
         let pointsHtml = '';
@@ -983,12 +955,11 @@ function renderDashboard() {
     }
   }
 
-  // Renderizar Card de Evento & Countdown
   if (eventContainer) {
     const eventConf = getNextEventFromCalendar() || (window.CONFIG && window.CONFIG.nextEvent ? window.CONFIG.nextEvent : null);
     
     if (eventConf && eventConf.active) {
-      // Formatar data brasileira
+
       const dateIso = normalizeDateISO(eventConf.date);
       const dateParts = dateIso.split('-');
       const formattedDate = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : eventConf.date;
@@ -1036,7 +1007,7 @@ function renderDashboard() {
           ${renderEventLinkButton(eventConf.signupLink)}
         </div>
       `;
-      // Inicializar o cronômetro do dashboard
+
       startCountdown();
     } else {
       eventContainer.innerHTML = `
@@ -1050,7 +1021,6 @@ function renderDashboard() {
   }
 }
 
-// 2. Ranking
 function renderRankingTable(players, page = 1) {
   currentRankingPage = page;
   filteredRankingList = players;
@@ -1168,14 +1138,13 @@ window.changeRankingPage = function(dir) {
     renderRankingTable(filteredRankingList, newPage);
     const tableEl = document.querySelector('.ranking-panel');
     if (tableEl) {
-      // scroll so the top of the table is near the top of the screen
+
       const y = tableEl.getBoundingClientRect().top + window.scrollY - 100;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
   }
 };
 
-// Cria link do local para o Google Maps quando houver URL cadastrada.
 function renderLocationLink(locationName, mapUrl) {
   const safeName = escapeHTML(locationName || 'Local não informado');
   const safeUrl = safeExternalUrl(mapUrl);
@@ -1187,7 +1156,6 @@ function renderLocationLink(locationName, mapUrl) {
   return `<a class="location-map-link" href="${escapeHTML(safeUrl)}" target="_blank" rel="noopener noreferrer" title="Abrir local no Google Maps">${safeName}<span class="location-map-link-icon">↗</span></a>`;
 }
 
-// 3. Calendário
 function renderCalendar() {
   const timeline = document.getElementById('calendar-timeline');
   if (!timeline) return;
@@ -1197,7 +1165,6 @@ function renderCalendar() {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
 
-  // Filtrar eventos passados (anteriores a hoje) e ordenar cronologicamente
   const sortedEvents = events
     .filter(e => {
       const d = parseDateSafe(e.Data);
@@ -1211,7 +1178,7 @@ function renderCalendar() {
   }
 
   timeline.innerHTML = sortedEvents.map(evt => {
-    // Formatar data em PT-BR
+
     const iso = normalizeDateISO(evt.Data);
     const parts = iso.split('-');
     const dateFormatted = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : evt.Data;
@@ -1246,7 +1213,6 @@ function renderCalendar() {
   }).join('');
 }
 
-// 4. Regras
 function renderRules() {
   const container = document.getElementById('rules-container');
   if (!container) return;
@@ -1275,7 +1241,6 @@ function renderRules() {
   }).join('');
 }
 
-// 5. Campeões (Hall of Fame)
 function renderChampions() {
   const container = document.getElementById('champions-container');
   if (!container) return;
@@ -1321,7 +1286,6 @@ function renderChampions() {
   }).join('');
 }
 
-// 6. Galeria
 function renderGallery() {
   const container = document.getElementById('gallery-container');
   if (!container) return;
@@ -1348,16 +1312,12 @@ function renderGallery() {
 }
 
 
-// --- INTERATIVIDADES E COMPONENTES ---
-
-// Alternar estados do Accordion de Regras
 window.toggleRule = function(index) {
   const item = document.getElementById(`rule-${index}`);
   if (!item) return;
 
   const isOpen = item.classList.contains('open');
-  
-  // Fechar todas antes
+
   document.querySelectorAll('.rule-item').forEach(el => {
     el.classList.remove('open');
     el.querySelector('.rule-content').style.maxHeight = null;
@@ -1370,9 +1330,8 @@ window.toggleRule = function(index) {
   }
 };
 
-// Temporizador Regressivo do Dashboard
-// Encerra o badge "Acontecendo Agora!" sempre às 21:30 do dia do evento.
-// Após esse horário, força re-render do dashboard para mostrar o próximo evento.
+
+
 let countdownInterval;
 let eventFinalized = false;
 const EVENT_END_HOUR = 21;
@@ -1387,7 +1346,6 @@ function startCountdown() {
 
   if (isNaN(targetTime)) return;
 
-  // Calcula o horário de fim do evento (mesmo dia, 21:30 local)
   const endTime = new Date(targetTime);
   endTime.setHours(EVENT_END_HOUR, EVENT_END_MINUTE, 0, 0);
 
@@ -1397,7 +1355,6 @@ function startCountdown() {
     const now = new Date().getTime();
     const difference = targetTime - now;
 
-    // Antes do horário de início: contagem regressiva normal
     if (difference > 0) {
       const days = Math.floor(difference / (1000 * 60 * 60 * 24));
       const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -1416,7 +1373,6 @@ function startCountdown() {
       return;
     }
 
-    // Evento já começou mas ainda não acabou (entre horário de início e 21:30)
     if (now < endTime.getTime()) {
       const widget = document.getElementById('event-widget-content');
       if (widget) {
@@ -1431,7 +1387,6 @@ function startCountdown() {
       return;
     }
 
-    // Passou das 21:30 do dia do evento: encerra e re-renderiza
     if (!eventFinalized) {
       eventFinalized = true;
       clearInterval(countdownInterval);
@@ -1445,7 +1400,6 @@ function startCountdown() {
   countdownInterval = setInterval(updateTimer, 1000);
 }
 
-// Lightbox (Visualizador de Galeria)
 let currentPhotoIndex = 0;
 window.openLightbox = function(index) {
   const lightbox = document.getElementById('lightbox');
@@ -1460,7 +1414,7 @@ window.openLightbox = function(index) {
   caption.innerText = `${photo.Titulo} - ${photo.Descricao || ''}`;
   
   lightbox.classList.add('active');
-  document.body.style.overflow = 'hidden'; // travar scroll principal
+  document.body.style.overflow = 'hidden'; 
 };
 
 function closeLightbox() {
@@ -1469,7 +1423,6 @@ function closeLightbox() {
   document.body.style.overflow = '';
 }
 
-// Modal de Detalhes do Jogador
 window.openPlayerModal = function(playerRef) {
   const modal = document.getElementById('player-modal');
   let player;
@@ -1486,7 +1439,7 @@ window.openPlayerModal = function(playerRef) {
   if (!player || !modal) return;
 
   const letter = player.Jogador ? player.Jogador.charAt(0).toUpperCase() : '?';
-  // Inserir elementos no modal
+
   document.getElementById('modal-avatar').innerText = letter;
   const medals = getPlayerMedals(player.Jogador);
   document.getElementById('modal-player-name').innerHTML = `${escapeHTML(player.Jogador)} ${medals}`;
@@ -1511,7 +1464,6 @@ window.openPlayerModal = function(playerRef) {
     `;
   }
 
-  // Preencher a linha do tempo de colocações (Evolução na Temporada)
   const timelineContainer = document.getElementById('modal-player-timeline');
   if (timelineContainer) {
     timelineContainer.innerHTML = '';
@@ -1607,15 +1559,12 @@ function closeChampionDeckModal() {
 }
 
 
-// --- NAVEGAÇÃO E SISTEMA DE ROTEAMENTO (SPA) ---
-
 function initNavigation() {
   const navLinks = document.querySelectorAll('.nav-link');
   const logoBtn = document.getElementById('logo-btn');
   const menuToggle = document.getElementById('menu-toggle');
   const navMenu = document.getElementById('nav-menu');
 
-  // Menu sanduíche responsivo
   if (menuToggle && navMenu) {
     menuToggle.addEventListener('click', () => {
       navMenu.classList.toggle('active');
@@ -1623,21 +1572,18 @@ function initNavigation() {
     });
   }
 
-  // Mudança de abas via Link
   function navigateTo(targetId) {
-    // Esconder todas as seções
+
     document.querySelectorAll('.section').forEach(section => {
       section.classList.remove('active');
     });
 
-    // Mostrar a seção alvo
     const activeSection = document.getElementById(targetId);
     if (activeSection) {
       activeSection.classList.add('active');
       window.scrollTo(0, 0);
     }
 
-    // Atualizar links de navegação ativos
     navLinks.forEach(link => {
       if (link.getAttribute('data-target') === targetId) {
         link.classList.add('active');
@@ -1646,7 +1592,6 @@ function initNavigation() {
       }
     });
 
-    // Fechar menu mobile se estiver aberto
     if (navMenu && navMenu.classList.contains('active')) {
       navMenu.classList.remove('active');
       if (menuToggle) {
@@ -1655,7 +1600,6 @@ function initNavigation() {
     }
   }
 
-  // Escutar cliques nos links
   navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1665,7 +1609,6 @@ function initNavigation() {
     });
   });
 
-  // Escutar clique no logo
   if (logoBtn) {
     logoBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1674,7 +1617,6 @@ function initNavigation() {
     });
   }
 
-  // Roteamento baseado no hash da URL (Ex: site.com/#ranking)
   function handleHashRoute() {
     const hash = window.location.hash.substring(1);
     const validSections = ['dashboard', 'ranking', 'calendar', 'rules', 'champions', 'gallery', 'metagame'];
@@ -1686,13 +1628,12 @@ function initNavigation() {
   }
 
   window.addEventListener('hashchange', handleHashRoute);
-  handleHashRoute(); // carregar inicial
+  handleHashRoute(); 
 }
 
-// --- CONFIGURAÇÃO DE EVENTOS GERAIS E INICIALIZAÇÃO ---
 
 function initEvents() {
-  // Busca na Tabela de Ranking
+
   const searchInput = document.getElementById('search-ranking');
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
@@ -1708,7 +1649,6 @@ function initEvents() {
     });
   }
 
-  // Filtro de etapa por data
   const rankingDateSelector = document.getElementById('ranking-date-selector');
   if (rankingDateSelector) {
     rankingDateSelector.addEventListener('change', async (e) => {
@@ -1727,12 +1667,11 @@ function initEvents() {
         if (infoBadge) infoBadge.classList.remove('active');
         currentRankingList = appData.Ranking;
         renderRankingTable(appData.Ranking, 1);
-        // Limpar busca ao trocar
+
         if (searchInput) searchInput.value = '';
         return;
       }
 
-      // Mostrar loader
       if (tbody) {
         tbody.innerHTML = `
           <tr>
@@ -1759,11 +1698,9 @@ function initEvents() {
         const normalized = normalizeRanking(stagePlayers, []);
         currentRankingList = normalized;
         renderRankingTable(normalized, 1);
-        
-        // Limpar busca ao trocar
+
         if (searchInput) searchInput.value = '';
-        
-        // Exibir info badge
+
         const stageInfo = stagesIndex.find(s => s.data === selectedValue);
         if (stageInfo && infoBadge) {
           const parts = selectedValue.split('-');
@@ -1790,7 +1727,6 @@ function initEvents() {
     });
   }
 
-  // Filtros Histórico
   const historicalSeason = document.getElementById('historical-season-selector');
   const historicalSearch = document.getElementById('historical-player-search');
   
@@ -1801,7 +1737,6 @@ function initEvents() {
     historicalSearch.addEventListener('input', () => { renderHistoricalScores(1); });
   }
 
-  // Cliques para fechar Lightbox
   const lightbox = document.getElementById('lightbox');
   const lightboxCloseBtn = document.getElementById('lightbox-close-btn');
   if (lightboxCloseBtn) lightboxCloseBtn.addEventListener('click', closeLightbox);
@@ -1813,7 +1748,6 @@ function initEvents() {
     });
   }
 
-  // Escutar teclas (ESC para fechar modais)
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeLightbox();
@@ -1822,7 +1756,6 @@ function initEvents() {
     }
   });
 
-  // Cliques para fechar modal do Deck do Campeão
   const championDeckModal = document.getElementById('champion-deck-modal');
   const championDeckCloseBtn = document.getElementById('champion-deck-close-btn');
   if (championDeckCloseBtn) championDeckCloseBtn.addEventListener('click', closeChampionDeckModal);
@@ -1834,7 +1767,6 @@ function initEvents() {
     });
   }
 
-  // Cliques para fechar modal do Jogador
   const playerModal = document.getElementById('player-modal');
   const modalCloseBtn = document.getElementById('modal-close-btn');
   if (modalCloseBtn) modalCloseBtn.addEventListener('click', closePlayerModal);
@@ -1847,10 +1779,8 @@ function initEvents() {
   }
 }
 
-
-// Inicializar tudo ao carregar a página
 document.addEventListener('DOMContentLoaded', () => {
-  // Ajustar títulos dinâmicos baseados no config.js
+
   const title = window.CONFIG ? window.CONFIG.leagueName : "Liga Atlântica";
   const subtitle = window.CONFIG ? window.CONFIG.leagueSubtitle : "Liga Pessoal de Pokémon TCG";
   
@@ -1863,8 +1793,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (fTitle) fTitle.innerText = title;
   if (wTitle) wTitle.innerText = title;
   if (wSub) wSub.innerText = subtitle;
-  
-  // Lógica de Troca de Tema (Light/Dark Mode)
+
   const themeToggleBtn = document.getElementById('theme-toggle');
   if (themeToggleBtn) {
     const savedTheme = localStorage.getItem('site-theme');
@@ -1879,21 +1808,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const newTheme = currentTheme === 'light' ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', newTheme);
       localStorage.setItem('site-theme', newTheme);
-      // Redraw chart to update font colors according to theme
+
       if (typeof updateMetagameDisplay === 'function') {
         updateMetagameDisplay();
       }
     });
   }
-  
-  // Iniciar Navegação e Eventos de Escuta
+
   initNavigation();
   initEvents();
-  
-  // Carregar dados da Planilha (ou Fallback)
+
   loadData();
 });
-// --- METAGAME LOGIC ---
+
 let metagameChartHome = null;
 let metagameChartPage = null;
 
@@ -1902,18 +1829,15 @@ function renderMetagame() {
   
   const navLink = document.getElementById('nav-metagame');
   const homeContainer = document.getElementById('metagame-home-container');
-  
-  // Se estiver offline ou desativado, esconde tudo.
+
   if (configVal === 'offline' || configVal === 'desativado') {
     if (navLink) navLink.style.display = 'none';
     if (homeContainer) homeContainer.style.display = 'none';
     return;
   }
-  
-  // O link do menu (página) fica sempre ativo
+
   if (navLink) navLink.style.display = '';
-  
-  // A section da Home pode ser desativada individualmente escrevendo "pagina" ou "page"
+
   if (configVal === 'pagina' || configVal === 'page') {
     if (homeContainer) homeContainer.style.display = 'none';
   } else {
@@ -2141,7 +2065,6 @@ function updateMetagameDisplay() {
       `;
     }
 
-    // Toggle button html will be generated inside the column card directly.
 
     const chartType = window.currentMetagameChartType || 'doughnut';
     
@@ -2262,20 +2185,19 @@ function updateMetagameDisplay() {
               const x0 = element.x;
               const y0 = element.y;
               const outerRadius = element.outerRadius;
-              const innerRadius = outerRadius * 0.50; // Thicker doughnut slice
+              const innerRadius = outerRadius * 0.50; 
               const midRadius = (innerRadius + outerRadius) / 2;
               
               const isOutros = name.toLowerCase() === 'outros';
-              
-              // Draw outside icons and leader lines for major decks (>= 4% share) to prevent visual crowding
+
               if (!isOutros && deckData && deckData.icone && percentNum >= 4) {
-                // 3-tier staggering to fully prevent overlaps
+
                 const R = outerRadius + (index % 3 === 0 ? 22 : index % 3 === 1 ? 46 : 70);
                 const drawX = x0 + Math.cos(angle) * R;
                 const drawY = y0 + Math.sin(angle) * R;
                 
                 drawCtx.save();
-                // Draw thin leader line
+
                 drawCtx.beginPath();
                 drawCtx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
                 drawCtx.lineWidth = 1;
@@ -2295,21 +2217,19 @@ function updateMetagameDisplay() {
                   window.chartIconCache[name] = img;
                 } else if (window.chartIconCache[name].complete && window.chartIconCache[name].naturalWidth > 0) {
                   const img = window.chartIconCache[name];
-                  const iconSize = 42; // Enlarged from 34px to 42px
+                  const iconSize = 42; 
                   drawCtx.save();
                   drawCtx.drawImage(img, drawX - (iconSize/2), drawY - (iconSize/2), iconSize, iconSize);
                   drawCtx.restore();
                 }
               }
-              
-              // Draw the percentage text INSIDE the slice for ALL decks
+
               const insideX = x0 + Math.cos(angle) * midRadius;
               const insideY = y0 + Math.sin(angle) * midRadius;
               
               drawCtx.save();
               drawCtx.translate(insideX, insideY);
-              
-              // Rotate radially to maximize lateral breathing room (respirar mais lateral)
+
               let textAngle = angle;
               let normalizedAngle = textAngle % (2 * Math.PI);
               if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
@@ -2325,13 +2245,13 @@ function updateMetagameDisplay() {
               drawCtx.textBaseline = 'middle';
               
               if (isOutros) {
-                // For Outros, draw "Outros" and percent in radial lines
+
                 drawCtx.font = "bold 8.5px 'Inter', sans-serif";
                 drawCtx.fillText("Outros", 0, -6);
                 drawCtx.font = '800 10px "Inter", sans-serif';
                 drawCtx.fillText(percent, 0, 6);
               } else {
-                // If it is a 2% or 3% deck, give it more margin by using a smaller font (9px)
+
                 if (percentNum <= 3) {
                   drawCtx.font = '800 9px "Inter", sans-serif';
                 } else {
@@ -2370,7 +2290,7 @@ function updateMetagameDisplay() {
                 
                 const parts = energyStr.toLowerCase().split('+').map(p => p.trim());
                 const hex1 = window.energyHexColors[parts[0]] || '#94a3b8';
-                const opacity = 'a0'; // ~62% opacidade para o efeito Glassmorphism
+                const opacity = 'a0'; 
                 
                 if (parts.length > 1 && window.energyHexColors[parts[1]]) {
                   const hex2 = window.energyHexColors[parts[1]];
@@ -2381,7 +2301,7 @@ function updateMetagameDisplay() {
                     const centerX = (chartArea.left + chartArea.right) / 2;
                     const centerY = (chartArea.top + chartArea.bottom) / 2;
                     const outerRadius = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top) / 2;
-                    const innerRadius = outerRadius * 0.50; // matches 50% cutout approx
+                    const innerRadius = outerRadius * 0.50; 
                     gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
                   }
                   
@@ -2487,8 +2407,7 @@ function updateMetagameDisplay() {
         });
       }
     }
-    
-    // Iniciar o carrossel aps a renderizao
+
     if (decksWithImages.length > 0) {
       setTimeout(() => window.initCarousel(canvasId), 50);
     }
@@ -2498,7 +2417,6 @@ function updateMetagameDisplay() {
   renderToContainer(pageContent, 'metagameChartCanvas_page', 'metagameChartPage', false);
 }
 
-// 3D Carousel Global Logic
 window.initCarousel = function(id) {
   const stage = document.getElementById('stage-' + id);
   if(!stage) return;
@@ -2512,8 +2430,7 @@ window.initCarousel = function(id) {
   
   if(!window.carouselIntervals) window.carouselIntervals = {};
   if(window.carouselIntervals[id]) clearInterval(window.carouselIntervals[id]);
-  
-  // Auto-play lento
+
   window.carouselIntervals[id] = setInterval(() => window.moveCarousel(id, 1), 4000);
   
   const container = document.getElementById('carousel-' + id);
@@ -2583,7 +2500,6 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
     return;
   }
 
-  // Atualiza a legenda no centro do gráfico com a cor/gradiente do deck
   if (centerTextWrap && centerName) {
     centerName.innerHTML = escapeHTML(deckName);
     
@@ -2616,4 +2532,5 @@ function toggleHistoryCollapse() {
     btn.classList.toggle('expanded');
   }
 }
+
 
