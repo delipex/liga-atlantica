@@ -1958,16 +1958,18 @@ function updateMetagameDisplay() {
     const isExpanded = window.outrosExpandedState[selectedSession];
     
     if (isExpanded) {
-      // DRILL-DOWN MODE: Show ONLY decks with count === 1
+      // DRILL-DOWN MODE: Show ONLY decks with count === 1 or named 'Outros'
       sortedDecks.forEach(d => {
-        if (d.count === 1) {
+        const isOutros = d.deck.toLowerCase() === 'outros' || d.deck.toLowerCase() === 'outros decks';
+        if (d.count === 1 || isOutros) {
           chartDecks.push(d);
         }
       });
     } else {
-      // MAIN MODE: Group count === 1 into "Outros Decks"
+      // MAIN MODE: Group count === 1 and 'Outros' into "Outros"
       sortedDecks.forEach(d => {
-        if (d.count === 1) {
+        const isOutros = d.deck.toLowerCase() === 'outros' || d.deck.toLowerCase() === 'outros decks';
+        if (d.count === 1 || isOutros) {
           outrosCount += d.count;
         } else {
           chartDecks.push(d);
@@ -1976,7 +1978,7 @@ function updateMetagameDisplay() {
       
       if (outrosCount > 0) {
         chartDecks.push({
-          deck: 'Outros Decks',
+          deck: 'Outros',
           count: outrosCount,
           image: null, icone: null, energia: '', limitless: '#'
         });
@@ -2156,19 +2158,26 @@ function updateMetagameDisplay() {
       </div>
     `;
 
+    const backButtonHtml = (chartType === 'doughnut' && window.outrosExpandedState && window.outrosExpandedState[selectedSession])
+      ? `<div onclick="window.outrosExpandedState['${selectedSession}'] = false; updateMetagameDisplay();" style="cursor:pointer; color:var(--accent-yellow); font-weight:bold; margin-bottom: 0.5rem; text-align:center; font-size: 1rem; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); transition: background 0.2s;">&#8592; Voltar para o gráfico inteiro</div>`
+      : '';
+
     const htmlContent = `
       <div style="display:flex; flex-direction:column; align-items:center; width: 100%;">
         <div class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:center; align-items:center; gap: ${isBar ? '0' : '4rem'}; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
           
           <div style="flex: ${chartColumnFlex}; width: 100%; max-width: ${chartColumnWidth}; display:flex; flex-direction:column; gap:1.5rem; align-items: center; justify-content: center;">
             ${chartType === 'doughnut' ? `
-            <div style="position:relative; width:100%; aspect-ratio: 1; display:flex; align-items:center; justify-content:center;">
-              <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
-              <!-- Center Name Info -->
-              <div id="chart-center-text-${canvasId}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; z-index:2; width: 100%; transition:opacity 0.3s;">
-                 <div id="chart-center-name-${canvasId}" onclick="if(window.outrosExpandedState && window.outrosExpandedState['${selectedSession}']) { window.outrosExpandedState['${selectedSession}'] = false; updateMetagameDisplay(); }" style="display:inline-block; font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.7); background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 12px rgba(0,0,0,0.5); ${window.outrosExpandedState && window.outrosExpandedState[selectedSession] ? 'pointer-events: auto;' : ''}">
-                    ${window.outrosExpandedState && window.outrosExpandedState[selectedSession] ? 'Clique p/ Voltar<br>ao Metagame' : 'Toque numa<br>fatia'}
-                 </div>
+            <div style="position:relative; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+              ${backButtonHtml}
+              <div style="position:relative; width:100%; aspect-ratio: 1; display:flex; align-items:center; justify-content:center;">
+                <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
+                <!-- Center Name Info -->
+                <div id="chart-center-text-${canvasId}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; z-index:2; width: 100%; transition:opacity 0.3s;">
+                   <div id="chart-center-name-${canvasId}" style="display:inline-block; font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.7); background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                      Toque numa<br>fatia
+                   </div>
+                </div>
               </div>
             </div>
             ` : accordionHtml}
@@ -2556,17 +2565,8 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
   
   if (!deckName) {
     if (centerName) {
-      const selector = document.getElementById('metagame-season-selector');
-      const selectedSession = selector ? selector.value : 'all';
-      const isExpanded = window.outrosExpandedState && window.outrosExpandedState[selectedSession];
-      
-      if (isExpanded) {
-        centerName.innerHTML = "Clique p/ Voltar<br>ao Metagame";
-        centerName.style.cssText = "display:inline-block; font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: #000; background: var(--accent-yellow); padding: 8px 12px; border-radius: 12px; cursor: pointer; pointer-events: auto;";
-      } else {
-        centerName.innerHTML = "Toque numa<br>fatia";
-        centerName.style.cssText = "display:inline-block; font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.7); background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 12px rgba(0,0,0,0.5);";
-      }
+      centerName.innerHTML = "Toque numa<br>fatia";
+      centerName.style.cssText = "display:inline-block; font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.7); background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 12px rgba(0,0,0,0.5);";
     }
     return;
   }
