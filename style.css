@@ -2606,7 +2606,9 @@ tbody tr.top-8 .row-rank,
   position: absolute;
   inset: 0;
   background-size: cover;
-  background-position: center 25%;
+  background-size: contain;
+  background-position: right center;
+  background-repeat: no-repeat;
   opacity: 0.25;
   filter: grayscale(100%);
   transition: opacity 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), filter 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -2664,7 +2666,15 @@ tbody tr.top-8 .row-rank,
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 2px 4px rgba(0, 0, 0, 0.9);
 }
 .accordion-item.expanded {
-  height: 120px;
+  height: 320px;
+}
+
+.accordion-item.no-expand {
+  cursor: default;
+}
+
+.accordion-item.no-expand.expanded {
+  height: 60px;
 }
 
 @media (min-width: 769px) {
@@ -2691,6 +2701,8 @@ tbody tr.top-8 .row-rank,
   }
   
   .accordion-bg-image {
+    background-size: cover;
+    background-position: center 25%;
     mask-image: linear-gradient(to top, transparent, black 40%);
     -webkit-mask-image: linear-gradient(to top, transparent, black 40%);
   }
