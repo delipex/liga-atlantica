@@ -1955,21 +1955,32 @@ function updateMetagameDisplay() {
   // Doughnut Grouping logic
   if (chartType === 'doughnut') {
     let outrosCount = 0;
-    sortedDecks.forEach(d => {
-      // Group if count is 1 and not explicitly expanded, AND it's not the only deck
-      if (d.count === 1 && !window.outrosExpandedState[selectedSession]) {
-        outrosCount += d.count;
-      } else {
-        chartDecks.push(d);
-      }
-    });
+    const isExpanded = window.outrosExpandedState[selectedSession];
     
-    if (outrosCount > 0 && !window.outrosExpandedState[selectedSession]) {
-      chartDecks.push({
-        deck: 'Outros Decks',
-        count: outrosCount,
-        image: null, icone: null, energia: '', limitless: '#'
+    if (isExpanded) {
+      // DRILL-DOWN MODE: Show ONLY decks with count === 1
+      sortedDecks.forEach(d => {
+        if (d.count === 1) {
+          chartDecks.push(d);
+        }
       });
+    } else {
+      // MAIN MODE: Group count === 1 into "Outros Decks"
+      sortedDecks.forEach(d => {
+        if (d.count === 1) {
+          outrosCount += d.count;
+        } else {
+          chartDecks.push(d);
+        }
+      });
+      
+      if (outrosCount > 0) {
+        chartDecks.push({
+          deck: 'Outros Decks',
+          count: outrosCount,
+          image: null, icone: null, energia: '', limitless: '#'
+        });
+      }
     }
   } else {
     chartDecks = sortedDecks;
@@ -2155,8 +2166,8 @@ function updateMetagameDisplay() {
               <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
               <!-- Center Name Info -->
               <div id="chart-center-text-${canvasId}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; z-index:2; width: 100%; transition:opacity 0.3s;">
-                 <div id="chart-center-name-${canvasId}" style="display:inline-block; font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.7); background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
-                    ${window.outrosExpandedState && window.outrosExpandedState[selectedSession] ? 'Toque para<br>Recolher' : 'Toque numa<br>fatia'}
+                 <div id="chart-center-name-${canvasId}" onclick="if(window.outrosExpandedState && window.outrosExpandedState['${selectedSession}']) { window.outrosExpandedState['${selectedSession}'] = false; updateMetagameDisplay(); }" style="display:inline-block; font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.7); background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 12px rgba(0,0,0,0.5); ${window.outrosExpandedState && window.outrosExpandedState[selectedSession] ? 'pointer-events: auto;' : ''}">
+                    ${window.outrosExpandedState && window.outrosExpandedState[selectedSession] ? 'Clique p/ Voltar<br>ao Metagame' : 'Toque numa<br>fatia'}
                  </div>
               </div>
             </div>
@@ -2550,8 +2561,8 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
       const isExpanded = window.outrosExpandedState && window.outrosExpandedState[selectedSession];
       
       if (isExpanded) {
-        centerName.innerHTML = "Toque para<br>Recolher";
-        centerName.style.cssText = "display:inline-block; font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: #000; background: var(--accent-yellow); padding: 8px 12px; border-radius: 12px;";
+        centerName.innerHTML = "Clique p/ Voltar<br>ao Metagame";
+        centerName.style.cssText = "display:inline-block; font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: #000; background: var(--accent-yellow); padding: 8px 12px; border-radius: 12px; cursor: pointer; pointer-events: auto;";
       } else {
         centerName.innerHTML = "Toque numa<br>fatia";
         centerName.style.cssText = "display:inline-block; font-weight: 500; font-size: 0.85rem; line-height: 1.2; color: rgba(255,255,255,0.7); background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 12px rgba(0,0,0,0.5);";
