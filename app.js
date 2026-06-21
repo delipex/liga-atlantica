@@ -420,8 +420,8 @@ function normalizeCategory(row) {
     return { code: 'ME', label: 'MASTER' };
   }
 
-  if (['SR', 'SENIOR', 'SENIORS'].includes(normalized)) {
-    return { code: 'SR', label: 'SENIOR' };
+  if (['SE', 'SR', 'SENIOR', 'SENIORS'].includes(normalized)) {
+    return { code: 'SE', label: 'SENIOR' };
   }
 
   if (['JR', 'JUNIOR', 'JUNIORS'].includes(normalized)) {
@@ -1073,12 +1073,25 @@ function renderRankingTable(players, page = 1) {
       </td>
     `;
     
+    const total = v + e + d;
+    const winRate = total > 0 ? Math.round((v / total) * 100) : 0;
+    const vPercent = total > 0 ? (v / total) * 100 : 0;
+    const ePercent = total > 0 ? (e / total) * 100 : 0;
+    const dPercent = total > 0 ? (d / total) * 100 : 0;
+
     const vedHtml = isFrozen ? '' : `
       <td style="text-align:center;vertical-align:middle;">
-        <div class="ved-container">
-          <span class="ved-badge v-badge" title="Vitórias">${v}V</span>
-          <span class="ved-badge e-badge" title="Empates">${e}E</span>
-          <span class="ved-badge d-badge" title="Derrotas">${d}D</span>
+        <div class="ved-display" title="${v} Vitórias, ${e} Empates, ${d} Derrotas">
+          <span class="ved-text">${winRate}%</span>
+          ${total > 0 ? `
+            <div class="ved-bar">
+              <div class="ved-seg v-seg" style="width: ${vPercent}%"></div>
+              <div class="ved-seg e-seg" style="width: ${ePercent}%"></div>
+              <div class="ved-seg d-seg" style="width: ${dPercent}%"></div>
+            </div>
+          ` : `
+            <div class="ved-bar-empty"></div>
+          `}
         </div>
       </td>
     `;
@@ -1090,10 +1103,6 @@ function renderRankingTable(players, page = 1) {
           <div class="player-cell">
             <div>
               <div style="font-weight:600;color:var(--text-primary);">${playerName} ${medals}</div>
-              <div style="font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.35rem; margin-top: 0.25rem;">
-                ${getEnergyDotHTML(getDeckEnergy(player.Deck))}
-                <span>${escapeHTML(player.Deck || 'Não registrado')}</span>
-              </div>
             </div>
           </div>
         </td>
@@ -2228,11 +2237,12 @@ function updateMetagameDisplay() {
 
     const isExpanded = !!(window.outrosExpandedState && window.outrosExpandedState[selectedSession]);
     const backButtonHtml = `
-      <div id="chart-back-btn-${canvasId}" style="display: ${isExpanded ? 'block' : 'none'}; cursor:pointer; color:var(--accent-yellow); font-weight:bold; margin-bottom: 0.5rem; text-align:center; font-size: 1rem; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); transition: background 0.2s;" onclick="
-        if (window.outrosExpandedState) window.outrosExpandedState['${selectedSession}'] = false;
-        updateMetagameDisplay();
-      ">
-        &#8592; Voltar para o gráfico inteiro
+      <div id="chart-back-btn-${canvasId}" style="display: ${isExpanded ? 'flex' : 'none'}; position: absolute; top: 1.5rem; left: 1.5rem; z-index: 10; align-items: center; gap: 6px; cursor: pointer; color: var(--accent-yellow); font-weight: 600; font-size: 0.82rem; padding: 6px 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; backdrop-filter: blur(8px); box-shadow: 0 4px 12px rgba(0,0,0,0.25); transition: all 0.2s ease;" 
+        onclick="if (window.outrosExpandedState) window.outrosExpandedState['${selectedSession}'] = false; updateMetagameDisplay();"
+        onmouseenter="this.style.background='rgba(255, 255, 255, 0.08)'; this.style.borderColor='rgba(255, 255, 255, 0.15)';" 
+        onmouseleave="this.style.background='rgba(255, 255, 255, 0.03)'; this.style.borderColor='rgba(255, 255, 255, 0.08)';">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Voltar
       </div>
     `;
 
@@ -2240,10 +2250,11 @@ function updateMetagameDisplay() {
       <div style="display:flex; flex-direction:column; align-items:center; width: 100%;">
         <div class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius); display:flex; flex-direction:row; flex-wrap: wrap; justify-content:center; align-items:center; gap: ${isBar ? '0' : '4rem'}; position:relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
           
+          ${backButtonHtml}
+
           <div style="flex: ${chartColumnFlex}; width: 100%; max-width: ${chartColumnWidth}; display:flex; flex-direction:column; gap:1.5rem; align-items: center; justify-content: center;">
             ${chartType === 'doughnut' ? `
             <div style="position:relative; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-              ${backButtonHtml}
               <div style="position:relative; width:100%; aspect-ratio: 1; display:flex; align-items:center; justify-content:center;">
                 <canvas id="${canvasId}" style="position:relative; z-index:1;"></canvas>
                 <!-- Center Name Info -->
@@ -2283,18 +2294,54 @@ function updateMetagameDisplay() {
       }
       targetContainer.innerHTML = htmlContent;
     } else {
+      // PRESERVE DOM AND UPDATE DATA FOR A BEAUTIFUL SMOOTH MORPH TRANSITION!
       if (window[chartVarName]) {
-        window[chartVarName].destroy();
-        window[chartVarName] = null;
-      }
-      // Update back button visibility dynamically if HTML is not reset
-      const backBtnEl = document.getElementById(`chart-back-btn-${canvasId}`);
-      if (backBtnEl) {
-        backBtnEl.style.display = isExpanded ? 'block' : 'none';
-        backBtnEl.onclick = () => {
-          if (window.outrosExpandedState) window.outrosExpandedState[selectedSession] = false;
-          updateMetagameDisplay();
-        };
+        const chart = window[chartVarName];
+        chart._chartDecks = chartDecks;
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = data;
+        
+        if (chart.config.type === 'doughnut') {
+          const firstLabel = labels[0];
+          const isOutros = firstLabel.toLowerCase() === 'outros' || firstLabel.toLowerCase() === 'outros decks';
+          if (!isOutros && data.length > 0) {
+            chart._selectedIndex = 0;
+            chart._selectedLabel = firstLabel;
+            chart._preventHoverLoop = true;
+            chart.setActiveElements([{ datasetIndex: 0, index: 0 }]);
+            chart._preventHoverLoop = false;
+            
+            if (window.focusCarouselDeck) {
+              window.focusCarouselDeck(canvasId, firstLabel, chart);
+            }
+          } else {
+            chart._selectedIndex = null;
+            chart._selectedLabel = null;
+            chart._preventHoverLoop = true;
+            chart.setActiveElements([]);
+            chart._preventHoverLoop = false;
+            if (window.focusCarouselDeck) {
+              window.focusCarouselDeck(canvasId, null, chart);
+            }
+          }
+        }
+        
+        chart.update();
+        
+        // Update back button visibility dynamically if HTML is not reset
+        const backBtnEl = document.getElementById(`chart-back-btn-${canvasId}`);
+        if (backBtnEl) {
+          backBtnEl.style.display = isExpanded ? 'flex' : 'none';
+          backBtnEl.onclick = () => {
+            if (window.outrosExpandedState) window.outrosExpandedState[selectedSession] = false;
+            updateMetagameDisplay();
+          };
+        }
+        
+        if (decksWithImages.length > 0) {
+          setTimeout(() => window.initCarousel(canvasId), 50);
+        }
+        return; // stop execution here, do not create a new chart!
       }
     }
     
@@ -2327,7 +2374,7 @@ function updateMetagameDisplay() {
               
               const percent = percentNum + '%';
               const name = chart.data.labels[index];
-              const deckData = chartDecks.find(d => d.deck === name);
+              const deckData = (chart._chartDecks || chartDecks).find(d => d.deck === name);
               
               const angle = (element.startAngle + element.endAngle) / 2;
               const x0 = element.x;
