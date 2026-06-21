@@ -759,10 +759,35 @@ async function loadData() {
       let rankingPromise;
       let stagesPromise;
       if (dataSource === "github" && githubSources.Ranking) {
+        // Resolve a fresh commit SHA dynamically to bypass the Fastly CDN cache of raw.githubusercontent.com
+        let commitSha = "main";
+        try {
+          const match = githubSources.Ranking.match(/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)/);
+          if (match) {
+            const owner = match[1];
+            const repo = match[2];
+            const branch = match[3];
+            commitSha = branch; // Default fallback
+            
+            const shaRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits/${branch}?t=${new Date().getTime()}`);
+            if (shaRes.ok) {
+              const shaData = await shaRes.json();
+              if (shaData && shaData.sha) {
+                commitSha = shaData.sha;
+                window.latestCommitSha = commitSha;
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Falha ao obter commit SHA dinâmico. Usando branch padrão.", e);
+        }
+
+        const resolvedRankingUrl = githubSources.Ranking.replace(/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)/, `/raw.githubusercontent.com/$1/$2/${commitSha}`);
+        const resolvedStagesUrl = resolvedRankingUrl.replace('ranking.tdf', 'etapas.json');
+
         rankingPromise = (async () => {
           try {
-            // CORREÇÃO: Adicionado o bloqueador de cache para baixar sempre o TDF mais novo
-            const res = await fetch(`${githubSources.Ranking}?v=${new Date().getTime()}`);
+            const res = await fetch(resolvedRankingUrl);
             if (!res.ok) throw new Error("Erro ao carregar ranking TDF do GitHub.");
             const text = await res.text();
             return parseTDF(text);
@@ -772,10 +797,9 @@ async function loadData() {
           }
         })();
 
-        const stagesJsonUrl = githubSources.Ranking.replace('ranking.tdf', 'etapas.json');
         stagesPromise = (async () => {
           try {
-            const res = await fetch(`${stagesJsonUrl}?v=${new Date().getTime()}`);
+            const res = await fetch(resolvedStagesUrl);
             if (res.ok) return await res.json();
           } catch (e) {
             console.warn("etapas.json não encontrado ou falha ao carregar.");
@@ -1003,17 +1027,51 @@ function renderDashboard() {
     let top4 = [];
     const statusPodio = (appData.Configuracoes && appData.Configuracoes.StatusPodio) ? appData.Configuracoes.StatusPodio : 'auto';
     
-    if (statusPodio === 'congelado' || statusPodio === 'offline') {
-       top4 = [...appData.Ranking]
-         .filter(p => p.PosicaoFinal && p.PosicaoFinal > 0)
-         .sort((a, b) => a.PosicaoFinal - b.PosicaoFinal)
-         .slice(0, 4);
-         
-       if (top4.length === 0) {
-         top4 = appData.Ranking.slice(0, 4);
-       }
+    // O modo "congelado" de exibição de temporada anterior (usando a PosicaoFinal) só será ativado caso os arquivos TDF do GitHub estejam realmente vazios ou ausentes (como no período de Off Season).
+    const isPreviousSeasonMode = window.CONFIG?.dataSource === 'sheets' || (!appData.Ranking || appData.Ranking.length === 0);
+    let isFrozenLayout = false;
+    
+    if (isPreviousSeasonMode) {
+      isFrozenLayout = true;
+      top4 = [...appData.Ranking]
+        .filter(p => p.PosicaoFinal && p.PosicaoFinal > 0)
+        .sort((a, b) => a.PosicaoFinal - b.PosicaoFinal)
+        .slice(0, 4);
+        
+      if (top4.length === 0) {
+        top4 = appData.Ranking.slice(0, 4);
+      }
     } else {
-       top4 = appData.Ranking.slice(0, 4);
+      // Se não estiver em modo temporada anterior (arquivos TDF existem), mas statusPodio for congelado/offline, exibimos os 4 melhores jogadores da etapa anterior
+      if (statusPodio === 'congelado' || statusPodio === 'offline') {
+        isFrozenLayout = true;
+        const latestStageIdx = stagesIndex.length - 1;
+        if (latestStageIdx >= 0) {
+          const playersWithStagePlacements = appData.Ranking.map(p => {
+            const historyArr = p.HistoricoColocacoes ? String(p.HistoricoColocacoes).split(';') : [];
+            const placementStr = historyArr.length > latestStageIdx ? historyArr[latestStageIdx] : '-';
+            const placement = (placementStr && placementStr !== '-') ? Number(placementStr) : null;
+            return { player: p, stagePlacement: placement };
+          })
+          .filter(x => x.stagePlacement !== null && x.stagePlacement > 0)
+          .sort((a, b) => a.stagePlacement - b.stagePlacement);
+          
+          top4 = playersWithStagePlacements.slice(0, 4).map(x => {
+            return {
+              ...x.player,
+              StagePlacement: x.stagePlacement
+            };
+          });
+        }
+        
+        if (top4.length === 0) {
+          top4 = appData.Ranking.slice(0, 4);
+          isFrozenLayout = false;
+        }
+      } else {
+        top4 = appData.Ranking.slice(0, 4);
+        isFrozenLayout = false;
+      }
     }
 
     if (top4.length === 0) {
@@ -1024,10 +1082,17 @@ function renderDashboard() {
         const playerName = escapeHTML(player.Jogador);
         const playerDeck = escapeHTML(player.Deck || 'Sem deck registrado');
 
-        const cardRank = (statusPodio === 'congelado' || statusPodio === 'offline') && player.PosicaoFinal ? player.PosicaoFinal : player.Pos;
+        let cardRank;
+        if (isPreviousSeasonMode) {
+          cardRank = player.PosicaoFinal || player.Pos;
+        } else if (statusPodio === 'congelado' || statusPodio === 'offline') {
+          cardRank = player.StagePlacement || player.Pos;
+        } else {
+          cardRank = player.Pos;
+        }
         
         let pointsHtml = '';
-        if (statusPodio === 'congelado' || statusPodio === 'offline') {
+        if (isFrozenLayout) {
           let label = '';
           let color = 'var(--text-secondary)';
           if (cardRank == 1) { label = '🏆 CAMPEÃO'; color = '#fbbf24'; }
@@ -1053,7 +1118,7 @@ function renderDashboard() {
         }
         
         return `
-          <div class="podium-card rank-${cardRank}" onclick="openPlayerModal(${player.Pos})">
+          <div class="podium-card rank-${cardRank}" onclick="openPlayerModal('${escapeHTML(player.Jogador)}')">
             <div class="podium-badge">${cardRank}</div>
             <div class="podium-info">
               <div class="podium-player-name">${playerName}</div>
@@ -1838,7 +1903,11 @@ function initEvents() {
 
       let stageTdfUrl = '';
       if (dataSource === "github" && githubSources.Ranking) {
-        stageTdfUrl = githubSources.Ranking.replace('ranking.tdf', `etapas/${selectedValue}.tdf`);
+        let baseRankingUrl = githubSources.Ranking;
+        if (window.latestCommitSha) {
+          baseRankingUrl = baseRankingUrl.replace(/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)/, `/raw.githubusercontent.com/$1/$2/${window.latestCommitSha}`);
+        }
+        stageTdfUrl = baseRankingUrl.replace('ranking.tdf', `etapas/${selectedValue}.tdf`);
       } else {
         stageTdfUrl = `etapas/${selectedValue}.tdf`;
       }
