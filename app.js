@@ -723,11 +723,24 @@ async function loadData() {
       configuracoes.forEach(row => {
         const param = (row.Parametro || "").trim().toLowerCase();
         const val = (row.Valor || "").trim();
-        if (param === "fonteranking" && !sourceParam) {
-          dataSource = val.toLowerCase() === "tdf" ? "github" : "sheets";
-        }
+        // NOTE: fonteranking is obsolete. The site always uses github (TDF) for active ranking.
         if (param === "statuspodio") {
           appData.Configuracoes.StatusPodio = val.toLowerCase();
+        }
+        if (param === "avisotopo" || param === "aviso-topo" || param === "aviso_topo") {
+          appData.Configuracoes.AvisoTopo = val;
+        }
+        if (param === "linkwhatsapp" || param === "link-whatsapp" || param === "link_whatsapp" || param === "whatsapp") {
+          appData.Configuracoes.LinkWhatsApp = val;
+        }
+        if (param === "linkinstagram" || param === "link-instagram" || param === "link_instagram" || param === "instagram") {
+          appData.Configuracoes.LinkInstagram = val;
+        }
+        if (param === "temapadrao" || param === "tema-padrao" || param === "tema_padrao" || param === "tema") {
+          appData.Configuracoes.TemaPadrao = val;
+        }
+        if (param === "exibirmetagame" || param === "exibir-metagame" || param === "exibir_metagame" || param === "metagame") {
+          appData.Configuracoes.ExibirMetagame = val;
         }
       });
 
@@ -849,7 +862,77 @@ async function loadData() {
   renderAll();
 }
 
+function renderAvisoTopo() {
+  const avisoText = appData.Configuracoes?.AvisoTopo;
+  const existingAviso = document.getElementById('aviso-topo-banner');
+  if (existingAviso) existingAviso.remove();
+
+  if (avisoText && avisoText.trim() !== '') {
+    const banner = document.createElement('div');
+    banner.id = 'aviso-topo-banner';
+    banner.style.cssText = `
+      background: linear-gradient(90deg, rgba(255, 203, 5, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%);
+      border-bottom: 1px solid rgba(255, 203, 5, 0.25);
+      color: #fff;
+      font-family: 'Exo 2', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-align: center;
+      padding: 8px 24px;
+      position: relative;
+      z-index: 101;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    `;
+    banner.innerHTML = `<span>📢</span> <span>${escapeHTML(avisoText)}</span>`;
+    document.body.insertBefore(banner, document.body.firstChild);
+  }
+}
+
 function renderAll() {
+  // 1. Render Top Notice Banner (AvisoTopo)
+  renderAvisoTopo();
+
+  // 2. Set Theme dynamically if localStorage is empty
+  const savedTheme = localStorage.getItem('site-theme');
+  if (!savedTheme && appData.Configuracoes && appData.Configuracoes.TemaPadrao) {
+    const defaultTheme = appData.Configuracoes.TemaPadrao.trim().toLowerCase();
+    let themeToSet = '';
+    if (['light', 'claro'].includes(defaultTheme)) {
+      themeToSet = 'light';
+    } else if (['dark', 'escuro'].includes(defaultTheme)) {
+      themeToSet = 'dark';
+    }
+    if (themeToSet) {
+      document.documentElement.setAttribute('data-theme', themeToSet);
+      if (typeof updateMetagameDisplay === 'function') {
+        updateMetagameDisplay();
+      }
+    }
+  }
+
+  // 3. Update Social Media Links from configuration if present
+  if (appData.Configuracoes) {
+    if (appData.Configuracoes.LinkWhatsApp) {
+      const waBtns = ['btn-whatsapp-welcome', 'btn-whatsapp-footer'];
+      waBtns.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.href = appData.Configuracoes.LinkWhatsApp;
+      });
+    }
+    if (appData.Configuracoes.LinkInstagram) {
+      const igBtns = ['btn-instagram-welcome', 'btn-instagram-footer'];
+      igBtns.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.href = appData.Configuracoes.LinkInstagram;
+      });
+    }
+  }
+
   currentRankingList = appData.Ranking;
   renderDashboard();
   renderRankingTable(appData.Ranking);
@@ -866,6 +949,8 @@ function getNextEventFromCalendar() {
   const now = new Date();
   const future = events.filter(e => {
     if (!e || !e.Data) return false;
+    const status = String(e.Status || '').toLowerCase().trim();
+    if (status === 'concluido' || status === 'cancelado') return false;
     const d = parseDateSafe(e.Data);
     return !isNaN(d) && d >= now;
   }).sort((a,b) => parseDateSafe(a.Data) - parseDateSafe(b.Data));
@@ -1258,9 +1343,13 @@ function renderChampions() {
 
   const champions = appData.Campeoes;
   if (!champions || champions.length === 0) {
+    container.className = "champions-grid";
     container.innerHTML = `<div style="grid-column:1/-1;padding:3rem;text-align:center;color:var(--text-secondary);">Galeria de campeões histórica vazia no momento.</div>`;
     return;
   }
+
+  // Set the container class to champions-accordion to use the premium Hall of Fame accordion layout
+  container.className = "champions-accordion";
 
   container.innerHTML = champions.map((champ, index) => {
     const photoUrl = safeExternalUrl(champ.FotoCampeao || champ.Foto || champ.URLFoto || champ.ImagemCampeao);
@@ -1271,27 +1360,37 @@ function renderChampions() {
       safeExternalUrl(champ.ImagemDeck || champ.FotoDeck) ||
       String(champ.ObservacaoDeck || champ.DescricaoDeck || '').trim()
     );
+    const isFirstExpanded = index === 0 ? 'expanded' : '';
 
     return `
-      <div class="glass-card champion-card">
-        <div class="champion-photo-wrap">
-          ${photoUrl
-            ? `<img class="champion-photo" src="${escapeHTML(photoUrl)}" alt="Foto de ${championName}" loading="lazy">`
-            : `<div class="champion-photo-placeholder">${championInitial}</div>`
-          }
-          <div class="champion-trophy-badge">🏆</div>
+      <div class="champion-accordion-item ${isFirstExpanded}" data-champ-name="${championName}" onclick="
+        this.parentNode.querySelectorAll('.champion-accordion-item').forEach(el => el.classList.remove('expanded'));
+        this.classList.add('expanded');
+      ">
+        <div class="champ-acc-season-rotated">${escapeHTML(champ.Temporada)}</div>
+        <div class="champ-acc-collapsed-icon">🏆</div>
+        
+        <div class="champ-acc-expanded-content">
+          <div class="champ-acc-season">${escapeHTML(champ.Temporada)}</div>
+          <div class="champ-acc-photo-wrap">
+            ${photoUrl
+              ? `<img class="champ-acc-photo" src="${escapeHTML(photoUrl)}" alt="Foto de ${championName}" loading="lazy">`
+              : `<div class="champ-acc-photo-placeholder">${championInitial}</div>`
+            }
+            <div class="champ-acc-trophy">🏆</div>
+          </div>
+          <h3 class="champ-acc-name">${championName}</h3>
+          
+          <div class="champ-acc-details">
+            <div class="champ-acc-deck-row">
+              Deck Campeão: <span class="champ-acc-deck-value">${escapeHTML(champ.DeckCampeao || 'Não especificado')}</span>
+            </div>
+            <div class="champ-acc-vice-row">
+              🥈 Vice: <strong>${escapeHTML(champ.Vice || '-')}</strong>
+            </div>
+            ${hasDeckDetails ? `<button class="champ-acc-btn" type="button" onclick="event.stopPropagation(); openChampionDeckModal(${index})">Ver Lista de Deck</button>` : ''}
+          </div>
         </div>
-        <div class="champion-season">${escapeHTML(champ.Temporada)}</div>
-        <div class="champion-name">${championName}</div>
-        <div class="champion-deck">
-          <span class="deck-badge champion-deck-badge">
-            Deck: <strong>${escapeHTML(champ.DeckCampeao || 'Não especificado')}</strong>
-          </span>
-        </div>
-        <div class="champion-runners">
-          <span>🥈 Vice: <strong>${escapeHTML(champ.Vice || '-')}</strong></span>
-        </div>
-        ${hasDeckDetails ? `<button class="btn-deck-details" type="button" onclick="openChampionDeckModal(${index})">Ver deck</button>` : ''}
       </div>
     `;
   }).join('');
@@ -2044,12 +2143,12 @@ function updateMetagameDisplay() {
     if (isExpanded) {
       // DRILL-DOWN MODE: Show all minor decks (which are in outrosDecksList)
       chartDecks = [...outrosDecksList];
-      // Plus a slice for the rest of the decks named "Visão Geral"
+      // Plus a slice for the rest of the decks named "Voltar para visão geral"
       if (mainDecksCount > 0) {
-        // Size of "Visão Geral" slice is scaled down to ~10% of the chart sum to leave room for minor decks
+        // Size of "Voltar para visão geral" slice is scaled down to ~10% of the chart sum to leave room for minor decks
         const sizeCount = Math.max(1, Math.round(outrosCount * 0.11));
         chartDecks.push({
-          deck: 'Visão Geral',
+          deck: 'Voltar para visão geral',
           count: sizeCount,
           realCount: mainDecksCount,
           image: null, icone: null, energia: '', limitless: '#'
@@ -2328,7 +2427,7 @@ function updateMetagameDisplay() {
         if (chart.config.type === 'doughnut') {
           const firstLabel = labels[0];
           const isOutros = firstLabel.toLowerCase() === 'outros' || firstLabel.toLowerCase() === 'outros decks';
-          const isVisaoGeral = firstLabel === 'Visão Geral';
+          const isVisaoGeral = firstLabel === 'Voltar para visão geral';
           if (!isOutros && !isVisaoGeral && data.length > 0) {
             chart._selectedIndex = 0;
             chart._selectedLabel = firstLabel;
@@ -2389,7 +2488,7 @@ function updateMetagameDisplay() {
         
         const isLight = document.documentElement.getAttribute('data-theme') === 'light';
         Chart.defaults.color = isLight ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.7)';
-        Chart.defaults.font.family = "'Ubuntu', sans-serif";
+        Chart.defaults.font.family = "'Exo 2', sans-serif";
         const sliceLabelsPlugin = {
           id: 'sliceLabels',
           afterDraw(chart, args, options) {
@@ -2416,7 +2515,7 @@ function updateMetagameDisplay() {
               const midRadius = (innerRadius + outerRadius) / 2;
               
               const isOutros = name.toLowerCase() === 'outros' || name.toLowerCase() === 'outros decks';
-              const isVisaoGeral = name === 'Visão Geral';
+              const isVisaoGeral = name === 'Voltar para visão geral';
 
               // Removed the percentNum >= 4 constraint to allow drawing icons for 1-player/2% decks in expanded drilldown view
               if (!isOutros && !isVisaoGeral && deckData && deckData.icone) {
@@ -2462,8 +2561,10 @@ function updateMetagameDisplay() {
               drawCtx.translate(insideX, insideY);
 
               let textAngle = angle;
-              // Flip text when on the lower half of the circle to keep it upright
-              if (textAngle > Math.PI) {
+              // Normalize angle to [0, 2*PI) to accurately flip text on the left side of the circle
+              let norm = textAngle % (2 * Math.PI);
+              if (norm < 0) norm += 2 * Math.PI;
+              if (norm > Math.PI / 2 && norm < 3 * Math.PI / 2) {
                 textAngle += Math.PI;
               }
               drawCtx.rotate(textAngle);
@@ -2475,20 +2576,21 @@ function updateMetagameDisplay() {
               drawCtx.textBaseline = 'middle';
               
               if (isOutros) {
-                drawCtx.font = "bold 8.5px 'Ubuntu', sans-serif";
+                drawCtx.font = "bold 8.5px 'Exo 2', sans-serif";
                 drawCtx.fillText("Outros Decks", 0, -6);
-                drawCtx.font = "700 10px 'Ubuntu', sans-serif";
+                drawCtx.font = "700 10px 'Exo 2', sans-serif";
                 drawCtx.fillText(percent, 0, 6);
               } else if (isVisaoGeral) {
-                drawCtx.font = "bold 8.5px 'Ubuntu', sans-serif";
-                drawCtx.fillText("Visão Geral", 0, -6);
-                drawCtx.font = "700 10px 'Ubuntu', sans-serif";
-                drawCtx.fillText(percent, 0, 6);
+                drawCtx.font = "bold 8px 'Exo 2', sans-serif";
+                drawCtx.fillText("Voltar para", 0, -11);
+                drawCtx.fillText("visão geral", 0, -1);
+                drawCtx.font = "700 10px 'Exo 2', sans-serif";
+                drawCtx.fillText(percent, 0, 9);
               } else {
                 if (percentNum <= 3) {
-                  drawCtx.font = "700 9px 'Ubuntu', sans-serif";
+                  drawCtx.font = "700 9px 'Exo 2', sans-serif";
                 } else {
-                  drawCtx.font = "700 11px 'Ubuntu', sans-serif";
+                  drawCtx.font = "700 11px 'Exo 2', sans-serif";
                 }
                 drawCtx.fillText(percent, 0, 0);
               }
@@ -2519,7 +2621,7 @@ function updateMetagameDisplay() {
                 
                 const deckName = chart.data.labels[context.dataIndex];
                 
-                if (deckName === 'Visão Geral') {
+                if (deckName === 'Voltar para visão geral') {
                   const centerX = (chartArea.left + chartArea.right) / 2;
                   const centerY = (chartArea.top + chartArea.bottom) / 2;
                   const outerRadius = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top) / 2;
@@ -2592,8 +2694,8 @@ function updateMetagameDisplay() {
               tooltip: { 
                 enabled: true,
                 backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                titleFont: { size: 14, family: "'Ubuntu', sans-serif" },
-                bodyFont: { size: 13, family: "'Ubuntu', sans-serif" },
+                titleFont: { size: 14, family: "'Exo 2', sans-serif" },
+                bodyFont: { size: 13, family: "'Exo 2', sans-serif" },
                 padding: 12,
                 cornerRadius: 8,
                 borderColor: 'rgba(255,255,255,0.1)',
@@ -2660,7 +2762,7 @@ function updateMetagameDisplay() {
                   window.outrosExpandedState[selectedSession] = true;
                   updateMetagameDisplay();
                   return;
-                } else if (label === 'Visão Geral') {
+                } else if (label === 'Voltar para visão geral') {
                   if (window.outrosExpandedState) window.outrosExpandedState[selectedSession] = false;
                   updateMetagameDisplay();
                   return;

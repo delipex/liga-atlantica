@@ -10,7 +10,7 @@ const CONFIG = {
 
 
 
-  dataSource: "sheets",
+  dataSource: "github",
 
   githubSources: {
     Ranking: "https://raw.githubusercontent.com/delipex/liga-atlantica/main/site/ranking.tdf", 

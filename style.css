@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600&display=swap');
 
 
 :root {
@@ -20,8 +20,8 @@
   --accent-magenta: #ec4899;
   --accent-purple: #8b5cf6;
   --accent-orange: #f59e0b;
-  --font-title: 'Ubuntu', sans-serif;
-  --font-body: 'Ubuntu', sans-serif;
+  --font-title: 'Exo 2', sans-serif;
+  --font-body: 'Exo 2', sans-serif;
   --radius: 12px;
   --radius-lg: 16px;
   --radius-xl: 28px;
@@ -100,6 +100,7 @@ html {
 
 body {
   font-family: var(--font-body);
+  font-weight: 300;
   color: var(--text-primary);
   line-height: 1.6;
   overflow-x: hidden;
@@ -191,8 +192,12 @@ button {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-title);
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.02em;
+}
+
+strong, b {
+  font-weight: 500;
 }
 
 
@@ -1062,17 +1067,21 @@ tbody tr.top-8 .row-rank,
 
 .category-badge.category-me {
   background: rgba(236, 72, 153, 0.08);
-  color: rgba(236, 72, 153, 0.85);
+  color: var(--accent-magenta);
+  border: 1px solid rgba(236, 72, 153, 0.2);
 }
 
+.category-badge.category-se,
 .category-badge.category-sr {
-  background: rgba(6, 182, 212, 0.08);
-  color: rgba(6, 182, 212, 0.85);
+  background: rgba(245, 158, 11, 0.08);
+  color: var(--accent-orange);
+  border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
 .category-badge.category-jr {
-  background: rgba(236, 72, 153, 0.08);
-  color: rgba(236, 72, 153, 0.85);
+  background: rgba(6, 182, 212, 0.08);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(6, 182, 212, 0.2);
 }
 
 
@@ -1223,8 +1232,12 @@ tbody tr.top-8 .row-rank,
 .carousel-3d-item img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   pointer-events: none;
+  transition: transform 0.3s ease;
+}
+.carousel-3d-item:hover img {
+  transform: scale(1.03);
 }
 .deck-card-label {
   position: absolute;
@@ -1441,62 +1454,7 @@ tbody tr.top-8 .row-rank,
   overflow: hidden;
 }
 
-.champion-card {
-  flex: 1 1 300px;
-  max-width: 350px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), inset 1px 1px 0 rgba(255, 255, 255, 0.1) !important;
-}
-
-.champion-trophy {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.4));
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-  100% { transform: translateY(0px); }
-}
-
-.champion-season {
-  font-family: var(--font-title);
-  color: var(--accent-yellow);
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.5rem;
-}
-
-.champion-name {
-  font-size: 1.5rem;
-  color: var(--text-primary);
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-
-.champion-deck {
-  margin-bottom: 1rem;
-}
-
-.champion-runners {
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  padding-top: 1rem;
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-}
+/* Old champion styles removed. Defined under Hall of Fame accordion. */
 
 
 .gallery-grid {
@@ -2588,7 +2546,7 @@ tbody tr.top-8 .row-rank,
 .accordion-item {
   position: relative;
   width: 100%;
-  height: 48px;
+  height: 56px;
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
@@ -2666,7 +2624,7 @@ tbody tr.top-8 .row-rank,
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 2px 4px rgba(0, 0, 0, 0.9);
 }
 .accordion-item.expanded {
-  height: 320px;
+  height: 140px;
 }
 
 .accordion-item.no-expand {
@@ -2674,7 +2632,7 @@ tbody tr.top-8 .row-rank,
 }
 
 .accordion-item.no-expand.expanded {
-  height: 60px;
+  height: 56px;
 }
 
 @media (min-width: 769px) {
@@ -2694,7 +2652,7 @@ tbody tr.top-8 .row-rank,
     transition: flex 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s;
   }
   
-  .accordion-item:hover,
+  .accordion-item:not(.no-expand):hover,
   .accordion-item.expanded {
     flex: 10;
     height: 100%;
@@ -2867,79 +2825,256 @@ tbody tr.top-8 .row-rank,
 }
 
 
-.champion-photo-wrap {
+/* HALL OF FAME ACCORDION */
+.champions-accordion {
+  display: flex;
+  flex-direction: row;
+  height: 440px;
+  gap: 16px;
+  width: 100%;
+  overflow: hidden;
+  margin-top: 1.5rem;
+}
+
+.champion-accordion-item {
+  flex: 1;
+  height: 100%;
   position: relative;
-  width: 104px;
-  height: 104px;
-  margin: 0 auto 1rem auto;
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transition: flex 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s, border-color 0.3s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
 }
 
-.champion-photo,
-.champion-photo-placeholder {
-  width: 104px;
-  height: 104px;
+.champion-accordion-item:hover,
+.champion-accordion-item.expanded {
+  flex: 4;
+  background: radial-gradient(circle at center, rgba(255, 203, 5, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border-color: rgba(255, 203, 5, 0.35);
+  box-shadow: 0 12px 35px rgba(255, 203, 5, 0.1);
+}
+
+.champ-acc-season-rotated {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  margin: auto 0;
+}
+
+.champ-acc-collapsed-icon {
+  font-size: 1.6rem;
+  margin-top: 1rem;
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+}
+
+.champ-acc-expanded-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.4s ease 0.1s, transform 0.4s ease 0.1s;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  width: 90%;
+}
+
+.champion-accordion-item.expanded .champ-acc-season-rotated,
+.champion-accordion-item.expanded .champ-acc-collapsed-icon,
+.champion-accordion-item:hover .champ-acc-season-rotated,
+.champion-accordion-item:hover .champ-acc-collapsed-icon {
+  opacity: 0;
+  display: none;
+}
+
+.champion-accordion-item.expanded .champ-acc-expanded-content,
+.champion-accordion-item:hover .champ-acc-expanded-content {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  pointer-events: auto;
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: scale(1);
+}
+
+.champ-acc-season {
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-yellow);
+  margin-bottom: 0.5rem;
+}
+
+.champ-acc-photo-wrap {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  margin-bottom: 1rem;
+}
+
+.champ-acc-photo {
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  border: 2px solid rgba(255, 203, 5, 0.38);
-  box-shadow: 0 0 22px rgba(255, 203, 5, 0.12);
-}
-
-.champion-photo {
-  display: block;
   object-fit: cover;
-  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid rgba(255, 203, 5, 0.4);
+  box-shadow: 0 0 22px rgba(255, 203, 5, 0.18);
 }
 
-.champion-photo-placeholder {
+.champ-acc-photo-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle, rgba(255, 203, 5, 0.18), rgba(22, 26, 42, 0.85));
+  background: radial-gradient(circle, rgba(255, 203, 5, 0.2), rgba(15, 23, 42, 0.85));
   color: var(--accent-yellow);
-  font-family: var(--font-title);
   font-size: 2.1rem;
   font-weight: 800;
+  border: 2px solid rgba(255, 203, 5, 0.4);
 }
 
-.champion-trophy-badge {
+.champ-acc-trophy {
   position: absolute;
   right: -4px;
   bottom: -2px;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #0f172a;
+  border: 1px solid rgba(255, 203, 5, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: rgba(9, 10, 15, 0.95);
-  border: 1px solid rgba(255, 203, 5, 0.35);
-  box-shadow: 0 0 14px rgba(255, 203, 5, 0.18);
+  font-size: 0.95rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
 }
 
-.champion-deck-badge {
-  background: rgba(255, 215, 0, 0.05);
-  border-color: rgba(255, 215, 0, 0.2);
+.champ-acc-name {
+  font-family: var(--font-title);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.75rem;
+  text-align: center;
 }
 
-.btn-deck-details {
+.champ-acc-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.champ-acc-deck-row, .champ-acc-vice-row {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+}
+
+.champ-acc-deck-value {
+  color: var(--accent-yellow);
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(255, 203, 5, 0.2);
+}
+
+.champ-acc-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: 1.1rem;
-  padding: 0.65rem 1rem;
-  border-radius: var(--radius);
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
   border: 1px solid rgba(255, 203, 5, 0.28);
   background: rgba(255, 203, 5, 0.08);
   color: var(--accent-yellow);
   font-family: var(--font-title);
-  font-weight: 700;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.btn-deck-details:hover {
+.champ-acc-btn:hover {
   background: var(--accent-yellow);
-  color: #090a0f;
+  color: #0f172a;
+  box-shadow: 0 0 15px rgba(255, 203, 5, 0.35);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-glow-yellow);
+}
+
+@media (max-width: 768px) {
+  .champions-accordion {
+    flex-direction: column;
+    height: auto;
+    gap: 12px;
+  }
+  
+  .champion-accordion-item {
+    width: 100%;
+    height: 60px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    flex: none !important;
+    transition: height 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  
+  .champion-accordion-item.expanded {
+    height: 380px;
+  }
+  
+  .champion-accordion-item:not(.expanded) .champ-acc-season-rotated {
+    writing-mode: horizontal-tb;
+    transform: none;
+    font-size: 0.95rem;
+    color: #fff;
+    opacity: 1;
+    margin: 0;
+  }
+  
+  .champion-accordion-item:not(.expanded) .champ-acc-collapsed-icon {
+    margin-top: 0;
+    font-size: 1.2rem;
+    opacity: 1;
+  }
+  
+  .champion-accordion-item:not(.expanded)::after {
+    content: attr(data-champ-name);
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+    margin-left: auto;
+    margin-right: 15px;
+  }
 }
 
 .champion-deck-modal-container {
