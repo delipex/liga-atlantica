@@ -392,7 +392,7 @@
       owner: "delipex",
       repo: "liga-atlantica",
       branch: "main",
-      path: "site/ranking.tdf"
+      path: "ranking.tdf"
     };
     let activeContent = "";
     let runtimeToken = null;
@@ -686,12 +686,13 @@
     }
 
     function parsePlayersToTDFString(players) {
-      const headers = ['Pos', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Deck', 'TipoEnergia'];
+      const headers = ['Pos', 'ID', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao'];
       let lines = [headers.join('\t')];
       
       players.forEach(p => {
         const row = [
           p.Pos || '',
+          p.ID || '',
           p.Jogador || '',
           p.Categoria || 'MASTER',
           p.Pontos !== undefined ? p.Pontos : 0,
@@ -699,9 +700,7 @@
           p.Empates !== undefined ? p.Empates : 0,
           p.Derrotas !== undefined ? p.Derrotas : 0,
           p.Podio !== undefined ? p.Podio : 0,
-          formatMediaColocacao(p.MediaColocacao),
-          p.Deck || 'Não registrado',
-          p.TipoEnergia || 'colorless'
+          formatMediaColocacao(p.MediaColocacao)
         ];
         lines.push(row.join('\t'));
       });
@@ -1182,6 +1181,26 @@
       return getFirstDefined(playerObj, ['ID', 'Player ID', 'PlayerID', 'POP ID', 'POPID', 'Play! ID', 'PlayID', 'OPID', 'User ID', 'Userid', 'id', 'userid']);
     }
 
+    function findMatchingPlayer(playersMap, p) {
+      const pId = getPlayerId(p);
+      const pName = getFirstDefined(p, ['Jogador', 'Player', 'Name']);
+      if (!pName) return null;
+      const nameKey = String(pName).trim().toLowerCase();
+      
+      // 1. Tenta correspondência por ID primeiro (se houver ID no objeto)
+      if (pId !== undefined && pId !== '') {
+        for (const [key, player] of playersMap.entries()) {
+          const playerDbId = getPlayerId(player);
+          if (playerDbId !== undefined && playerDbId !== '' && String(playerDbId).trim() === String(pId).trim()) {
+            return player;
+          }
+        }
+      }
+      
+      // 2. Tenta correspondência pelo nome normalizado como fallback
+      return playersMap.get(nameKey) || null;
+    }
+
     async function processTDFText(text) {
       if (!text || !text.trim()) {
         document.getElementById('preview-section').style.display = 'none';
@@ -1404,41 +1423,12 @@
           officialName = resolution;
         }
 
-        // Busca o deck e energia na planilha Google Sheets
-        let deck = 'Não registrado';
-        let energy = 'colorless';
-        
-        if (cachedMetagame && cachedMetagame.length > 0) {
-          const headers = Object.keys(cachedMetagame[0] || {});
-          const dateColumn = findDateColumn(headers, eventDate);
-          
-          if (dateColumn) {
-            const normOfficial = normalizePlayerName(officialName);
-            const metagameRow = cachedMetagame.find(row => {
-              const keys = ['jogador', 'player', 'nome', 'treinador'];
-              for (const k of Object.keys(row)) {
-                if (keys.includes(k.trim().toLowerCase())) {
-                  if (normalizePlayerName(row[k]) === normOfficial) return true;
-                }
-              }
-              return false;
-            });
-            
-            if (metagameRow && metagameRow[dateColumn]) {
-              deck = String(metagameRow[dateColumn]).trim();
-              
-              if (cachedDecks && cachedDecks.length > 0 && deck) {
-                const deckInfo = cachedDecks.find(d => (d.Deck || '').trim().toLowerCase() === deck.toLowerCase());
-                if (deckInfo && deckInfo.TipoEnergia) {
-                  energy = deckInfo.TipoEnergia.trim().toLowerCase();
-                }
-              }
-            }
-          }
-        }
+        // Puxa o ID do jogador (do arquivo original ou do banco do Sheets)
+        const tId = getPlayerId(p) || (cachedJogadores && cachedJogadores.find(dbPlayer => normalizePlayerName(dbPlayer.Jogador || dbPlayer.Name) === normalizePlayerName(officialName))?.ID) || '';
 
         return {
           Pos: playerPos,
+          ID: tId,
           Jogador: officialName,
           Categoria: category,
           Pontos: points,
@@ -1446,9 +1436,7 @@
           Empates: e,
           Derrotas: d,
           Podio: resolvedPodium,
-          MediaColocacao: resolvedMedia,
-          Deck: deck,
-          TipoEnergia: energy
+          MediaColocacao: resolvedMedia
         };
       });
 
@@ -1571,74 +1559,65 @@
         const { v, e, d } = getVED(p);
         playersMap.set(nameKey, {
           Jogador: playerName,
+          ID: getPlayerId(p) || '',
           Categoria: getFirstDefined(p, ['Categoria', 'Category', 'Cat']) || 'MASTER',
           Pontos: Number(getFirstDefined(p, ['Pontos', 'Points', 'Pts'])) || 0,
           Vitorias: v,
           Empates: e,
           Derrotas: d,
-          Podio: Number(getFirstDefined(p, ['Podio', 'Pódio', 'Podios', 'Pódios', 'Podium'])) || 0,
-          MediaColocacao: Number(getFirstDefined(p, ['MediaColocacao', 'MédiaColocação', 'Media Colocacao', 'Média Colocação', 'Media', 'Média'])) || 0,
-          Deck: getFirstDefined(p, ['Deck', 'deck', 'Baralho', 'baralho', 'Archetype', 'archetype']) || 'Não registrado',
-          TipoEnergia: getFirstDefined(p, ['TipoEnergia', 'tipoenergia', 'Tipo Energia', 'tipo energia', 'Energia', 'energia', 'Energy', 'energy', 'Type', 'type', 'Tipo', 'tipo']) || 'colorless',
-          Participacoes: Number(p.Participacoes) || 1,
+          Podio: 0,
+          MediaColocacao: 0,
+          Participacoes: 0,
           HistoricoColocacoes: p.HistoricoColocacoes || ''
         });
       });
       
       stageList.forEach(sp => {
-        const playerName = getFirstDefined(sp, ['Jogador', 'Player', 'Name']);
-        if (!playerName) return;
-        const nameKey = String(playerName).trim().toLowerCase();
-        
-        if (playersMap.has(nameKey)) {
-          const p = playersMap.get(nameKey);
-          
+        const matchingPlayer = findMatchingPlayer(playersMap, sp);
+        if (matchingPlayer) {
           const stagePts = Number(getFirstDefined(sp, ['Pontos', 'Points', 'Pts'])) || 0;
           const { v: stageV, e: stageE, d: stageD } = getVED(sp);
-          const stagePos = toNumber(getFirstDefined(sp, ['Pos', 'Position', 'Placement', 'Rank']), 999);
           
-          p.Pontos -= (stagePts * oldMultiplier);
-          p.Vitorias -= stageV;
-          p.Empates -= stageE;
-          p.Derrotas -= stageD;
-          p.Participacoes -= 1;
-          if (stagePos <= 4) p.Podio -= 1;
+          matchingPlayer.Pontos -= (stagePts * oldMultiplier);
+          matchingPlayer.Vitorias -= stageV;
+          matchingPlayer.Empates -= stageE;
+          matchingPlayer.Derrotas -= stageD;
 
-          let historyArr = p.HistoricoColocacoes ? String(p.HistoricoColocacoes).split(';') : [];
+          let historyArr = matchingPlayer.HistoricoColocacoes ? String(matchingPlayer.HistoricoColocacoes).split(';') : [];
           if (historyArr.length > stageIndex) {
             historyArr[stageIndex] = '-';
           }
-          p.HistoricoColocacoes = historyArr.join(';');
+          matchingPlayer.HistoricoColocacoes = historyArr.join(';');
+        }
+      });
+      
+      // Recalcula estatísticas (Participações, Pódios, Média) baseadas na string de histórico
+      playersMap.forEach(p => {
+        let historyArr = p.HistoricoColocacoes ? String(p.HistoricoColocacoes).split(';') : [];
+        let activePlacements = historyArr
+          .map(x => String(x).trim())
+          .filter(x => x !== '-' && x !== '' && !isNaN(Number(x)))
+          .map(Number);
+          
+        p.Participacoes = activePlacements.length;
+        p.Podio = activePlacements.filter(pos => pos <= 4).length;
+        
+        if (p.Participacoes > 0) {
+          p.MediaColocacao = activePlacements.reduce((sum, val) => sum + val, 0) / p.Participacoes;
+        } else {
+          p.MediaColocacao = 0;
         }
       });
       
       const activePlayers = Array.from(playersMap.values()).filter(p => p.Participacoes > 0);
       
-      stageList.forEach(sp => {
-        const playerName = getFirstDefined(sp, ['Jogador', 'Player', 'Name']);
-        if (!playerName) return;
-        const nameKey = String(playerName).trim().toLowerCase();
-        
-        const matchingPlayer = activePlayers.find(ap => ap.Jogador.trim().toLowerCase() === nameKey);
-        if (matchingPlayer) {
-          const stagePos = toNumber(getFirstDefined(sp, ['Pos', 'Position', 'Placement', 'Rank']), 999);
-          const newPart = matchingPlayer.Participacoes + 1;
-          const oldPart = matchingPlayer.Participacoes;
-          if (oldPart > 0) {
-            const currentMedia = matchingPlayer.MediaColocacao;
-            matchingPlayer.MediaColocacao = ((currentMedia * newPart) - stagePos) / oldPart;
-          } else {
-            matchingPlayer.MediaColocacao = 0;
-          }
-        }
-      });
-      
-      const headers = ['Pos', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Deck', 'TipoEnergia', 'Participacoes', 'HistoricoColocacoes'];
+      const headers = ['Pos', 'ID', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Participacoes', 'HistoricoColocacoes'];
       let tdfString = headers.join('\t') + '\n';
       
       activePlayers.forEach((p, index) => {
         const row = [
           index + 1,
+          p.ID || '',
           p.Jogador,
           p.Categoria,
           p.Pontos,
@@ -1647,8 +1626,6 @@
           p.Derrotas,
           p.Podio,
           Number(p.MediaColocacao).toFixed(2),
-          p.Deck,
-          p.TipoEnergia,
           p.Participacoes,
           p.HistoricoColocacoes || ''
         ];
@@ -1675,16 +1652,15 @@
         
         playersMap.set(nameKey, {
           Jogador: playerName,
+          ID: getPlayerId(p) || '',
           Categoria: getFirstDefined(p, ['Categoria', 'Category', 'Cat']) || 'MASTER',
           Pontos: Number(getFirstDefined(p, ['Pontos', 'Points', 'Pts'])) || 0,
           Vitorias: v,
           Empates: e,
           Derrotas: d,
-          Podio: Number(getFirstDefined(p, ['Podio', 'Pódio', 'Podios', 'Pódios', 'Podium'])) || 0,
-          MediaColocacao: Number(getFirstDefined(p, ['MediaColocacao', 'MédiaColocação', 'Media Colocacao', 'Média Colocação', 'Media', 'Média'])) || 0,
-          Deck: p.Deck || 'Não registrado',
-          TipoEnergia: p.TipoEnergia || 'colorless',
-          Participacoes: Number(p.Participacoes) || 1,
+          Podio: 0,
+          MediaColocacao: 0,
+          Participacoes: 0,
           HistoricoColocacoes: p.HistoricoColocacoes || ''
         });
       });
@@ -1702,48 +1678,34 @@
       newList.forEach(p => {
         const playerName = getFirstDefined(p, ['Jogador', 'Player', 'Name']);
         if (!playerName) return;
-        const nameKey = String(playerName).trim().toLowerCase();
-        playersInNewStage.add(nameKey);
+        
+        const existing = findMatchingPlayer(playersMap, p);
         
         const newPos = toNumber(getFirstDefined(p, ['Pos', 'Position', 'Placement', 'Rank']), 999);
-        const isNewPodio = newPos <= 4;
-        
         const { v: newV, e: newE, d: newD } = getVED(p);
         const newPts = Number(getFirstDefined(p, ['Pontos', 'Points', 'Pts'])) || 0;
         const multipliedNewPts = newPts * multiplier;
         const newCat = getFirstDefined(p, ['Categoria', 'Category', 'Cat']);
+        const newId = getPlayerId(p) || '';
         
-        if (playersMap.has(nameKey)) {
-          const existing = playersMap.get(nameKey);
-          const oldPart = existing.Participacoes;
-          const newPart = oldPart + 1;
+        if (existing) {
+          const existingNameKey = String(existing.Jogador).trim().toLowerCase();
+          playersInNewStage.add(existingNameKey);
           
           existing.Pontos += multipliedNewPts;
-          if (isNewPodio) existing.Podio += 1;
-
-          const oldMedia = existing.MediaColocacao || newPos;
-          existing.MediaColocacao = ((oldMedia * oldPart) + newPos) / newPart;
-          existing.Participacoes = newPart;
-
           existing.Vitorias += newV;
           existing.Empates += newE;
           existing.Derrotas += newD;
-          
-          const resolvedDeck = getFirstDefined(p, ['Deck', 'deck', 'Baralho', 'baralho', 'Archetype', 'archetype']);
-          const resolvedEnergy = getFirstDefined(p, ['TipoEnergia', 'tipoenergia', 'Tipo Energia', 'tipo energia', 'Energia', 'energia', 'Energy', 'energy', 'Type', 'type', 'Tipo', 'tipo']);
-          if (resolvedDeck && resolvedDeck !== 'Não registrado') existing.Deck = resolvedDeck;
-          if (resolvedEnergy && resolvedEnergy !== 'colorless') existing.TipoEnergia = resolvedEnergy;
           if (newCat) existing.Categoria = newCat;
+          if (newId) existing.ID = newId;
 
           let historyArr = existing.HistoricoColocacoes ? String(existing.HistoricoColocacoes).split(';') : [];
           if (existingStageIdx >= 0) {
-
             while (historyArr.length <= existingStageIdx) {
               historyArr.push('-');
             }
             historyArr[existingStageIdx] = newPos;
           } else {
-
             while (historyArr.length < currentStageCount) {
               historyArr.push('-');
             }
@@ -1751,6 +1713,8 @@
           }
           existing.HistoricoColocacoes = historyArr.join(';');
         } else {
+          const newNameKey = String(playerName).trim().toLowerCase();
+          playersInNewStage.add(newNameKey);
 
           let historyArr = [];
           if (existingStageIdx >= 0) {
@@ -1764,18 +1728,17 @@
             historyArr.push(newPos);
           }
           
-          playersMap.set(nameKey, {
+          playersMap.set(newNameKey, {
+            ID: newId,
             Jogador: playerName,
             Categoria: newCat || 'MASTER',
             Pontos: multipliedNewPts,
             Vitorias: newV,
             Empates: newE,
             Derrotas: newD,
-            Podio: isNewPodio ? 1 : 0,
-            MediaColocacao: newPos,
-            Deck: p.Deck || 'Não registrado',
-            TipoEnergia: p.TipoEnergia || 'colorless',
-            Participacoes: 1,
+            Podio: 0,
+            MediaColocacao: 0,
+            Participacoes: 0,
             HistoricoColocacoes: historyArr.join(';')
           });
         }
@@ -1799,6 +1762,24 @@
         }
       });
       
+      // Recalcula estatísticas (Participações, Pódios, Média) baseadas na string de histórico
+      playersMap.forEach(p => {
+        let historyArr = p.HistoricoColocacoes ? String(p.HistoricoColocacoes).split(';') : [];
+        let activePlacements = historyArr
+          .map(x => String(x).trim())
+          .filter(x => x !== '-' && x !== '' && !isNaN(Number(x)))
+          .map(Number);
+          
+        p.Participacoes = activePlacements.length;
+        p.Podio = activePlacements.filter(pos => pos <= 4).length;
+        
+        if (p.Participacoes > 0) {
+          p.MediaColocacao = activePlacements.reduce((sum, val) => sum + val, 0) / p.Participacoes;
+        } else {
+          p.MediaColocacao = 0;
+        }
+      });
+      
       const mergedList = Array.from(playersMap.values());
 
       mergedList.sort((a, b) => {
@@ -1808,12 +1789,13 @@
         return String(a.Jogador).localeCompare(String(b.Jogador), 'pt-BR');
       });
       
-      const headers = ['Pos', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Deck', 'TipoEnergia', 'Participacoes', 'HistoricoColocacoes'];
+      const headers = ['Pos', 'ID', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Participacoes', 'HistoricoColocacoes'];
       let tdfString = headers.join('\t') + '\n';
       
       mergedList.forEach((p, index) => {
         const row = [
           index + 1,
+          p.ID || '',
           p.Jogador,
           p.Categoria,
           p.Pontos,
@@ -1822,8 +1804,6 @@
           p.Derrotas,
           p.Podio,
           Number(p.MediaColocacao).toFixed(2),
-          p.Deck,
-          p.TipoEnergia,
           p.Participacoes,
           p.HistoricoColocacoes || ''
         ];
@@ -1901,7 +1881,7 @@
         // Busca o etapas.json no GitHub (com cache buster)
         let stagesList = [];
         let etapasSha = null;
-        const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/site/etapas.json`;
+        const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas.json`;
         try {
           const res = await fetch(etapasUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
             headers: { 'Authorization': `token ${runtimeToken}` }
@@ -1926,7 +1906,7 @@
         // Se for acumulativo, desfaz a etapa anterior se ela já existia na mesma data (rollback)
         let baseTdfText = oldTdfText;
         if (shouldAccumulate && oldTdfText && existingStageIdx >= 0) {
-          const oldStageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/site/etapas/${eventDate}.tdf`;
+          const oldStageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas/${eventDate}.tdf`;
           try {
             const res = await fetch(oldStageTdfUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
               headers: { 'Authorization': `token ${runtimeToken}` }
@@ -1956,7 +1936,7 @@
         }
 
         const stageTdfContent = mergeRankings("", activeContent, 1.0, -1);
-        const stageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/site/etapas/${eventDate}.tdf`;
+        const stageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas/${eventDate}.tdf`;
 
         // 1. Commit da etapa individual (Busca o SHA mais recente em tempo real)
         let stageSha = await getLatestSha(stageTdfUrl);
@@ -2158,7 +2138,7 @@
       wrapper.style.display = 'none';
       tbody.innerHTML = '';
       
-      const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/site/etapas.json`;
+      const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas.json`;
       
       try {
         const res = await fetch(etapasUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
@@ -2221,35 +2201,29 @@
         const { v, e, d } = getVED(p);
         playersMap.set(nameKey, {
           Jogador: playerName,
+          ID: getPlayerId(p) || '',
           Categoria: getFirstDefined(p, ['Categoria', 'Category', 'Cat']) || 'MASTER',
           Pontos: Number(getFirstDefined(p, ['Pontos', 'Points', 'Pts'])) || 0,
           Vitorias: v,
           Empates: e,
           Derrotas: d,
-          Podio: Number(getFirstDefined(p, ['Podio', 'Pódio', 'Podios', 'Pódios', 'Podium'])) || 0,
-          MediaColocacao: Number(getFirstDefined(p, ['MediaColocacao', 'MédiaColocação', 'Media Colocacao', 'Média Colocação', 'Media', 'Média'])) || 0,
-          Deck: getFirstDefined(p, ['Deck', 'deck', 'Baralho', 'baralho', 'Archetype', 'archetype']) || 'Não registrado',
-          TipoEnergia: getFirstDefined(p, ['TipoEnergia', 'tipoenergia', 'Tipo Energia', 'tipo energia', 'Energia', 'energia', 'Energy', 'energy', 'Type', 'type', 'Tipo', 'tipo']) || 'colorless',
-          Participacoes: Number(p.Participacoes) || 1,
+          Podio: 0,
+          MediaColocacao: 0,
+          Participacoes: 0,
           HistoricoColocacoes: p.HistoricoColocacoes || ''
         });
       });
       
       stageList.forEach(sp => {
-        const playerName = getFirstDefined(sp, ['Jogador', 'Player', 'Name']);
-        if (!playerName) return;
-        const nameKey = String(playerName).trim().toLowerCase();
-        
-        if (playersMap.has(nameKey)) {
-          const p = playersMap.get(nameKey);
-          
+        const matchingPlayer = findMatchingPlayer(playersMap, sp);
+        if (matchingPlayer) {
           const stagePts = Number(getFirstDefined(sp, ['Pontos', 'Points', 'Pts'])) || 0;
           const { v: stageV, e: stageE, d: stageD } = getVED(sp);
           
-          p.Pontos -= (stagePts * stageMultiplier);
-          p.Vitorias -= stageV;
-          p.Empates -= stageE;
-          p.Derrotas -= stageD;
+          matchingPlayer.Pontos -= (stagePts * stageMultiplier);
+          matchingPlayer.Vitorias -= stageV;
+          matchingPlayer.Empates -= stageE;
+          matchingPlayer.Derrotas -= stageD;
         }
       });
       
@@ -2279,54 +2253,6 @@
       // Filtra jogadores que ainda possuem participações
       const activePlayers = Array.from(playersMap.values()).filter(p => p.Participacoes > 0);
       
-      // Atualiza o deck e energia para a última participação restante se planilhas estiverem carregadas
-      if (newStagesList && newStagesList.length > 0 && cachedMetagame && cachedMetagame.length > 0) {
-        const headers = Object.keys(cachedMetagame[0] || {});
-        
-        activePlayers.forEach(p => {
-          let historyArr = p.HistoricoColocacoes ? String(p.HistoricoColocacoes).split(';') : [];
-          let lastParticipatedIdx = -1;
-          for (let i = historyArr.length - 1; i >= 0; i--) {
-            if (historyArr[i] !== '-' && historyArr[i] !== '') {
-              lastParticipatedIdx = i;
-              break;
-            }
-          }
-          
-          if (lastParticipatedIdx >= 0 && lastParticipatedIdx < newStagesList.length) {
-            const lastStageDate = newStagesList[lastParticipatedIdx].data;
-            const dateColumn = findDateColumn(headers, lastStageDate);
-            
-            if (dateColumn) {
-              const normName = normalizePlayerName(p.Jogador);
-              const metagameRow = cachedMetagame.find(row => {
-                const keys = ['jogador', 'player', 'nome', 'treinador'];
-                for (const k of Object.keys(row)) {
-                  if (keys.includes(k.trim().toLowerCase())) {
-                    if (normalizePlayerName(row[k]) === normName) return true;
-                  }
-                }
-                return false;
-              });
-              
-              if (metagameRow && metagameRow[dateColumn]) {
-                const deck = String(metagameRow[dateColumn]).trim();
-                p.Deck = deck || 'Não registrado';
-                
-                let energy = 'colorless';
-                if (cachedDecks && cachedDecks.length > 0 && deck) {
-                  const deckInfo = cachedDecks.find(d => (d.Deck || '').trim().toLowerCase() === deck.toLowerCase());
-                  if (deckInfo && deckInfo.TipoEnergia) {
-                    energy = deckInfo.TipoEnergia.trim().toLowerCase();
-                  }
-                }
-                p.TipoEnergia = energy;
-              }
-            }
-          }
-        });
-      }
-      
       // Ordena o ranking
       activePlayers.sort((a, b) => {
         if (b.Pontos !== a.Pontos) return b.Pontos - a.Pontos;
@@ -2335,12 +2261,13 @@
         return String(a.Jogador).localeCompare(String(b.Jogador), 'pt-BR');
       });
       
-      const headers = ['Pos', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Deck', 'TipoEnergia', 'Participacoes', 'HistoricoColocacoes'];
+      const headers = ['Pos', 'ID', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Participacoes', 'HistoricoColocacoes'];
       let tdfString = headers.join('\t') + '\n';
       
       activePlayers.forEach((p, index) => {
         const row = [
           index + 1,
+          p.ID || '',
           p.Jogador,
           p.Categoria,
           p.Pontos,
@@ -2349,8 +2276,6 @@
           p.Derrotas,
           p.Podio,
           Number(p.MediaColocacao).toFixed(2),
-          p.Deck,
-          p.TipoEnergia,
           p.Participacoes,
           p.HistoricoColocacoes || ''
         ];
@@ -2381,9 +2306,9 @@
       showSuccess(`⏳ Excluindo etapa de ${formatDateISOToPT(eventDate)} e recalculando o ranking...`);
       window.scrollTo(0, 0);
       
-      const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/site/etapas.json`;
+      const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas.json`;
       const rankingUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
-      const stageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/site/etapas/${eventDate}.tdf`;
+      const stageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas/${eventDate}.tdf`;
       
       try {
         // 1. Busca etapas.json mais recente

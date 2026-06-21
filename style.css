@@ -528,6 +528,7 @@ strong, b {
   box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.08), var(--shadow-lg);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   cursor: pointer;
+  flex: 1;
 }
 
 .podium-card:hover {
@@ -1939,6 +1940,7 @@ tbody tr.top-8 .row-rank,
     border-radius: var(--radius);
     flex-wrap: wrap;
     gap: 0.5rem;
+    flex: initial;
   }
   
   .podium-points {

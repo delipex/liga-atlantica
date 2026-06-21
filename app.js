@@ -443,7 +443,9 @@ function getLatestDeckFromRow(row) {
 
 function normalizeRanking(rankingRows, partidasRows = []) {
   const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
-  const isFrozen = window.CONFIG?.dataSource === 'sheets' || statusPodio === 'congelado' || statusPodio === 'offline';
+  const isFrozen = window.CONFIG?.dataSource === 'sheets' || 
+                   ((statusPodio === 'congelado' || statusPodio === 'offline') && (!rankingRows || rankingRows.length === 0)) ||
+                   (!rankingRows || rankingRows.length === 0);
   
   if (isFrozen && appData.Jogadores && appData.Jogadores.length > 0) {
     rankingRows = appData.Jogadores;
@@ -491,7 +493,9 @@ function normalizeRanking(rankingRows, partidasRows = []) {
     })
     .sort((a, b) => {
       const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
-      const isFrozen = window.CONFIG?.dataSource === 'sheets' || statusPodio === 'congelado' || statusPodio === 'offline';
+      const isFrozen = window.CONFIG?.dataSource === 'sheets' || 
+                       ((statusPodio === 'congelado' || statusPodio === 'offline') && (!rankingRows || rankingRows.length === 0)) ||
+                       (!rankingRows || rankingRows.length === 0);
       
       if (isFrozen) {
         return String(a.Jogador).localeCompare(String(b.Jogador), 'pt-BR');
@@ -822,17 +826,20 @@ async function loadData() {
       isOfflineMode = false;
 
       if (statusBadge) {
-        const isFrozen = window.CONFIG?.dataSource === 'sheets' || (appData.Configuracoes && (appData.Configuracoes.StatusPodio === 'offline' || appData.Configuracoes.StatusPodio === 'congelado'));
+        const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
+        const isFrozen = window.CONFIG?.dataSource === 'sheets' || 
+                         ((statusPodio === 'congelado' || statusPodio === 'offline') && (!appData.Ranking || appData.Ranking.length === 0)) ||
+                         (!appData.Ranking || appData.Ranking.length === 0);
         if (isFrozen) {
-          statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#94a3b8;border-radius:50%"></span> Offline`;
+          statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#94a3b8;border-radius:50%"></span> Off Season`;
           statusBadge.style.color = "#94a3b8";
           statusBadge.style.borderColor = "rgba(148, 163, 184, 0.3)";
-          statusBadge.title = "Temporada atual está encerrada/congelada.";
+          statusBadge.title = "Temporada atual está inativa ou aguardando torneios (modo Roster).";
         } else {
           statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#10b981;border-radius:50%"></span> Online`;
           statusBadge.style.color = "#10b981";
           statusBadge.style.borderColor = "rgba(16, 185, 129, 0.3)";
-          statusBadge.title = "Conectado e recebendo atualizações.";
+          statusBadge.title = "Temporada ativa e recebendo atualizações dos TDFs.";
         }
       }
     } catch (error) {
@@ -887,8 +894,28 @@ function renderAvisoTopo() {
       align-items: center;
       justify-content: center;
       gap: 8px;
+      flex-wrap: wrap;
     `;
-    banner.innerHTML = `<span>📢</span> <span>${escapeHTML(avisoText)}</span>`;
+
+    const urlRegex = /(https?:\/\/[^\s]+)/gi;
+    const match = avisoText.match(urlRegex);
+
+    if (match) {
+      const url = match[0];
+      let cleanText = avisoText.replace(url, '').trim();
+      if (!cleanText) cleanText = "Novidade disponível! Acesse o link ao lado:";
+      
+      banner.innerHTML = `
+        <span>📢</span>
+        <span>${escapeHTML(cleanText)}</span>
+        <a href="${escapeHTML(url)}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; justify-content: center; background: rgba(255, 203, 5, 0.2); border: 1px solid rgba(255, 203, 5, 0.4); color: #fff; text-decoration: none; padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-left: 4px; transition: all 0.2s; gap: 4px;" onmouseover="this.style.background='rgba(255, 203, 5, 0.35)'" onmouseout="this.style.background='rgba(255, 203, 5, 0.2)'">
+          Acessar Link <svg style="width:12px; height:12px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+        </a>
+      `;
+    } else {
+      banner.innerHTML = `<span>📢</span> <span>${escapeHTML(avisoText)}</span>`;
+    }
+
     document.body.insertBefore(banner, document.body.firstChild);
   }
 }
@@ -1117,7 +1144,9 @@ function renderRankingTable(players, page = 1) {
   const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
   const selector = document.getElementById('ranking-date-selector');
   const isGeneral = !selector || selector.value === 'general';
-  const isFrozen = (window.CONFIG?.dataSource === 'sheets' || statusPodio === 'congelado' || statusPodio === 'offline') && isGeneral;
+  const isFrozen = (window.CONFIG?.dataSource === 'sheets' || 
+                    ((statusPodio === 'congelado' || statusPodio === 'offline') && (!appData.Ranking || appData.Ranking.length === 0)) ||
+                    (!appData.Ranking || appData.Ranking.length === 0)) && isGeneral;
 
   const thPontos = document.getElementById('th-pontos');
   const thVed = document.getElementById('th-ved');
@@ -2384,8 +2413,8 @@ function updateMetagameDisplay() {
                    </div>
                 </div>
               </div>
-              <div id="chart-drilldown-note-${canvasId}" style="position:absolute; bottom: -0.8rem; left: 50%; transform: translateX(-50%); font-size: 0.72rem; color: rgba(255, 255, 255, 0.45); font-style: italic; white-space: nowrap; pointer-events: none; z-index: 10; display: ${isExpanded ? 'block' : 'none'};">
-                Visão da fatia 'Outros' expandida.
+              <div id="chart-drilldown-note-${canvasId}" style="position:absolute; bottom: -0.8rem; left: 50%; transform: translateX(-50%); font-size: 0.72rem; color: rgba(255, 255, 255, 0.45); font-style: italic; white-space: nowrap; pointer-events: none; z-index: 10; display: block;">
+                ${isExpanded ? "Visão da fatia 'Outros' expandida." : "Clique em outros decks para expandir a lista."}
               </div>
             </div>
             ` : accordionHtml}
@@ -2465,7 +2494,8 @@ function updateMetagameDisplay() {
         // Update drilldown note dynamically
         const drilldownNoteEl = document.getElementById(`chart-drilldown-note-${canvasId}`);
         if (drilldownNoteEl) {
-          drilldownNoteEl.style.display = isExpanded ? 'block' : 'none';
+          drilldownNoteEl.style.display = 'block';
+          drilldownNoteEl.innerText = isExpanded ? "Visão da fatia 'Outros' expandida." : "Clique em outros decks para expandir a lista.";
         }
         
         if (decksWithImages.length > 0) {
