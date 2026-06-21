@@ -2024,30 +2024,43 @@ function updateMetagameDisplay() {
   // Doughnut Grouping logic
   if (chartType === 'doughnut') {
     let outrosCount = 0;
+    let outrosDecksList = [];
+    let mainDecksCount = 0;
     const isExpanded = window.outrosExpandedState[selectedSession];
     
+    // Categorize decks into main and outros decks
+    sortedDecks.forEach(d => {
+      const isOutrosVal = d.deck.toLowerCase() === 'outros' || d.deck.toLowerCase() === 'outros decks';
+      if (d.count === 1 || isOutrosVal) {
+        outrosCount += d.count;
+        outrosDecksList.push(d);
+      } else {
+        mainDecksCount += d.count;
+      }
+    });
+
     if (isExpanded) {
-      // DRILL-DOWN MODE: Show ONLY decks with count === 1 or named 'Outros'
-      sortedDecks.forEach(d => {
-        const isOutros = d.deck.toLowerCase() === 'outros' || d.deck.toLowerCase() === 'outros decks';
-        if (d.count === 1 || isOutros) {
-          chartDecks.push(d);
-        }
-      });
+      // DRILL-DOWN MODE: Show all minor decks (which are in outrosDecksList)
+      chartDecks = [...outrosDecksList];
+      // Plus a slice for the rest of the decks named "Visão Geral"
+      if (mainDecksCount > 0) {
+        chartDecks.push({
+          deck: 'Visão Geral',
+          count: mainDecksCount,
+          image: null, icone: null, energia: '', limitless: '#'
+        });
+      }
     } else {
-      // MAIN MODE: Group count === 1 and 'Outros' into "Outros"
+      // MAIN MODE: Show main decks, group minor into "Outros Decks"
       sortedDecks.forEach(d => {
-        const isOutros = d.deck.toLowerCase() === 'outros' || d.deck.toLowerCase() === 'outros decks';
-        if (d.count === 1 || isOutros) {
-          outrosCount += d.count;
-        } else {
+        const isOutrosVal = d.deck.toLowerCase() === 'outros' || d.deck.toLowerCase() === 'outros decks';
+        if (d.count > 1 && !isOutrosVal) {
           chartDecks.push(d);
         }
       });
-      
       if (outrosCount > 0) {
         chartDecks.push({
-          deck: 'Outros',
+          deck: 'Outros Decks',
           count: outrosCount,
           image: null, icone: null, energia: '', limitless: '#'
         });
@@ -2096,14 +2109,16 @@ function updateMetagameDisplay() {
 
     if (tooltip.body) {
       const dataIndex = tooltip.dataPoints[0].dataIndex;
-      const deckInfo = sortedDecks[dataIndex];
+      const deckInfo = (chart._chartDecks || chartDecks)[dataIndex];
       
       let innerHtml = '';
-      if (deckInfo.image) {
-        innerHtml += `<img src="${safeExternalUrl(deckInfo.image)}" style="width: 100px; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 5px;">`;
+      if (deckInfo) {
+        if (deckInfo.image) {
+          innerHtml += `<img src="${safeExternalUrl(deckInfo.image)}" style="width: 100px; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 5px;">`;
+        }
+        innerHtml += `<div style="font-weight: bold; text-align: center;">${escapeHTML(deckInfo.deck)}</div>`;
+        innerHtml += `<div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">${deckInfo.count} jogador(es)</div>`;
       }
-      innerHtml += `<div style="font-weight: bold; text-align: center;">${escapeHTML(deckInfo.deck)}</div>`;
-      innerHtml += `<div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">${deckInfo.count} jogador(es)</div>`;
       
       tooltipEl.innerHTML = innerHtml;
     }
@@ -2264,6 +2279,9 @@ function updateMetagameDisplay() {
                    </div>
                 </div>
               </div>
+              <div id="chart-drilldown-note-${canvasId}" style="position:absolute; bottom: -0.8rem; left: 50%; transform: translateX(-50%); font-size: 0.72rem; color: rgba(255, 255, 255, 0.45); font-style: italic; white-space: nowrap; pointer-events: none; z-index: 10; display: ${isExpanded ? 'block' : 'none'};">
+                Visão da fatia 'Outros' expandida.
+              </div>
             </div>
             ` : accordionHtml}
             ${toggleHtml}
@@ -2304,7 +2322,8 @@ function updateMetagameDisplay() {
         if (chart.config.type === 'doughnut') {
           const firstLabel = labels[0];
           const isOutros = firstLabel.toLowerCase() === 'outros' || firstLabel.toLowerCase() === 'outros decks';
-          if (!isOutros && data.length > 0) {
+          const isVisaoGeral = firstLabel === 'Visão Geral';
+          if (!isOutros && !isVisaoGeral && data.length > 0) {
             chart._selectedIndex = 0;
             chart._selectedLabel = firstLabel;
             chart._preventHoverLoop = true;
@@ -2338,6 +2357,12 @@ function updateMetagameDisplay() {
           };
         }
         
+        // Update drilldown note dynamically
+        const drilldownNoteEl = document.getElementById(`chart-drilldown-note-${canvasId}`);
+        if (drilldownNoteEl) {
+          drilldownNoteEl.style.display = isExpanded ? 'block' : 'none';
+        }
+        
         if (decksWithImages.length > 0) {
           setTimeout(() => window.initCarousel(canvasId), 50);
         }
@@ -2358,7 +2383,7 @@ function updateMetagameDisplay() {
         
         const isLight = document.documentElement.getAttribute('data-theme') === 'light';
         Chart.defaults.color = isLight ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.7)';
-        Chart.defaults.font.family = '"Inter", sans-serif';
+        Chart.defaults.font.family = "'Ubuntu', sans-serif";
         const sliceLabelsPlugin = {
           id: 'sliceLabels',
           afterDraw(chart, args, options) {
@@ -2384,9 +2409,10 @@ function updateMetagameDisplay() {
               const midRadius = (innerRadius + outerRadius) / 2;
               
               const isOutros = name.toLowerCase() === 'outros' || name.toLowerCase() === 'outros decks';
+              const isVisaoGeral = name === 'Visão Geral';
 
               // Removed the percentNum >= 4 constraint to allow drawing icons for 1-player/2% decks in expanded drilldown view
-              if (!isOutros && deckData && deckData.icone) {
+              if (!isOutros && !isVisaoGeral && deckData && deckData.icone) {
                 // Adjust stagger radius and reduce icon size from 42px to 30px to prevent clipping
                 const offset = index % 3 === 0 ? 20 : index % 3 === 1 ? 36 : 52;
                 const R = outerRadius + offset;
@@ -2443,15 +2469,20 @@ function updateMetagameDisplay() {
               drawCtx.textBaseline = 'middle';
               
               if (isOutros) {
-                drawCtx.font = "bold 8.5px 'Inter', sans-serif";
-                drawCtx.fillText("Outros", 0, -6);
-                drawCtx.font = '800 10px "Inter", sans-serif';
+                drawCtx.font = "bold 8.5px 'Ubuntu', sans-serif";
+                drawCtx.fillText("Outros Decks", 0, -6);
+                drawCtx.font = "800 10px 'Ubuntu', sans-serif";
+                drawCtx.fillText(percent, 0, 6);
+              } else if (isVisaoGeral) {
+                drawCtx.font = "bold 8.5px 'Ubuntu', sans-serif";
+                drawCtx.fillText("Visão Geral", 0, -6);
+                drawCtx.font = "800 10px 'Ubuntu', sans-serif";
                 drawCtx.fillText(percent, 0, 6);
               } else {
                 if (percentNum <= 3) {
-                  drawCtx.font = '800 9px "Inter", sans-serif';
+                  drawCtx.font = "800 9px 'Ubuntu', sans-serif";
                 } else {
-                  drawCtx.font = '800 11px "Inter", sans-serif';
+                  drawCtx.font = "800 11px 'Ubuntu', sans-serif";
                 }
                 drawCtx.fillText(percent, 0, 0);
               }
@@ -2481,6 +2512,18 @@ function updateMetagameDisplay() {
                 if (!chartArea) return '#475569';
                 
                 const deckName = chart.data.labels[context.dataIndex];
+                
+                if (deckName === 'Visão Geral') {
+                  const centerX = (chartArea.left + chartArea.right) / 2;
+                  const centerY = (chartArea.top + chartArea.bottom) / 2;
+                  const outerRadius = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top) / 2;
+                  const innerRadius = outerRadius * 0.50; 
+                  const gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
+                  gradient.addColorStop(0, 'rgba(255, 255, 255, 0.22)');
+                  gradient.addColorStop(1, 'rgba(255, 255, 255, 0.08)');
+                  return gradient;
+                }
+                
                 const energyStr = getDeckEnergy(deckName);
                 if (!energyStr) return 'rgba(255, 255, 255, 0.2)';
                 
@@ -2543,8 +2586,8 @@ function updateMetagameDisplay() {
               tooltip: { 
                 enabled: true,
                 backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                titleFont: { size: 14, family: "'Inter', sans-serif" },
-                bodyFont: { size: 13, family: "'Inter', sans-serif" },
+                titleFont: { size: 14, family: "'Ubuntu', sans-serif" },
+                bodyFont: { size: 13, family: "'Ubuntu', sans-serif" },
                 padding: 12,
                 cornerRadius: 8,
                 borderColor: 'rgba(255,255,255,0.1)',
@@ -2611,8 +2654,8 @@ function updateMetagameDisplay() {
                   window.outrosExpandedState[selectedSession] = true;
                   updateMetagameDisplay();
                   return;
-                } else if (window.outrosExpandedState && window.outrosExpandedState[selectedSession]) {
-                  window.outrosExpandedState[selectedSession] = false;
+                } else if (label === 'Visão Geral') {
+                  if (window.outrosExpandedState) window.outrosExpandedState[selectedSession] = false;
                   updateMetagameDisplay();
                   return;
                 }
@@ -2633,12 +2676,6 @@ function updateMetagameDisplay() {
                   window.focusCarouselDeck(chart.canvas.id, label, chart);
                 }
               } else {
-                if (window.outrosExpandedState && window.outrosExpandedState[selectedSession]) {
-                  window.outrosExpandedState[selectedSession] = false;
-                  updateMetagameDisplay();
-                  return;
-                }
-                
                 // Clear selection
                 chart._selectedIndex = null;
                 chart._selectedLabel = null;
