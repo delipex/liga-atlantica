@@ -2460,7 +2460,10 @@ function updateMetagameDisplay() {
               drawCtx.translate(insideX, insideY);
 
               let textAngle = angle;
-              // Consistent outward radial alignment to prevent adjacent labels from flipping directions
+              // Flip text when on the lower half of the circle to keep it upright
+              if (textAngle > Math.PI) {
+                textAngle += Math.PI;
+              }
               drawCtx.rotate(textAngle);
               
               drawCtx.shadowColor = 'rgba(0, 0, 0, 0.95)';
