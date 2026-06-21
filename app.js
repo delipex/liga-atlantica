@@ -261,7 +261,7 @@ function isInstagramUrl(url) {
 function renderTimelineThumb(url, eventTitle) {
   const safeUrl = safeExternalUrl(normalizeImageUrl(url));
   if (safeUrl) {
-    return `<div class="timeline-thumb"><img src="${escapeHTML(safeUrl)}" alt="${escapeHTML(eventTitle || 'Evento')}" loading="lazy"></div>`;
+    return `<div class="timeline-thumb" onclick="window.openGenericLightbox('${safeUrl.replace(/'/g, "\\'")}', '${(eventTitle || '').replace(/'/g, "\\'")}')" style="cursor:pointer;"><img src="${escapeHTML(safeUrl)}" alt="${escapeHTML(eventTitle || 'Evento')}" loading="lazy"></div>`;
   }
   return '';
 }
@@ -1410,11 +1410,26 @@ window.openLightbox = function(index) {
   if (!photo) return;
 
   currentPhotoIndex = index;
-  img.src = photo.URL_Imagem;
+  img.src = safeExternalUrl(normalizeImageUrl(photo.URL_Imagem));
   caption.innerText = `${photo.Titulo} - ${photo.Descricao || ''}`;
   
   lightbox.classList.add('active');
   document.body.style.overflow = 'hidden'; 
+};
+
+window.openGenericLightbox = function(imgSrc, title) {
+  const lightbox = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-image');
+  const caption = document.getElementById('lightbox-caption');
+  if (!lightbox || !img) return;
+
+  img.src = safeExternalUrl(normalizeImageUrl(imgSrc));
+  if (caption) {
+    caption.innerText = title || '';
+  }
+  
+  lightbox.classList.add('active');
+  document.body.style.overflow = 'hidden';
 };
 
 function closeLightbox() {
@@ -1852,7 +1867,7 @@ function getMetagameSessions() {
   const rows = appData.Metagame || [];
   if (rows.length === 0) return [];
   
-  const ignoreKeys = ['jogador', 'player', 'nome', '', 'posicaofinal', 'pontos', 'deck', 'categoria'];
+  const ignoreKeys = ['id', 'popid', 'playid', 'play! pokemon id', 'jogador', 'player', 'nome', '', 'posicaofinal', 'pontos', 'deck', 'categoria'];
   const allKeys = new Set();
   
   rows.forEach(row => {
@@ -2211,9 +2226,15 @@ function updateMetagameDisplay() {
       </div>
     `;
 
-    const backButtonHtml = (chartType === 'doughnut' && window.outrosExpandedState && window.outrosExpandedState[selectedSession])
-      ? `<div onclick="window.outrosExpandedState['${selectedSession}'] = false; updateMetagameDisplay();" style="cursor:pointer; color:var(--accent-yellow); font-weight:bold; margin-bottom: 0.5rem; text-align:center; font-size: 1rem; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); transition: background 0.2s;">&#8592; Voltar para o gráfico inteiro</div>`
-      : '';
+    const isExpanded = !!(window.outrosExpandedState && window.outrosExpandedState[selectedSession]);
+    const backButtonHtml = `
+      <div id="chart-back-btn-${canvasId}" style="display: ${isExpanded ? 'block' : 'none'}; cursor:pointer; color:var(--accent-yellow); font-weight:bold; margin-bottom: 0.5rem; text-align:center; font-size: 1rem; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); transition: background 0.2s;" onclick="
+        if (window.outrosExpandedState) window.outrosExpandedState['${selectedSession}'] = false;
+        updateMetagameDisplay();
+      ">
+        &#8592; Voltar para o gráfico inteiro
+      </div>
+    `;
 
     const htmlContent = `
       <div style="display:flex; flex-direction:column; align-items:center; width: 100%;">
@@ -2247,12 +2268,35 @@ function updateMetagameDisplay() {
       </div>
     `;
     
-    if (window[chartVarName]) {
-      window[chartVarName].destroy();
-      window[chartVarName] = null;
-    }
+    const existingCanvas = document.getElementById(canvasId);
+    const isCurrentlyBar = existingCanvas ? (window[chartVarName] && window[chartVarName].config.type === 'bar') : false;
+    const isCurrentlyDoughnut = existingCanvas ? (window[chartVarName] && window[chartVarName].config.type === 'doughnut') : false;
     
-    targetContainer.innerHTML = htmlContent;
+    const needsHtmlReset = !existingCanvas || 
+                           (chartType === 'bar' && !isCurrentlyBar) || 
+                           (chartType === 'doughnut' && !isCurrentlyDoughnut);
+
+    if (needsHtmlReset) {
+      if (window[chartVarName]) {
+        window[chartVarName].destroy();
+        window[chartVarName] = null;
+      }
+      targetContainer.innerHTML = htmlContent;
+    } else {
+      if (window[chartVarName]) {
+        window[chartVarName].destroy();
+        window[chartVarName] = null;
+      }
+      // Update back button visibility dynamically if HTML is not reset
+      const backBtnEl = document.getElementById(`chart-back-btn-${canvasId}`);
+      if (backBtnEl) {
+        backBtnEl.style.display = isExpanded ? 'block' : 'none';
+        backBtnEl.onclick = () => {
+          if (window.outrosExpandedState) window.outrosExpandedState[selectedSession] = false;
+          updateMetagameDisplay();
+        };
+      }
+    }
     
     const ctx = document.getElementById(canvasId);
     if (ctx && chartType === 'doughnut') {
@@ -2294,7 +2338,8 @@ function updateMetagameDisplay() {
               
               const isOutros = name.toLowerCase() === 'outros' || name.toLowerCase() === 'outros decks';
 
-              if (!isOutros && deckData && deckData.icone && percentNum >= 4) {
+              // Removed the percentNum >= 4 constraint to allow drawing icons for 1-player/2% decks in expanded drilldown view
+              if (!isOutros && deckData && deckData.icone) {
                 // Adjust stagger radius and reduce icon size from 42px to 30px to prevent clipping
                 const offset = index % 3 === 0 ? 20 : index % 3 === 1 ? 36 : 52;
                 const R = outerRadius + offset;
