@@ -2132,7 +2132,15 @@ function updateMetagameDisplay() {
 
     if (decksWithImages.length > 0) {
       const cardsHtml = decksWithImages.map((d, i) => `
-        <a href="${d.limitless}" target="_blank" rel="noopener noreferrer" class="carousel-3d-item" data-index="${i}" data-deck="${escapeHTML(d.deck)}" title="Ver ${escapeHTML(d.deck)} no Limitless">
+        <a href="${d.limitless}" target="_blank" rel="noopener noreferrer" class="carousel-3d-item" data-index="${i}" data-deck="${escapeHTML(d.deck)}" title="Ver ${escapeHTML(d.deck)} no Limitless" onclick="
+          const isAct = this.classList.contains('active');
+          if (!isAct) {
+            event.preventDefault();
+            if (window.syncCarouselToDeck) {
+              window.syncCarouselToDeck('${canvasId}', '${d.deck.replace(/'/g, "\\'")}');
+            }
+          }
+        ">
           <img src="${safeExternalUrl(d.image)}" alt="${escapeHTML(d.deck)}" loading="lazy">
           ${isHome ? '' : `<div class="deck-card-label" style="${window.getDeckGradientStyle(d.deck)} text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">${escapeHTML(d.deck)}</div>`}
         </a>
@@ -2287,8 +2295,9 @@ function updateMetagameDisplay() {
               const isOutros = name.toLowerCase() === 'outros' || name.toLowerCase() === 'outros decks';
 
               if (!isOutros && deckData && deckData.icone && percentNum >= 4) {
-
-                const R = outerRadius + (index % 3 === 0 ? 22 : index % 3 === 1 ? 46 : 70);
+                // Adjust stagger radius and reduce icon size from 42px to 30px to prevent clipping
+                const offset = index % 3 === 0 ? 20 : index % 3 === 1 ? 36 : 52;
+                const R = outerRadius + offset;
                 const drawX = x0 + Math.cos(angle) * R;
                 const drawY = y0 + Math.sin(angle) * R;
                 
@@ -2299,8 +2308,9 @@ function updateMetagameDisplay() {
                 drawCtx.lineWidth = 1;
                 const startX = x0 + Math.cos(angle) * outerRadius;
                 const startY = y0 + Math.sin(angle) * outerRadius;
-                const endX = x0 + Math.cos(angle) * (R - 22);
-                const endY = y0 + Math.sin(angle) * (R - 22);
+                // Connector line stops just outside the icon (icon radius is 15px)
+                const endX = x0 + Math.cos(angle) * (R - 16);
+                const endY = y0 + Math.sin(angle) * (R - 16);
                 drawCtx.moveTo(startX, startY);
                 drawCtx.lineTo(endX, endY);
                 drawCtx.stroke();
@@ -2313,7 +2323,7 @@ function updateMetagameDisplay() {
                   window.chartIconCache[name] = img;
                 } else if (window.chartIconCache[name].complete && window.chartIconCache[name].naturalWidth > 0) {
                   const img = window.chartIconCache[name];
-                  const iconSize = 42; 
+                  const iconSize = 30; 
                   drawCtx.save();
                   drawCtx.drawImage(img, drawX - (iconSize/2), drawY - (iconSize/2), iconSize, iconSize);
                   drawCtx.restore();
@@ -2341,13 +2351,11 @@ function updateMetagameDisplay() {
               drawCtx.textBaseline = 'middle';
               
               if (isOutros) {
-
                 drawCtx.font = "bold 8.5px 'Inter', sans-serif";
                 drawCtx.fillText("Outros", 0, -6);
                 drawCtx.font = '800 10px "Inter", sans-serif';
                 drawCtx.fillText(percent, 0, 6);
               } else {
-
                 if (percentNum <= 3) {
                   drawCtx.font = '800 9px "Inter", sans-serif';
                 } else {
@@ -2461,8 +2469,10 @@ function updateMetagameDisplay() {
           } : { 
             responsive: true, 
             maintainAspectRatio: true, 
-            layout: { padding: { top: 110, bottom: 110, left: 110, right: 110 } },
+            layout: { padding: 65 }, // Reduced from 110 to restore larger chart size
             onHover: (event, activeElements, chart) => {
+              if (chart._preventHoverLoop) return;
+              
               if (activeElements && activeElements.length > 0) {
                 const dataIndex = activeElements[0].index;
                 const label = chart.data.labels[dataIndex];
@@ -2478,8 +2488,20 @@ function updateMetagameDisplay() {
               } else {
                 if (chart._lastHoveredLabel !== null) {
                   chart._lastHoveredLabel = null;
-                  if (window.focusCarouselDeck) {
-                    window.focusCarouselDeck(chart.canvas.id, null, chart);
+                  
+                  // Revert to selected label if exists, else default text
+                  if (chart._selectedLabel) {
+                    if (window.focusCarouselDeck) {
+                      window.focusCarouselDeck(chart.canvas.id, chart._selectedLabel, chart);
+                    }
+                    chart._preventHoverLoop = true;
+                    chart.setActiveElements([{ datasetIndex: 0, index: chart._selectedIndex }]);
+                    chart.update();
+                    chart._preventHoverLoop = false;
+                  } else {
+                    if (window.focusCarouselDeck) {
+                      window.focusCarouselDeck(chart.canvas.id, null, chart);
+                    }
                   }
                 }
               }
@@ -2503,13 +2525,39 @@ function updateMetagameDisplay() {
                   return;
                 }
                 
+                // Set selected state
+                chart._selectedIndex = dataIndex;
+                chart._selectedLabel = label;
+                
+                chart._preventHoverLoop = true;
+                chart.setActiveElements([{ datasetIndex: 0, index: dataIndex }]);
+                chart.update();
+                chart._preventHoverLoop = false;
+                
                 if (window.syncCarouselToDeck) {
                   window.syncCarouselToDeck(chart.canvas.id, label);
+                }
+                if (window.focusCarouselDeck) {
+                  window.focusCarouselDeck(chart.canvas.id, label, chart);
                 }
               } else {
                 if (window.outrosExpandedState && window.outrosExpandedState[selectedSession]) {
                   window.outrosExpandedState[selectedSession] = false;
                   updateMetagameDisplay();
+                  return;
+                }
+                
+                // Clear selection
+                chart._selectedIndex = null;
+                chart._selectedLabel = null;
+                
+                chart._preventHoverLoop = true;
+                chart.setActiveElements([]);
+                chart.update();
+                chart._preventHoverLoop = false;
+                
+                if (window.focusCarouselDeck) {
+                  window.focusCarouselDeck(chart.canvas.id, null, chart);
                 }
               }
             },
@@ -2521,6 +2569,24 @@ function updateMetagameDisplay() {
           },
           plugins: [sliceLabelsPlugin]
         });
+        
+        // Auto-select first slice on load to match the carousel starting state
+        if (chartType === 'doughnut' && data.length > 0) {
+          const firstLabel = labels[0];
+          const isOutros = firstLabel.toLowerCase() === 'outros' || firstLabel.toLowerCase() === 'outros decks';
+          if (!isOutros) {
+            window[chartVarName]._selectedIndex = 0;
+            window[chartVarName]._selectedLabel = firstLabel;
+            window[chartVarName]._preventHoverLoop = true;
+            window[chartVarName].setActiveElements([{ datasetIndex: 0, index: 0 }]);
+            window[chartVarName].update();
+            window[chartVarName]._preventHoverLoop = false;
+            
+            if (window.focusCarouselDeck) {
+              window.focusCarouselDeck(canvasId, firstLabel, window[chartVarName]);
+            }
+          }
+        }
       }
     }
 
@@ -2589,6 +2655,32 @@ window.updateCarousel = function(id) {
       item.style.opacity = offset > 2 ? '0' : String(1 - (offset * 0.25));
     }
   });
+
+  // Highlight/select corresponding slice on chart if not currently hovered
+  const activeItem = c.items[c.index];
+  if (activeItem) {
+    const deckName = activeItem.getAttribute('data-deck');
+    if (deckName) {
+      const chartVarName = id === 'metagameChartCanvas_home' ? 'metagameChartHome' : 'metagameChartPage';
+      const chart = window[chartVarName];
+      if (chart && (!chart._lastHoveredLabel)) {
+        const dataIndex = chart.data.labels.findIndex(l => l.toLowerCase() === deckName.toLowerCase());
+        if (dataIndex !== -1 && chart._selectedIndex !== dataIndex) {
+          chart._selectedIndex = dataIndex;
+          chart._selectedLabel = chart.data.labels[dataIndex];
+          
+          chart._preventHoverLoop = true;
+          chart.setActiveElements([{ datasetIndex: 0, index: dataIndex }]);
+          chart.update();
+          chart._preventHoverLoop = false;
+          
+          if (window.focusCarouselDeck) {
+            window.focusCarouselDeck(id, chart._selectedLabel, chart);
+          }
+        }
+      }
+    }
+  }
 };
 
 window.syncCarouselToDeck = function(id, deckName) {
