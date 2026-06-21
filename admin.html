@@ -214,6 +214,21 @@
             </div>
           </div>
           
+          <!-- Structured Event Fields (Season & Number) -->
+          <div id="structured-fields" class="form-row" style="margin-bottom: 1.5rem; display: flex; gap: 1rem;">
+            <div class="form-group" style="flex: 1;">
+              <label for="event-season">Temporada</label>
+              <input type="number" id="event-season" class="search-input" min="1" value="5" style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="event-number">Número da Sessão/Etapa</label>
+              <input type="number" id="event-number" class="search-input" min="1" value="1" style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
+            </div>
+          </div>
+
+          <!-- Suggested Column Code Display -->
+          <div id="column-code-suggestion" style="margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--accent-yellow); font-weight: bold; background: rgba(255, 203, 5, 0.08); border: 1px solid rgba(255, 203, 5, 0.2); padding: 8px 12px; border-radius: 6px; display: none;"></div>
+
           <div class="form-group" id="multiplier-group" style="margin-bottom: 1.5rem; display: none;">
             <label for="event-multiplier">Multiplicador de Pontos</label>
             <input type="number" id="event-multiplier" class="search-input" step="0.1" min="0.1" value="1.0" style="width: 100%; box-sizing: border-box;">
@@ -733,6 +748,7 @@
     }
 
     function handleDateChange() {
+      handleEventTypeChange();
       const text = document.getElementById('raw-input').value;
       if (text) {
         processTDFText(text);
@@ -827,14 +843,51 @@
       const eventType = document.getElementById('event-type').value;
       const multGroup = document.getElementById('multiplier-group');
       const multInput = document.getElementById('event-multiplier');
+      const structuredFields = document.getElementById('structured-fields');
+      const suggestionDiv = document.getElementById('column-code-suggestion');
       
       if (eventType === 'Personalizado') {
-        multGroup.style.display = 'flex';
+        multGroup.style.display = 'block';
+        if (structuredFields) structuredFields.style.display = 'none';
+        if (suggestionDiv) suggestionDiv.style.display = 'none';
       } else {
         multGroup.style.display = 'none';
-        if (eventType === 'Liga') multInput.value = '1.0';
-        else if (eventType === 'Challenge') multInput.value = '1.5';
-        else if (eventType === 'Cup') multInput.value = '1.5';
+        if (structuredFields) structuredFields.style.display = 'flex';
+        if (suggestionDiv) {
+          suggestionDiv.style.display = 'block';
+          
+          // Auto-set multipliers programmatically
+          if (eventType === 'Liga') {
+            multInput.value = '1.0';
+          } else if (eventType === 'Challenge' || eventType === 'Cup') {
+            multInput.value = '1.5';
+          }
+          
+          // Generate suggestion code
+          const dateVal = document.getElementById('event-date').value;
+          const seasonVal = document.getElementById('event-season').value || '5';
+          const numVal = document.getElementById('event-number').value || '1';
+          
+          if (dateVal) {
+            const parts = dateVal.split('-');
+            if (parts.length === 3) {
+              const yy = parts[0].substring(2);
+              const mm = parts[1];
+              const dd = parts[2];
+              const yymmdd = yy + mm + dd;
+              
+              let prefix = 'S';
+              if (eventType === 'Challenge') prefix = 'CH';
+              else if (eventType === 'Cup') prefix = 'CUP';
+              
+              suggestionDiv.innerHTML = `💡 Código da Coluna para criar no Google Sheets: <strong>${prefix}${numVal}T${seasonVal} ${yymmdd}</strong>`;
+            } else {
+              suggestionDiv.innerHTML = '💡 Código da Coluna no Sheets: (data inválida)';
+            }
+          } else {
+            suggestionDiv.innerHTML = '💡 Código da Coluna no Sheets: (selecione uma data)';
+          }
+        }
       }
     }
 
@@ -2439,6 +2492,9 @@
         deleteButtons.forEach(btn => btn.disabled = false);
       }
     }
+
+    // Inicializa os campos e sugestões do evento no carregamento da página
+    handleEventTypeChange();
   </script>
 </body>
 </html>

@@ -2044,9 +2044,12 @@ function updateMetagameDisplay() {
       chartDecks = [...outrosDecksList];
       // Plus a slice for the rest of the decks named "Visão Geral"
       if (mainDecksCount > 0) {
+        // Size of "Visão Geral" slice is scaled down to ~10% of the chart sum to leave room for minor decks
+        const sizeCount = Math.max(1, Math.round(outrosCount * 0.11));
         chartDecks.push({
           deck: 'Visão Geral',
-          count: mainDecksCount,
+          count: sizeCount,
+          realCount: mainDecksCount,
           image: null, icone: null, energia: '', limitless: '#'
         });
       }
@@ -2113,11 +2116,12 @@ function updateMetagameDisplay() {
       
       let innerHtml = '';
       if (deckInfo) {
+        const realCount = deckInfo.realCount !== undefined ? deckInfo.realCount : deckInfo.count;
         if (deckInfo.image) {
           innerHtml += `<img src="${safeExternalUrl(deckInfo.image)}" style="width: 100px; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 5px;">`;
         }
         innerHtml += `<div style="font-weight: bold; text-align: center;">${escapeHTML(deckInfo.deck)}</div>`;
-        innerHtml += `<div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">${deckInfo.count} jogador(es)</div>`;
+        innerHtml += `<div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">${realCount} jogador(es)</div>`;
       }
       
       tooltipEl.innerHTML = innerHtml;
@@ -2389,11 +2393,12 @@ function updateMetagameDisplay() {
           afterDraw(chart, args, options) {
             const drawCtx = chart.ctx;
             const meta = chart.getDatasetMeta(0);
-            const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
             
             meta.data.forEach((element, index) => {
               const val = chart.data.datasets[0].data[index];
-              const percentNum = Math.round((val / total) * 100);
+              const deckObj = (chart._chartDecks || chartDecks)[index];
+              const realCount = deckObj ? (deckObj.realCount !== undefined ? deckObj.realCount : deckObj.count) : val;
+              const percentNum = Math.round((realCount / totalDecksCount) * 100);
               
               if (val < 1) return;
               
@@ -2455,11 +2460,7 @@ function updateMetagameDisplay() {
               drawCtx.translate(insideX, insideY);
 
               let textAngle = angle;
-              let normalizedAngle = textAngle % (2 * Math.PI);
-              if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
-              if (normalizedAngle > Math.PI / 2 && normalizedAngle < 1.5 * Math.PI) {
-                textAngle += Math.PI;
-              }
+              // Consistent outward radial alignment to prevent adjacent labels from flipping directions
               drawCtx.rotate(textAngle);
               
               drawCtx.shadowColor = 'rgba(0, 0, 0, 0.95)';
@@ -2471,18 +2472,18 @@ function updateMetagameDisplay() {
               if (isOutros) {
                 drawCtx.font = "bold 8.5px 'Ubuntu', sans-serif";
                 drawCtx.fillText("Outros Decks", 0, -6);
-                drawCtx.font = "800 10px 'Ubuntu', sans-serif";
+                drawCtx.font = "700 10px 'Ubuntu', sans-serif";
                 drawCtx.fillText(percent, 0, 6);
               } else if (isVisaoGeral) {
                 drawCtx.font = "bold 8.5px 'Ubuntu', sans-serif";
                 drawCtx.fillText("Visão Geral", 0, -6);
-                drawCtx.font = "800 10px 'Ubuntu', sans-serif";
+                drawCtx.font = "700 10px 'Ubuntu', sans-serif";
                 drawCtx.fillText(percent, 0, 6);
               } else {
                 if (percentNum <= 3) {
-                  drawCtx.font = "800 9px 'Ubuntu', sans-serif";
+                  drawCtx.font = "700 9px 'Ubuntu', sans-serif";
                 } else {
-                  drawCtx.font = "800 11px 'Ubuntu', sans-serif";
+                  drawCtx.font = "700 11px 'Ubuntu', sans-serif";
                 }
                 drawCtx.fillText(percent, 0, 0);
               }
@@ -2844,7 +2845,7 @@ window.focusCarouselDeck = function(id, deckName, chartObj = null) {
     
     centerName.style.cssText = `
       display: inline-block;
-      font-weight: 800; 
+      font-weight: 700; 
       font-size: 0.9rem; 
       line-height: 1.2; 
       color: #ffffff;
