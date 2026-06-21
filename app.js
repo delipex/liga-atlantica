@@ -800,7 +800,7 @@ async function loadData() {
       if (campeoes && campeoes.length) appData.Campeoes = campeoes;
       if (regras && regras.length) appData.Regras = regras;
       if (galeria && galeria.length) appData.Galeria = galeria;
-      if (metagame && metagame.length) appData.Metagame = metagame;
+      appData.Metagame = (metagame && metagame.length) ? metagame : (jogadoresSheet || []);
       if (decks && decks.length) appData.Decks = decks;
 
       isOfflineMode = false;
@@ -2094,11 +2094,11 @@ function updateMetagameDisplay() {
     if (!targetContainer) return;
     
     if (!appData.Metagame || appData.Metagame.length === 0) {
-      targetContainer.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Crie as abas "Metagame" e "Decks" na planilha para ver as estatísticas!</div>';
+      targetContainer.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Crie as abas "Jogadores" e "Decks" na planilha para ver as estatísticas!</div>';
       return;
     }
     if (sessions.length === 0) {
-      targetContainer.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Adicione colunas de sessões na aba Metagame.</div>';
+      targetContainer.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-secondary);">Adicione colunas de sessões (ex: S1T5 210626) na aba Jogadores.</div>';
       return;
     }
     if (Object.keys(deckCounts).length === 0) {

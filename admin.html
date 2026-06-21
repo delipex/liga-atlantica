@@ -520,9 +520,9 @@
             fetchOptionalSheetTab(spreadsheetId, "Decks", publishedSheetGids.Decks)
           ]);
           cachedJogadores = jogadores || [];
-          cachedMetagame = metagame || [];
+          cachedMetagame = (metagame && metagame.length) ? metagame : cachedJogadores;
           cachedDecks = decks || [];
-          console.log("Planilhas carregadas com sucesso. Jogadores:", cachedJogadores.length, "Metagame:", cachedMetagame.length, "Decks:", cachedDecks.length);
+          console.log("Planilhas carregadas com sucesso. Jogadores:", cachedJogadores.length, "Metagame (ou Jogadores fallback):", cachedMetagame.length, "Decks:", cachedDecks.length);
         }
       } catch (err) {
         console.error("Erro ao carregar dados da planilha:", err);
@@ -701,11 +701,24 @@
       renderEnrichedPreview();
     }
 
-    function copyNewPlayersToClipboard() {
+    async function copyNewPlayersToClipboard() {
       const area = document.getElementById('new-players-copy-area');
       if (!area || !area.value) return;
-      area.select();
-      document.execCommand('copy');
+
+      let copied = false;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(area.value);
+          copied = true;
+        }
+      } catch (err) {
+        console.warn("Falha ao usar navigator.clipboard, usando fallback...", err);
+      }
+
+      if (!copied) {
+        area.select();
+        document.execCommand('copy');
+      }
       
       const btn = document.querySelector('#new-players-section button');
       if (btn) {
@@ -1036,7 +1049,8 @@
                   Podio: place <= 4 ? 1 : 0,
                   MediaColocacao: place,
                   Deck: "Não registrado",
-                  TipoEnergia: "colorless"
+                  TipoEnergia: "colorless",
+                  id: id
                 });
               }
             }
@@ -1059,7 +1073,8 @@
                 Podio: idx <= 4 ? 1 : 0,
                 MediaColocacao: idx,
                 Deck: "Não registrado",
-                TipoEnergia: "colorless"
+                TipoEnergia: "colorless",
+                id: id
               });
               idx++;
             });
@@ -1106,6 +1121,11 @@
         });
         return obj;
       });
+    }
+
+    function getPlayerId(playerObj) {
+      if (!playerObj) return undefined;
+      return getFirstDefined(playerObj, ['ID', 'Player ID', 'PlayerID', 'POP ID', 'POPID', 'Play! ID', 'PlayID', 'OPID', 'User ID', 'Userid', 'id', 'userid']);
     }
 
     async function processTDFText(text) {
@@ -1157,15 +1177,33 @@
       if (cachedJogadores && cachedJogadores.length > 0) {
         const dbNamesNormalized = cachedJogadores.map(j => normalizePlayerName(j.Jogador || j.Name));
         
-        // Encontra jogadores do arquivo que não estão no banco
+        // Encontra jogadores do arquivo que não estão no banco (e não puderam ser resolvidos por ID)
         const detectedUnresolved = [];
         players.forEach(p => {
           const rawName = getFirstDefined(p, nameFields) || '';
           if (rawName) {
             const normName = normalizePlayerName(rawName);
-            if (!dbNamesNormalized.includes(normName)) {
-              if (!detectedUnresolved.includes(rawName)) {
-                detectedUnresolved.push(rawName);
+            
+            // Tenta correspondência por ID primeiro
+            const tId = getPlayerId(p);
+            let resolvedById = null;
+            
+            if (tId !== undefined && tId !== '') {
+              resolvedById = cachedJogadores.find(dbPlayer => {
+                const dbId = getPlayerId(dbPlayer);
+                return dbId !== undefined && dbId !== '' && String(dbId).trim() === String(tId).trim();
+              });
+            }
+            
+            if (resolvedById) {
+              // Se encontrou por ID, já mapeia no resolvedNamesMap!
+              resolvedNamesMap[rawName] = resolvedById.Jogador || resolvedById.Name;
+            } else {
+              // Se não encontrou por ID, verifica pelo nome normalizado
+              if (!dbNamesNormalized.includes(normName)) {
+                if (!detectedUnresolved.includes(rawName)) {
+                  detectedUnresolved.push(rawName);
+                }
               }
             }
           }
@@ -1173,9 +1211,28 @@
         
         unresolvedPlayers = detectedUnresolved;
         
-        // Limpa e atualiza resolvedNamesMap preservando resoluções válidas da sessão atual
+        // Limpa e atualiza resolvedNamesMap preservando as resoluções da sessão atual
         const oldMap = { ...resolvedNamesMap };
         resolvedNamesMap = {};
+        
+        // Primeiro, mapeia as resoluções por ID de novo para garantir
+        players.forEach(p => {
+          const rawName = getFirstDefined(p, nameFields) || '';
+          if (rawName) {
+            const tId = getPlayerId(p);
+            if (tId !== undefined && tId !== '') {
+              const resolvedById = cachedJogadores.find(dbPlayer => {
+                const dbId = getPlayerId(dbPlayer);
+                return dbId !== undefined && dbId !== '' && String(dbId).trim() === String(tId).trim();
+              });
+              if (resolvedById) {
+                resolvedNamesMap[rawName] = resolvedById.Jogador || resolvedById.Name;
+              }
+            }
+          }
+        });
+        
+        // Em seguida, recupera as seleções manuais salvas
         unresolvedPlayers.forEach(name => {
           if (oldMap[name]) {
             resolvedNamesMap[name] = oldMap[name];
@@ -1369,17 +1426,31 @@
       const copyArea = document.getElementById('new-players-copy-area');
       
       if (newPlayersToRegister.length > 0) {
-        let baseIndex = (cachedJogadores ? cachedJogadores.length : 0) + 1;
-        
-        const sheetsLines = newPlayersToRegister.map((name, idx) => {
+        const firstDbPlayer = (cachedJogadores && cachedJogadores.length > 0) ? cachedJogadores[0] : null;
+        const dbHeaders = firstDbPlayer ? Object.keys(firstDbPlayer) : ['ID', 'Jogador', 'Categoria', 'PosicaoFinal'];
+
+        const sheetsLines = newPlayersToRegister.map(name => {
           const matchingPlayer = currentRawPlayers.find(p => (getFirstDefined(p, nameFields) || '') === name);
           const category = matchingPlayer ? (getFirstDefined(matchingPlayer, catFields) || 'MASTER') : 'MASTER';
+          const tId = matchingPlayer ? getPlayerId(matchingPlayer) : '';
           
           let catLabel = "Mestre";
           if (category.toUpperCase().includes('SENIOR')) catLabel = "Sênior";
           else if (category.toUpperCase().includes('JUNIOR')) catLabel = "Junior";
           
-          return `${name}\t${catLabel}\t`;
+          return dbHeaders.map(header => {
+            const hNorm = header.toLowerCase().trim();
+            if (hNorm === 'jogador' || hNorm === 'player' || hNorm === 'nome') {
+              return name;
+            }
+            if (hNorm === 'categoria' || hNorm === 'category' || hNorm === 'cat') {
+              return catLabel;
+            }
+            if (hNorm === 'id' || hNorm === 'popid' || hNorm === 'playid' || hNorm === 'userid') {
+              return tId || '';
+            }
+            return '';
+          }).join('\t');
         });
         
         copyArea.value = sheetsLines.join('\n');

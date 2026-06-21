@@ -29,10 +29,10 @@ const CONFIG = {
     Regras: "1560734436",
     Galeria: "1311009323",
     ScoresAntigos: "1809448887",
-    Metagame: "1049757256",
+    Metagame: "",
     Decks: "1459968566",
     Configuracoes: "1275325263",
-    Jogadores: "1049757256"
+    Jogadores: "711743754"
   },
 
   historicalScoresTab: "ScoresAntigos",
