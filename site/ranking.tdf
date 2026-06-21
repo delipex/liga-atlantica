@@ -1,7 +1,18 @@
 Pos	Jogador	Categoria	Pontos	Vitorias	Empates	Derrotas	Podio	MediaColocacao	Deck	TipoEnergia	Participacoes	HistoricoColocacoes
-1	João Vitor Pereira	MASTER	14	4	2	0	2	1.00	Não registrado	colorless	2	1;1
-2	CAIO DA SILVA	MASTER	12	4	0	2	2	2.00	Não registrado	colorless	2	2;2
-3	JOAO GLORIA	MASTER	10	2	4	0	2	3.00	Não registrado	colorless	2	3;3
-4	Lucas Vaz	MASTER	8	2	2	2	2	4.00	Não registrado	colorless	2	4;4
-5	Carlos Junior	MASTER	6	2	0	4	0	5.00	Não registrado	colorless	2	5;5
-6	ISRAEL SILVA	MASTER	0	0	0	6	0	6.00	Não registrado	colorless	2	6;6
+1	João Vitor Pereira	MASTER	14	4	2	0	2	1.00	Não registrado	colorless	2	1;1;-
+2	Carlos Junior	MASTER	13	4	1	5	1	4.33	Não registrado	colorless	3	5;5;3
+3	CAIO DA SILVA	MASTER	12	4	0	2	2	2.00	Não registrado	colorless	2	2;2;-
+4	Wesllen Dias	MASTER	12	4	0	0	1	1.00	Não registrado	colorless	1	-;-;1
+5	JOAO GLORIA	MASTER	10	2	4	0	2	3.00	Não registrado	colorless	2	3;3;-
+6	Lucas Vaz	MASTER	8	2	2	2	2	4.00	Não registrado	colorless	2	4;4;-
+7	Guilherme Oliveira	MASTER	7	2	1	1	1	2.00	Não registrado	colorless	1	-;-;2
+8	Igor Melo	MASTER	7	2	1	0	1	4.00	Não registrado	colorless	1	-;-;4
+9	Carlos Henrique	MASTER	5	1	2	1	0	5.00	Não registrado	colorless	1	-;-;5
+10	João Pedro Oliveira	MASTER	5	1	2	1	0	6.00	Não registrado	colorless	1	-;-;6
+11	ALDAIR REIS	MASTER	4	1	1	2	0	7.00	Não registrado	colorless	1	-;-;7
+12	FILIPE MIRANDA	MASTER	4	1	1	2	0	8.00	Não registrado	colorless	1	-;-;8
+13	Gabriel Seixas	MASTER	3	1	0	1	0	9.00	Não registrado	colorless	1	-;-;9
+14	PHELIPE SANTOS	MASTER	2	0	2	2	0	11.00	Não registrado	colorless	1	-;-;11
+15	Felipe Damasceno	MASTER	1	0	1	1	0	12.00	Não registrado	colorless	1	-;-;12
+16	ISRAEL SILVA	MASTER	0	0	0	6	0	6.00	Não registrado	colorless	2	6;6;-
+17	IVANA TAVARES	MASTER	0	0	0	3	0	10.00	Não registrado	colorless	1	-;-;10
