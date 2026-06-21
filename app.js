@@ -1866,6 +1866,51 @@ function getMetagameSessions() {
   return [...allKeys].sort((a, b) => b.localeCompare(a, 'pt-BR', { numeric: true }));
 }
 
+function formatDateDDMMYY(dateStr) {
+  if (!dateStr || dateStr.length !== 6) return dateStr;
+  const dd = dateStr.substring(0, 2);
+  const mm = dateStr.substring(2, 4);
+  const yy = dateStr.substring(4, 6);
+  return `${dd}/${mm}/20${yy}`;
+}
+
+function formatSessionName(sessionRaw) {
+  if (!sessionRaw) return '';
+  
+  // League Cup: CUP(\d+)T(\d+)\s+(\d{6})
+  const cupMatch = sessionRaw.match(/^CUP(\d+)T(\d+)\s+(\d{6})$/i);
+  if (cupMatch) {
+    const cupNum = cupMatch[1];
+    const tempNum = cupMatch[2];
+    const dateStr = cupMatch[3];
+    const formattedDate = formatDateDDMMYY(dateStr);
+    return `League Cup ${cupNum} - Temporada ${tempNum} (${formattedDate})`;
+  }
+
+  // League Challenge: CH(\d+)T(\d+)\s+(\d{6})
+  const chMatch = sessionRaw.match(/^CH(\d+)T(\d+)\s+(\d{6})$/i);
+  if (chMatch) {
+    const chNum = chMatch[1];
+    const tempNum = chMatch[2];
+    const dateStr = chMatch[3];
+    const formattedDate = formatDateDDMMYY(dateStr);
+    return `League Challenge ${chNum} - Temporada ${tempNum} (${formattedDate})`;
+  }
+
+  // Sessão de Liga: S(\d+)T(\d+)\s+(\d{6})
+  const sMatch = sessionRaw.match(/^S(\d+)T(\d+)\s+(\d{6})$/i);
+  if (sMatch) {
+    const sNum = sMatch[1];
+    const tempNum = sMatch[2];
+    const dateStr = sMatch[3];
+    const formattedDate = formatDateDDMMYY(dateStr);
+    return `Sessão de Liga ${sNum} - Temporada ${tempNum} (${formattedDate})`;
+  }
+
+  // Retorno padrão caso não case com o modelo abreviado
+  return sessionRaw;
+}
+
 function populateMetagameSeasonSelector(configVal) {
   const selector = document.getElementById('metagame-season-selector');
   if (!selector) return;
@@ -1878,7 +1923,7 @@ function populateMetagameSeasonSelector(configVal) {
   
   const currentValue = selector.value;
   let optionsHTML = '<option value="all">Todas as Sessões (Geral)</option>';
-  optionsHTML += sessions.map(s => `<option value="${escapeHTML(s)}">${escapeHTML(s)}</option>`).join('');
+  optionsHTML += sessions.map(s => `<option value="${escapeHTML(s)}">${escapeHTML(formatSessionName(s))}</option>`).join('');
   
   selector.innerHTML = optionsHTML;
   
