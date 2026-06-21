@@ -13,7 +13,7 @@ const CONFIG = {
   dataSource: "github",
 
   githubSources: {
-    Ranking: "https://raw.githubusercontent.com/delipex/liga-atlantica/main/site/ranking.tdf", 
+    Ranking: "https://raw.githubusercontent.com/delipex/liga-atlantica/main/ranking.tdf", 
     Calendario: "", 
     Campeoes: "",
     Regras: "",
