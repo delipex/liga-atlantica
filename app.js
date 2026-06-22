@@ -444,7 +444,7 @@ function getLatestDeckFromRow(row) {
 function normalizeRanking(rankingRows, partidasRows = []) {
   const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
   const isFrozen = window.CONFIG?.dataSource === 'sheets' || 
-                   ((statusPodio === 'congelado' || statusPodio === 'offline') && (!rankingRows || rankingRows.length === 0)) ||
+                   (statusPodio === 'congelado' || statusPodio === 'offline') ||
                    (!rankingRows || rankingRows.length === 0);
   
   if (isFrozen && appData.Jogadores && appData.Jogadores.length > 0) {
@@ -494,7 +494,7 @@ function normalizeRanking(rankingRows, partidasRows = []) {
     .sort((a, b) => {
       const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
       const isFrozen = window.CONFIG?.dataSource === 'sheets' || 
-                       ((statusPodio === 'congelado' || statusPodio === 'offline') && (!rankingRows || rankingRows.length === 0)) ||
+                       (statusPodio === 'congelado' || statusPodio === 'offline') ||
                        (!rankingRows || rankingRows.length === 0);
       
       if (isFrozen) {
@@ -852,7 +852,7 @@ async function loadData() {
       if (statusBadge) {
         const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
         const isFrozen = window.CONFIG?.dataSource === 'sheets' || 
-                         ((statusPodio === 'congelado' || statusPodio === 'offline') && (!appData.Ranking || appData.Ranking.length === 0)) ||
+                         (statusPodio === 'congelado' || statusPodio === 'offline') ||
                          (!appData.Ranking || appData.Ranking.length === 0);
         if (isFrozen) {
           statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#94a3b8;border-radius:50%"></span> Off Season`;
@@ -1027,12 +1027,12 @@ function renderDashboard() {
     let top4 = [];
     const statusPodio = (appData.Configuracoes && appData.Configuracoes.StatusPodio) ? appData.Configuracoes.StatusPodio : 'auto';
     
-    // O modo "congelado" de exibição de temporada anterior (usando a PosicaoFinal) só será ativado caso os arquivos TDF do GitHub estejam realmente vazios ou ausentes (como no período de Off Season).
-    const isPreviousSeasonMode = window.CONFIG?.dataSource === 'sheets' || (!appData.Ranking || appData.Ranking.length === 0);
-    let isFrozenLayout = false;
+    // O modo congelado/ativo depende exclusivamente do status da planilha ou se não houver dados.
+    const isFrozenLayout = window.CONFIG?.dataSource === 'sheets' || 
+                           (statusPodio === 'congelado' || statusPodio === 'offline') ||
+                           (!appData.Ranking || appData.Ranking.length === 0);
     
-    if (isPreviousSeasonMode) {
-      isFrozenLayout = true;
+    if (isFrozenLayout) {
       top4 = [...appData.Ranking]
         .filter(p => p.PosicaoFinal && p.PosicaoFinal > 0)
         .sort((a, b) => a.PosicaoFinal - b.PosicaoFinal)
@@ -1042,36 +1042,7 @@ function renderDashboard() {
         top4 = appData.Ranking.slice(0, 4);
       }
     } else {
-      // Se não estiver em modo temporada anterior (arquivos TDF existem), mas statusPodio for congelado/offline, exibimos os 4 melhores jogadores da etapa anterior
-      if (statusPodio === 'congelado' || statusPodio === 'offline') {
-        isFrozenLayout = true;
-        const latestStageIdx = stagesIndex.length - 1;
-        if (latestStageIdx >= 0) {
-          const playersWithStagePlacements = appData.Ranking.map(p => {
-            const historyArr = p.HistoricoColocacoes ? String(p.HistoricoColocacoes).split(';') : [];
-            const placementStr = historyArr.length > latestStageIdx ? historyArr[latestStageIdx] : '-';
-            const placement = (placementStr && placementStr !== '-') ? Number(placementStr) : null;
-            return { player: p, stagePlacement: placement };
-          })
-          .filter(x => x.stagePlacement !== null && x.stagePlacement > 0)
-          .sort((a, b) => a.stagePlacement - b.stagePlacement);
-          
-          top4 = playersWithStagePlacements.slice(0, 4).map(x => {
-            return {
-              ...x.player,
-              StagePlacement: x.stagePlacement
-            };
-          });
-        }
-        
-        if (top4.length === 0) {
-          top4 = appData.Ranking.slice(0, 4);
-          isFrozenLayout = false;
-        }
-      } else {
-        top4 = appData.Ranking.slice(0, 4);
-        isFrozenLayout = false;
-      }
+      top4 = appData.Ranking.slice(0, 4);
     }
 
     if (top4.length === 0) {
@@ -1082,14 +1053,7 @@ function renderDashboard() {
         const playerName = escapeHTML(player.Jogador);
         const playerDeck = escapeHTML(player.Deck || 'Sem deck registrado');
 
-        let cardRank;
-        if (isPreviousSeasonMode) {
-          cardRank = player.PosicaoFinal || player.Pos;
-        } else if (statusPodio === 'congelado' || statusPodio === 'offline') {
-          cardRank = player.StagePlacement || player.Pos;
-        } else {
-          cardRank = player.Pos;
-        }
+        const cardRank = isFrozenLayout ? (player.PosicaoFinal || player.Pos) : player.Pos;
         
         let pointsHtml = '';
         if (isFrozenLayout) {
@@ -1200,6 +1164,37 @@ function renderDashboard() {
   }
 }
 
+function getDeckForStage(playerName, stageDateStr) {
+  if (!playerName || !stageDateStr || !appData.Jogadores) return null;
+  
+  const parts = stageDateStr.split('-');
+  if (parts.length !== 3) return null;
+  const dd = parts[2];
+  const mm = parts[1];
+  const yy = parts[0].substring(2);
+  const dateDDMMYY = `${dd}${mm}${yy}`;
+  
+  const cleanName = playerName.trim().toLowerCase();
+  const dbPlayer = appData.Jogadores.find(j => {
+    const name = j.Jogador || j.Name || "";
+    return name.trim().toLowerCase() === cleanName;
+  });
+  if (!dbPlayer) return null;
+  
+  const columnKey = Object.keys(dbPlayer).find(k => {
+    const normalizedKey = k.toLowerCase().trim();
+    return normalizedKey.includes(dateDDMMYY) || normalizedKey.includes(stageDateStr);
+  });
+  
+  if (columnKey) {
+    const deckName = dbPlayer[columnKey];
+    if (deckName && typeof deckName === 'string' && deckName.trim() !== '') {
+      return deckName.trim();
+    }
+  }
+  return null;
+}
+
 function renderRankingTable(players, page = 1) {
   currentRankingPage = page;
   filteredRankingList = players;
@@ -1210,7 +1205,7 @@ function renderRankingTable(players, page = 1) {
   const selector = document.getElementById('ranking-date-selector');
   const isGeneral = !selector || selector.value === 'general';
   const isFrozen = (window.CONFIG?.dataSource === 'sheets' || 
-                    ((statusPodio === 'congelado' || statusPodio === 'offline') && (!appData.Ranking || appData.Ranking.length === 0)) ||
+                    (statusPodio === 'congelado' || statusPodio === 'offline') ||
                     (!appData.Ranking || appData.Ranking.length === 0)) && isGeneral;
 
   const thPontos = document.getElementById('th-pontos');
@@ -1277,13 +1272,33 @@ function renderRankingTable(players, page = 1) {
       </td>
     `;
 
+    let deckIconHtml = '';
+    if (!isGeneral && selector) {
+      const deckName = getDeckForStage(player.Jogador, selector.value);
+      if (deckName) {
+        const energy = getDeckEnergy(deckName);
+        const energyDot = getEnergyDotHTML(energy);
+        
+        const decksTab = appData.Decks || [];
+        const deckInfo = decksTab.find(d => (d.Deck || '').trim().toLowerCase() === deckName.toLowerCase());
+        const customIconUrl = deckInfo ? safeExternalUrl(deckInfo.Icone || deckInfo.Imagem) : null;
+        
+        if (customIconUrl) {
+          deckIconHtml = `<img src="${escapeHTML(customIconUrl)}" alt="${escapeHTML(deckName)}" title="Deck: ${escapeHTML(deckName)}" style="width:20px;height:20px;object-fit:contain;border-radius:4px;vertical-align:middle;margin-left:6px;background:rgba(255,255,255,0.05);padding:2px;border:1px solid rgba(255,255,255,0.1);">`;
+        } else {
+          deckIconHtml = `<span style="display:inline-block;vertical-align:middle;margin-left:6px;" title="Deck: ${escapeHTML(deckName)}">${energyDot}</span>`;
+        }
+      }
+    }
+
     return `
       <tr class="${rowClass}" onclick="openPlayerModal('${escapeHTML(player.Jogador)}')" style="cursor:pointer">
         <td class="row-rank">${rankBadge}</td>
         <td>
           <div class="player-cell">
-            <div>
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
               <div style="font-weight:600;color:var(--text-primary);">${playerName} ${medals}</div>
+              ${deckIconHtml}
             </div>
           </div>
         </td>
@@ -1666,6 +1681,7 @@ window.openPlayerModal = function(playerRef) {
     ${getEnergyDotHTML(getDeckEnergy(player.Deck))}
     <span>Deck: <strong>${escapeHTML(player.Deck || 'Não registrado')}</strong></span>
   `;
+  document.getElementById('modal-stat-participations').innerText = toNumber(player.Participacoes);
   document.getElementById('modal-stat-podiums').innerText = toNumber(player.Podio);
   document.getElementById('modal-stat-average-placement').innerText = `${formatAveragePlacement(player.MediaColocacao)}º`;
   document.getElementById('modal-detail-category').innerText = `${player.Categoria || 'MASTER'} (${player.CategoriaCodigo || 'ME'})`;

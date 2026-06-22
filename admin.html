@@ -140,6 +140,57 @@
       border-color: #ef4444;
       box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
     }
+
+    /* Estilos Embelezados do Seletor de Tipo de Evento */
+    .event-type-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    @media (max-width: 600px) {
+      .event-type-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .event-type-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 0.75rem 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.02);
+    }
+    .event-type-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+    .event-type-card.active {
+      background: rgba(255, 203, 5, 0.08);
+      border-color: var(--accent-yellow);
+      box-shadow: 0 0 12px rgba(255, 203, 5, 0.12), inset 1px 1px 0 rgba(255, 203, 5, 0.05);
+    }
+    .event-type-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+    .event-type-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .event-type-sub {
+      font-size: 0.68rem;
+      color: var(--text-secondary);
+    }
   </style>
 </head>
 <body class="bg-dark">
@@ -197,44 +248,85 @@
           <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
             📤 Carregar Arquivo de Classificação (.tdf)
           </h2>
-          
-          <div class="form-row" style="margin-bottom: 1.5rem;">
-            <div class="form-group">
+          <div class="form-row" style="margin-bottom: 1.25rem;">
+            <div class="form-group" style="width: 100%;">
               <label for="event-date">Data do Evento</label>
               <input type="date" id="event-date" class="search-input" style="width: 100%; box-sizing: border-box;" onchange="handleDateChange()" required>
-            </div>
-            <div class="form-group">
-              <label for="event-type">Tipo de Evento</label>
-              <select id="event-type" class="search-input select-input" style="width: 100%; box-sizing: border-box;" onchange="handleEventTypeChange()">
-                <option value="Liga">Sessão de Liga (1.0x)</option>
-                <option value="Challenge">League Challenge (1.5x)</option>
-                <option value="Cup">League Cup (1.5x)</option>
-                <option value="Personalizado">Personalizado</option>
-              </select>
+              <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+                A data em que o torneio foi realizado. O sistema criará o arquivo da etapa usando esta data (`etapas/AAAA-MM-DD.tdf`).
+              </span>
             </div>
           </div>
+
+          <div class="form-group" style="margin-bottom: 1.25rem; width: 100%;">
+            <label style="margin-bottom: 0.5rem; display: block;">Tipo de Evento</label>
+            <div class="event-type-grid">
+              <div class="event-type-card active" data-value="Liga" onclick="selectEventType('Liga')">
+                <div class="event-type-icon">⚔️</div>
+                <div class="event-type-label">Sessão de Liga</div>
+                <div class="event-type-sub">1.0x (Fixo)</div>
+              </div>
+              <div class="event-type-card" data-value="Challenge" onclick="selectEventType('Challenge')">
+                <div class="event-type-icon">🏅</div>
+                <div class="event-type-label">Challenge</div>
+                <div class="event-type-sub">1.5x (Fixo)</div>
+              </div>
+              <div class="event-type-card" data-value="Cup" onclick="selectEventType('Cup')">
+                <div class="event-type-icon">🏆</div>
+                <div class="event-type-label">League Cup</div>
+                <div class="event-type-sub">1.5x (Fixo)</div>
+              </div>
+              <div class="event-type-card" data-value="Personalizado" onclick="selectEventType('Personalizado')">
+                <div class="event-type-icon">⚙️</div>
+                <div class="event-type-label">Personalizado</div>
+                <div class="event-type-sub">Livre</div>
+              </div>
+            </div>
+            <input type="hidden" id="event-type" value="Liga">
+            <span class="small-text-hint" style="display:block; margin-top:0.4rem; font-size:0.75rem; color:var(--text-secondary);">
+              Selecione a categoria do torneio. Para Liga, Cup e Challenge, os multiplicadores oficiais são travados automaticamente.
+            </span>
+          </div>
+
+          <!-- Custom Event Title Input -->
+          <div class="form-group" id="custom-title-group" style="margin-bottom: 1.25rem; display: none;">
+            <label for="event-custom-title">Título/Tipo do Evento Personalizado</label>
+            <input type="text" id="event-custom-title" class="search-input" placeholder="Ex: Championship, Desafio Especial..." style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
+            <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+              Digite o nome customizado do evento. Este nome será salvo no etapas.json e exibido nos detalhes e cabeçalhos de etapa no site.
+            </span>
+          </div>
           
-          <div class="form-group" id="multiplier-group" style="margin-bottom: 1.5rem;">
+          <div class="form-group" id="multiplier-group" style="margin-bottom: 1.25rem;">
             <label for="event-multiplier">Multiplicador de Pontos</label>
             <input type="number" id="event-multiplier" class="search-input" step="0.1" min="0.1" value="1.0" style="width: 100%; box-sizing: border-box;">
+            <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+              Define o peso dos pontos do torneio no ranking consolidado. Multiplicadores oficiais: Liga (1.0x), Challenge (1.5x) e Cup (1.5x) são travados automaticamente.
+            </span>
           </div>
 
           <!-- Structured Event Fields (Season & Number) -->
-          <div id="structured-fields" class="form-row" style="margin-bottom: 1.5rem; display: flex; gap: 1rem;">
+          <div id="structured-fields" class="form-row" style="margin-bottom: 1.25rem; display: flex; gap: 1rem;">
             <div class="form-group" style="flex: 1;">
               <label for="event-season">Temporada</label>
               <input type="number" id="event-season" class="search-input" min="1" value="5" style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
+              <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+                O número da temporada atual. Usado para classificar o histórico e sugerir o nome correto da coluna no Google Sheets.
+              </span>
             </div>
             <div class="form-group" style="flex: 1;">
               <label for="event-number">Número da Sessão/Etapa</label>
               <input type="number" id="event-number" class="search-input" min="1" value="1" style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
+              <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+                A ordem sequencial desta etapa/sessão dentro da temporada vigente.
+              </span>
             </div>
           </div>
 
           <!-- Suggested Column Code Display -->
-          <div id="column-code-suggestion" style="margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--accent-yellow); font-weight: bold; background: rgba(255, 203, 5, 0.08); border: 1px solid rgba(255, 203, 5, 0.2); padding: 8px 12px; border-radius: 6px; display: none;"></div>
+          <div id="column-code-suggestion" style="margin-bottom: 1.25rem; font-size: 0.85rem; color: var(--accent-yellow); font-weight: bold; background: rgba(255, 203, 5, 0.08); border: 1px solid rgba(255, 203, 5, 0.2); padding: 8px 12px; border-radius: 6px; display: none;"></div>
           
-          <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+          <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()" style="margin-bottom: 1.25rem;">
             <div class="dropzone-icon">📄</div>
             <div>
               <p style="font-weight: 500; color: #fff;">Arraste o arquivo .tdf aqui ou clique para buscar</p>
@@ -243,16 +335,24 @@
             <input type="file" id="file-input" style="display: none;" accept=".tdf,.txt,.tsv" onchange="handleFileSelect(event)">
           </div>
 
-          <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; background: rgba(255, 203, 5, 0.05); padding: 0.75rem 1rem; border-radius: var(--radius); border: 1px dashed rgba(255, 203, 5, 0.2);">
-            <input type="checkbox" id="accumulate-checkbox" checked style="width: 18px; height: 18px; cursor: pointer;">
-            <label for="accumulate-checkbox" style="font-size: 0.85rem; font-weight: 500; color: #fff; cursor: pointer; user-select: none;">
-              Acumular pontos com o ranking atual do site (Soma automática de etapas)
-            </label>
+          <div style="margin-bottom: 1.25rem; display: flex; align-items: flex-start; gap: 0.5rem; background: rgba(255, 203, 5, 0.05); padding: 0.75rem 1rem; border-radius: var(--radius); border: 1px dashed rgba(255, 203, 5, 0.2);">
+            <input type="checkbox" id="accumulate-checkbox" checked style="width: 18px; height: 18px; margin-top: 2px; cursor: pointer;">
+            <div style="flex: 1;">
+              <label for="accumulate-checkbox" style="font-size: 0.85rem; font-weight: 600; color: #fff; cursor: pointer; user-select: none; display: block; margin-bottom: 0.2rem;">
+                Acumular pontos com o ranking atual do site (Soma automática de etapas)
+              </label>
+              <span class="small-text-hint" style="font-size:0.75rem; color:var(--text-secondary); display: block;">
+                💡 Se ativado (recomendado), o sistema calcula os pontos acumulados da temporada inteira somando as vitórias/empates/derrotas das etapas anteriores. Se desativado, o ranking consolidado será reiniciado mostrando apenas os pontos desta única etapa.
+              </span>
+            </div>
           </div>
 
           <div class="form-group" style="margin-bottom: 0;">
             <label for="raw-input">Ou cole o texto do arquivo abaixo:</label>
             <textarea id="raw-input" class="raw-textarea" placeholder="Pos&#9;Jogador&#9;Categoria&#9;Pontos&#9;Podio&#9;MediaColocacao&#9;Deck&#9;TipoEnergia..." oninput="handleRawInput()"></textarea>
+            <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+              Cole o texto copiado de um arquivo .tdf ou exportado do Tome. Certifique-se de que os dados estão separados por tabulações.
+            </span>
           </div>
         </section>
 
@@ -838,55 +938,81 @@
       closeSettingsModal();
     }
 
+    window.selectEventType = function(val) {
+      document.getElementById('event-type').value = val;
+      document.querySelectorAll('.event-type-card').forEach(card => {
+        if (card.getAttribute('data-value') === val) {
+          card.classList.add('active');
+        } else {
+          card.classList.remove('active');
+        }
+      });
+      handleEventTypeChange();
+    };
+
     function handleEventTypeChange() {
       const eventType = document.getElementById('event-type').value;
       const multGroup = document.getElementById('multiplier-group');
       const multInput = document.getElementById('event-multiplier');
       const structuredFields = document.getElementById('structured-fields');
       const suggestionDiv = document.getElementById('column-code-suggestion');
+      const customTitleGroup = document.getElementById('custom-title-group');
       
       // Multiplier remains visible at all times
       if (multGroup) multGroup.style.display = 'block';
       
       if (eventType === 'Personalizado') {
-        if (structuredFields) structuredFields.style.display = 'none';
-        if (suggestionDiv) suggestionDiv.style.display = 'none';
+        if (customTitleGroup) customTitleGroup.style.display = 'block';
+        multInput.disabled = false;
+        multInput.style.opacity = '1.0';
+        multInput.style.cursor = 'text';
       } else {
-        if (structuredFields) structuredFields.style.display = 'flex';
-        if (suggestionDiv) {
-          suggestionDiv.style.display = 'block';
-          
-          // Auto-set multipliers programmatically
-          if (eventType === 'Liga') {
-            multInput.value = '1.0';
-          } else if (eventType === 'Challenge' || eventType === 'Cup') {
-            multInput.value = '1.5';
-          }
-          
-          // Generate suggestion code
-          const dateVal = document.getElementById('event-date').value;
-          const seasonVal = document.getElementById('event-season').value || '5';
-          const numVal = document.getElementById('event-number').value || '1';
-          
-          if (dateVal) {
-            const parts = dateVal.split('-');
-            if (parts.length === 3) {
-              const yy = parts[0].substring(2);
-              const mm = parts[1];
-              const dd = parts[2];
-              const yymmdd = yy + mm + dd;
-              
-              let prefix = 'S';
-              if (eventType === 'Challenge') prefix = 'CH';
-              else if (eventType === 'Cup') prefix = 'CUP';
-              
-              suggestionDiv.innerHTML = `💡 Código da Coluna para criar no Google Sheets: <strong>${prefix}${numVal}T${seasonVal} ${yymmdd}</strong>`;
-            } else {
-              suggestionDiv.innerHTML = '💡 Código da Coluna no Sheets: (data inválida)';
+        if (customTitleGroup) customTitleGroup.style.display = 'none';
+        multInput.disabled = true;
+        multInput.style.opacity = '0.6';
+        multInput.style.cursor = 'not-allowed';
+        
+        // Auto-set multipliers programmatically
+        if (eventType === 'Liga') {
+          multInput.value = '1.0';
+        } else if (eventType === 'Challenge' || eventType === 'Cup') {
+          multInput.value = '1.5';
+        }
+      }
+      
+      // Structured fields always visible
+      if (structuredFields) structuredFields.style.display = 'flex';
+      
+      if (suggestionDiv) {
+        suggestionDiv.style.display = 'block';
+        
+        // Generate suggestion code
+        const dateVal = document.getElementById('event-date').value;
+        const seasonVal = document.getElementById('event-season').value || '5';
+        const numVal = document.getElementById('event-number').value || '1';
+        
+        if (dateVal) {
+          const parts = dateVal.split('-');
+          if (parts.length === 3) {
+            const yy = parts[0].substring(2);
+            const mm = parts[1];
+            const dd = parts[2];
+            const yymmdd = yy + mm + dd;
+            
+            let prefix = 'S';
+            if (eventType === 'Challenge') prefix = 'CH';
+            else if (eventType === 'Cup') prefix = 'CUP';
+            else if (eventType === 'Personalizado') {
+              const customTitle = document.getElementById('event-custom-title').value.trim() || 'CUSTOM';
+              prefix = customTitle.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 5);
             }
+            
+            suggestionDiv.innerHTML = `💡 Código da Coluna para criar no Google Sheets: <strong>${prefix}${numVal}T${seasonVal} ${yymmdd}</strong><br><span style="font-size: 0.75rem; font-weight: normal; color: var(--text-secondary);">⚠️ IMPORTANTE: Crie uma coluna idêntica a este código na aba 'Jogadores' da planilha ANTES de publicar para registrar os decks de etapa corretamente.</span>`;
           } else {
-            suggestionDiv.innerHTML = '💡 Código da Coluna no Sheets: (selecione uma data)';
+            suggestionDiv.innerHTML = '💡 Código da Coluna no Sheets: (data inválida)';
           }
+        } else {
+          suggestionDiv.innerHTML = '💡 Código da Coluna no Sheets: (selecione uma data)';
         }
       }
     }
@@ -1844,6 +1970,7 @@
       const eventDate = document.getElementById('event-date').value;
       const eventType = document.getElementById('event-type').value;
       const eventMult = parseFloat(document.getElementById('event-multiplier').value) || 1.0;
+      const savedEventType = eventType === 'Personalizado' ? (document.getElementById('event-custom-title').value.trim() || 'Personalizado') : eventType;
       
       if (!eventDate) {
         showError("Selecione a data do evento!");
@@ -1941,7 +2068,7 @@
         // 1. Commit da etapa individual (Busca o SHA mais recente em tempo real)
         let stageSha = await getLatestSha(stageTdfUrl);
         const commitStagePayload = {
-          message: `Salvar etapa individual ${eventDate} (${eventType})`,
+          message: `Salvar etapa individual ${eventDate} (${savedEventType})`,
           content: encodeBase64UTF8(stageTdfContent),
           branch: config.branch
         };
@@ -1963,9 +2090,9 @@
 
         // Atualiza a lista de etapas
         if (existingStageIdx >= 0) {
-          stagesList[existingStageIdx] = { data: eventDate, tipo: eventType, multiplicador: eventMult };
+          stagesList[existingStageIdx] = { data: eventDate, tipo: savedEventType, multiplicador: eventMult };
         } else {
-          stagesList.push({ data: eventDate, tipo: eventType, multiplicador: eventMult });
+          stagesList.push({ data: eventDate, tipo: savedEventType, multiplicador: eventMult });
         }
         stagesList.sort((a, b) => a.data.localeCompare(b.data));
 
