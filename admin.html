@@ -450,6 +450,14 @@
                 <!-- Preenchido dinamicamente -->
               </tbody>
             </table>
+            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.75rem;">
+              <button id="btn-recalculate-all" onclick="recalculateRankingFromStages()" class="btn" style="width: 100%; justify-content: center; padding: 0.75rem; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-color: rgba(245, 158, 11, 0.25);">
+                🔄 Recalcular Ranking Geral do Site
+              </button>
+              <span style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; display: block; text-align: center;">
+                💡 Se houver alguma inconsistência nas pontuações gerais ou se você acabou de remover etapas "fantasma", este botão reconstrói todo o arquivo do ranking do zero cruzando e somando os dados de todos os arquivos <code>.tdf</code> individuais de etapa ativos.
+              </span>
+            </div>
           </div>
         </section>
       </div>
@@ -2463,13 +2471,26 @@
         const rankingSha = rankingData.sha;
         
         // 3. Busca o .tdf da etapa individual
+        let stageTdfText = "";
+        let stageTdfSha = null;
         const stageTdfRes = await fetch(stageTdfUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
           headers: { 'Authorization': `token ${runtimeToken}` }
         });
-        if (!stageTdfRes.ok) throw new Error("Não foi possível carregar o arquivo .tdf da etapa individual.");
-        const stageTdfData = await stageTdfRes.json();
-        const stageTdfText = decodeBase64UTF8(stageTdfData.content);
-        const stageTdfSha = stageTdfData.sha;
+        if (stageTdfRes.ok) {
+          const stageTdfData = await stageTdfRes.json();
+          stageTdfText = decodeBase64UTF8(stageTdfData.content);
+          stageTdfSha = stageTdfData.sha;
+        } else if (stageTdfRes.status === 404) {
+          const msg = `⚠️ Atenção: O arquivo .tdf desta etapa não foi encontrado no repositório (Etapa Fantasma).\n\nA exclusão removerá o registro desta data e limpará o histórico/participações dos jogadores, mas NÃO conseguirá subtrair automaticamente os pontos e vitórias acumulados no ranking geral.\n\nRecomendamos realizar o recálculo geral do ranking após esta exclusão.\n\nDeseja continuar com a exclusão mesmo assim?`;
+          if (!confirm(msg)) {
+            // Re-habilita os botões e esconde a mensagem de progresso
+            deleteButtons.forEach(btn => btn.disabled = false);
+            hideAlerts();
+            return;
+          }
+        } else {
+          throw new Error("Não foi possível carregar o arquivo .tdf da etapa individual: " + stageTdfRes.statusText);
+        }
         
         // Remove a etapa da lista
         stagesList.splice(stageIndex, 1);
@@ -2477,23 +2498,25 @@
         // 4. Executa a lógica de recálculo (rollback)
         const newRankText = removeStageFromRanking(oldRankText, stageTdfText, stageMultiplier, stageIndex, stagesList);
         
-        // 5. Deleta o arquivo da etapa individual no GitHub
-        const deletePayload = {
-          message: `Remover arquivo da etapa ${eventDate}`,
-          sha: stageTdfSha,
-          branch: config.branch
-        };
-        const delRes = await fetch(stageTdfUrl, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `token ${runtimeToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(deletePayload)
-        });
-        if (!delRes.ok) {
-          const errData = await delRes.json();
-          throw new Error("Falha ao excluir arquivo da etapa no GitHub: " + (errData.message || delRes.statusText));
+        // 5. Deleta o arquivo da etapa individual no GitHub (apenas se ele existir)
+        if (stageTdfSha) {
+          const deletePayload = {
+            message: `Remover arquivo da etapa ${eventDate}`,
+            sha: stageTdfSha,
+            branch: config.branch
+          };
+          const delRes = await fetch(stageTdfUrl, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `token ${runtimeToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(deletePayload)
+          });
+          if (!delRes.ok) {
+            const errData = await delRes.json();
+            throw new Error("Falha ao excluir arquivo da etapa no GitHub: " + (errData.message || delRes.statusText));
+          }
         }
         
         // 6. Atualiza etapas.json no GitHub (SHA dinâmico)
@@ -2543,6 +2566,201 @@
       } catch (err) {
         showError("Erro ao excluir etapa: " + err.message);
         deleteButtons.forEach(btn => btn.disabled = false);
+      }
+    }
+
+    // --- Fluxo de Recálculo Geral do Ranking a partir de todas as Etapas ---
+    async function recalculateRankingFromStages() {
+      if (!runtimeToken) {
+        showError("Token do GitHub não configurado. Faça login novamente.");
+        return;
+      }
+      
+      const config = GITHUB_CONFIG;
+      const stagesTbody = document.getElementById('stages-tbody');
+      const recalculateBtn = document.getElementById('btn-recalculate-all');
+      
+      if (!confirm("Deseja recalcular TODO o ranking consolidado a partir do zero usando todos os arquivos TDF das etapas listadas no etapas.json?\n\nIsso reconstruirá o ranking geral consolidado de forma consistente.")) {
+        return;
+      }
+      
+      // Desabilita botões e o próprio botão de recálculo
+      const deleteButtons = stagesTbody ? stagesTbody.querySelectorAll('button') : [];
+      deleteButtons.forEach(btn => btn.disabled = true);
+      if (recalculateBtn) recalculateBtn.disabled = true;
+      
+      showSuccess("⏳ Iniciando recálculo geral do ranking...");
+      window.scrollTo(0, 0);
+      
+      const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas.json`;
+      const rankingUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
+      
+      try {
+        // 1. Busca etapas.json
+        const etapasRes = await fetch(etapasUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
+          headers: { 'Authorization': `token ${runtimeToken}` }
+        });
+        if (!etapasRes.ok) throw new Error("Não foi possível carregar a lista de etapas (etapas.json).");
+        
+        const etapasData = await etapasRes.json();
+        const stagesList = JSON.parse(decodeBase64UTF8(etapasData.content));
+        
+        if (stagesList.length === 0) {
+          throw new Error("Não há nenhuma etapa cadastrada no etapas.json para recalcular.");
+        }
+        
+        showSuccess(`⏳ Carregando os dados das ${stagesList.length} etapas do GitHub...`);
+        
+        // 2. Busca todos os arquivos TDF das etapas em paralelo
+        const fetchPromises = stagesList.map(async (stage) => {
+          const stageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas/${stage.data}.tdf?ref=${config.branch}&t=${new Date().getTime()}`;
+          const res = await fetch(stageTdfUrl, {
+            headers: { 'Authorization': `token ${runtimeToken}` }
+          });
+          
+          if (!res.ok) {
+            if (res.status === 404) {
+              throw new Error(`O arquivo individual da etapa ${formatDateISOToPT(stage.data)} (.tdf) não existe no repositório. Por favor, exclua a etapa fantasma antes de recalcular o ranking geral.`);
+            } else {
+              throw new Error(`Erro ao carregar etapa ${formatDateISOToPT(stage.data)}: ${res.statusText}`);
+            }
+          }
+          
+          const fileData = await res.json();
+          const text = decodeBase64UTF8(fileData.content);
+          return { stage, text };
+        });
+        
+        const results = await Promise.all(fetchPromises);
+        
+        showSuccess(`⏳ Processando dados e reconstruindo o ranking geral consolidado...`);
+        
+        const calculatedPlayers = new Map();
+        
+        results.forEach((resObj, stageIndex) => {
+          const stageObj = resObj.stage;
+          const stagePlayers = parseTDF(resObj.text);
+          const mult = Number(stageObj.multiplicador) || 1.0;
+          
+          stagePlayers.forEach(sp => {
+            const name = getFirstDefined(sp, ['Jogador', 'Player', 'Name']);
+            if (!name) return;
+            const key = String(name).trim().toLowerCase();
+            
+            if (!calculatedPlayers.has(key)) {
+              calculatedPlayers.set(key, {
+                Jogador: String(name).trim(),
+                ID: getPlayerId(sp) || '',
+                Categoria: getFirstDefined(sp, ['Categoria', 'Category', 'Cat']) || 'MASTER',
+                Pontos: 0,
+                Vitorias: 0,
+                Empates: 0,
+                Derrotas: 0,
+                HistoryPlacements: Array(stagesList.length).fill('-')
+              });
+            }
+            
+            const cp = calculatedPlayers.get(key);
+            const { v, e, d } = getVED(sp);
+            const pts = Number(getFirstDefined(sp, ['Pontos', 'Points', 'Pts'])) || 0;
+            
+            cp.Pontos += (pts * mult);
+            cp.Vitorias += v;
+            cp.Empates += e;
+            cp.Derrotas += d;
+            cp.HistoryPlacements[stageIndex] = sp.HistoricoColocacoes || sp.Pos || '-';
+          });
+        });
+        
+        const finalCalculated = [];
+        calculatedPlayers.forEach(p => {
+          const historyStr = p.HistoryPlacements.join(';');
+          const placements = p.HistoryPlacements
+            .map(x => String(x).trim())
+            .filter(x => x !== '-' && x !== '' && !isNaN(Number(x)))
+            .map(Number);
+            
+          const participacoes = placements.length;
+          const podios = placements.filter(pos => pos <= 4).length;
+          const media = participacoes > 0 ? (placements.reduce((sum, val) => sum + val, 0) / participacoes) : 0;
+          
+          finalCalculated.push({
+            Jogador: p.Jogador,
+            ID: p.ID,
+            Categoria: p.Categoria,
+            Pontos: p.Pontos,
+            Vitorias: p.Vitorias,
+            Empates: p.Empates,
+            Derrotas: p.Derrotas,
+            Podio: podios,
+            MediaColocacao: media,
+            Participacoes: participacoes,
+            HistoricoColocacoes: historyStr
+          });
+        });
+        
+        // Ordena ranking calculado
+        finalCalculated.sort((a, b) => {
+          if (b.Pontos !== a.Pontos) return b.Pontos - a.Pontos;
+          if (b.Podio !== a.Podio) return b.Podio - a.Podio;
+          if (a.MediaColocacao !== b.MediaColocacao) return a.MediaColocacao - b.MediaColocacao;
+          return String(a.Jogador).localeCompare(String(b.Jogador), 'pt-BR');
+        });
+        
+        // Montar TDF consolidado
+        const headers = ['Pos', 'ID', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Participacoes', 'HistoricoColocacoes'];
+        let tdfString = headers.join('\t') + '\n';
+        
+        finalCalculated.forEach((p, index) => {
+          const row = [
+            index + 1,
+            p.ID || '',
+            p.Jogador,
+            p.Categoria,
+            p.Pontos,
+            p.Vitorias,
+            p.Empates,
+            p.Derrotas,
+            p.Podio,
+            Number(p.MediaColocacao).toFixed(2),
+            p.Participacoes,
+            p.HistoricoColocacoes || ''
+          ];
+          tdfString += row.join('\t') + '\n';
+        });
+        
+        showSuccess(`⏳ Fazendo commit do novo ranking geral recalculado no GitHub...`);
+        
+        // 3. Commit no GitHub
+        let currentRankingSha = await getLatestSha(rankingUrl);
+        const commitRankingPayload = {
+          message: `Recalculo geral completo do ranking consolidado a partir das etapas`,
+          content: encodeBase64UTF8(tdfString),
+          branch: config.branch
+        };
+        if (currentRankingSha) commitRankingPayload.sha = currentRankingSha;
+        
+        const rkRes = await fetch(rankingUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitRankingPayload)
+        });
+        
+        if (!rkRes.ok) {
+          const errData = await rkRes.json();
+          throw new Error("Falha ao salvar o ranking geral recalculado no GitHub: " + (errData.message || rkRes.statusText));
+        }
+        
+        showSuccess("🚀 Ranking geral do site recalculado com sucesso a partir de todas as etapas ativas!");
+        await loadAndRenderStages();
+      } catch (err) {
+        showError("Erro ao recalcular ranking: " + err.message);
+      } finally {
+        deleteButtons.forEach(btn => btn.disabled = false);
+        if (recalculateBtn) recalculateBtn.disabled = false;
       }
     }
 
