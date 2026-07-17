@@ -1201,8 +1201,19 @@
                   statsMap.get(p2id).e++;
                 }
               } else if (p1id && !p2id) {
-                // Bye
+                // Bye (TDF older standard)
                 statsMap.get(p1id).v++;
+              } else {
+                // Bye or single player match (Tome XML standard)
+                const singlePlayerNode = match.getElementsByTagName("player")[0];
+                const spid = singlePlayerNode ? singlePlayerNode.getAttribute("userid") : null;
+                if (spid) {
+                  if (!statsMap.has(spid)) statsMap.set(spid, { v: 0, e: 0, d: 0 });
+                  if (outcome === 5) {
+                    statsMap.get(spid).v++; // 3-point Bye (Win)
+                  }
+                  // outcome=8 (Late Entry) is ignored (0 wins/0 losses/0 points)
+                }
               }
             }
           }
@@ -1211,8 +1222,17 @@
           const playersResult = [];
           const standingsContainer = xmlDoc.getElementsByTagName("standings")[0];
           if (standingsContainer) {
-            const finishedPod = standingsContainer.getElementsByTagName("pod")[0];
-            if (finishedPod) {
+            const podNodes = standingsContainer.getElementsByTagName("pod");
+            for (let podIdx = 0; podIdx < podNodes.length; podIdx++) {
+              const finishedPod = podNodes[podIdx];
+              const type = finishedPod.getAttribute("type"); // "finished" or "dnf"
+              const categoryAttr = finishedPod.getAttribute("category");
+              
+              let currentCategory = "MASTER";
+              if (categoryAttr === "10" || categoryAttr === "2") currentCategory = "MASTER";
+              else if (categoryAttr === "11" || categoryAttr === "1") currentCategory = "SENIOR";
+              else if (categoryAttr === "12" || categoryAttr === "0") currentCategory = "JUNIOR";
+              
               const pNodes = finishedPod.getElementsByTagName("player");
               for (let i = 0; i < pNodes.length; i++) {
                 const node = pNodes[i];
@@ -1228,12 +1248,12 @@
                 playersResult.push({
                   Pos: place,
                   Jogador: pInfo.name,
-                  Categoria: podCategory,
+                  Categoria: currentCategory,
                   Pontos: points,
                   Vitorias: pStats.v,
                   Empates: pStats.e,
                   Derrotas: pStats.d,
-                  Podio: place <= 4 ? 1 : 0,
+                  Podio: place <= 4 && type !== "dnf" ? 1 : 0,
                   MediaColocacao: place,
                   Deck: "Não registrado",
                   TipoEnergia: "colorless",

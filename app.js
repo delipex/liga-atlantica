@@ -782,13 +782,20 @@ async function loadData() {
           console.warn("Falha ao obter commit SHA dinâmico. Usando branch padrão.", e);
         }
 
-        const resolvedRankingUrl = githubSources.Ranking.replace(/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)/, `/raw.githubusercontent.com/$1/$2/${commitSha}`);
-        const resolvedStagesUrl = resolvedRankingUrl.replace('ranking.tdf', 'etapas.json');
+        let resolvedRankingUrl = githubSources.Ranking.replace(/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)/, `/raw.githubusercontent.com/$1/$2/${commitSha}`);
+        let resolvedStagesUrl = resolvedRankingUrl.replace('ranking.tdf', 'etapas.json');
+
+        // Se estiver rodando localmente (localhost ou 127.0.0.1), carrega os arquivos locais do servidor
+        const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (isLocalHost) {
+          resolvedRankingUrl = `ranking.tdf?v=${new Date().getTime()}`;
+          resolvedStagesUrl = `etapas.json?v=${new Date().getTime()}`;
+        }
 
         rankingPromise = (async () => {
           try {
             const res = await fetch(resolvedRankingUrl);
-            if (!res.ok) throw new Error("Erro ao carregar ranking TDF do GitHub.");
+            if (!res.ok) throw new Error("Erro ao carregar ranking TDF.");
             const text = await res.text();
             return parseTDF(text);
           } catch (e) {
@@ -1918,7 +1925,10 @@ function initEvents() {
       }
 
       let stageTdfUrl = '';
-      if (dataSource === "github" && githubSources.Ranking) {
+      const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isLocalHost) {
+        stageTdfUrl = `etapas/${selectedValue}.tdf?v=${new Date().getTime()}`;
+      } else if (dataSource === "github" && githubSources.Ranking) {
         let baseRankingUrl = githubSources.Ranking;
         if (window.latestCommitSha) {
           baseRankingUrl = baseRankingUrl.replace(/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)/, `/raw.githubusercontent.com/$1/$2/${window.latestCommitSha}`);
@@ -2697,10 +2707,8 @@ function updateMetagameDisplay() {
                 drawCtx.fillText(percent, 0, 6);
               } else if (isVisaoGeral) {
                 drawCtx.font = "bold 8px 'Exo 2', sans-serif";
-                drawCtx.fillText("Voltar para", 0, -11);
-                drawCtx.fillText("visão geral", 0, -1);
-                drawCtx.font = "700 10px 'Exo 2', sans-serif";
-                drawCtx.fillText(percent, 0, 9);
+                drawCtx.fillText("Voltar para", 0, -6);
+                drawCtx.fillText("visão geral", 0, 4);
               } else {
                 if (percentNum <= 3) {
                   drawCtx.font = "700 9px 'Exo 2', sans-serif";
@@ -2742,8 +2750,8 @@ function updateMetagameDisplay() {
                   const outerRadius = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top) / 2;
                   const innerRadius = outerRadius * 0.50; 
                   const gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
-                  gradient.addColorStop(0, 'rgba(255, 255, 255, 0.22)');
-                  gradient.addColorStop(1, 'rgba(255, 255, 255, 0.08)');
+                  gradient.addColorStop(0, 'rgba(239, 68, 68, 0.45)');
+                  gradient.addColorStop(1, 'rgba(239, 68, 68, 0.18)');
                   return gradient;
                 }
                 
