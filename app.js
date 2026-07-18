@@ -1291,9 +1291,19 @@ function renderRankingTable(players, page = 1) {
         const customIconUrl = deckInfo ? safeExternalUrl(deckInfo.Icone || deckInfo.Imagem) : null;
         
         if (customIconUrl) {
-          deckIconHtml = `<img src="${escapeHTML(customIconUrl)}" alt="${escapeHTML(deckName)}" title="Deck: ${escapeHTML(deckName)}" style="width:20px;height:20px;object-fit:contain;border-radius:4px;vertical-align:middle;margin-left:6px;background:rgba(255,255,255,0.05);padding:2px;border:1px solid rgba(255,255,255,0.1);">`;
+          deckIconHtml = `
+            <div class="deck-badge" style="display:inline-flex; align-items:center; gap:4px; vertical-align:middle; margin-left:6px;">
+              <img src="${escapeHTML(customIconUrl)}" alt="${escapeHTML(deckName)}" title="Deck: ${escapeHTML(deckName)}" style="width:23px;height:23px;object-fit:contain;border-radius:4px;vertical-align:middle;background:rgba(255,255,255,0.05);padding:2px;border:1px solid rgba(255,255,255,0.1);">
+              <span style="font-size:0.68rem; font-weight:500; color:var(--text-secondary); max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:middle;">${escapeHTML(deckName)}</span>
+            </div>
+          `;
         } else {
-          deckIconHtml = `<span style="display:inline-block;vertical-align:middle;margin-left:6px;" title="Deck: ${escapeHTML(deckName)}">${energyDot}</span>`;
+          deckIconHtml = `
+            <div class="deck-badge" style="display:inline-flex; align-items:center; gap:4px; vertical-align:middle; margin-left:6px;">
+              <span style="display:inline-block;vertical-align:middle;">${energyDot}</span>
+              <span style="font-size:0.68rem; font-weight:500; color:var(--text-secondary); max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:middle;">${escapeHTML(deckName)}</span>
+            </div>
+          `;
         }
       }
     }

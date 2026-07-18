@@ -1154,23 +1154,55 @@
             }
           }
           
-          // Get pod category from standings or pods
-          let podCategory = "MASTER";
-          const podNodes = xmlDoc.getElementsByTagName("pod");
-          for (let i = 0; i < podNodes.length; i++) {
-            const cat = podNodes[i].getAttribute("category");
-            if (cat) {
-              if (cat === "10") podCategory = "MASTER";
-              else if (cat === "11") podCategory = "SENIOR";
-              else if (cat === "12") podCategory = "JUNIOR";
-              break;
+          // 2. Map the players' actual categories from the standings pod or pods container
+          const playerCategories = new Map(); // userid -> category string
+          const standingsContainer = xmlDoc.getElementsByTagName("standings")[0];
+          if (standingsContainer) {
+            const podNodes = standingsContainer.getElementsByTagName("pod");
+            for (let i = 0; i < podNodes.length; i++) {
+              const pod = podNodes[i];
+              const cat = pod.getAttribute("category");
+              let currentCategory = "MASTER";
+              if (cat === "10" || cat === "2") currentCategory = "MASTER";
+              else if (cat === "11" || cat === "1") currentCategory = "SENIOR";
+              else if (cat === "12" || cat === "0") currentCategory = "JUNIOR";
+              
+              const pNodes = pod.getElementsByTagName("player");
+              for (let j = 0; j < pNodes.length; j++) {
+                const id = pNodes[j].getAttribute("id");
+                if (id) {
+                  playerCategories.set(id, currentCategory);
+                }
+              }
             }
           }
           
-          // Initialize match stats for all players
-          const statsMap = new Map(); // userid -> { v: 0, e: 0, d: 0 }
+          // Fallback check in pods subgroups (e.g. for dropped/unlisted players)
+          const podsContainer = xmlDoc.getElementsByTagName("pods")[0];
+          if (podsContainer) {
+            const podNodes = podsContainer.getElementsByTagName("pod");
+            for (let i = 0; i < podNodes.length; i++) {
+              const pod = podNodes[i];
+              const cat = pod.getAttribute("category");
+              let currentCategory = "MASTER";
+              if (cat === "10" || cat === "2") currentCategory = "MASTER";
+              else if (cat === "11" || cat === "1") currentCategory = "SENIOR";
+              else if (cat === "12" || cat === "0") currentCategory = "JUNIOR";
+              
+              const pNodes = pod.getElementsByTagName("player");
+              for (let j = 0; j < pNodes.length; j++) {
+                const id = pNodes[j].getAttribute("userid");
+                if (id && !playerCategories.has(id)) {
+                  playerCategories.set(id, currentCategory);
+                }
+              }
+            }
+          }
+          
+          // 3. Initialize match stats for all players
+          const statsMap = new Map(); // userid -> { v: 0, e: 0, d: 0, opponents: [] }
           playersMap.forEach((p, userid) => {
-            statsMap.set(userid, { v: 0, e: 0, d: 0 });
+            statsMap.set(userid, { v: 0, e: 0, d: 0, opponents: [] });
           });
           
           // Parse matches inside rounds to calculate Wins, Draws, Losses
@@ -1186,10 +1218,13 @@
               const p1id = player1Node ? player1Node.getAttribute("userid") : null;
               const p2id = player2Node ? player2Node.getAttribute("userid") : null;
               
-              if (p1id && !statsMap.has(p1id)) statsMap.set(p1id, { v: 0, e: 0, d: 0 });
-              if (p2id && !statsMap.has(p2id)) statsMap.set(p2id, { v: 0, e: 0, d: 0 });
+              if (p1id && !statsMap.has(p1id)) statsMap.set(p1id, { v: 0, e: 0, d: 0, opponents: [] });
+              if (p2id && !statsMap.has(p2id)) statsMap.set(p2id, { v: 0, e: 0, d: 0, opponents: [] });
               
               if (p1id && p2id) {
+                statsMap.get(p1id).opponents.push(p2id);
+                statsMap.get(p2id).opponents.push(p1id);
+                
                 if (outcome === 1) {
                   statsMap.get(p1id).v++;
                   statsMap.get(p2id).d++;
@@ -1208,7 +1243,7 @@
                 const singlePlayerNode = match.getElementsByTagName("player")[0];
                 const spid = singlePlayerNode ? singlePlayerNode.getAttribute("userid") : null;
                 if (spid) {
-                  if (!statsMap.has(spid)) statsMap.set(spid, { v: 0, e: 0, d: 0 });
+                  if (!statsMap.has(spid)) statsMap.set(spid, { v: 0, e: 0, d: 0, opponents: [] });
                   if (outcome === 5) {
                     statsMap.get(spid).v++; // 3-point Bye (Win)
                   }
@@ -1218,74 +1253,71 @@
             }
           }
           
-          // Parse standings to get placement
-          const playersResult = [];
-          const standingsContainer = xmlDoc.getElementsByTagName("standings")[0];
-          if (standingsContainer) {
-            const podNodes = standingsContainer.getElementsByTagName("pod");
-            for (let podIdx = 0; podIdx < podNodes.length; podIdx++) {
-              const finishedPod = podNodes[podIdx];
-              const type = finishedPod.getAttribute("type"); // "finished" or "dnf"
-              const categoryAttr = finishedPod.getAttribute("category");
-              
-              let currentCategory = "MASTER";
-              if (categoryAttr === "10" || categoryAttr === "2") currentCategory = "MASTER";
-              else if (categoryAttr === "11" || categoryAttr === "1") currentCategory = "SENIOR";
-              else if (categoryAttr === "12" || categoryAttr === "0") currentCategory = "JUNIOR";
-              
-              const pNodes = finishedPod.getElementsByTagName("player");
-              for (let i = 0; i < pNodes.length; i++) {
-                const node = pNodes[i];
-                const id = node.getAttribute("id");
-                const place = Number(node.getAttribute("place")) || (i + 1);
-                
-                const pInfo = playersMap.get(id) || { name: `Jogador ${id}`, birthdate: "" };
-                const pStats = statsMap.get(id) || { v: 0, e: 0, d: 0 };
-                
-                // Calculate points: 3 for Win, 1 for Draw
-                const points = pStats.v * 3 + pStats.e * 1;
-                
-                playersResult.push({
-                  Pos: place,
-                  Jogador: pInfo.name,
-                  Categoria: currentCategory,
-                  Pontos: points,
-                  Vitorias: pStats.v,
-                  Empates: pStats.e,
-                  Derrotas: pStats.d,
-                  Podio: place <= 4 && type !== "dnf" ? 1 : 0,
-                  MediaColocacao: place,
-                  Deck: "Não registrado",
-                  TipoEnergia: "colorless",
-                  id: id
-                });
-              }
-            }
-          }
+          // 4. Compute OMW% (Opponent Match Win Percentage) for all players
+          const mwpMap = new Map();
+          statsMap.forEach((stats, id) => {
+            const points = stats.v * 3 + stats.e * 1;
+            const matchesPlayed = stats.opponents.length;
+            const maxPoints = matchesPlayed * 3;
+            let mwp = maxPoints > 0 ? (points / maxPoints) : 0.33;
+            if (mwp < 0.33) mwp = 0.33;
+            mwpMap.set(id, mwp);
+          });
           
-          // If standings was empty but we have players, just list them with default values
-          if (playersResult.length === 0 && playersMap.size > 0) {
-            let idx = 1;
-            playersMap.forEach((pInfo, id) => {
-              const pStats = statsMap.get(id) || { v: 0, e: 0, d: 0 };
-              const points = pStats.v * 3 + pStats.e * 1;
-              playersResult.push({
-                Pos: idx,
-                Jogador: pInfo.name,
-                Categoria: podCategory,
-                Pontos: points,
-                Vitorias: pStats.v,
-                Empates: pStats.e,
-                Derrotas: pStats.d,
-                Podio: idx <= 4 ? 1 : 0,
-                MediaColocacao: idx,
-                Deck: "Não registrado",
-                TipoEnergia: "colorless",
-                id: id
-              });
-              idx++;
+          const omwMap = new Map();
+          statsMap.forEach((stats, id) => {
+            const opps = stats.opponents;
+            let sumOppsMwp = 0;
+            opps.forEach(oppId => {
+              sumOppsMwp += mwpMap.get(oppId) || 0.33;
             });
-          }
+            const omw = opps.length > 0 ? (sumOppsMwp / opps.length) : 0.33;
+            omwMap.set(id, omw);
+          });
+          
+          // 5. Gather all players uncompiled
+          const rawList = [];
+          playersMap.forEach((pInfo, id) => {
+            const stats = statsMap.get(id) || { v: 0, e: 0, d: 0 };
+            const points = stats.v * 3 + stats.e * 1;
+            const omw = omwMap.get(id) || 0.33;
+            rawList.push({
+              id,
+              name: pInfo.name,
+              points,
+              v: stats.v,
+              e: stats.e,
+              d: stats.d,
+              omw
+            });
+          });
+          
+          // Sort by points desc, then OMW desc, then name asc
+          rawList.sort((a, b) => {
+            if (b.points !== a.points) return b.points - a.points;
+            if (b.omw !== a.omw) return b.omw - a.omw;
+            return a.name.localeCompare(b.name, 'pt-BR');
+          });
+          
+          // 6. Map to final output format (preserving categories but with overall Pos)
+          const playersResult = [];
+          rawList.forEach((p, idx) => {
+            const finalCat = playerCategories.get(p.id) || "MASTER";
+            playersResult.push({
+              Pos: idx + 1,
+              Jogador: p.name,
+              Categoria: finalCat,
+              Pontos: p.points,
+              Vitorias: p.v,
+              Empates: p.e,
+              Derrotas: p.d,
+              Podio: (idx + 1) <= 4 ? 1 : 0,
+              MediaColocacao: idx + 1,
+              Deck: "Não registrado",
+              TipoEnergia: "colorless",
+              id: p.id
+            });
+          });
           
           return playersResult;
         } catch (err) {
