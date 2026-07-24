@@ -348,11 +348,11 @@ function getVED(player) {
 
 function getPlayerMedals(playerName) {
   if (!playerName || !appData || !appData.Campeoes) return '';
-  const cleanName = playerName.trim().toLowerCase();
+  const normPlayerName = normalizePlayerName(playerName);
   let medalsHtml = '';
 
   appData.Campeoes.forEach(champ => {
-    if (champ.Campeao && champ.Campeao.trim().toLowerCase() === cleanName) {
+    if (champ.Campeao && normalizePlayerName(champ.Campeao) === normPlayerName) {
       medalsHtml += `
         <svg class="medal-svg gold" width="17" height="17" title="Campeão" viewBox="0 0 8.4666665 8.4666669" xmlns="http://www.w3.org/2000/svg">
           <g fill="#ffcb05" transform="translate(0 -288.533)">
@@ -363,7 +363,7 @@ function getPlayerMedals(playerName) {
         </svg>
       `;
     }
-    if (champ.Vice && champ.Vice.trim().toLowerCase() === cleanName) {
+    if (champ.Vice && normalizePlayerName(champ.Vice) === normPlayerName) {
       medalsHtml += `
         <svg class="medal-svg silver" width="17" height="17" title="Vice-campeão" viewBox="0 0 8.4666665 8.4666669" xmlns="http://www.w3.org/2000/svg">
           <g fill="#cfd8dc" transform="translate(0 -288.533)">
@@ -457,11 +457,10 @@ function normalizeRanking(rankingRows, partidasRows = []) {
     .filter(player => player && (player.Jogador || player.Name))
     .map(player => {
       const playerName = player.Jogador || player.Name || "";
-      const playerNameClean = playerName.trim().toLowerCase();
+      const normPlayerName = normalizePlayerName(playerName);
 
       const dbPlayer = (appData.Jogadores || []).find(j => {
-        const jName = j.Jogador || j.Name || "";
-        return jName.trim().toLowerCase() === playerNameClean;
+        return normalizePlayerName(j.Jogador || j.Name) === normPlayerName;
       }) || {};
 
       const pontosRaw = player.Pontos !== undefined && player.Pontos !== '' ? player.Pontos : player['Match Points'];
@@ -476,7 +475,7 @@ function normalizeRanking(rankingRows, partidasRows = []) {
 
       return {
         ...player,
-        Jogador: playerName,
+        Jogador: dbPlayer.Jogador || playerName,
         Pos: toNumber(posRaw, 0),
         Categoria: categoria.label,
         CategoriaCodigo: categoria.code,
@@ -1181,10 +1180,9 @@ function getDeckForStage(playerName, stageDateStr) {
   const yy = parts[0].substring(2);
   const dateDDMMYY = `${dd}${mm}${yy}`;
   
-  const cleanName = playerName.trim().toLowerCase();
+  const normPlayerName = normalizePlayerName(playerName);
   const dbPlayer = appData.Jogadores.find(j => {
-    const name = j.Jogador || j.Name || "";
-    return name.trim().toLowerCase() === cleanName;
+    return normalizePlayerName(j.Jogador || j.Name) === normPlayerName;
   });
   if (!dbPlayer) return null;
   
@@ -1681,10 +1679,10 @@ window.openPlayerModal = function(playerRef) {
   if (typeof playerRef === 'number') {
     const listPlayer = currentRankingList.find(p => p.Pos === playerRef);
     if (listPlayer) {
-      player = appData.Ranking.find(p => p.Jogador.trim().toLowerCase() === listPlayer.Jogador.trim().toLowerCase());
+      player = appData.Ranking.find(p => normalizePlayerName(p.Jogador) === normalizePlayerName(listPlayer.Jogador));
     }
   } else {
-    player = appData.Ranking.find(p => p.Jogador.trim().toLowerCase() === String(playerRef).trim().toLowerCase());
+    player = appData.Ranking.find(p => normalizePlayerName(p.Jogador) === normalizePlayerName(playerRef));
   }
   
   if (!player || !modal) return;
