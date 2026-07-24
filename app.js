@@ -1,3 +1,12 @@
+function normalizePlayerName(name) {
+  if (!name) return "";
+  return name.trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
+
 function normalizeImageUrl(url){
   if(!url) return '';
   const m = String(url).match(/\/d\/([a-zA-Z0-9_-]+)/);
