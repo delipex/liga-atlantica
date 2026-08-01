@@ -1,38 +1,40 @@
 Pos	ID	Jogador	Categoria	Pontos	Vitorias	Empates	Derrotas	Podio	MediaColocacao	Participacoes	HistoricoColocacoes
-1	5131143	Wesllen Dias	MASTER	33	10	3	2	2	3.50	4	-;1;6;2;5
-2	5871616	Davi Soledade	SENIOR	31	10	1	0	3	1.33	3	-;-;1;1;2
-3	5583587	Carlos Paes	MASTER	24	8	0	3	2	4.00	3	-;-;1;3;8
-4	5818960	Carlos Morais	MASTER	23	7	2	6	2	6.00	4	2;4;13;5;-
-5	5770809	Joao Gloria	MASTER	21	7	0	1	2	2.50	2	1;-;4;-;-
-6	5145513	Felipe Damasceno	MASTER	19	6	1	4	1	7.67	3	7;2;14;-;-
-7	5597125	Carlos Junior	MASTER	19	6	1	8	0	8.75	4	8;-;8;6;13
-8	6063895	IGOR COSTA	MASTER	14	4	2	9	0	7.50	4	9;7;5;9;-
-9	5273684	João Vitor Pereira	MASTER	13	4	1	2	2	4.00	2	-;-;-;4;4
-10	4957486	Miguel Neto	MASTER	13	4	1	3	1	6.50	2	-;3;-;-;10
-11	6056635	Filipe Miranda	MASTER	13	4	1	7	0	8.67	3	6;8;12;-;-
-12	5608142	Guilherme Oliveira	MASTER	13	4	1	7	0	9.33	3	5;12;-;-;11
-13	5374807	Fernando Ribeiro	MASTER	12	4	0	0	1	1.00	1	-;-;-;-;1
-14	5747202	Ivana Tavares	MASTER	12	4	0	3	1	6.00	2	4;-;-;8;-
-15	5374792	Gabriel Seixas	MASTER	11	3	2	3	0	8.00	2	-;6;10;-;-
-16	5587010	PEDRO COELHO	MASTER	9	3	0	1	1	2.00	1	-;-;2;-;-
-17	6099996	Uesdras Santos	MASTER	9	3	0	1	1	3.00	1	3;-;-;-;-
-18	5090112	WALLYSON OLIVEIRA	MASTER	9	3	0	1	1	3.00	1	-;-;3;-;-
-19	5374806	Washington Neto	MASTER	9	3	0	1	1	3.00	1	-;-;-;-;3
-20	5612980	Leilson Filho	SENIOR	7	2	1	1	0	5.00	1	-;5;-;-;-
-21	4957469	Caio Rios	MASTER	7	2	1	1	0	6.00	1	-;-;-;-;6
-22	5653368	Lara Carvalho	MASTER	6	2	0	2	0	7.00	1	-;-;7;-;-
-23	5374793	Pedro Cardoso	MASTER	6	2	0	2	0	7.00	1	-;-;-;-;7
-24	5272026	Moisés Farias	MASTER	6	2	0	2	0	9.00	1	-;-;-;-;9
-25	4719300	João Pedro Oliveira	MASTER	6	2	0	2	0	12.00	1	-;-;-;-;12
-26	6024599	Aldair Reis	MASTER	6	2	0	6	0	13.00	2	-;11;-;-;15
-27	6098770	KAIKE FALCAO DE OLIVEIRA	MASTER	6	2	0	6	0	13.50	2	-;-;9;-;18
-28	6098811	MARIA LUISA SOUSA	MASTER	6	2	0	6	0	16.00	2	-;-;16;-;16
-29	100008	Lucas Vila Nova	SENIOR	4	1	1	2	0	9.00	1	-;9;-;-;-
-30	100009	Matheus Mascarenhas	SENIOR	4	1	1	2	0	10.00	1	-;10;-;-;-
-31	5770809	João Glória	MASTER	3	1	0	2	0	7.00	1	-;-;-;7;-
-32	6022380	ANTONIO NETO	MASTER	3	1	0	3	0	10.00	1	10;-;-;-;-
-33	5685779	Adriel Nunes	MASTER	3	1	0	3	0	11.00	1	-;-;11;-;-
-34	6038121	JOAO PRAZERES	MASTER	3	1	0	3	0	11.00	1	11;-;-;-;-
-35	5603425	Felipe Queiroz	SENIOR	3	1	0	3	0	14.00	1	-;-;-;-;14
-36	5685789	Yuri Aoki	MASTER	3	1	0	3	0	15.00	1	-;-;15;-;-
-37	6130201	Eduardo Melo	SENIOR	3	1	0	3	0	17.00	1	-;-;-;-;17
+1	5871616	Davi Soledade	SENIOR	38	12	2	0	4	1.50	4	-;-;1;1;2;2
+2	5131143	Wesllen Dias	MASTER	37	11	4	3	2	3.80	5	-;1;6;2;5;5
+3	5583587	Carlos Paes	MASTER	29	9	2	3	3	4.00	4	-;-;1;3;8;4
+4	5770809	Joao Gloria	MASTER	24	7	3	1	2	4.67	3	1;-;4;-;-;9
+5	5818960	Carlos Morais	MASTER	23	7	2	6	2	6.00	4	2;4;13;5;-;-
+6	5145513	Felipe Damasceno	MASTER	19	6	1	4	1	7.67	3	7;2;14;-;-;-
+7	5597125	Carlos Junior	MASTER	19	6	1	8	0	8.75	4	8;-;8;6;13;-
+8	5273684	João Vitor Pereira	MASTER	15	4	3	3	2	6.00	3	-;-;-;4;4;10
+9	6063895	IGOR COSTA	MASTER	14	4	2	9	0	7.50	4	9;7;5;9;-;-
+10	4957486	Miguel Neto	MASTER	13	4	1	3	1	6.50	2	-;3;-;-;10;-
+11	6056635	Filipe Miranda	MASTER	13	4	1	7	0	8.67	3	6;8;12;-;-;-
+12	5608142	Guilherme Oliveira	MASTER	13	4	1	7	0	9.33	3	5;12;-;-;11;-
+13	5374807	Fernando Ribeiro	MASTER	12	4	0	0	1	1.00	1	-;-;-;-;1;-
+14	5747202	Ivana Tavares	MASTER	12	4	0	3	1	6.00	2	4;-;-;8;-;-
+15	5374792	Gabriel Seixas	MASTER	11	3	2	3	0	8.00	2	-;6;10;-;-;-
+16	6098770	KAIKE FALCAO DE OLIVEIRA	MASTER	10	3	1	7	0	11.33	3	-;-;9;-;18;7
+17	5374802	Noide Neto	MASTER	9	3	0	0	1	1.00	1	-;-;-;-;-;1
+18	5587010	PEDRO COELHO	MASTER	9	3	0	1	1	2.00	1	-;-;2;-;-;-
+19	6099996	Uesdras Santos	MASTER	9	3	0	1	1	3.00	1	3;-;-;-;-;-
+20	5090112	WALLYSON OLIVEIRA	MASTER	9	3	0	1	1	3.00	1	-;-;3;-;-;-
+21	5374806	Washington Neto	MASTER	9	3	0	1	1	3.00	1	-;-;-;-;3;-
+22	5612980	Leilson Filho	SENIOR	7	2	1	1	0	5.00	1	-;5;-;-;-;-
+23	4957469	Caio Rios	MASTER	7	2	1	1	0	6.00	1	-;-;-;-;6;-
+24	5609667	Matheus Mascarenhas	SENIOR	7	2	1	4	0	9.00	2	-;10;-;-;-;8
+25	5603425	Felipe Queiroz	SENIOR	7	2	1	4	0	10.00	2	-;-;-;-;14;6
+26	5117276	Bruno Bittencourt	MASTER	6	2	0	1	1	3.00	1	-;-;-;-;-;3
+27	5653368	Lara Carvalho	MASTER	6	2	0	2	0	7.00	1	-;-;7;-;-;-
+28	5374793	Pedro Cardoso	MASTER	6	2	0	2	0	7.00	1	-;-;-;-;7;-
+29	5272026	Moisés Farias	MASTER	6	2	0	2	0	9.00	1	-;-;-;-;9;-
+30	4719300	João Pedro Oliveira	MASTER	6	2	0	2	0	12.00	1	-;-;-;-;12;-
+31	6024599	Aldair Reis	MASTER	6	2	0	6	0	13.00	2	-;11;-;-;15;-
+32	6098811	MARIA LUISA SOUSA	MASTER	6	2	0	9	0	14.67	3	-;-;16;-;16;12
+33	100008	Lucas Vila Nova	SENIOR	4	1	1	2	0	9.00	1	-;9;-;-;-;-
+34	6130201	Eduardo Melo	SENIOR	4	1	1	5	0	14.00	2	-;-;-;-;17;11
+35	5770809	João Glória	MASTER	3	1	0	2	0	7.00	1	-;-;-;7;-;-
+36	6022380	ANTONIO NETO	MASTER	3	1	0	3	0	10.00	1	10;-;-;-;-;-
+37	5685779	Adriel Nunes	MASTER	3	1	0	3	0	11.00	1	-;-;11;-;-;-
+38	6038121	JOAO PRAZERES	MASTER	3	1	0	3	0	11.00	1	11;-;-;-;-;-
+39	5685789	Yuri Aoki	MASTER	3	1	0	3	0	15.00	1	-;-;15;-;-;-
