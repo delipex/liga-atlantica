@@ -1,4 +1,4 @@
-function normalizePlayerName(name) {
+﻿function normalizePlayerName(name) {
   if (!name) return "";
   return name.trim()
     .normalize('NFD')
@@ -3117,3 +3117,4 @@ function toggleHistoryCollapse() {
     btn.classList.toggle('expanded');
   }
 }
+
