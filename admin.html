@@ -1238,9 +1238,10 @@
             statsMap.set(userid, { v: 0, e: 0, d: 0 });
           });
           
-          // Parse matches inside rounds to calculate Wins, Draws, Losses
-          const roundsContainer = xmlDoc.getElementsByTagName("rounds")[0];
-          if (roundsContainer) {
+          // Parse matches inside all rounds containers to calculate Wins, Draws, Losses
+          const roundsContainers = xmlDoc.getElementsByTagName("rounds");
+          for (let rcIdx = 0; rcIdx < roundsContainers.length; rcIdx++) {
+            const roundsContainer = roundsContainers[rcIdx];
             const matches = roundsContainer.getElementsByTagName("match");
             for (let i = 0; i < matches.length; i++) {
               const match = matches[i];
