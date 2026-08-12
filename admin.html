@@ -1352,6 +1352,32 @@
             });
           }
           
+          // Ordenação unificada por pontos, vitórias, empates, derrotas (menor é melhor) e nome
+          playersResult.sort((a, b) => {
+            const ptsA = Number(a.Pontos) || 0;
+            const ptsB = Number(b.Pontos) || 0;
+            if (ptsB !== ptsA) return ptsB - ptsA;
+
+            const vA = Number(a.Vitorias) || 0;
+            const vB = Number(b.Vitorias) || 0;
+            if (vB !== vA) return vB - vA;
+
+            const eA = Number(a.Empates) || 0;
+            const eB = Number(b.Empates) || 0;
+            if (eB !== eA) return eB - eA;
+
+            const dA = Number(a.Derrotas) || 0;
+            const dB = Number(b.Derrotas) || 0;
+            if (dA !== dB) return dA - dB;
+
+            return String(a.Jogador || '').localeCompare(String(b.Jogador || ''), 'pt-BR');
+          });
+
+          // Reatribuição do Rank unificado contínuo
+          playersResult.forEach((p, idx) => {
+            p.Pos = idx + 1;
+          });
+          
           return playersResult;
         } catch (err) {
           console.error("Erro ao processar TDF XML:", err);
