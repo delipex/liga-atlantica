@@ -589,8 +589,9 @@ function populateStageSelector() {
 
   selector.innerHTML = '<option value="general">Ranking Geral</option>';
 
-  const chronologicalStages = [...stagesIndex].sort((a, b) => a.data.localeCompare(b.data));
-  const sortedStages = [...stagesIndex].sort((a, b) => b.data.localeCompare(a.data));
+  const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
+  const chronologicalStages = [...cleanStages].sort((a, b) => a.data.localeCompare(b.data));
+  const sortedStages = [...cleanStages].sort((a, b) => b.data.localeCompare(a.data));
 
   sortedStages.forEach(stage => {
     const stageNumber = chronologicalStages.findIndex(s => s.data === stage.data) + 1;
@@ -1182,7 +1183,7 @@ function renderDashboard() {
 }
 
 function getDeckForStage(playerName, stageDateStr) {
-  if (!playerName || !stageDateStr || !appData.Jogadores) return null;
+  if (!playerName || !stageDateStr || typeof stageDateStr !== 'string' || !appData.Jogadores) return null;
   
   const parts = stageDateStr.split('-');
   if (parts.length !== 3) return null;
@@ -2501,13 +2502,16 @@ function updateMetagameDisplay() {
     // Recalcular prêmios da temporada se estiver em Home (dashboard)
     let awardsHtml = '';
     if (isHome && appData.Ranking && appData.Ranking.length > 0) {
+      // Filtra estágios válidos
+      const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
+      
       // Filtro de etapas para Cup e Challenge (com fallback se não houver nenhuma cadastrada ainda)
-      const cupChallengeStages = stagesIndex.filter(s => {
+      const cupChallengeStages = cleanStages.filter(s => {
         const t = String(s.tipo || '').toLowerCase();
         return t.includes('cup') || t.includes('challenge') || t.includes('copa') || t.includes('desafio');
       });
       const useFallback = cupChallengeStages.length === 0;
-      const targetStages = useFallback ? stagesIndex : cupChallengeStages;
+      const targetStages = useFallback ? cleanStages : cupChallengeStages;
 
       // 1. Pokébola de Ouro: Jogador com maior pontuação acumulada geral (Rank 1)
       const pokebolaDeOuroPlayer = appData.Ranking[0];
@@ -2522,10 +2526,13 @@ function updateMetagameDisplay() {
 
       // 3. Ditto Player: Mais decks diferentes em Cups/Challenges (desempate por vitórias e depois winrate)
       const dittoCandidates = [];
-      appData.Ranking.forEach(r => {
-        const playerName = r.Jogador;
+      (appData.Ranking || []).forEach(r => {
+        if (!r) return;
+        const playerName = r.Jogador || r.Player || r.Name;
+        if (!playerName) return;
         const uniqueDecks = new Set();
         targetStages.forEach(stage => {
+          if (!stage || !stage.data) return;
           const deck = getDeckForStage(playerName, stage.data);
           if (deck) uniqueDecks.add(deck);
         });
@@ -2551,12 +2558,12 @@ function updateMetagameDisplay() {
       const dittoPlayer = dittoCandidates[0];
 
       // 4. Pokébola Murcha: Maior taxa de derrotas por participação (desempate por assiduidade em Cups/Challenges)
-      const murchaCandidates = appData.Ranking.filter(r => toNumber(r.Participacoes) > 0).map(r => {
-        const playerName = r.Jogador;
+      const murchaCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) > 0).map(r => {
+        const playerName = r.Jogador || r.Player || r.Name;
         const ratio = toNumber(r.Derrotas) / toNumber(r.Participacoes);
-        const assiduidade = targetStages.filter(stage => getDeckForStage(playerName, stage.data) !== null).length;
+        const assiduidade = targetStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
         return {
-          player: playerName,
+          player: playerName || 'Desconhecido',
           ratio: ratio,
           defeats: toNumber(r.Derrotas),
           participations: toNumber(r.Participacoes),
@@ -2743,7 +2750,7 @@ function updateMetagameDisplay() {
         
         if (chart.config.type === 'doughnut') {
           const firstLabel = labels[0];
-          const isOutros = firstLabel.toLowerCase() === 'outros' || firstLabel.toLowerCase() === 'outros decks';
+          const isOutros = firstLabel ? (firstLabel.toLowerCase() === 'outros' || firstLabel.toLowerCase() === 'outros decks') : false;
           const isVisaoGeral = firstLabel === 'Voltar para visão geral';
           if (!isOutros && !isVisaoGeral && data.length > 0) {
             chart._selectedIndex = 0;
@@ -2832,7 +2839,7 @@ function updateMetagameDisplay() {
               const innerRadius = outerRadius * 0.50; 
               const midRadius = (innerRadius + outerRadius) / 2;
               
-              const isOutros = name.toLowerCase() === 'outros' || name.toLowerCase() === 'outros decks';
+              const isOutros = name ? (name.toLowerCase() === 'outros' || name.toLowerCase() === 'outros decks') : false;
               const isVisaoGeral = name === 'Voltar para visão geral';
 
               // Removed the percentNum >= 4 constraint to allow drawing icons for 1-player/2% decks in expanded drilldown view
@@ -3073,7 +3080,7 @@ function updateMetagameDisplay() {
                 const dataIndex = activeElements[0].index;
                 const label = chart.data.labels[dataIndex];
                 
-                if (label === 'Outros Decks' || label.toLowerCase() === 'outros') {
+                if (label === 'Outros Decks' || (label && label.toLowerCase() === 'outros')) {
                   if (!window.outrosExpandedState) window.outrosExpandedState = {};
                   window.outrosExpandedState[selectedSession] = true;
                   updateMetagameDisplay();
