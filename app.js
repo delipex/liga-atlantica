@@ -589,15 +589,17 @@ function populateStageSelector() {
 
   selector.innerHTML = '<option value="general">Ranking Geral</option>';
 
+  const chronologicalStages = [...stagesIndex].sort((a, b) => a.data.localeCompare(b.data));
   const sortedStages = [...stagesIndex].sort((a, b) => b.data.localeCompare(a.data));
 
   sortedStages.forEach(stage => {
+    const stageNumber = chronologicalStages.findIndex(s => s.data === stage.data) + 1;
     const parts = stage.data.split('-');
     const formattedDate = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : stage.data;
     const typeLabel = stage.tipo ? ` (${stage.tipo})` : '';
     const option = document.createElement('option');
     option.value = stage.data;
-    option.textContent = stage.label || `Etapa - ${formattedDate}${typeLabel}`;
+    option.textContent = stage.label || `Etapa ${stageNumber} - ${formattedDate}${typeLabel}`;
     selector.appendChild(option);
   });
 }
@@ -2256,7 +2258,7 @@ function updateMetagameDisplay() {
     };
   }).sort((a, b) => b.count - a.count);
   
-  const chartType = window.currentMetagameChartType || 'doughnut';
+  const chartType = 'doughnut';
   
   if (!window.outrosExpandedState) window.outrosExpandedState = {};
   
@@ -2444,7 +2446,7 @@ function updateMetagameDisplay() {
     }
 
 
-    const chartType = window.currentMetagameChartType || 'doughnut';
+    const chartType = 'doughnut';
     
     let accordionHtml = '';
     if (chartType === 'bar' && accordionDecks.length > 0) {
@@ -2496,145 +2498,152 @@ function updateMetagameDisplay() {
       </div>
     `;
 
-    // Recalcular prêmios da temporada se não estiver em Home
+    // Recalcular prêmios da temporada se estiver em Home (dashboard)
     let awardsHtml = '';
-    if (!isHome && appData.Ranking && appData.Ranking.length > 0) {
-      // 1. Exploradores de Metagame (jogadores com mais decks diferentes)
-      const playerDeckCounts = [];
-      const metagameRows = appData.Metagame || [];
-      if (metagameRows.length > 0) {
-        metagameRows.forEach(row => {
-          const playerName = row.Jogador || row.Player || row.Name || '';
-          if (!playerName) return;
-          
-          const uniqueDecks = new Set();
-          sessions.forEach(col => {
-            const deckName = row[col];
-            if (deckName && typeof deckName === 'string' && deckName.trim() !== '') {
-              uniqueDecks.add(deckName.trim());
-            }
-          });
-          
-          if (uniqueDecks.size > 0) {
-            playerDeckCounts.push({
-              player: playerName,
-              count: uniqueDecks.size,
-              decks: Array.from(uniqueDecks)
-            });
-          }
-        });
-      }
-      playerDeckCounts.sort((a, b) => b.count - a.count);
-      const top3Explorers = playerDeckCounts.slice(0, 3);
-      
-      // 2. MVP da Temporada (fórmula ponderada com mínimo de 50% de participações)
-      const minStages = Math.ceil(sessions.length / 2);
-      const mvpCandidates = appData.Ranking.filter(p => toNumber(p.Participacoes) >= minStages);
-      let mvpPlayer = null;
-      if (mvpCandidates.length > 0) {
-        mvpCandidates.forEach(p => {
-          const stageAvgPoints = toNumber(p.Pontos) / toNumber(p.Participacoes);
-          const podiumRate = toNumber(p.Podio) / toNumber(p.Participacoes);
-          p.mvpScore = stageAvgPoints * (1 + podiumRate);
-        });
-        mvpCandidates.sort((a, b) => b.mvpScore - a.mvpScore);
-        mvpPlayer = mvpCandidates[0];
-      }
-      
-      // 3. Mestre dos Pódios (mais pódios acumulados)
-      const podiumCandidates = [...appData.Ranking].sort((a, b) => {
-        const podB = toNumber(b.Podio);
-        const podA = toNumber(a.Podio);
-        if (podB !== podA) return podB - podA;
-        return toNumber(a.MediaColocacao) - toNumber(b.MediaColocacao);
+    if (isHome && appData.Ranking && appData.Ranking.length > 0) {
+      // Filtro de etapas para Cup e Challenge (com fallback se não houver nenhuma cadastrada ainda)
+      const cupChallengeStages = stagesIndex.filter(s => {
+        const t = String(s.tipo || '').toLowerCase();
+        return t.includes('cup') || t.includes('challenge') || t.includes('copa') || t.includes('desafio');
       });
-      const topPodiumPlayer = podiumCandidates[0];
+      const useFallback = cupChallengeStages.length === 0;
+      const targetStages = useFallback ? stagesIndex : cupChallengeStages;
 
-      // 4. Constância de Ferro (melhor média de colocação com mínimo de 50% participações)
-      const constancyCandidates = appData.Ranking.filter(p => toNumber(p.Participacoes) >= minStages);
-      let constancyPlayer = null;
-      if (constancyCandidates.length > 0) {
-        constancyCandidates.sort((a, b) => {
-          const mediaA = toNumber(a.MediaColocacao) > 0 ? toNumber(a.MediaColocacao) : 999999;
-          const mediaB = toNumber(b.MediaColocacao) > 0 ? toNumber(b.MediaColocacao) : 999999;
-          return mediaA - mediaB;
+      // 1. Pokébola de Ouro: Jogador com maior pontuação acumulada geral (Rank 1)
+      const pokebolaDeOuroPlayer = appData.Ranking[0];
+
+      // 2. Líder de Ginásio: Jogador com maior número de participações (desempate por pontuação)
+      const liderDeGinasioPlayer = [...appData.Ranking].sort((a, b) => {
+        const partA = toNumber(a.Participacoes);
+        const partB = toNumber(b.Participacoes);
+        if (partB !== partA) return partB - partA;
+        return toNumber(b.Pontos) - toNumber(a.Pontos);
+      })[0];
+
+      // 3. Ditto Player: Mais decks diferentes em Cups/Challenges (desempate por vitórias e depois winrate)
+      const dittoCandidates = [];
+      appData.Ranking.forEach(r => {
+        const playerName = r.Jogador;
+        const uniqueDecks = new Set();
+        targetStages.forEach(stage => {
+          const deck = getDeckForStage(playerName, stage.data);
+          if (deck) uniqueDecks.add(deck);
         });
-        constancyPlayer = constancyCandidates[0];
-      }
+        if (uniqueDecks.size > 0) {
+          const wins = toNumber(r.Vitorias);
+          const losses = toNumber(r.Derrotas);
+          const draws = toNumber(r.Empates);
+          const winRate = (wins + losses + draws) > 0 ? (wins / (wins + losses + draws)) : 0;
+          dittoCandidates.push({
+            player: playerName,
+            count: uniqueDecks.size,
+            decks: Array.from(uniqueDecks),
+            wins: wins,
+            winRate: winRate
+          });
+        }
+      });
+      dittoCandidates.sort((a, b) => {
+        if (b.count !== a.count) return b.count - a.count;
+        if (b.wins !== a.wins) return b.wins - a.wins;
+        return b.winRate - a.winRate;
+      });
+      const dittoPlayer = dittoCandidates[0];
 
-      // Monta os cards HTML
-      let explorersListHtml = '';
-      if (top3Explorers.length > 0) {
-        explorersListHtml = top3Explorers.map((exp, idx) => {
-          const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
-          const deckBadges = exp.decks.map(d => `<span class="ved-badge" style="${window.getDeckGradientStyle(d)} color:#fff; font-size:0.65rem; padding: 2px 6px; border-radius: 10px; margin-right:4px; display:inline-block; margin-top:4px;">${escapeHTML(d)}</span>`).join('');
-          return `
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-              <div>
-                <div style="font-weight:600; font-size:0.85rem; color:#fff;">${medal} ${escapeHTML(exp.player)}</div>
-                <div style="display:flex; flex-wrap:wrap; margin-top:2px;">${deckBadges}</div>
-              </div>
-              <div style="font-weight:700; color:var(--accent-yellow); font-size:0.85rem; white-space:nowrap; margin-left:10px;">${exp.count} Decks</div>
-            </div>
-          `;
-        }).join('');
-      } else {
-        explorersListHtml = '<div style="color:var(--text-secondary); font-size:0.85rem; text-align:center; padding:1rem 0;">Nenhum metagame registrado ainda.</div>';
-      }
+      // 4. Pokébola Murcha: Maior taxa de derrotas por participação (desempate por assiduidade em Cups/Challenges)
+      const murchaCandidates = appData.Ranking.filter(r => toNumber(r.Participacoes) > 0).map(r => {
+        const playerName = r.Jogador;
+        const ratio = toNumber(r.Derrotas) / toNumber(r.Participacoes);
+        const assiduidade = targetStages.filter(stage => getDeckForStage(playerName, stage.data) !== null).length;
+        return {
+          player: playerName,
+          ratio: ratio,
+          defeats: toNumber(r.Derrotas),
+          participations: toNumber(r.Participacoes),
+          assiduidade: assiduidade
+        };
+      });
+      murchaCandidates.sort((a, b) => {
+        if (b.ratio !== a.ratio) return b.ratio - a.ratio;
+        return b.assiduidade - a.assiduidade;
+      });
+      const murchaPlayer = murchaCandidates[0];
 
-      const mvpCardHtml = mvpPlayer ? `
+      const goldCardHtml = pokebolaDeOuroPlayer ? `
         <div class="glass-card" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);">
           <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:1.5rem;">🏆</span>
+            <span style="font-size:1.5rem;">👑</span>
             <div>
-              <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">MVP da Temporada</div>
-              <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(mvpPlayer.Jogador)}</div>
+              <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Pokébola de Ouro</div>
+              <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(pokebolaDeOuroPlayer.Jogador)}</div>
             </div>
           </div>
           <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
-            Destaque geral calculado pela média de pontos combinada à constância em pódios (${minStages}+ etapas).
+            Maior pontuação acumulada demonstrando o melhor desempenho geral da temporada.
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
-            <div>Média Pontos: <strong>${(toNumber(mvpPlayer.Pontos)/toNumber(mvpPlayer.Participacoes)).toFixed(1)} PTS</strong></div>
-            <div>Pódios: <strong>${toNumber(mvpPlayer.Podio)} (${Math.round((toNumber(mvpPlayer.Podio)/toNumber(mvpPlayer.Participacoes))*100)}%)</strong></div>
+            <div>Pontuação: <strong>${toNumber(pokebolaDeOuroPlayer.Pontos).toFixed(0)} PTS</strong></div>
+            <div>Média Pos: <strong>${toNumber(pokebolaDeOuroPlayer.MediaColocacao).toFixed(1)}º</strong></div>
           </div>
         </div>
       ` : '';
 
-      const constancyCardHtml = constancyPlayer ? `
+      const gymLeaderCardHtml = liderDeGinasioPlayer ? `
         <div class="glass-card" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);">
           <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:1.5rem;">⚙️</span>
+            <span style="font-size:1.5rem;">🏋️‍♂️</span>
             <div>
-              <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Constância de Ferro</div>
-              <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(constancyPlayer.Jogador)}</div>
+              <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Líder de Ginásio</div>
+              <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(liderDeGinasioPlayer.Jogador)}</div>
             </div>
           </div>
           <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
-            Treinador com a melhor média de colocação na temporada (${minStages}+ etapas).
+            O jogador mais assíduo, com maior presença registrada nas etapas da temporada.
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
-            <div>Média Colocação: <strong>${toNumber(constancyPlayer.MediaColocacao).toFixed(2)}º</strong></div>
-            <div>Etapas: <strong>${toNumber(constancyPlayer.Participacoes)}/${sessions.length}</strong></div>
+            <div>Presenças: <strong>${toNumber(liderDeGinasioPlayer.Participacoes)} etapas</strong></div>
+            <div>Total Pontos: <strong>${toNumber(liderDeGinasioPlayer.Pontos).toFixed(0)} PTS</strong></div>
           </div>
         </div>
       ` : '';
 
-      const podiumCardHtml = topPodiumPlayer ? `
+      const dittoCardHtml = dittoPlayer ? `
         <div class="glass-card" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);">
           <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:1.5rem;">🥇</span>
+            <span style="font-size:1.5rem;">🦎</span>
             <div>
-              <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Mestre dos Pódios</div>
-              <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(topPodiumPlayer.Jogador)}</div>
+              <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Ditto Player</div>
+              <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(dittoPlayer.player)}</div>
             </div>
           </div>
           <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
-            Jogador com o maior número absoluto de pódios conquistados na temporada.
+            Mais decks diferentes usados em Cups e Challenges${useFallback ? ' (geral)' : ''}.
+          </div>
+          <div style="margin-top:5px; display:flex; flex-wrap:wrap; gap:4px;">
+            ${dittoPlayer.decks.map(d => `<span class="ved-badge" style="${window.getDeckGradientStyle(d)} color:#fff; font-size:0.65rem; padding: 2px 6px; border-radius: 10px; display:inline-block;">${escapeHTML(d)}</span>`).join('')}
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
-            <div>Total Pódios: <strong>${toNumber(topPodiumPlayer.Podio)} pódios</strong></div>
-            <div>Aproveitamento: <strong>${Math.round((toNumber(topPodiumPlayer.Podio)/toNumber(topPodiumPlayer.Participacoes))*100)}%</strong></div>
+            <div>Variedade: <strong>${dittoPlayer.count} Decks</strong></div>
+            <div>Vitórias: <strong>${dittoPlayer.wins} (WR: ${(dittoPlayer.winRate*100).toFixed(0)}%)</strong></div>
+          </div>
+        </div>
+      ` : '';
+
+      const murchaCardHtml = murchaPlayer ? `
+        <div class="glass-card" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:1.5rem;">💀</span>
+            <div>
+              <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Pokébola Murcha</div>
+              <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(murchaPlayer.player)}</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
+            Maior proporção de derrotas por participação na temporada (desempate por assiduidade).
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
+            <div>Derrotas/Etapa: <strong>${murchaPlayer.ratio.toFixed(2)}</strong></div>
+            <div>Derrotas Totais: <strong>${murchaPlayer.defeats} em ${murchaPlayer.participations} et.</strong></div>
           </div>
         </div>
       ` : '';
@@ -2650,31 +2659,17 @@ function updateMetagameDisplay() {
           </h2>
           
           <div style="display:flex; flex-direction:row; flex-wrap:wrap; gap:1.5rem; width:100%;">
-            <!-- MVP Card -->
-            ${mvpCardHtml}
+            <!-- Pokébola de Ouro -->
+            ${goldCardHtml}
             
-            <!-- Podium Card -->
-            ${podiumCardHtml}
+            <!-- Líder de Ginásio -->
+            ${gymLeaderCardHtml}
             
-            <!-- Constancy Card -->
-            ${constancyCardHtml}
+            <!-- Ditto Player -->
+            ${dittoCardHtml}
             
-            <!-- Explorador Card -->
-            <div class="glass-card" style="flex: 1 1 300px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:1.5rem;">🔍</span>
-                <div>
-                  <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Exploradores do Metagame</div>
-                  <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">Top Diversidade de Decks</div>
-                </div>
-              </div>
-              <div style="font-size:0.8rem; color:var(--text-secondary); margin-bottom: 5px;">
-                Jogadores que jogaram com o maior número de decks diferentes ao longo da temporada.
-              </div>
-              <div style="display:flex; flex-direction:column; gap:2px; margin-top:5px; margin-top:auto;">
-                ${explorersListHtml}
-              </div>
-            </div>
+            <!-- Pokébola Murcha -->
+            ${murchaCardHtml}
           </div>
         </div>
       `;
@@ -2713,15 +2708,11 @@ function updateMetagameDisplay() {
                 ${isExpanded ? "Visão da fatia 'Outros' expandida." : "Clique em outros decks para expandir a lista."}
               </div>
             </div>
-            ` : accordionHtml}
-            ${toggleHtml}
           </div>
           
-          ${isBar ? '' : `
           <div style="flex: 1 1 350px; width: 100%; max-width: 400px;">
             ${carouselHtml}
           </div>
-          `}
 
         </div>
         ${awardsHtml}
@@ -2925,7 +2916,7 @@ function updateMetagameDisplay() {
           }
         };
 
-        const chartType = window.currentMetagameChartType || 'doughnut';
+        const chartType = 'doughnut';
         
         if (chartType === 'bar') {
           const centerWrap = document.getElementById('chart-center-text-' + canvasId);
