@@ -1,4 +1,4 @@
-﻿function normalizePlayerName(name) {
+function normalizePlayerName(name) {
   if (!name) return "";
   return name.trim()
     .normalize('NFD')
@@ -2496,6 +2496,190 @@ function updateMetagameDisplay() {
       </div>
     `;
 
+    // Recalcular prêmios da temporada se não estiver em Home
+    let awardsHtml = '';
+    if (!isHome && appData.Ranking && appData.Ranking.length > 0) {
+      // 1. Exploradores de Metagame (jogadores com mais decks diferentes)
+      const playerDeckCounts = [];
+      const metagameRows = appData.Metagame || [];
+      if (metagameRows.length > 0) {
+        metagameRows.forEach(row => {
+          const playerName = row.Jogador || row.Player || row.Name || '';
+          if (!playerName) return;
+          
+          const uniqueDecks = new Set();
+          sessions.forEach(col => {
+            const deckName = row[col];
+            if (deckName && typeof deckName === 'string' && deckName.trim() !== '') {
+              uniqueDecks.add(deckName.trim());
+            }
+          });
+          
+          if (uniqueDecks.size > 0) {
+            playerDeckCounts.push({
+              player: playerName,
+              count: uniqueDecks.size,
+              decks: Array.from(uniqueDecks)
+            });
+          }
+        });
+      }
+      playerDeckCounts.sort((a, b) => b.count - a.count);
+      const top3Explorers = playerDeckCounts.slice(0, 3);
+      
+      // 2. MVP da Temporada (fórmula ponderada com mínimo de 50% de participações)
+      const minStages = Math.ceil(sessions.length / 2);
+      const mvpCandidates = appData.Ranking.filter(p => toNumber(p.Participacoes) >= minStages);
+      let mvpPlayer = null;
+      if (mvpCandidates.length > 0) {
+        mvpCandidates.forEach(p => {
+          const stageAvgPoints = toNumber(p.Pontos) / toNumber(p.Participacoes);
+          const podiumRate = toNumber(p.Podio) / toNumber(p.Participacoes);
+          p.mvpScore = stageAvgPoints * (1 + podiumRate);
+        });
+        mvpCandidates.sort((a, b) => b.mvpScore - a.mvpScore);
+        mvpPlayer = mvpCandidates[0];
+      }
+      
+      // 3. Mestre dos Pódios (mais pódios acumulados)
+      const podiumCandidates = [...appData.Ranking].sort((a, b) => {
+        const podB = toNumber(b.Podio);
+        const podA = toNumber(a.Podio);
+        if (podB !== podA) return podB - podA;
+        return toNumber(a.MediaColocacao) - toNumber(b.MediaColocacao);
+      });
+      const topPodiumPlayer = podiumCandidates[0];
+
+      // 4. Constância de Ferro (melhor média de colocação com mínimo de 50% participações)
+      const constancyCandidates = appData.Ranking.filter(p => toNumber(p.Participacoes) >= minStages);
+      let constancyPlayer = null;
+      if (constancyCandidates.length > 0) {
+        constancyCandidates.sort((a, b) => {
+          const mediaA = toNumber(a.MediaColocacao) > 0 ? toNumber(a.MediaColocacao) : 999999;
+          const mediaB = toNumber(b.MediaColocacao) > 0 ? toNumber(b.MediaColocacao) : 999999;
+          return mediaA - mediaB;
+        });
+        constancyPlayer = constancyCandidates[0];
+      }
+
+      // Monta os cards HTML
+      let explorersListHtml = '';
+      if (top3Explorers.length > 0) {
+        explorersListHtml = top3Explorers.map((exp, idx) => {
+          const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
+          const deckBadges = exp.decks.map(d => `<span class="ved-badge" style="${window.getDeckGradientStyle(d)} color:#fff; font-size:0.65rem; padding: 2px 6px; border-radius: 10px; margin-right:4px; display:inline-block; margin-top:4px;">${escapeHTML(d)}</span>`).join('');
+          return `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <div>
+                <div style="font-weight:600; font-size:0.85rem; color:#fff;">${medal} ${escapeHTML(exp.player)}</div>
+                <div style="display:flex; flex-wrap:wrap; margin-top:2px;">${deckBadges}</div>
+              </div>
+              <div style="font-weight:700; color:var(--accent-yellow); font-size:0.85rem; white-space:nowrap; margin-left:10px;">${exp.count} Decks</div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        explorersListHtml = '<div style="color:var(--text-secondary); font-size:0.85rem; text-align:center; padding:1rem 0;">Nenhum metagame registrado ainda.</div>';
+      }
+
+      const mvpCardHtml = mvpPlayer ? `
+        <div class="glass-card" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:1.5rem;">🏆</span>
+            <div>
+              <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">MVP da Temporada</div>
+              <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(mvpPlayer.Jogador)}</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
+            Destaque geral calculado pela média de pontos combinada à constância em pódios (${minStages}+ etapas).
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
+            <div>Média Pontos: <strong>${(toNumber(mvpPlayer.Pontos)/toNumber(mvpPlayer.Participacoes)).toFixed(1)} PTS</strong></div>
+            <div>Pódios: <strong>${toNumber(mvpPlayer.Podio)} (${Math.round((toNumber(mvpPlayer.Podio)/toNumber(mvpPlayer.Participacoes))*100)}%)</strong></div>
+          </div>
+        </div>
+      ` : '';
+
+      const constancyCardHtml = constancyPlayer ? `
+        <div class="glass-card" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:1.5rem;">⚙️</span>
+            <div>
+              <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Constância de Ferro</div>
+              <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(constancyPlayer.Jogador)}</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
+            Treinador com a melhor média de colocação na temporada (${minStages}+ etapas).
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
+            <div>Média Colocação: <strong>${toNumber(constancyPlayer.MediaColocacao).toFixed(2)}º</strong></div>
+            <div>Etapas: <strong>${toNumber(constancyPlayer.Participacoes)}/${sessions.length}</strong></div>
+          </div>
+        </div>
+      ` : '';
+
+      const podiumCardHtml = topPodiumPlayer ? `
+        <div class="glass-card" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:1.5rem;">🥇</span>
+            <div>
+              <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Mestre dos Pódios</div>
+              <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(topPodiumPlayer.Jogador)}</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
+            Jogador com o maior número absoluto de pódios conquistados na temporada.
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
+            <div>Total Pódios: <strong>${toNumber(topPodiumPlayer.Podio)} pódios</strong></div>
+            <div>Aproveitamento: <strong>${Math.round((toNumber(topPodiumPlayer.Podio)/toNumber(topPodiumPlayer.Participacoes))*100)}%</strong></div>
+          </div>
+        </div>
+      ` : '';
+
+      awardsHtml = `
+        <div class="metagame-awards-section" style="width: 100%; margin-top: 3rem;">
+          <h2 class="podium-title" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px; height:24px;">
+              <circle cx="12" cy="8" r="7"></circle>
+              <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+            </svg>
+            Premiações Projetadas da Temporada
+          </h2>
+          
+          <div style="display:flex; flex-direction:row; flex-wrap:wrap; gap:1.5rem; width:100%;">
+            <!-- MVP Card -->
+            ${mvpCardHtml}
+            
+            <!-- Podium Card -->
+            ${podiumCardHtml}
+            
+            <!-- Constancy Card -->
+            ${constancyCardHtml}
+            
+            <!-- Explorador Card -->
+            <div class="glass-card" style="flex: 1 1 300px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.5rem;">🔍</span>
+                <div>
+                  <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Exploradores do Metagame</div>
+                  <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">Top Diversidade de Decks</div>
+                </div>
+              </div>
+              <div style="font-size:0.8rem; color:var(--text-secondary); margin-bottom: 5px;">
+                Jogadores que jogaram com o maior número de decks diferentes ao longo da temporada.
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px; margin-top:5px; margin-top:auto;">
+                ${explorersListHtml}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     const isExpanded = !!(window.outrosExpandedState && window.outrosExpandedState[selectedSession]);
     const backButtonHtml = `
       <div id="chart-back-btn-${canvasId}" style="display: ${isExpanded ? 'flex' : 'none'}; position: absolute; top: 1.5rem; left: 1.5rem; z-index: 10; align-items: center; gap: 6px; cursor: pointer; color: var(--accent-yellow); font-weight: 600; font-size: 0.82rem; padding: 6px 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; backdrop-filter: blur(8px); box-shadow: 0 4px 12px rgba(0,0,0,0.25); transition: all 0.2s ease;" 
@@ -2540,6 +2724,7 @@ function updateMetagameDisplay() {
           `}
 
         </div>
+        ${awardsHtml}
       </div>
     `;
     
