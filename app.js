@@ -1198,9 +1198,29 @@ function getDeckForStage(playerName, stageDateStr) {
   });
   if (!dbPlayer) return null;
   
+  // Calcula o número da etapa cronológico para match inteligente (ex: S9T5)
+  const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
+  const chronologicalStages = [...cleanStages].sort((a, b) => a.data.localeCompare(b.data));
+  const stageNumber = chronologicalStages.findIndex(s => s.data === stageDateStr) + 1;
+  
   const columnKey = Object.keys(dbPlayer).find(k => {
     const normalizedKey = k.toLowerCase().trim();
-    return normalizedKey.includes(dateDDMMYY) || normalizedKey.includes(stageDateStr);
+    
+    // 1. Match por data ddmmyy ou data formatada completa
+    if (normalizedKey.includes(dateDDMMYY) || normalizedKey.includes(stageDateStr)) {
+      return true;
+    }
+    
+    // 2. Match inteligente por Número da Etapa (S[numero]T...)
+    if (stageNumber > 0) {
+      const stagePrefix = `s${stageNumber}`;
+      const regex = new RegExp(`^${stagePrefix}\\D`, 'i');
+      if (regex.test(normalizedKey)) {
+        return true;
+      }
+    }
+    
+    return false;
   });
   
   if (columnKey) {
