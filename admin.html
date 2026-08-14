@@ -1068,11 +1068,15 @@
           return;
         }
 
-        // Ordenação unificada por pontos, vitórias, empates, derrotas (menor é melhor) e nome
+        // Ordenação unificada por pontos, colocação oficial (MediaColocacao), vitórias, empates, derrotas (menor é melhor) e nome
         allPlayers.sort((a, b) => {
           const ptsA = Number(a.Pontos) || 0;
           const ptsB = Number(b.Pontos) || 0;
           if (ptsB !== ptsA) return ptsB - ptsA;
+
+          const medA = Number(a.MediaColocacao) || 999;
+          const medB = Number(b.MediaColocacao) || 999;
+          if (medA !== medB) return medA - medB;
 
           const vA = Number(a.Vitorias) || 0;
           const vB = Number(b.Vitorias) || 0;
@@ -1353,11 +1357,15 @@
             });
           }
           
-          // Ordenação unificada por pontos, vitórias, empates, derrotas (menor é melhor) e nome
+          // Ordenação unificada por pontos, colocação oficial (MediaColocacao), vitórias, empates, derrotas (menor é melhor) e nome
           playersResult.sort((a, b) => {
             const ptsA = Number(a.Pontos) || 0;
             const ptsB = Number(b.Pontos) || 0;
             if (ptsB !== ptsA) return ptsB - ptsA;
+
+            const medA = Number(a.MediaColocacao) || 999;
+            const medB = Number(b.MediaColocacao) || 999;
+            if (medA !== medB) return medA - medB;
 
             const vA = Number(a.Vitorias) || 0;
             const vB = Number(b.Vitorias) || 0;
