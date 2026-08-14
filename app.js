@@ -1901,53 +1901,53 @@ window.openAwardModal = function(awardKey) {
       const playerName = r.Jogador || r.Player || r.Name;
       if (!playerName) return;
       const uniqueDecks = new Set();
-      targetStages.forEach(stage => {
+      cleanStages.forEach(stage => {
         if (!stage || !stage.data) return;
         const deck = getDeckForStage(playerName, stage.data);
         if (deck) uniqueDecks.add(deck);
       });
       if (uniqueDecks.size > 0) {
-        const wins = toNumber(r.Vitorias);
-        const partCount = targetStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
+        const partCount = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
+        const podiums = toNumber(r.Podio);
         dittoCandidates.push({
           player: playerName,
           count: uniqueDecks.size,
           decks: Array.from(uniqueDecks),
           participations: partCount,
-          wins: wins
+          podiums: podiums
         });
       }
     });
     dittoCandidates.sort((a, b) => {
       if (b.count !== a.count) return b.count - a.count;
       if (b.participations !== a.participations) return b.participations - a.participations;
-      return b.wins - a.wins;
+      return b.podiums - a.podiums;
     });
     
     const top = dittoCandidates[0];
     winnerName = top ? top.player : 'Nenhum';
-    description = `Prêmio para o jogador mais versátil, que jogou com a maior variedade de decks diferentes nas etapas de Cup e Challenge${useFallback ? ' (geral)' : ''}.`;
+    description = `Prêmio para o jogador mais versátil da temporada, que jogou com a maior variedade de decks diferentes ao longo de todas as etapas.`;
     formulaHtml = `
       <div style="font-size:0.8rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:4px; color:var(--text-secondary); margin-top:8px;">
         <div><strong>Critérios de Ordenação:</strong></div>
-        <div>1. Variedade = Total de decks únicos em Cup/Challenge</div>
-        <div>2. Presença = Participações nas etapas de Cup/Challenge</div>
-        <div>3. Total de Vitórias na temporada</div>
+        <div>1. Variedade = Total de decks únicos jogados na temporada (todas as etapas)</div>
+        <div>2. Presença = Participações nas etapas de Cup/Challenge (Desempate 1)</div>
+        <div>3. Pódios = Total de pódios conquistados na temporada (Desempate 2)</div>
       </div>
     `;
     if (top) {
       detailHtml = `
         <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; margin-top:8px;">
           <div style="font-weight:600; color:#fff; font-size:1rem; margin-bottom:4px;">Cálculo do Vencedor (${escapeHTML(top.player)}):</div>
-          <div style="display:flex; justify-content:space-between;"><span>Variedade de Decks:</span><strong style="color:var(--accent-yellow);">${top.count} decks distintos</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Variedade de Decks (Temporada):</span><strong style="color:var(--accent-yellow);">${top.count} decks distintos</strong></div>
           <div style="display:flex; flex-direction:column; gap:4px; margin-top:2px;">
-            <span style="font-size:0.75rem; color:var(--text-secondary);">Decks jogados nas etapas:</span>
+            <span style="font-size:0.75rem; color:var(--text-secondary);">Decks jogados na temporada:</span>
             <div style="display:flex; flex-wrap:wrap; gap:4px; padding-left:5px;">
               ${top.decks.map(d => `<span class="ved-badge" style="${window.getDeckGradientStyle(d)} color:#fff; font-size:0.65rem; padding: 2px 6px; border-radius: 10px; display:inline-block;">${escapeHTML(d)}</span>`).join('')}
             </div>
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:4px;"><span>Presença em Cup/Challenge:</span><strong style="color:#fff;">${top.participations} etapas</strong></div>
-          <div style="display:flex; justify-content:space-between;"><span>Vitórias Totais:</span><strong style="color:#fff;">${top.wins}</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Pódios Conquistados:</span><strong style="color:#fff;">${top.podiums}</strong></div>
         </div>
       `;
     }
@@ -2805,34 +2805,34 @@ function updateMetagameDisplay() {
         return toNumber(b.Pontos) - toNumber(a.Pontos);
       })[0];
 
-      // 3. Ditto Player: Mais decks diferentes em Cups/Challenges (desempate por presenças em Cup/Challenge, depois vitórias)
+      // 3. Ditto Player: Mais decks diferentes em toda a temporada (desempates: presenças em Cup/Challenge, depois Pódios)
       const dittoCandidates = [];
       (appData.Ranking || []).forEach(r => {
         if (!r) return;
         const playerName = r.Jogador || r.Player || r.Name;
         if (!playerName) return;
         const uniqueDecks = new Set();
-        targetStages.forEach(stage => {
+        cleanStages.forEach(stage => {
           if (!stage || !stage.data) return;
           const deck = getDeckForStage(playerName, stage.data);
           if (deck) uniqueDecks.add(deck);
         });
         if (uniqueDecks.size > 0) {
-          const wins = toNumber(r.Vitorias);
-          const partCount = targetStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
+          const partCount = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
+          const podiums = toNumber(r.Podio);
           dittoCandidates.push({
             player: playerName,
             count: uniqueDecks.size,
             decks: Array.from(uniqueDecks),
             participations: partCount,
-            wins: wins
+            podiums: podiums
           });
         }
       });
       dittoCandidates.sort((a, b) => {
         if (b.count !== a.count) return b.count - a.count;
         if (b.participations !== a.participations) return b.participations - a.participations;
-        return b.wins - a.wins;
+        return b.podiums - a.podiums;
       });
       const dittoPlayer = dittoCandidates[0];
 
@@ -2912,14 +2912,14 @@ function updateMetagameDisplay() {
             </div>
           </div>
           <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
-            Mais decks diferentes usados em Cups e Challenges${useFallback ? ' (geral)' : ''}.
+            Mais decks diferentes usados ao longo de toda a temporada.
           </div>
           <div style="margin-top:5px; display:flex; flex-wrap:wrap; gap:4px;">
             ${dittoPlayer.decks.map(d => `<span class="ved-badge" style="${window.getDeckGradientStyle(d)} color:#fff; font-size:0.65rem; padding: 2px 6px; border-radius: 10px; display:inline-block;">${escapeHTML(d)}</span>`).join('')}
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
             <div>Variedade: <strong>${dittoPlayer.count} Decks</strong></div>
-            <div>Etapas: <strong>${dittoPlayer.participations} et.</strong></div>
+            <div>Etapas Cup/Chal: <strong>${dittoPlayer.participations} et.</strong></div>
           </div>
           <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver cálculo detalhado ➔</div>
         </div>
