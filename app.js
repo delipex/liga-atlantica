@@ -1876,7 +1876,7 @@ window.openAwardModal = function(awardKey) {
     const gymCandidates = [...appData.Ranking].map(r => {
       const playerName = r.Jogador || r.Player || r.Name;
       const totalPart = toNumber(r.Participacoes);
-      const cupChallengePart = targetStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
+      const cupChallengePart = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
       return {
         player: playerName,
         totalPart: totalPart,
@@ -1977,7 +1977,7 @@ window.openAwardModal = function(awardKey) {
     const murchaCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) > 0).map(r => {
       const playerName = r.Jogador || r.Player || r.Name;
       const ratio = toNumber(r.Derrotas) / toNumber(r.Participacoes);
-      const assiduidade = targetStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
+      const assiduidade = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
       return {
         player: playerName || 'Desconhecido',
         ratio: ratio,
@@ -2818,8 +2818,8 @@ function updateMetagameDisplay() {
         const partB = toNumber(b.Participacoes);
         if (partB !== partA) return partB - partA;
         
-        const cupChalA = targetStages.filter(stage => stage && stage.data && getDeckForStage(a.Jogador || a.Player || a.Name, stage.data) !== null).length;
-        const cupChalB = targetStages.filter(stage => stage && stage.data && getDeckForStage(b.Jogador || b.Player || b.Name, stage.data) !== null).length;
+        const cupChalA = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(a.Jogador || a.Player || a.Name, stage.data) !== null).length;
+        const cupChalB = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(b.Jogador || b.Player || b.Name, stage.data) !== null).length;
         if (cupChalB !== cupChalA) return cupChalB - cupChalA;
         
         return toNumber(b.Pontos) - toNumber(a.Pontos);
@@ -2860,7 +2860,7 @@ function updateMetagameDisplay() {
       const murchaCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) > 0).map(r => {
         const playerName = r.Jogador || r.Player || r.Name;
         const ratio = toNumber(r.Derrotas) / toNumber(r.Participacoes);
-        const assiduidade = targetStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
+        const assiduidade = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
         return {
           player: playerName || 'Desconhecido',
           ratio: ratio,
