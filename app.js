@@ -1769,6 +1769,264 @@ function closePlayerModal() {
   document.body.style.overflow = '';
 }
 
+window.openAwardModal = function(awardKey) {
+  let modal = document.getElementById('award-detail-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'award-detail-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-container" style="max-width: 480px; position: relative;">
+        <button class="modal-close-btn" onclick="window.closeAwardModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-secondary); font-size: 1.25rem; cursor: pointer; padding: 4px; line-height: 1; transition: color 0.2s;">✕</button>
+        <div id="award-modal-content"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  
+  const contentContainer = document.getElementById('award-modal-content');
+  if (!contentContainer) return;
+  
+  const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
+  const cupChallengeStages = cleanStages.filter(s => {
+    const t = String(s.tipo || '').toLowerCase();
+    return t.includes('cup') || t.includes('challenge') || t.includes('copa') || t.includes('desafio');
+  });
+  const useFallback = cupChallengeStages.length === 0;
+  const targetStages = useFallback ? cleanStages : cupChallengeStages;
+  
+  let title = '';
+  let icon = '';
+  let winnerName = '';
+  let description = '';
+  let formulaHtml = '';
+  let detailHtml = '';
+  
+  if (awardKey === 'gold') {
+    title = 'Pokébola de Ouro';
+    icon = '👑';
+    const goldCandidates = [...appData.Ranking].map(r => {
+      const wins = toNumber(r.Vitorias);
+      const losses = toNumber(r.Derrotas);
+      const draws = toNumber(r.Empates);
+      const total = wins + losses + draws;
+      const winRate = total > 0 ? (wins / total) : 0;
+      return {
+        player: r.Jogador || r.Player || r.Name,
+        winRate: winRate,
+        podiums: toNumber(r.Podio),
+        wins: wins,
+        losses: losses,
+        draws: draws,
+        total: total
+      };
+    });
+    goldCandidates.sort((a, b) => {
+      if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+      if (b.podiums !== a.podiums) return b.podiums - a.podiums;
+      return b.wins - a.wins;
+    });
+    
+    const top = goldCandidates[0];
+    winnerName = top ? top.player : 'Nenhum';
+    description = 'Prêmio para o jogador com o melhor desempenho geral, avaliado primariamente por taxa de vitória (winrate), com pódios e vitórias como critérios de desempate.';
+    formulaHtml = `
+      <div style="font-size:0.8rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:4px; color:var(--text-secondary); margin-top:8px;">
+        <div><strong>Critérios de Ordenação:</strong></div>
+        <div>1. Taxa de Vitórias (Winrate) = Vitórias / Partidas Totais</div>
+        <div>2. Quantidade total de Pódios na temporada</div>
+        <div>3. Quantidade total de Vitórias na temporada</div>
+      </div>
+    `;
+    if (top) {
+      detailHtml = `
+        <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; margin-top:8px;">
+          <div style="font-weight:600; color:#fff; font-size:1rem; margin-bottom:4px;">Cálculo do Vencedor (${escapeHTML(top.player)}):</div>
+          <div style="display:flex; justify-content:space-between;"><span>Taxa de Vitória (Winrate):</span><strong style="color:var(--accent-yellow);">${(top.winRate * 100).toFixed(1)}%</strong></div>
+          <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:-6px; text-align:right;">(${top.wins} vitórias / ${top.total} partidas)</div>
+          <div style="display:flex; justify-content:space-between; margin-top:4px;"><span>Pódios Conquistados:</span><strong style="color:#fff;">${top.podiums}</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Vitórias Totais:</span><strong style="color:#fff;">${top.wins}</strong></div>
+        </div>
+      `;
+    }
+  } else if (awardKey === 'gym') {
+    title = 'Líder de Ginásio';
+    icon = '🏋️‍♂️';
+    
+    const gymCandidates = [...appData.Ranking].map(r => {
+      const playerName = r.Jogador || r.Player || r.Name;
+      const totalPart = toNumber(r.Participacoes);
+      const cupChallengePart = targetStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
+      return {
+        player: playerName,
+        totalPart: totalPart,
+        cupChallengePart: cupChallengePart,
+        points: toNumber(r.Pontos)
+      };
+    });
+    gymCandidates.sort((a, b) => {
+      if (b.totalPart !== a.totalPart) return b.totalPart - a.totalPart;
+      if (b.cupChallengePart !== a.cupChallengePart) return b.cupChallengePart - a.cupChallengePart;
+      return b.points - a.points;
+    });
+    
+    const top = gymCandidates[0];
+    winnerName = top ? top.player : 'Nenhum';
+    description = 'Prêmio para o jogador mais assíduo da temporada (com maior número de participações no ranking geral), utilizando a presença em etapas de Cup/Challenge e os pontos acumulados como desempates.';
+    formulaHtml = `
+      <div style="font-size:0.8rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:4px; color:var(--text-secondary); margin-top:8px;">
+        <div><strong>Critérios de Ordenação:</strong></div>
+        <div>1. Presença Geral = Total de participações na temporada</div>
+        <div>2. Presença Especial = Total de participações em Cup/Challenge</div>
+        <div>3. Pontuação Geral = Total de pontos acumulados na temporada</div>
+      </div>
+    `;
+    if (top) {
+      detailHtml = `
+        <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; margin-top:8px;">
+          <div style="font-weight:600; color:#fff; font-size:1rem; margin-bottom:4px;">Cálculo do Vencedor (${escapeHTML(top.player)}):</div>
+          <div style="display:flex; justify-content:space-between;"><span>Presença Geral (Temporada):</span><strong style="color:var(--accent-yellow);">${top.totalPart} etapas</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Presença em Cup/Challenge:</span><strong style="color:#fff;">${top.cupChallengePart} etapas</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Pontos Totais Acumulados:</span><strong style="color:#fff;">${top.points.toFixed(0)} PTS</strong></div>
+        </div>
+      `;
+    }
+  } else if (awardKey === 'ditto') {
+    title = 'Ditto Player';
+    icon = '🦎';
+    
+    const dittoCandidates = [];
+    (appData.Ranking || []).forEach(r => {
+      if (!r) return;
+      const playerName = r.Jogador || r.Player || r.Name;
+      if (!playerName) return;
+      const uniqueDecks = new Set();
+      targetStages.forEach(stage => {
+        if (!stage || !stage.data) return;
+        const deck = getDeckForStage(playerName, stage.data);
+        if (deck) uniqueDecks.add(deck);
+      });
+      if (uniqueDecks.size > 0) {
+        const wins = toNumber(r.Vitorias);
+        const partCount = targetStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
+        dittoCandidates.push({
+          player: playerName,
+          count: uniqueDecks.size,
+          decks: Array.from(uniqueDecks),
+          participations: partCount,
+          wins: wins
+        });
+      }
+    });
+    dittoCandidates.sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count;
+      if (b.participations !== a.participations) return b.participations - a.participations;
+      return b.wins - a.wins;
+    });
+    
+    const top = dittoCandidates[0];
+    winnerName = top ? top.player : 'Nenhum';
+    description = `Prêmio para o jogador mais versátil, que jogou com a maior variedade de decks diferentes nas etapas de Cup e Challenge${useFallback ? ' (geral)' : ''}.`;
+    formulaHtml = `
+      <div style="font-size:0.8rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:4px; color:var(--text-secondary); margin-top:8px;">
+        <div><strong>Critérios de Ordenação:</strong></div>
+        <div>1. Variedade = Total de decks únicos em Cup/Challenge</div>
+        <div>2. Presença = Participações nas etapas de Cup/Challenge</div>
+        <div>3. Total de Vitórias na temporada</div>
+      </div>
+    `;
+    if (top) {
+      detailHtml = `
+        <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; margin-top:8px;">
+          <div style="font-weight:600; color:#fff; font-size:1rem; margin-bottom:4px;">Cálculo do Vencedor (${escapeHTML(top.player)}):</div>
+          <div style="display:flex; justify-content:space-between;"><span>Variedade de Decks:</span><strong style="color:var(--accent-yellow);">${top.count} decks distintos</strong></div>
+          <div style="display:flex; flex-direction:column; gap:4px; margin-top:2px;">
+            <span style="font-size:0.75rem; color:var(--text-secondary);">Decks jogados nas etapas:</span>
+            <div style="display:flex; flex-wrap:wrap; gap:4px; padding-left:5px;">
+              ${top.decks.map(d => `<span class="ved-badge" style="${window.getDeckGradientStyle(d)} color:#fff; font-size:0.65rem; padding: 2px 6px; border-radius: 10px; display:inline-block;">${escapeHTML(d)}</span>`).join('')}
+            </div>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:4px;"><span>Presença em Cup/Challenge:</span><strong style="color:#fff;">${top.participations} etapas</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Vitórias Totais:</span><strong style="color:#fff;">${top.wins}</strong></div>
+        </div>
+      `;
+    }
+  } else if (awardKey === 'murcha') {
+    title = 'Pokébola Murcha';
+    icon = '💀';
+    const murchaCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) > 0).map(r => {
+      const playerName = r.Jogador || r.Player || r.Name;
+      const ratio = toNumber(r.Derrotas) / toNumber(r.Participacoes);
+      const assiduidade = targetStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
+      return {
+        player: playerName || 'Desconhecido',
+        ratio: ratio,
+        defeats: toNumber(r.Derrotas),
+        participations: toNumber(r.Participacoes),
+        assiduidade: assiduidade
+      };
+    });
+    murchaCandidates.sort((a, b) => {
+      if (b.ratio !== a.ratio) return b.ratio - a.ratio;
+      return b.assiduidade - a.assiduidade;
+    });
+    
+    const top = murchaCandidates[0];
+    winnerName = top ? top.player : 'Nenhum';
+    description = 'Prêmio de consolação para o jogador com a maior proporção de derrotas por etapa jogada na temporada, com desempate pela assiduidade em etapas de Cup/Challenge.';
+    formulaHtml = `
+      <div style="font-size:0.8rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:4px; color:var(--text-secondary); margin-top:8px;">
+        <div><strong>Critérios de Ordenação:</strong></div>
+        <div>1. Razão Murcha = Total de Derrotas / Total de Participações</div>
+        <div>2. Assiduidade = Participações nas etapas de Cup/Challenge</div>
+      </div>
+    `;
+    if (top) {
+      detailHtml = `
+        <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; margin-top:8px;">
+          <div style="font-weight:600; color:#fff; font-size:1rem; margin-bottom:4px;">Cálculo do Vencedor (${escapeHTML(top.player)}):</div>
+          <div style="display:flex; justify-content:space-between;"><span>Derrotas/Etapa (Proporção):</span><strong style="color:var(--accent-yellow);">${top.ratio.toFixed(2)}</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Derrotas Totais:</span><strong style="color:#fff;">${top.defeats} derrotas em ${top.participations} et.</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Presença em Cup/Challenge:</span><strong style="color:#fff;">${top.assiduidade} etapas</strong></div>
+        </div>
+      `;
+    }
+  }
+  
+  contentContainer.innerHTML = `
+    <div style="display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">
+      <span style="font-size:2rem; line-height:1;">${icon}</span>
+      <div>
+        <h3 style="font-weight:700; color:#fff; font-size:1.2rem; margin:0;">${escapeHTML(title)}</h3>
+        <div style="font-size:0.75rem; color:var(--accent-yellow); margin-top:2px;">Detalhamento de Cálculo do Prêmio</div>
+      </div>
+    </div>
+    
+    <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.4; margin-top:8px;">
+      ${description}
+    </div>
+    
+    ${formulaHtml}
+    
+    ${detailHtml}
+    
+    <div style="display:flex; justify-content:flex-end; margin-top:16px; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
+      <button class="btn" onclick="window.closeAwardModal()" style="padding:6px 16px; font-size:0.8rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:20px; color:#fff; cursor:pointer; transition:background 0.2s;">Fechar Detalhes</button>
+    </div>
+  `;
+  
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeAwardModal = function() {
+  const modal = document.getElementById('award-detail-modal');
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+};
+
 window.openChampionDeckModal = function(index) {
   const modal = document.getElementById('champion-deck-modal');
   const champion = appData.Campeoes && appData.Campeoes[index];
@@ -2513,18 +2771,41 @@ function updateMetagameDisplay() {
       const useFallback = cupChallengeStages.length === 0;
       const targetStages = useFallback ? cleanStages : cupChallengeStages;
 
-      // 1. Pokébola de Ouro: Jogador com maior pontuação acumulada geral (Rank 1)
-      const pokebolaDeOuroPlayer = appData.Ranking[0];
+      // 1. Pokébola de Ouro: Maior Winrate (desempate por pódios, depois vitórias)
+      const goldCandidates = [...appData.Ranking].map(r => {
+        const wins = toNumber(r.Vitorias);
+        const losses = toNumber(r.Derrotas);
+        const draws = toNumber(r.Empates);
+        const total = wins + losses + draws;
+        const winRate = total > 0 ? (wins / total) : 0;
+        return {
+          player: r,
+          winRate: winRate,
+          podiums: toNumber(r.Podio),
+          wins: wins
+        };
+      });
+      goldCandidates.sort((a, b) => {
+        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+        if (b.podiums !== a.podiums) return b.podiums - a.podiums;
+        return b.wins - a.wins;
+      });
+      const pokebolaDeOuroPlayer = goldCandidates[0] ? goldCandidates[0].player : null;
 
-      // 2. Líder de Ginásio: Jogador com maior número de participações (desempate por pontuação)
+      // 2. Líder de Ginásio: Jogador com maior número de participações (desempates: presenças Cup/Challenge, depois pontuação)
       const liderDeGinasioPlayer = [...appData.Ranking].sort((a, b) => {
         const partA = toNumber(a.Participacoes);
         const partB = toNumber(b.Participacoes);
         if (partB !== partA) return partB - partA;
+        
+        const cupChalA = targetStages.filter(stage => stage && stage.data && getDeckForStage(a.Jogador || a.Player || a.Name, stage.data) !== null).length;
+        const cupChalB = targetStages.filter(stage => stage && stage.data && getDeckForStage(b.Jogador || b.Player || b.Name, stage.data) !== null).length;
+        if (cupChalB !== cupChalA) return cupChalB - cupChalA;
+        
         return toNumber(b.Pontos) - toNumber(a.Pontos);
       })[0];
 
-      // 3. Ditto Player: Mais decks diferentes em Cups/Challenges (desempate por vitórias e depois winrate)
+      // 3. Ditto Player: Mais decks diferentes em Cups/Challenges (desempate por presenças em Cup/Challenge, depois vitórias)
       const dittoCandidates = [];
       (appData.Ranking || []).forEach(r => {
         if (!r) return;
@@ -2538,22 +2819,20 @@ function updateMetagameDisplay() {
         });
         if (uniqueDecks.size > 0) {
           const wins = toNumber(r.Vitorias);
-          const losses = toNumber(r.Derrotas);
-          const draws = toNumber(r.Empates);
-          const winRate = (wins + losses + draws) > 0 ? (wins / (wins + losses + draws)) : 0;
+          const partCount = targetStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
           dittoCandidates.push({
             player: playerName,
             count: uniqueDecks.size,
             decks: Array.from(uniqueDecks),
-            wins: wins,
-            winRate: winRate
+            participations: partCount,
+            wins: wins
           });
         }
       });
       dittoCandidates.sort((a, b) => {
         if (b.count !== a.count) return b.count - a.count;
-        if (b.wins !== a.wins) return b.wins - a.wins;
-        return b.winRate - a.winRate;
+        if (b.participations !== a.participations) return b.participations - a.participations;
+        return b.wins - a.wins;
       });
       const dittoPlayer = dittoCandidates[0];
 
@@ -2576,8 +2855,14 @@ function updateMetagameDisplay() {
       });
       const murchaPlayer = murchaCandidates[0];
 
-      const goldCardHtml = pokebolaDeOuroPlayer ? `
-        <div class="glass-card" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);">
+      const goldCardHtml = pokebolaDeOuroPlayer ? (() => {
+        const wins = toNumber(pokebolaDeOuroPlayer.Vitorias);
+        const losses = toNumber(pokebolaDeOuroPlayer.Derrotas);
+        const draws = toNumber(pokebolaDeOuroPlayer.Empates);
+        const total = wins + losses + draws;
+        const winRatePct = total > 0 ? ((wins / total) * 100).toFixed(0) : '0';
+        return `
+        <div class="glass-card" onclick="window.openAwardModal('gold')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size:1.5rem;">👑</span>
             <div>
@@ -2586,17 +2871,19 @@ function updateMetagameDisplay() {
             </div>
           </div>
           <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
-            Maior pontuação acumulada demonstrando o melhor desempenho geral da temporada.
+            Melhor desempenho geral calculado por winrate geral, pódios e total de vitórias.
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
-            <div>Pontuação: <strong>${toNumber(pokebolaDeOuroPlayer.Pontos).toFixed(0)} PTS</strong></div>
-            <div>Média Pos: <strong>${toNumber(pokebolaDeOuroPlayer.MediaColocacao).toFixed(1)}º</strong></div>
+            <div>Winrate: <strong>${winRatePct}%</strong></div>
+            <div>Pódios: <strong>${toNumber(pokebolaDeOuroPlayer.Podio)}</strong></div>
           </div>
+          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver cálculo detalhado ➔</div>
         </div>
-      ` : '';
+      `;
+      })() : '';
 
       const gymLeaderCardHtml = liderDeGinasioPlayer ? `
-        <div class="glass-card" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);">
+        <div class="glass-card" onclick="window.openAwardModal('gym')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size:1.5rem;">🏋️‍♂️</span>
             <div>
@@ -2605,17 +2892,18 @@ function updateMetagameDisplay() {
             </div>
           </div>
           <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
-            O jogador mais assíduo, com maior presença registrada nas etapas da temporada.
+            O treinador mais assíduo nas etapas e torneios da temporada.
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
             <div>Presenças: <strong>${toNumber(liderDeGinasioPlayer.Participacoes)} etapas</strong></div>
             <div>Total Pontos: <strong>${toNumber(liderDeGinasioPlayer.Pontos).toFixed(0)} PTS</strong></div>
           </div>
+          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver cálculo detalhado ➔</div>
         </div>
       ` : '';
 
       const dittoCardHtml = dittoPlayer ? `
-        <div class="glass-card" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);">
+        <div class="glass-card" onclick="window.openAwardModal('ditto')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size:1.5rem;">🦎</span>
             <div>
@@ -2631,13 +2919,14 @@ function updateMetagameDisplay() {
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
             <div>Variedade: <strong>${dittoPlayer.count} Decks</strong></div>
-            <div>Vitórias: <strong>${dittoPlayer.wins} (WR: ${(dittoPlayer.winRate*100).toFixed(0)}%)</strong></div>
+            <div>Etapas: <strong>${dittoPlayer.participations} et.</strong></div>
           </div>
+          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver cálculo detalhado ➔</div>
         </div>
       ` : '';
 
       const murchaCardHtml = murchaPlayer ? `
-        <div class="glass-card" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);">
+        <div class="glass-card" onclick="window.openAwardModal('murcha')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size:1.5rem;">💀</span>
             <div>
@@ -2652,6 +2941,7 @@ function updateMetagameDisplay() {
             <div>Derrotas/Etapa: <strong>${murchaPlayer.ratio.toFixed(2)}</strong></div>
             <div>Derrotas Totais: <strong>${murchaPlayer.defeats} em ${murchaPlayer.participations} et.</strong></div>
           </div>
+          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver cálculo detalhado ➔</div>
         </div>
       ` : '';
 
