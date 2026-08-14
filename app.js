@@ -2715,6 +2715,7 @@ function updateMetagameDisplay() {
                 ${isExpanded ? "Visão da fatia 'Outros' expandida." : "Clique em outros decks para expandir a lista."}
               </div>
             </div>
+            ` : accordionHtml}
           </div>
           
           <div style="flex: 1 1 350px; width: 100%; max-width: 400px;">
@@ -3130,11 +3131,10 @@ function updateMetagameDisplay() {
           plugins: [sliceLabelsPlugin]
         });
         
-        // Auto-select first slice on load to match the carousel starting state
         if (chartType === 'doughnut' && data.length > 0) {
           const firstLabel = labels[0];
-          const isOutros = firstLabel.toLowerCase() === 'outros' || firstLabel.toLowerCase() === 'outros decks';
-          if (!isOutros) {
+          const isOutros = firstLabel ? (firstLabel.toLowerCase() === 'outros' || firstLabel.toLowerCase() === 'outros decks') : false;
+          if (!isOutros && firstLabel) {
             window[chartVarName]._selectedIndex = 0;
             window[chartVarName]._selectedLabel = firstLabel;
             window[chartVarName]._preventHoverLoop = true;
@@ -3224,7 +3224,7 @@ window.updateCarousel = function(id) {
       const chartVarName = id === 'metagameChartCanvas_home' ? 'metagameChartHome' : 'metagameChartPage';
       const chart = window[chartVarName];
       if (chart && (!chart._lastHoveredLabel)) {
-        const dataIndex = chart.data.labels.findIndex(l => l.toLowerCase() === deckName.toLowerCase());
+        const dataIndex = chart.data.labels.findIndex(l => l && l.toLowerCase() === deckName.toLowerCase());
         if (dataIndex !== -1 && chart._selectedIndex !== dataIndex) {
           chart._selectedIndex = dataIndex;
           chart._selectedLabel = chart.data.labels[dataIndex];
