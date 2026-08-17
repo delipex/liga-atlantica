@@ -423,7 +423,11 @@
             </table>
           </div>
 
-          <button id="btn-publish" onclick="publishRanking()" class="btn btn-whatsapp" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow);">
+          <button id="btn-validate" onclick="runValidation()" class="btn" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem; background: #2563eb; color: #fff; border-color: #2563eb; margin-bottom: 0.75rem;">
+            🔍 Validar Dados do Arquivo
+          </button>
+
+          <button id="btn-publish" onclick="publishRanking()" class="btn btn-whatsapp" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); display: none;">
             🚀 Publicar Ranking no Site
           </button>
         </section>
@@ -503,6 +507,7 @@
       path: "ranking.tdf"
     };
     let activeContent = "";
+    let isFileValidated = false;
     let runtimeToken = null;
 
     // Variáveis globais para cache das planilhas Google Sheets
@@ -818,6 +823,7 @@
 
     // --- Manipuladores da Resolução de Nomes ---
     function handleResolutionChange(rawName, selectedValue) {
+      resetValidation();
       resolvedNamesMap[rawName] = selectedValue;
       newPlayersToRegister = unresolvedPlayers.filter(name => resolvedNamesMap[name] === 'new_player');
       renderEnrichedPreview();
@@ -854,7 +860,87 @@
       }
     }
 
+    function resetValidation() {
+      isFileValidated = false;
+      const checkBadge = document.getElementById('check-badge');
+      if (checkBadge) {
+        checkBadge.innerText = "Não Validado ❌";
+        checkBadge.style.background = "rgba(239, 68, 68, 0.15)";
+        checkBadge.style.color = "#ef4444";
+        checkBadge.style.borderColor = "rgba(239, 68, 68, 0.3)";
+      }
+      const validateBtn = document.getElementById('btn-validate');
+      const publishBtn = document.getElementById('btn-publish');
+      if (validateBtn) validateBtn.style.display = 'block';
+      if (publishBtn) publishBtn.style.display = 'none';
+    }
+
+    function runValidation() {
+      hideAlerts();
+      
+      const eventDate = document.getElementById('event-date').value;
+      if (!eventDate) {
+        showError("Erro de Validação: Selecione a data do evento!");
+        return;
+      }
+
+      if (!activeContent) {
+        showError("Erro de Validação: Nenhum arquivo carregado ou dados vazios!");
+        return;
+      }
+
+      // Verifica nomes não resolvidos
+      const unresolvedCount = unresolvedPlayers.filter(name => !resolvedNamesMap[name]).length;
+      if (unresolvedCount > 0) {
+        showError(`Erro de Validação: Existem ${unresolvedCount} nomes não cadastrados/não resolvidos na planilha. Por favor, associe cada um abaixo antes de validar.`);
+        const resSection = document.getElementById('name-resolution-section');
+        if (resSection) resSection.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+
+      // Verifica se existem nomes duplicados na tabela
+      const namesList = currentRawPlayers.map(p => {
+        const rawName = getFirstDefined(p, ['Jogador', 'Player', 'Name', 'Nome']) || '';
+        const resolution = resolvedNamesMap[rawName];
+        return (resolution && resolution !== 'new_player') ? resolution : rawName;
+      }).filter(n => n !== '');
+
+      const duplicates = namesList.filter((item, index) => namesList.indexOf(item) !== index);
+      if (duplicates.length > 0) {
+        showError(`Erro de Validação: O arquivo contém jogadores duplicados após resolução de nomes: ${Array.from(new Set(duplicates)).join(', ')}.`);
+        return;
+      }
+
+      // Validação passou com sucesso!
+      isFileValidated = true;
+      
+      // Atualiza Badge
+      const checkBadge = document.getElementById('check-badge');
+      if (checkBadge) {
+        checkBadge.innerText = "Validado ✓";
+        checkBadge.style.background = "rgba(16, 185, 129, 0.15)";
+        checkBadge.style.color = "#10b981";
+        checkBadge.style.borderColor = "rgba(16, 185, 129, 0.3)";
+      }
+
+      // Altera a exibição dos botões
+      const validateBtn = document.getElementById('btn-validate');
+      const publishBtn = document.getElementById('btn-publish');
+      if (validateBtn) validateBtn.style.display = 'none';
+      if (publishBtn) {
+        publishBtn.style.display = 'block';
+        publishBtn.disabled = false;
+        publishBtn.innerText = "🚀 Publicar Ranking no Site";
+        publishBtn.style.background = "var(--accent-yellow)";
+        publishBtn.style.borderColor = "var(--accent-yellow)";
+        publishBtn.style.color = "#000";
+      }
+
+      showSuccess("✓ Sucesso! O arquivo foi verificado e validado com sucesso. Pronto para publicação.");
+    }
+
     function handleDateChange() {
+      resetValidation();
       handleEventTypeChange();
       const text = document.getElementById('raw-input').value;
       if (text) {
@@ -1113,12 +1199,14 @@
     }
 
     function handleFileSelect(e) {
+      resetValidation();
       if (e.target.files && e.target.files.length > 0) {
         handleMultipleFiles(e.target.files);
       }
     }
     
     function handleRawInput() {
+      resetValidation();
       const text = document.getElementById('raw-input').value;
       processTDFText(text);
     }
@@ -1137,6 +1225,7 @@
       }, false);
     });
     dropzone.addEventListener('drop', (e) => {
+      resetValidation();
       const dt = e.dataTransfer;
       if (dt.files && dt.files.length > 0) {
         handleMultipleFiles(dt.files);
@@ -1812,22 +1901,50 @@
         copyArea.value = '';
       }
 
-      // 5. Gerencia a trava do botão de publicar
+      // 5. Gerencia os botões de validação e publicação
+      const validateBtn = document.getElementById('btn-validate');
       const publishBtn = document.getElementById('btn-publish');
       const unresolvedCount = unresolvedPlayers.filter(name => !resolvedNamesMap[name]).length;
       
-      if (unresolvedCount > 0) {
-        publishBtn.disabled = true;
-        publishBtn.innerText = `⏳ Resolução de nomes pendente (${unresolvedCount})`;
-        publishBtn.style.background = "#4b5563";
-        publishBtn.style.borderColor = "#4b5563";
-        publishBtn.style.color = "#9ca3af";
+      if (isFileValidated && unresolvedCount === 0) {
+        if (validateBtn) validateBtn.style.display = 'none';
+        if (publishBtn) {
+          publishBtn.style.display = 'block';
+          publishBtn.disabled = false;
+          publishBtn.innerText = "🚀 Publicar Ranking no Site";
+          publishBtn.style.background = "var(--accent-yellow)";
+          publishBtn.style.borderColor = "var(--accent-yellow)";
+          publishBtn.style.color = "#000";
+        }
       } else {
-        publishBtn.disabled = false;
-        publishBtn.innerText = "🚀 Publicar Ranking no Site";
-        publishBtn.style.background = "var(--accent-yellow)";
-        publishBtn.style.borderColor = "var(--accent-yellow)";
-        publishBtn.style.color = "#000";
+        // Se mudou algo ou tem pendências, exige validação novamente
+        isFileValidated = false;
+        if (validateBtn) {
+          validateBtn.style.display = 'block';
+          if (unresolvedCount > 0) {
+            validateBtn.disabled = true;
+            validateBtn.innerText = `⏳ Resolva os nomes pendentes (${unresolvedCount})`;
+            validateBtn.style.background = "#4b5563";
+            validateBtn.style.borderColor = "#4b5563";
+            validateBtn.style.color = "#9ca3af";
+          } else {
+            validateBtn.disabled = false;
+            validateBtn.innerText = "🔍 Validar Dados do Arquivo";
+            validateBtn.style.background = "#2563eb";
+            validateBtn.style.borderColor = "#2563eb";
+            validateBtn.style.color = "#fff";
+          }
+        }
+        if (publishBtn) publishBtn.style.display = 'none';
+        
+        // Mantém o badge como não validado
+        const checkBadge = document.getElementById('check-badge');
+        if (checkBadge) {
+          checkBadge.innerText = "Não Validado ❌";
+          checkBadge.style.background = "rgba(239, 68, 68, 0.15)";
+          checkBadge.style.color = "#ef4444";
+          checkBadge.style.borderColor = "rgba(239, 68, 68, 0.3)";
+        }
       }
     }
 
@@ -2142,6 +2259,11 @@
       const config = GITHUB_CONFIG;
       if (!runtimeToken) {
         showError("Token do GitHub não configurado no código. Fale com o administrador.");
+        return;
+      }
+
+      if (!isFileValidated) {
+        showError("O arquivo precisa ser validado clicando em 'Validar Dados do Arquivo' antes de publicar!");
         return;
       }
       
