@@ -1068,11 +1068,15 @@
           return;
         }
 
-        // Ordenação unificada por pontos, colocação oficial (MediaColocacao), vitórias, empates, derrotas (menor é melhor) e nome
+        // Ordenação unificada por pontos, OMW%, colocação oficial (MediaColocacao), vitórias, empates, derrotas (menor é melhor) e nome
         allPlayers.sort((a, b) => {
           const ptsA = Number(a.Pontos) || 0;
           const ptsB = Number(b.Pontos) || 0;
           if (ptsB !== ptsA) return ptsB - ptsA;
+
+          const omwA = Number(a.omw) || 0;
+          const omwB = Number(b.omw) || 0;
+          if (omwB !== omwA) return omwB - omwA;
 
           const medA = Number(a.MediaColocacao) || 999;
           const medB = Number(b.MediaColocacao) || 999;
@@ -1093,9 +1097,10 @@
           return String(a.Jogador || '').localeCompare(String(b.Jogador || ''), 'pt-BR');
         });
 
-        // Reatribuição do Rank unificado
+        // Reatribuição do Rank unificado e pódio
         allPlayers.forEach((p, idx) => {
           p.Pos = idx + 1;
+          p.Podio = (p.Pos <= 4 && !p.isDnf) ? 1 : 0;
         });
 
         const consolidatedText = parsePlayersToTDFString(allPlayers);
@@ -1230,19 +1235,15 @@
             const cat = podNodes[i].getAttribute("category");
             if (cat) {
               if (cat === "10") podCategory = "MASTER";
-              else if (cat === "11") podCategory = "SENIOR";
-              else if (cat === "12") podCategory = "JUNIOR";
-              break;
-            }
-          }
-          
-          // Initialize match stats for all players
+              els          // Initialize match stats and opponents sets for all players
           const statsMap = new Map(); // userid -> { v: 0, e: 0, d: 0 }
+          const opponentsMap = new Map(); // userid -> Set
           playersMap.forEach((p, userid) => {
             statsMap.set(userid, { v: 0, e: 0, d: 0 });
+            opponentsMap.set(userid, new Set());
           });
           
-          // Parse matches inside all rounds containers to calculate Wins, Draws, Losses
+          // Parse matches inside all rounds containers to calculate Wins, Draws, Losses and opponents
           const roundsContainers = xmlDoc.getElementsByTagName("rounds");
           for (let rcIdx = 0; rcIdx < roundsContainers.length; rcIdx++) {
             const roundsContainer = roundsContainers[rcIdx];
@@ -1256,10 +1257,20 @@
               const p1id = player1Node ? player1Node.getAttribute("userid") : null;
               const p2id = player2Node ? player2Node.getAttribute("userid") : null;
               
-              if (p1id && !statsMap.has(p1id)) statsMap.set(p1id, { v: 0, e: 0, d: 0 });
-              if (p2id && !statsMap.has(p2id)) statsMap.set(p2id, { v: 0, e: 0, d: 0 });
+              if (p1id && !statsMap.has(p1id)) {
+                statsMap.set(p1id, { v: 0, e: 0, d: 0 });
+                opponentsMap.set(p1id, new Set());
+              }
+              if (p2id && !statsMap.has(p2id)) {
+                statsMap.set(p2id, { v: 0, e: 0, d: 0 });
+                opponentsMap.set(p2id, new Set());
+              }
               
               if (p1id && p2id) {
+                // Add to opponents
+                opponentsMap.get(p1id).add(p2id);
+                opponentsMap.get(p2id).add(p1id);
+                
                 if (outcome === 1) {
                   statsMap.get(p1id).v++;
                   statsMap.get(p2id).d++;
@@ -1278,15 +1289,47 @@
                 const singlePlayerNode = match.getElementsByTagName("player")[0];
                 const spid = singlePlayerNode ? singlePlayerNode.getAttribute("userid") : null;
                 if (spid) {
-                  if (!statsMap.has(spid)) statsMap.set(spid, { v: 0, e: 0, d: 0 });
+                  if (!statsMap.has(spid)) {
+                    statsMap.set(spid, { v: 0, e: 0, d: 0 });
+                    opponentsMap.set(spid, new Set());
+                  }
                   if (outcome === 5) {
                     statsMap.get(spid).v++; // 3-point Bye (Win)
                   }
-                  // outcome=8 (Late Entry) is ignored (0 wins/0 losses/0 points)
                 }
               }
             }
           }
+          
+          // Calculate individual Win Rates for OMW calculation (max(0.25, points / (rounds * 3)))
+          const winRates = new Map();
+          playersMap.forEach((p, id) => {
+            const stats = statsMap.get(id) || { v: 0, e: 0, d: 0 };
+            const points = stats.v * 3 + stats.e * 1;
+            const opps = opponentsMap.get(id);
+            const totalMatches = opps ? opps.size : 0;
+            if (totalMatches === 0) {
+              winRates.set(id, 0.25);
+            } else {
+              const rate = points / (totalMatches * 3);
+              winRates.set(id, Math.max(0.25, rate));
+            }
+          });
+          
+          // Calculate OMW (Opponent Match Win Percentage)
+          const omwMap = new Map();
+          playersMap.forEach((p, id) => {
+            const opps = opponentsMap.get(id);
+            if (!opps || opps.size === 0) {
+              omwMap.set(id, 0.25);
+            } else {
+              let sum = 0;
+              opps.forEach(oppId => {
+                sum += winRates.get(oppId) || 0.25;
+              });
+              omwMap.set(id, sum / opps.size);
+            }
+          });
           
           // Parse standings to get placement
           const playersResult = [];
@@ -1311,8 +1354,6 @@
                 
                 const pInfo = playersMap.get(id) || { name: `Jogador ${id}`, birthdate: "" };
                 const pStats = statsMap.get(id) || { v: 0, e: 0, d: 0 };
-                
-                // Calculate points: 3 for Win, 1 for Draw
                 const points = pStats.v * 3 + pStats.e * 1;
                 
                 playersResult.push({
@@ -1323,11 +1364,13 @@
                   Vitorias: pStats.v,
                   Empates: pStats.e,
                   Derrotas: pStats.d,
-                  Podio: place <= 4 && type !== "dnf" ? 1 : 0,
+                  Podio: 0, // Recalculado abaixo com base no ranking geral unificado
                   MediaColocacao: place,
                   Deck: "Não registrado",
                   TipoEnergia: "colorless",
-                  id: id
+                  id: id,
+                  omw: omwMap.get(id) || 0.25,
+                  isDnf: type === "dnf"
                 });
               }
             }
@@ -1347,21 +1390,27 @@
                 Vitorias: pStats.v,
                 Empates: pStats.e,
                 Derrotas: pStats.d,
-                Podio: idx <= 4 ? 1 : 0,
+                Podio: 0, // Recalculado abaixo
                 MediaColocacao: idx,
                 Deck: "Não registrado",
                 TipoEnergia: "colorless",
-                id: id
+                id: id,
+                omw: omwMap.get(id) || 0.25,
+                isDnf: false
               });
               idx++;
             });
           }
           
-          // Ordenação unificada por pontos, colocação oficial (MediaColocacao), vitórias, empates, derrotas (menor é melhor) e nome
+          // Ordenação unificada por pontos, OMW%, colocação oficial (MediaColocacao), vitórias, empates, derrotas (menor é melhor) e nome
           playersResult.sort((a, b) => {
             const ptsA = Number(a.Pontos) || 0;
             const ptsB = Number(b.Pontos) || 0;
             if (ptsB !== ptsA) return ptsB - ptsA;
+
+            const omwA = Number(a.omw) || 0;
+            const omwB = Number(b.omw) || 0;
+            if (omwB !== omwA) return omwB - omwA;
 
             const medA = Number(a.MediaColocacao) || 999;
             const medB = Number(b.MediaColocacao) || 999;
@@ -1382,9 +1431,10 @@
             return String(a.Jogador || '').localeCompare(String(b.Jogador || ''), 'pt-BR');
           });
 
-          // Reatribuição do Rank unificado contínuo
+          // Reatribuição do Rank unificado contínuo e cálculo correto do Pódio Geral
           playersResult.forEach((p, idx) => {
             p.Pos = idx + 1;
+            p.Podio = (p.Pos <= 4 && !p.isDnf) ? 1 : 0;
           });
           
           return playersResult;
