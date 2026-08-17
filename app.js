@@ -2175,18 +2175,41 @@ function initNavigation() {
 function initEvents() {
 
   const searchInput = document.getElementById('search-ranking');
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      const value = e.target.value.toLowerCase().trim();
+  const catSelector = document.getElementById('ranking-category-selector');
+
+  function applyRankingFilters() {
+    const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const selectedCat = catSelector ? catSelector.value : 'all';
+    
+    const filtered = currentRankingList.filter(player => {
+      let searchMatch = true;
+      if (searchVal) {
+        const nameMatch = player.Jogador && player.Jogador.toLowerCase().includes(searchVal);
+        const deckMatch = player.Deck && player.Deck.toLowerCase().includes(searchVal);
+        searchMatch = nameMatch || deckMatch;
+      }
       
-      const filtered = currentRankingList.filter(player => {
-        const nameMatch = player.Jogador && player.Jogador.toLowerCase().includes(value);
-        const deckMatch = player.Deck && player.Deck.toLowerCase().includes(value);
-        return nameMatch || deckMatch;
-      });
+      let catMatch = true;
+      if (selectedCat !== 'all') {
+        const playerCat = String(player.Categoria || player.Category || '').toUpperCase().trim();
+        // Trata acentuação "Sênior" no value contra "SENIOR" no dado
+        const normalizedSelCat = selectedCat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+        const normalizedPlayerCat = playerCat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+        catMatch = normalizedPlayerCat === normalizedSelCat;
+      }
       
-      renderRankingTable(filtered, 1);
+      return searchMatch && catMatch;
     });
+    
+    renderRankingTable(filtered, 1);
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', applyRankingFilters);
+  }
+
+  if (catSelector) {
+    catSelector.addEventListener('change', applyRankingFilters);
   }
 
   const rankingDateSelector = document.getElementById('ranking-date-selector');
@@ -2209,6 +2232,7 @@ function initEvents() {
         renderRankingTable(appData.Ranking, 1);
 
         if (searchInput) searchInput.value = '';
+        if (catSelector) catSelector.value = 'all';
         return;
       }
 
@@ -2247,6 +2271,7 @@ function initEvents() {
         renderRankingTable(normalized, 1);
 
         if (searchInput) searchInput.value = '';
+        if (catSelector) catSelector.value = 'all';
 
         const stageInfo = stagesIndex.find(s => s.data === selectedValue);
         if (stageInfo && infoBadge) {
