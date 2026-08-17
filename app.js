@@ -56,6 +56,7 @@ let filteredRankingList = [];
 let filteredHistoricalList = [];
 let currentRankingPage = 1;
 let currentHistoricalPage = 1;
+let currentCalendarMonth = null;
 const ITEMS_PER_PAGE = 20;
 let isOfflineMode = true;
 
@@ -1410,27 +1411,85 @@ function renderLocationLink(locationName, mapUrl) {
 
 function renderCalendar() {
   const timeline = document.getElementById('calendar-timeline');
+  const tabsContainer = document.getElementById('calendar-month-tabs');
   if (!timeline) return;
 
-  const events = appData.Calendario;
+  const events = appData.Calendario || [];
 
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-
-  const sortedEvents = events
-    .filter(e => {
-      const d = parseDateSafe(e.Data);
-      return !isNaN(d) && d >= now;
-    })
+  // 1. Filtra eventos válidos e ordena cronologicamente
+  const validEvents = events
+    .filter(e => e && e.Data && !isNaN(parseDateSafe(e.Data)))
     .sort((a, b) => parseDateSafe(a.Data) - parseDateSafe(b.Data));
 
-  if (sortedEvents.length === 0) {
+  if (validEvents.length === 0) {
+    if (tabsContainer) tabsContainer.innerHTML = '';
     timeline.innerHTML = `<div style="padding:3rem;text-align:center;color:var(--text-secondary);">Nenhum torneio cadastrado no calendário.</div>`;
     return;
   }
 
-  timeline.innerHTML = sortedEvents.map(evt => {
+  // Nomes dos meses em português
+  const monthNames = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
 
+  // 2. Agrupa eventos por chave "YYYY-MM"
+  const groups = {}; // key "YYYY-MM" -> { monthKey: "2026-08", label: "Agosto 2026", events: [] }
+  validEvents.forEach(evt => {
+    const d = parseDateSafe(evt.Data);
+    const monthVal = String(d.getMonth() + 1).padStart(2, '0'); // "01"-"12"
+    const yearVal = d.getFullYear(); // e.g. 2026
+    const key = `${yearVal}-${monthVal}`;
+    const label = `${monthNames[d.getMonth()]} de ${yearVal}`;
+    
+    if (!groups[key]) {
+      groups[key] = {
+        monthKey: key,
+        label: label,
+        events: []
+      };
+    }
+    groups[key].events.push(evt);
+  });
+
+  // Chaves de meses ordenadas cronologicamente
+  const sortedMonthKeys = Object.keys(groups).sort();
+
+  // 3. Determina o mês a ser exibido inicialmente se currentCalendarMonth for nulo
+  if (!currentCalendarMonth || !groups[currentCalendarMonth]) {
+    // Tenta encontrar o mês atual ("YYYY-MM")
+    const now = new Date();
+    const nowMonthVal = String(now.getMonth() + 1).padStart(2, '0');
+    const nowKey = `${now.getFullYear()}-${nowMonthVal}`;
+    
+    if (groups[nowKey]) {
+      currentCalendarMonth = nowKey;
+    } else {
+      // Se o mês atual não tiver eventos, pega o primeiro mês disponível que tem eventos
+      currentCalendarMonth = sortedMonthKeys[0];
+    }
+  }
+
+  // 4. Renderiza as abas de meses
+  if (tabsContainer) {
+    tabsContainer.innerHTML = sortedMonthKeys.map(key => {
+      const activeClass = key === currentCalendarMonth ? 'active' : '';
+      return `
+        <button class="month-tab-btn ${activeClass}" onclick="selectCalendarMonth('${key}')">
+          ${escapeHTML(groups[key].label)}
+        </button>
+      `;
+    }).join('');
+  }
+
+  // 5. Renderiza os eventos do mês selecionado
+  const selectedGroup = groups[currentCalendarMonth];
+  if (!selectedGroup || selectedGroup.events.length === 0) {
+    timeline.innerHTML = `<div style="padding:3rem;text-align:center;color:var(--text-secondary);">Nenhum torneio cadastrado para este mês.</div>`;
+    return;
+  }
+
+  timeline.innerHTML = selectedGroup.events.map(evt => {
     const iso = normalizeDateISO(evt.Data);
     const parts = iso.split('-');
     const dateFormatted = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : evt.Data;
@@ -1464,6 +1523,12 @@ function renderCalendar() {
     `;
   }).join('');
 }
+
+// Função global para trocar o mês do calendário
+window.selectCalendarMonth = function(monthKey) {
+  currentCalendarMonth = monthKey;
+  renderCalendar();
+};
 
 function renderRules() {
   const container = document.getElementById('rules-container');
