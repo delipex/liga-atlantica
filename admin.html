@@ -1235,7 +1235,13 @@
             const cat = podNodes[i].getAttribute("category");
             if (cat) {
               if (cat === "10") podCategory = "MASTER";
-              els          // Initialize match stats and opponents sets for all players
+              else if (cat === "11") podCategory = "SENIOR";
+              else if (cat === "12") podCategory = "JUNIOR";
+              break;
+            }
+          }
+          
+          // Initialize match stats and opponents sets for all players
           const statsMap = new Map(); // userid -> { v: 0, e: 0, d: 0 }
           const opponentsMap = new Map(); // userid -> Set
           playersMap.forEach((p, userid) => {
