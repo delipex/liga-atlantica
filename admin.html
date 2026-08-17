@@ -369,7 +369,10 @@
               <thead>
                 <tr>
                   <th style="padding: 0.5rem; text-align: left;">Nome no Arquivo</th>
+                  <th style="padding: 0.5rem; text-align: center;">Categoria</th>
+                  <th style="padding: 0.5rem; text-align: center;">POP ID</th>
                   <th style="padding: 0.5rem; text-align: left;">Ação / Associação</th>
+                  <th style="padding: 0.5rem; text-align: center;">Cadastro Rápido</th>
                 </tr>
               </thead>
               <tbody id="name-resolution-tbody">
@@ -471,26 +474,60 @@
 
   
   <div id="settings-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
-    <div class="glass-card" style="width: 90%; max-width: 400px; padding: 2rem; position: relative;">
+    <div class="glass-card" style="width: 90%; max-width: 450px; padding: 2rem; position: relative;">
       <button onclick="closeSettingsModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
-      <h3 style="color: #fff; margin-bottom: 1rem; text-align: center;">Acesso à Planilha</h3>
+      <h3 style="color: #fff; margin-bottom: 1rem; text-align: center;">Acesso e Configurações</h3>
       <div class="alert-box alert-error" id="settings-error" style="display: none; margin-bottom: 1rem;">Senha incorreta!</div>
       
-      <div id="settings-pw-group">
+      <div id="settings-pw-group" style="margin-bottom: 1.5rem;">
         <div class="form-group">
-          <label for="settings-password">Senha de Segurança</label>
+          <label for="settings-password">Senha de Segurança (Spreadsheet Edit Link)</label>
           <input type="password" id="settings-password" class="search-input" placeholder="Digite a senha secreta...">
         </div>
         <button id="settings-login-btn" onclick="handleSettingsLogin()" class="btn btn-whatsapp" style="width: 100%; justify-content: center; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); margin-top: 1rem;">
-          Desbloquear Planilha
+          Desbloquear Link da Planilha
         </button>
       </div>
       
       <!-- Unlocked Button (initially hidden) -->
-      <a id="modal-sheets-link-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp" style="display: none; background: #0f766e; border-color: #0f766e; color: #fff; margin-top: 1rem; justify-content: center; width: 100%; text-decoration: none; font-weight: 700; gap: 0.5rem; align-items: center;">
+      <a id="modal-sheets-link-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp" style="display: none; background: #0f766e; border-color: #0f766e; color: #fff; margin-top: 1rem; margin-bottom: 1.5rem; justify-content: center; width: 100%; text-decoration: none; font-weight: 700; gap: 0.5rem; align-items: center;">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         Ir para o Google Sheets
       </a>
+
+      <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <h4 style="color: #fff; margin-bottom: 0.5rem; font-size: 0.95rem; display: flex; align-items: center; gap: 0.35rem;">
+          ⚡ Cadastro Automático de Jogadores
+        </h4>
+        <p style="font-size: 0.72rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.4;">
+          Para cadastrar novos jogadores na planilha com apenas um clique a partir do validador, insira a URL do Web App do Google Apps Script configurado na sua planilha:
+        </p>
+        <div class="form-group">
+          <label for="apps-script-url">URL do Apps Script (Web App)</label>
+          <input type="url" id="apps-script-url" class="search-input" placeholder="https://script.google.com/macros/s/.../exec" style="font-size: 0.8rem;" oninput="saveAppsScriptUrl()">
+        </div>
+        <details style="font-size: 0.72rem; color: var(--accent-yellow); cursor: pointer; margin-top: 0.5rem;">
+          <summary>Ver código do Google Apps Script para colar na planilha</summary>
+          <pre style="background: rgba(0,0,0,0.4); padding: 0.65rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; color: #fff; font-family: monospace; font-size: 0.65rem; margin-top: 0.5rem; user-select: all; line-height: 1.4;">
+function doGet(e) {
+  var id = e.parameter.id || "";
+  var name = e.parameter.name || "";
+  var cat = e.parameter.category || "";
+  
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Jogadores");
+  if (!sheet) {
+    return ContentService.createTextOutput("ERROR: Aba 'Jogadores' não encontrada.").setMimeType(ContentService.MimeType.TEXT);
+  }
+  
+  // Adiciona a linha no final
+  sheet.appendRow([id, name, cat]);
+  
+  // Retorna sucesso com cabeçalhos de CORS habilitados
+  return ContentService.createTextOutput("SUCCESS")
+    .setMimeType(ContentService.MimeType.TEXT);
+}</pre>
+        </details>
+      </div>
     </div>
   </div>
 
@@ -1776,13 +1813,31 @@
         });
         selectOptions += `</optgroup>`;
 
+        const rawPlayer = currentRawPlayers.find(pl => (getFirstDefined(pl, ['Jogador', 'Player', 'Name', 'Nome']) || '') === rawName);
+        const catVal = rawPlayer ? (getFirstDefined(rawPlayer, ['Categoria', 'Category', 'Cat']) || 'MASTER') : 'MASTER';
+        const idVal = rawPlayer ? (getPlayerId(rawPlayer) || '-') : '-';
+        
+        let catLabel = "Mestre";
+        if (catVal.toUpperCase().includes('SENIOR')) catLabel = "Sênior";
+        else if (catVal.toUpperCase().includes('JUNIOR')) catLabel = "Junior";
+
         return `
           <tr>
             <td style="padding: 0.5rem; font-weight: bold; color: #fff;">${escapeHTML(rawName)}</td>
+            <td style="padding: 0.5rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">${escapeHTML(catLabel)}</td>
+            <td style="padding: 0.5rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">${escapeHTML(idVal)}</td>
             <td style="padding: 0.5rem;">
               <select class="search-input" style="width: 100%; padding: 0.4rem; font-size: 0.85rem; background: rgba(0,0,0,0.6);" onchange="handleResolutionChange('${escapeHTML(rawName)}', this.value)">
                 ${selectOptions}
               </select>
+            </td>
+            <td style="padding: 0.5rem; text-align: center; white-space: nowrap;">
+              <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3); margin-right: 0.25rem;" onclick="copySingleRow('${escapeHTML(idVal)}', '${escapeHTML(rawName)}', '${escapeHTML(catVal)}', this)">
+                📋 Copiar
+              </button>
+              <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: #2563eb; color: #fff; border-color: #2563eb;" onclick="registerPlayerDirectly('${escapeHTML(idVal)}', '${escapeHTML(rawName)}', '${escapeHTML(catVal)}', this)">
+                ⚡ Cadastrar
+              </button>
             </td>
           </tr>
         `;
@@ -3062,8 +3117,98 @@
       }
     }
 
+    function saveAppsScriptUrl() {
+      const url = document.getElementById('apps-script-url').value.trim();
+      localStorage.setItem('googleAppsScriptUrl', url);
+    }
+
+    async function copySingleRow(id, name, category, btn) {
+      const firstDbPlayer = (cachedJogadores && cachedJogadores.length > 0) ? cachedJogadores[0] : null;
+      const dbHeaders = firstDbPlayer ? Object.keys(firstDbPlayer) : ['ID', 'Jogador', 'Categoria', 'PosicaoFinal'];
+
+      let catLabel = "Mestre";
+      if (category.toUpperCase().includes('SENIOR')) catLabel = "Sênior";
+      else if (category.toUpperCase().includes('JUNIOR')) catLabel = "Junior";
+
+      const rowText = dbHeaders.map(header => {
+        const hNorm = header.toLowerCase().trim();
+        if (hNorm === 'jogador' || hNorm === 'player' || hNorm === 'nome') return name;
+        if (hNorm === 'categoria' || hNorm === 'category' || hNorm === 'cat') return catLabel;
+        if (hNorm === 'id' || hNorm === 'popid' || hNorm === 'playid' || hNorm === 'userid') return id;
+        return '';
+      }).join('\t');
+
+      let copied = false;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(rowText);
+          copied = true;
+        }
+      } catch (err) {
+        console.warn("Falha no clipboard:", err);
+      }
+
+      const originalText = btn.innerHTML;
+      if (copied) {
+        btn.innerHTML = "✓ Copiado!";
+        btn.style.background = "rgba(16, 185, 129, 0.3)";
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.background = "";
+        }, 1500);
+      } else {
+        alert(`Não foi possível copiar automaticamente. Use a cópia do bloco geral abaixo ou adicione manualmente:\n${rowText}`);
+      }
+    }
+
+    async function registerPlayerDirectly(id, name, category, btn) {
+      const url = localStorage.getItem('googleAppsScriptUrl') || document.getElementById('apps-script-url').value.trim();
+      if (!url) {
+        showError("Configure a URL do Apps Script nas Configurações (ícone de engrenagem) antes de usar o cadastro direto.");
+        document.getElementById('settings-modal').style.display = 'flex';
+        return;
+      }
+
+      btn.disabled = true;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "⏳ Cadastrando...";
+      btn.style.background = "#4b5563";
+
+      try {
+        const targetUrl = `${url}?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&category=${encodeURIComponent(category)}`;
+        await fetch(targetUrl, { mode: 'no-cors' });
+        
+        btn.innerHTML = "✓ Cadastrado!";
+        btn.style.background = "#10b981";
+        btn.style.borderColor = "#10b981";
+        btn.style.color = "#fff";
+        
+        resolvedNamesMap[name] = name;
+        unresolvedPlayers = unresolvedPlayers.filter(pName => pName !== name);
+        
+        setTimeout(() => {
+          renderNameResolutionUI();
+          renderEnrichedPreview();
+        }, 1200);
+
+      } catch (err) {
+        console.error("Erro ao cadastrar jogador:", err);
+        showError("Falha ao registrar jogador na planilha. Verifique a URL do Apps Script.");
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        btn.style.background = "";
+      }
+    }
+
     // Inicializa os campos e sugestões do evento no carregamento da página
     handleEventTypeChange();
+
+    // Carrega a URL do Apps Script salva
+    const savedScriptUrl = localStorage.getItem('googleAppsScriptUrl');
+    if (savedScriptUrl) {
+      const urlInput = document.getElementById('apps-script-url');
+      if (urlInput) urlInput.value = savedScriptUrl;
+    }
   </script>
 </body>
 </html>
