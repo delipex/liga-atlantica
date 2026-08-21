@@ -48,10 +48,5 @@
     "data": "2026-08-15",
     "tipo": "Liga",
     "multiplicador": 1
-  },
-  {
-    "data": "2026-08-21",
-    "tipo": "OFFMETA",
-    "multiplicador": 1
   }
 ]
