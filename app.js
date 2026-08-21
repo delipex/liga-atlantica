@@ -1985,19 +1985,29 @@ window.openAwardModal = function(awardKey) {
       if (!r) return;
       const playerName = r.Jogador || r.Player || r.Name;
       if (!playerName) return;
-      const uniqueDecks = new Set();
+      
+      const uniqueDecksNormalized = new Set();
+      const uniqueDecksOriginal = [];
       cleanStages.forEach(stage => {
         if (!stage || !stage.data) return;
         const deck = getDeckForStage(playerName, stage.data);
-        if (deck) uniqueDecks.add(deck);
+        if (deck) {
+          const trimmedDeck = deck.trim();
+          const normDeck = trimmedDeck.toLowerCase();
+          if (!uniqueDecksNormalized.has(normDeck)) {
+            uniqueDecksNormalized.add(normDeck);
+            uniqueDecksOriginal.push(trimmedDeck);
+          }
+        }
       });
-      if (uniqueDecks.size > 0) {
+      
+      if (uniqueDecksNormalized.size > 0) {
         const partCount = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
         const podiums = toNumber(r.Podio);
         dittoCandidates.push({
           player: playerName,
-          count: uniqueDecks.size,
-          decks: Array.from(uniqueDecks),
+          count: uniqueDecksNormalized.size,
+          decks: uniqueDecksOriginal,
           participations: partCount,
           podiums: podiums
         });
