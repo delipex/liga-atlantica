@@ -1128,7 +1128,7 @@ function doGet(e) {
             const yy = parts[0].substring(2);
             const mm = parts[1];
             const dd = parts[2];
-            const yymmdd = yy + mm + dd;
+            const ddmmaa = dd + mm + yy;
             
             let prefix = 'S';
             if (eventType === 'Challenge') prefix = 'CH';
@@ -1138,7 +1138,7 @@ function doGet(e) {
               prefix = customTitle.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 5);
             }
             
-            suggestionDiv.innerHTML = `💡 Código da Coluna para criar no Google Sheets: <strong>${prefix}${numVal}T${seasonVal} ${yymmdd}</strong><br><span style="font-size: 0.75rem; font-weight: normal; color: var(--text-secondary);">⚠️ IMPORTANTE: Crie uma coluna idêntica a este código na aba 'Jogadores' da planilha ANTES de publicar para registrar os decks de etapa corretamente.</span>`;
+            suggestionDiv.innerHTML = `💡 Código da Coluna para criar no Google Sheets: <strong>${prefix}${numVal}T${seasonVal} ${ddmmaa}</strong><br><span style="font-size: 0.75rem; font-weight: normal; color: var(--text-secondary);">⚠️ IMPORTANTE: Crie uma coluna idêntica a este código na aba 'Jogadores' da planilha ANTES de publicar para registrar os decks de etapa corretamente.</span>`;
           } else {
             suggestionDiv.innerHTML = '💡 Código da Coluna no Sheets: (data inválida)';
           }
