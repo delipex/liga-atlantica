@@ -2108,17 +2108,24 @@ window.openAwardModal = function(awardKey) {
       if (uniqueDecksNormalized.size > 0) {
         const partCount = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
         const podiums = toNumber(r.Podio);
+        const mediaColocacao = toNumber(r.MediaColocacao);
         dittoCandidates.push({
           player: playerName,
           count: uniqueDecksNormalized.size,
           decks: uniqueDecksOriginal,
           participations: partCount,
-          podiums: podiums
+          podiums: podiums,
+          mediaColocacao: mediaColocacao
         });
       }
     });
     dittoCandidates.sort((a, b) => {
       if (b.count !== a.count) return b.count - a.count;
+      
+      const mediaA = a.mediaColocacao > 0 ? a.mediaColocacao : 999999;
+      const mediaB = b.mediaColocacao > 0 ? b.mediaColocacao : 999999;
+      if (mediaA !== mediaB) return mediaA - mediaB;
+      
       if (b.participations !== a.participations) return b.participations - a.participations;
       return b.podiums - a.podiums;
     });
@@ -2130,8 +2137,9 @@ window.openAwardModal = function(awardKey) {
       <div style="font-size:0.8rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:4px; color:var(--text-secondary); margin-top:8px;">
         <div><strong>Critérios de Ordenação:</strong></div>
         <div>1. Variedade = Total de decks únicos jogados na temporada (todas as etapas)</div>
-        <div>2. Presença = Participações nas etapas de Cup/Challenge (Desempate 1)</div>
-        <div>3. Pódios = Total de pódios conquistados na temporada (Desempate 2)</div>
+        <div>2. Desempenho = Menor média de colocação geral (Desempate 1)</div>
+        <div>3. Presença = Participações nas etapas de Cup/Challenge (Desempate 2)</div>
+        <div>4. Pódios = Total de pódios conquistados na temporada (Desempate 3)</div>
       </div>
     `;
     if (top) {
@@ -2145,7 +2153,8 @@ window.openAwardModal = function(awardKey) {
               ${top.decks.map(d => `<span class="ved-badge" style="${window.getDeckGradientStyle(d)} color:#fff; font-size:0.65rem; padding: 2px 6px; border-radius: 10px; display:inline-block;">${escapeHTML(d)}</span>`).join('')}
             </div>
           </div>
-          <div style="display:flex; justify-content:space-between; margin-top:4px;"><span>Presença em Cup/Challenge:</span><strong style="color:#fff;">${top.participations} etapas</strong></div>
+          <div style="display:flex; justify-content:space-between; margin-top:4px;"><span>Média de Colocação:</span><strong style="color:#fff;">${top.mediaColocacao > 0 ? top.mediaColocacao.toFixed(1) + 'º' : '-'}</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Presença em Cup/Challenge:</span><strong style="color:#fff;">${top.participations} etapas</strong></div>
           <div style="display:flex; justify-content:space-between;"><span>Pódios Conquistados:</span><strong style="color:#fff;">${top.podiums}</strong></div>
         </div>
       `;
@@ -2162,7 +2171,7 @@ window.openAwardModal = function(awardKey) {
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase;">
                 <th style="padding: 4px 6px;">Pos</th>
                 <th style="padding: 4px 6px;">Jogador</th>
-                <th style="padding: 4px 6px; text-align: right;">Decks Diferentes</th>
+                <th style="padding: 4px 6px; text-align: right;">Decks / Média</th>
               </tr>
             </thead>
             <tbody>
@@ -2171,7 +2180,8 @@ window.openAwardModal = function(awardKey) {
                   <td style="padding: 4px 6px; font-weight: bold;">${i + 1}º</td>
                   <td style="padding: 4px 6px;">${escapeHTML(c.player)}</td>
                   <td style="padding: 4px 6px; text-align: right; font-weight: bold;">
-                    ${c.count} <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">decks distintos</span>
+                    ${c.count} <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">decks</span>
+                    <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">(${c.mediaColocacao > 0 ? c.mediaColocacao.toFixed(1) + 'º' : '-'})</span>
                   </td>
                 </tr>
               `).join('')}
@@ -3092,32 +3102,49 @@ function updateMetagameDisplay() {
         return toNumber(b.Pontos) - toNumber(a.Pontos);
       })[0];
 
-      // 3. Ditto Player: Mais decks diferentes em toda a temporada (desempates: presenças em Cup/Challenge, depois Pódios)
+      // 3. Ditto Player: Mais decks diferentes em toda a temporada (desempates: média de colocação, presenças Cup/Challenge, pódios)
       const dittoCandidates = [];
       (appData.Ranking || []).forEach(r => {
         if (!r) return;
         const playerName = r.Jogador || r.Player || r.Name;
         if (!playerName) return;
-        const uniqueDecks = new Set();
+        
+        const uniqueDecksNormalized = new Set();
+        const uniqueDecksOriginal = [];
         cleanStages.forEach(stage => {
           if (!stage || !stage.data) return;
           const deck = getDeckForStage(playerName, stage.data);
-          if (deck) uniqueDecks.add(deck);
+          if (deck) {
+            const trimmedDeck = deck.trim();
+            const normDeck = trimmedDeck.toLowerCase();
+            if (!uniqueDecksNormalized.has(normDeck)) {
+              uniqueDecksNormalized.add(normDeck);
+              uniqueDecksOriginal.push(trimmedDeck);
+            }
+          }
         });
-        if (uniqueDecks.size > 0) {
+        
+        if (uniqueDecksNormalized.size > 0) {
           const partCount = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
           const podiums = toNumber(r.Podio);
+          const mediaColocacao = toNumber(r.MediaColocacao);
           dittoCandidates.push({
             player: playerName,
-            count: uniqueDecks.size,
-            decks: Array.from(uniqueDecks),
+            count: uniqueDecksNormalized.size,
+            decks: uniqueDecksOriginal,
             participations: partCount,
-            podiums: podiums
+            podiums: podiums,
+            mediaColocacao: mediaColocacao
           });
         }
       });
       dittoCandidates.sort((a, b) => {
         if (b.count !== a.count) return b.count - a.count;
+        
+        const mediaA = a.mediaColocacao > 0 ? a.mediaColocacao : 999999;
+        const mediaB = b.mediaColocacao > 0 ? b.mediaColocacao : 999999;
+        if (mediaA !== mediaB) return mediaA - mediaB;
+        
         if (b.participations !== a.participations) return b.participations - a.participations;
         return b.podiums - a.podiums;
       });
@@ -3206,7 +3233,7 @@ function updateMetagameDisplay() {
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
             <div>Variedade: <strong>${dittoPlayer.count} Decks</strong></div>
-            <div>Etapas Cup/Chal: <strong>${dittoPlayer.participations} et.</strong></div>
+            <div>Média: <strong>${dittoPlayer.mediaColocacao > 0 ? dittoPlayer.mediaColocacao.toFixed(1) + 'º' : '-'}</strong></div>
           </div>
           <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver classificação e detalhes ➔</div>
         </div>
