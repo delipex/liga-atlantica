@@ -1933,7 +1933,7 @@ window.openAwardModal = function(awardKey) {
     title = 'Pokébola de Ouro';
     icon = `
       <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0;">
-        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png" style="width:58px; height:58px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Meowth">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/gs-ball.png" style="width:36px; height:36px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="GS Ball">
       </span>
     `;
     const goldCandidates = [...appData.Ranking].map(r => {
@@ -2015,7 +2015,7 @@ window.openAwardModal = function(awardKey) {
     title = 'Líder de Ginásio';
     icon = `
       <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0;">
-        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/68.png" style="width:58px; height:58px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Machamp">
+        <img src="https://raw.githubusercontent.com/SteGriff/pokemon-badges/master/svg/kanto/earth.svg" style="width:32px; height:32px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Earth Badge">
       </span>
     `;
     
@@ -2206,7 +2206,7 @@ window.openAwardModal = function(awardKey) {
     title = 'Pokébola Murcha';
     icon = `
       <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0;">
-        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png" style="width:58px; height:58px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Magikarp">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="width:36px; height:36px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2; filter: grayscale(1) brightness(0.4) contrast(0.8);" alt="Murcha Ball">
       </span>
     `;
     const murchaCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) > 0).map(r => {
@@ -3195,7 +3195,7 @@ function updateMetagameDisplay() {
         <div class="glass-card" onclick="window.openAwardModal('gold')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
           <div style="display:flex; align-items:center; gap:10px; margin-top:-5px;">
             <span style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0; margin-right:4px;">
-              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png" style="width:50px; height:50px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Meowth">
+              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/gs-ball.png" style="width:32px; height:32px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="GS Ball">
             </span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Pokébola de Ouro</div>
@@ -3218,7 +3218,7 @@ function updateMetagameDisplay() {
         <div class="glass-card" onclick="window.openAwardModal('gym')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
           <div style="display:flex; align-items:center; gap:10px; margin-top:-5px;">
             <span style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0; margin-right:4px;">
-              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/68.png" style="width:50px; height:50px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Machamp">
+              <img src="https://raw.githubusercontent.com/SteGriff/pokemon-badges/master/svg/kanto/earth.svg" style="width:28px; height:28px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Earth Badge">
             </span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Líder de Ginásio</div>
@@ -3265,7 +3265,7 @@ function updateMetagameDisplay() {
         <div class="glass-card" onclick="window.openAwardModal('murcha')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
           <div style="display:flex; align-items:center; gap:10px; margin-top:-5px;">
             <span style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0; margin-right:4px;">
-              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png" style="width:50px; height:50px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Magikarp">
+              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="width:32px; height:32px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2; filter: grayscale(1) brightness(0.4) contrast(0.8);" alt="Murcha Ball">
             </span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Pokébola Murcha</div>
