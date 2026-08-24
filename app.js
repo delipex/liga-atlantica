@@ -1583,6 +1583,46 @@ function renderChampions() {
     );
     const isFirstExpanded = index === 0 ? 'expanded' : '';
 
+    // Check for optional seasonal titles columns in the Campeoes sheet row
+    const pOuro = champ.PokebolaOuro || champ.PokebolaDeOuro;
+    const lGinasio = champ.LiderGinasio || champ.LiderDeGinasio;
+    const dPlayer = champ.DittoPlayer;
+    const pMurcha = champ.PokebolaMurcha;
+    const hasSeasonTitles = Boolean(pOuro || lGinasio || dPlayer || pMurcha);
+
+    let seasonTitlesHtml = '';
+    if (hasSeasonTitles) {
+      seasonTitlesHtml = `
+        <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08); display:flex; flex-direction:column; gap:6px; font-size:0.75rem; text-align:left; width:100%; max-width:240px; margin-left:auto; margin-right:auto;">
+          <div style="font-weight:600; color:var(--accent-yellow); font-size:0.75rem; margin-bottom:2px; text-transform:uppercase; letter-spacing:0.5px; text-align:center;">Títulos da Temporada:</div>
+          ${pOuro ? `
+            <div style="display:flex; align-items:center; gap:6px; justify-content:flex-start;">
+              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png" style="width:24px; height:24px; object-fit:contain; margin:-4px 0;" alt="Ouro">
+              <span style="color:rgba(255,255,255,0.85); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Ouro: <strong>${escapeHTML(pOuro)}</strong></span>
+            </div>
+          ` : ''}
+          ${lGinasio ? `
+            <div style="display:flex; align-items:center; gap:6px; justify-content:flex-start;">
+              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/68.png" style="width:24px; height:24px; object-fit:contain; margin:-4px 0;" alt="Líder">
+              <span style="color:rgba(255,255,255,0.85); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Líder: <strong>${escapeHTML(lGinasio)}</strong></span>
+            </div>
+          ` : ''}
+          ${dPlayer ? `
+            <div style="display:flex; align-items:center; gap:6px; justify-content:flex-start;">
+              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" style="width:24px; height:24px; object-fit:contain; margin:-4px 0;" alt="Ditto">
+              <span style="color:rgba(255,255,255,0.85); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Ditto: <strong>${escapeHTML(dPlayer)}</strong></span>
+            </div>
+          ` : ''}
+          ${pMurcha ? `
+            <div style="display:flex; align-items:center; gap:6px; justify-content:flex-start;">
+              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png" style="width:24px; height:24px; object-fit:contain; margin:-4px 0;" alt="Murcha">
+              <span style="color:rgba(255,255,255,0.85); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Murcha: <strong>${escapeHTML(pMurcha)}</strong></span>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
     return `
       <div class="champion-accordion-item ${isFirstExpanded}" data-champ-name="${championName}" onclick="
         this.parentNode.querySelectorAll('.champion-accordion-item').forEach(el => el.classList.remove('expanded'));
@@ -1609,7 +1649,8 @@ function renderChampions() {
             <div class="champ-acc-vice-row">
               🥈 Vice: <strong>${escapeHTML(champ.Vice || '-')}</strong>
             </div>
-            ${hasDeckDetails ? `<button class="champ-acc-btn" type="button" onclick="event.stopPropagation(); openChampionDeckModal(${index})">Ver Lista de Deck</button>` : ''}
+            ${hasDeckDetails ? `<button class="champ-acc-btn" type="button" onclick="event.stopPropagation(); openChampionDeckModal(${index})" style="margin-bottom:4px;">Ver Lista de Deck</button>` : ''}
+            ${seasonTitlesHtml}
           </div>
         </div>
       </div>
