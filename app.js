@@ -1886,10 +1886,11 @@ window.openAwardModal = function(awardKey) {
   let description = '';
   let formulaHtml = '';
   let detailHtml = '';
+  let rankingHtml = '';
   
   if (awardKey === 'gold') {
     title = 'Pokébola de Ouro';
-    icon = '👑';
+    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/luxury-ball.png" style="width:36px; height:36px; object-fit:contain; vertical-align:middle;" alt="Luxury Ball">';
     const goldCandidates = [...appData.Ranking].map(r => {
       const wins = toNumber(r.Vitorias);
       const losses = toNumber(r.Derrotas);
@@ -1934,9 +1935,40 @@ window.openAwardModal = function(awardKey) {
         </div>
       `;
     }
+
+    rankingHtml = `
+      <details style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; cursor: pointer;">
+        <summary style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); outline: none; user-select: none;">
+          📊 Ver Classificação Completa dos Candidatos
+        </summary>
+        <div style="margin-top: 8px; max-height: 180px; overflow-y: auto; font-size: 0.78rem;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase;">
+                <th style="padding: 4px 6px;">Pos</th>
+                <th style="padding: 4px 6px;">Jogador</th>
+                <th style="padding: 4px 6px; text-align: right;">Winrate / Partidas</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${goldCandidates.map((c, i) => `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); color: ${i === 0 ? 'var(--accent-yellow)' : '#fff'}">
+                  <td style="padding: 4px 6px; font-weight: bold;">${i + 1}º</td>
+                  <td style="padding: 4px 6px;">${escapeHTML(c.player)}</td>
+                  <td style="padding: 4px 6px; text-align: right; font-weight: bold;">
+                    ${(c.winRate * 100).toFixed(1)}% 
+                    <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">(${c.wins}/${c.total})</span>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    `;
   } else if (awardKey === 'gym') {
     title = 'Líder de Ginásio';
-    icon = '🏋️‍♂️';
+    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/earth-badge.png" style="width:36px; height:36px; object-fit:contain; vertical-align:middle;" alt="Earth Badge">';
     
     const gymCandidates = [...appData.Ranking].map(r => {
       const playerName = r.Jogador || r.Player || r.Name;
@@ -1976,9 +2008,40 @@ window.openAwardModal = function(awardKey) {
         </div>
       `;
     }
+
+    rankingHtml = `
+      <details style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; cursor: pointer;">
+        <summary style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); outline: none; user-select: none;">
+          📊 Ver Classificação Completa dos Candidatos
+        </summary>
+        <div style="margin-top: 8px; max-height: 180px; overflow-y: auto; font-size: 0.78rem;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase;">
+                <th style="padding: 4px 6px;">Pos</th>
+                <th style="padding: 4px 6px;">Jogador</th>
+                <th style="padding: 4px 6px; text-align: right;">Participações / Pontos</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${gymCandidates.map((c, i) => `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); color: ${i === 0 ? 'var(--accent-yellow)' : '#fff'}">
+                  <td style="padding: 4px 6px; font-weight: bold;">${i + 1}º</td>
+                  <td style="padding: 4px 6px;">${escapeHTML(c.player)}</td>
+                  <td style="padding: 4px 6px; text-align: right; font-weight: bold;">
+                    ${c.totalPart} <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">etapas</span>
+                    <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">(${c.points.toFixed(0)} pts)</span>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    `;
   } else if (awardKey === 'ditto') {
     title = 'Ditto Player';
-    icon = '🦎';
+    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" style="width:44px; height:44px; object-fit:contain; vertical-align:middle; margin-top:-6px;" alt="Ditto">';
     
     const dittoCandidates = [];
     (appData.Ranking || []).forEach(r => {
@@ -2046,9 +2109,39 @@ window.openAwardModal = function(awardKey) {
         </div>
       `;
     }
+
+    rankingHtml = `
+      <details style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; cursor: pointer;">
+        <summary style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); outline: none; user-select: none;">
+          📊 Ver Classificação Completa dos Candidatos
+        </summary>
+        <div style="margin-top: 8px; max-height: 180px; overflow-y: auto; font-size: 0.78rem;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase;">
+                <th style="padding: 4px 6px;">Pos</th>
+                <th style="padding: 4px 6px;">Jogador</th>
+                <th style="padding: 4px 6px; text-align: right;">Decks Diferentes</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${dittoCandidates.map((c, i) => `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); color: ${i === 0 ? 'var(--accent-yellow)' : '#fff'}">
+                  <td style="padding: 4px 6px; font-weight: bold;">${i + 1}º</td>
+                  <td style="padding: 4px 6px;">${escapeHTML(c.player)}</td>
+                  <td style="padding: 4px 6px; text-align: right; font-weight: bold;">
+                    ${c.count} <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">decks distintos</span>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    `;
   } else if (awardKey === 'murcha') {
     title = 'Pokébola Murcha';
-    icon = '💀';
+    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png" style="width:44px; height:44px; object-fit:contain; vertical-align:middle; margin-top:-6px;" alt="Magikarp">';
     const murchaCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) > 0).map(r => {
       const playerName = r.Jogador || r.Player || r.Name;
       const ratio = toNumber(r.Derrotas) / toNumber(r.Participacoes);
@@ -2086,11 +2179,42 @@ window.openAwardModal = function(awardKey) {
         </div>
       `;
     }
+
+    rankingHtml = `
+      <details style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; cursor: pointer;">
+        <summary style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); outline: none; user-select: none;">
+          📊 Ver Classificação Completa dos Candidatos
+        </summary>
+        <div style="margin-top: 8px; max-height: 180px; overflow-y: auto; font-size: 0.78rem;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase;">
+                <th style="padding: 4px 6px;">Pos</th>
+                <th style="padding: 4px 6px;">Jogador</th>
+                <th style="padding: 4px 6px; text-align: right;">Derrotas por Etapa</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${murchaCandidates.map((c, i) => `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); color: ${i === 0 ? 'var(--accent-yellow)' : '#fff'}">
+                  <td style="padding: 4px 6px; font-weight: bold;">${i + 1}º</td>
+                  <td style="padding: 4px 6px;">${escapeHTML(c.player)}</td>
+                  <td style="padding: 4px 6px; text-align: right; font-weight: bold;">
+                    ${c.ratio.toFixed(2)} 
+                    <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">(${c.defeats}/${c.participations})</span>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    `;
   }
   
   contentContainer.innerHTML = `
     <div style="display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">
-      <span style="font-size:2rem; line-height:1;">${icon}</span>
+      <span style="display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; background:rgba(255,255,255,0.05); border-radius:50%; border:1px solid rgba(255,255,255,0.1);">${icon}</span>
       <div>
         <h3 style="font-weight:700; color:#fff; font-size:1.2rem; margin:0;">${escapeHTML(title)}</h3>
         <div style="font-size:0.75rem; color:var(--accent-yellow); margin-top:2px;">Detalhamento de Cálculo do Prêmio</div>
@@ -2104,6 +2228,8 @@ window.openAwardModal = function(awardKey) {
     ${formulaHtml}
     
     ${detailHtml}
+    
+    ${rankingHtml}
     
     <div style="display:flex; justify-content:flex-end; margin-top:16px; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
       <button class="btn" onclick="window.closeAwardModal()" style="padding:6px 16px; font-size:0.8rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:20px; color:#fff; cursor:pointer; transition:background 0.2s;">Fechar Detalhes</button>
@@ -2983,8 +3109,8 @@ function updateMetagameDisplay() {
         const winRatePct = total > 0 ? ((wins / total) * 100).toFixed(0) : '0';
         return `
         <div class="glass-card" onclick="window.openAwardModal('gold')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:1.5rem;">👑</span>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:rgba(255,255,255,0.05); border-radius:50%; border:1px solid rgba(255,255,255,0.1);"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/luxury-ball.png" style="width:28px; height:28px; object-fit:contain;" alt="Luxury Ball"></span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Pokébola de Ouro</div>
               <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(pokebolaDeOuroPlayer.Jogador)}</div>
@@ -2997,15 +3123,15 @@ function updateMetagameDisplay() {
             <div>Winrate: <strong>${winRatePct}%</strong></div>
             <div>Pódios: <strong>${toNumber(pokebolaDeOuroPlayer.Podio)}</strong></div>
           </div>
-          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver cálculo detalhado ➔</div>
+          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver classificação e detalhes ➔</div>
         </div>
       `;
       })() : '';
 
       const gymLeaderCardHtml = liderDeGinasioPlayer ? `
         <div class="glass-card" onclick="window.openAwardModal('gym')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:1.5rem;">🏋️‍♂️</span>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:rgba(255,255,255,0.05); border-radius:50%; border:1px solid rgba(255,255,255,0.1);"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/earth-badge.png" style="width:28px; height:28px; object-fit:contain;" alt="Earth Badge"></span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Líder de Ginásio</div>
               <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(liderDeGinasioPlayer.Jogador)}</div>
@@ -3018,14 +3144,14 @@ function updateMetagameDisplay() {
             <div>Presenças: <strong>${toNumber(liderDeGinasioPlayer.Participacoes)} etapas</strong></div>
             <div>Total Pontos: <strong>${toNumber(liderDeGinasioPlayer.Pontos).toFixed(0)} PTS</strong></div>
           </div>
-          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver cálculo detalhado ➔</div>
+          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver classificação e detalhes ➔</div>
         </div>
       ` : '';
 
       const dittoCardHtml = dittoPlayer ? `
         <div class="glass-card" onclick="window.openAwardModal('ditto')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:1.5rem;">🦎</span>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:rgba(255,255,255,0.05); border-radius:50%; border:1px solid rgba(255,255,255,0.1);"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" style="width:34px; height:34px; object-fit:contain; margin-top:2px;" alt="Ditto"></span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Ditto Player</div>
               <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(dittoPlayer.player)}</div>
@@ -3041,14 +3167,14 @@ function updateMetagameDisplay() {
             <div>Variedade: <strong>${dittoPlayer.count} Decks</strong></div>
             <div>Etapas Cup/Chal: <strong>${dittoPlayer.participations} et.</strong></div>
           </div>
-          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver cálculo detalhado ➔</div>
+          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver classificação e detalhes ➔</div>
         </div>
       ` : '';
 
       const murchaCardHtml = murchaPlayer ? `
         <div class="glass-card" onclick="window.openAwardModal('murcha')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:1.5rem;">💀</span>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:rgba(255,255,255,0.05); border-radius:50%; border:1px solid rgba(255,255,255,0.1);"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png" style="width:34px; height:34px; object-fit:contain; margin-top:-2px;" alt="Magikarp"></span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Pokébola Murcha</div>
               <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(murchaPlayer.player)}</div>
@@ -3061,7 +3187,7 @@ function updateMetagameDisplay() {
             <div>Derrotas/Etapa: <strong>${murchaPlayer.ratio.toFixed(2)}</strong></div>
             <div>Derrotas Totais: <strong>${murchaPlayer.defeats} em ${murchaPlayer.participations} et.</strong></div>
           </div>
-          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver cálculo detalhado ➔</div>
+          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver classificação e detalhes ➔</div>
         </div>
       ` : '';
 
