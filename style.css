@@ -2830,7 +2830,7 @@ tbody tr.top-8 .row-rank,
 .champions-accordion {
   display: flex;
   flex-direction: row;
-  height: 440px;
+  height: 520px;
   gap: 16px;
   width: 100%;
   overflow: hidden;
@@ -3050,7 +3050,7 @@ tbody tr.top-8 .row-rank,
   }
   
   .champion-accordion-item.expanded {
-    height: 380px;
+    height: 470px;
   }
   
   .champion-accordion-item:not(.expanded) .champ-acc-season-rotated {
