@@ -2119,14 +2119,12 @@ window.openAwardModal = function(awardKey) {
       
       if (uniqueDecksNormalized.size > 0) {
         const partCount = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
-        const podiums = toNumber(r.Podio);
         const mediaColocacao = toNumber(r.MediaColocacao);
         dittoCandidates.push({
           player: playerName,
           count: uniqueDecksNormalized.size,
           decks: uniqueDecksOriginal,
           participations: partCount,
-          podiums: podiums,
           mediaColocacao: mediaColocacao
         });
       }
@@ -2138,8 +2136,7 @@ window.openAwardModal = function(awardKey) {
       const mediaB = b.mediaColocacao > 0 ? b.mediaColocacao : 999999;
       if (mediaA !== mediaB) return mediaA - mediaB;
       
-      if (b.participations !== a.participations) return b.participations - a.participations;
-      return b.podiums - a.podiums;
+      return b.participations - a.participations;
     });
     
     const top = dittoCandidates[0];
@@ -2151,7 +2148,6 @@ window.openAwardModal = function(awardKey) {
         <div>1. Variedade = Total de decks únicos jogados na temporada (todas as etapas)</div>
         <div>2. Desempenho = Menor média de colocação geral (Desempate 1)</div>
         <div>3. Presença = Participações nas etapas de Cup/Challenge (Desempate 2)</div>
-        <div>4. Pódios = Total de pódios conquistados na temporada (Desempate 3)</div>
       </div>
     `;
     if (top) {
@@ -2167,7 +2163,6 @@ window.openAwardModal = function(awardKey) {
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:4px;"><span>Média de Colocação:</span><strong style="color:#fff;">${top.mediaColocacao > 0 ? top.mediaColocacao.toFixed(1) + 'º' : '-'}</strong></div>
           <div style="display:flex; justify-content:space-between;"><span>Presença em Cup/Challenge:</span><strong style="color:#fff;">${top.participations} etapas</strong></div>
-          <div style="display:flex; justify-content:space-between;"><span>Pódios Conquistados:</span><strong style="color:#fff;">${top.podiums}</strong></div>
         </div>
       `;
     }
@@ -3142,14 +3137,12 @@ function updateMetagameDisplay() {
         
         if (uniqueDecksNormalized.size > 0) {
           const partCount = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
-          const podiums = toNumber(r.Podio);
           const mediaColocacao = toNumber(r.MediaColocacao);
           dittoCandidates.push({
             player: playerName,
             count: uniqueDecksNormalized.size,
             decks: uniqueDecksOriginal,
             participations: partCount,
-            podiums: podiums,
             mediaColocacao: mediaColocacao
           });
         }
@@ -3161,8 +3154,7 @@ function updateMetagameDisplay() {
         const mediaB = b.mediaColocacao > 0 ? b.mediaColocacao : 999999;
         if (mediaA !== mediaB) return mediaA - mediaB;
         
-        if (b.participations !== a.participations) return b.participations - a.participations;
-        return b.podiums - a.podiums;
+        return b.participations - a.participations;
       });
       const dittoPlayer = dittoCandidates[0];
 
