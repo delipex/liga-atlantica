@@ -1931,7 +1931,11 @@ window.openAwardModal = function(awardKey) {
   
   if (awardKey === 'gold') {
     title = 'Pokébola de Ouro';
-    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png" style="width:60px; height:60px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Meowth">';
+    icon = `
+      <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0;">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png" style="width:58px; height:58px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Meowth">
+      </span>
+    `;
     const goldCandidates = [...appData.Ranking].map(r => {
       const wins = toNumber(r.Vitorias);
       const losses = toNumber(r.Derrotas);
@@ -2009,7 +2013,11 @@ window.openAwardModal = function(awardKey) {
     `;
   } else if (awardKey === 'gym') {
     title = 'Líder de Ginásio';
-    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/68.png" style="width:60px; height:60px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Machamp">';
+    icon = `
+      <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0;">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/68.png" style="width:58px; height:58px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Machamp">
+      </span>
+    `;
     
     const gymCandidates = [...appData.Ranking].map(r => {
       const playerName = r.Jogador || r.Player || r.Name;
@@ -2082,7 +2090,11 @@ window.openAwardModal = function(awardKey) {
     `;
   } else if (awardKey === 'ditto') {
     title = 'Ditto Player';
-    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" style="width:60px; height:60px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Ditto">';
+    icon = `
+      <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0;">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" style="width:58px; height:58px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Ditto">
+      </span>
+    `;
     
     const dittoCandidates = [];
     (appData.Ranking || []).forEach(r => {
@@ -2192,7 +2204,11 @@ window.openAwardModal = function(awardKey) {
     `;
   } else if (awardKey === 'murcha') {
     title = 'Pokébola Murcha';
-    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png" style="width:60px; height:60px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Magikarp">';
+    icon = `
+      <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0;">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png" style="width:58px; height:58px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Magikarp">
+      </span>
+    `;
     const murchaCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) > 0).map(r => {
       const playerName = r.Jogador || r.Player || r.Name;
       const ratio = toNumber(r.Derrotas) / toNumber(r.Participacoes);
@@ -3178,7 +3194,9 @@ function updateMetagameDisplay() {
         return `
         <div class="glass-card" onclick="window.openAwardModal('gold')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
           <div style="display:flex; align-items:center; gap:10px; margin-top:-5px;">
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png" style="width:52px; height:52px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Meowth">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0; margin-right:4px;">
+              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png" style="width:50px; height:50px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Meowth">
+            </span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Pokébola de Ouro</div>
               <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(pokebolaDeOuroPlayer.Jogador)}</div>
@@ -3199,7 +3217,9 @@ function updateMetagameDisplay() {
       const gymLeaderCardHtml = liderDeGinasioPlayer ? `
         <div class="glass-card" onclick="window.openAwardModal('gym')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
           <div style="display:flex; align-items:center; gap:10px; margin-top:-5px;">
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/68.png" style="width:52px; height:52px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Machamp">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0; margin-right:4px;">
+              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/68.png" style="width:50px; height:50px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Machamp">
+            </span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Líder de Ginásio</div>
               <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(liderDeGinasioPlayer.Jogador)}</div>
@@ -3219,7 +3239,9 @@ function updateMetagameDisplay() {
       const dittoCardHtml = dittoPlayer ? `
         <div class="glass-card" onclick="window.openAwardModal('ditto')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
           <div style="display:flex; align-items:center; gap:10px; margin-top:-5px;">
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" style="width:52px; height:52px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Ditto">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0; margin-right:4px;">
+              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" style="width:50px; height:50px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Ditto">
+            </span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Ditto Player</div>
               <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(dittoPlayer.player)}</div>
@@ -3242,7 +3264,9 @@ function updateMetagameDisplay() {
       const murchaCardHtml = murchaPlayer ? `
         <div class="glass-card" onclick="window.openAwardModal('murcha')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
           <div style="display:flex; align-items:center; gap:10px; margin-top:-5px;">
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png" style="width:52px; height:52px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Magikarp">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0; margin-right:4px;">
+              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png" style="width:50px; height:50px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Magikarp">
+            </span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Pokébola Murcha</div>
               <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(murchaPlayer.player)}</div>
