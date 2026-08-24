@@ -1890,7 +1890,7 @@ window.openAwardModal = function(awardKey) {
   
   if (awardKey === 'gold') {
     title = 'Pokébola de Ouro';
-    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/luxury-ball.png" style="width:36px; height:36px; object-fit:contain; vertical-align:middle;" alt="Luxury Ball">';
+    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png" style="width:60px; height:60px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Meowth">';
     const goldCandidates = [...appData.Ranking].map(r => {
       const wins = toNumber(r.Vitorias);
       const losses = toNumber(r.Derrotas);
@@ -1941,7 +1941,7 @@ window.openAwardModal = function(awardKey) {
         <summary style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); outline: none; user-select: none;">
           📊 Ver Classificação Completa dos Candidatos
         </summary>
-        <div style="margin-top: 8px; max-height: 180px; overflow-y: auto; font-size: 0.78rem;">
+        <div style="margin-top: 10px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.78rem;">
           <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase;">
@@ -1968,7 +1968,7 @@ window.openAwardModal = function(awardKey) {
     `;
   } else if (awardKey === 'gym') {
     title = 'Líder de Ginásio';
-    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/earth-badge.png" style="width:36px; height:36px; object-fit:contain; vertical-align:middle;" alt="Earth Badge">';
+    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/68.png" style="width:60px; height:60px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Machamp">';
     
     const gymCandidates = [...appData.Ranking].map(r => {
       const playerName = r.Jogador || r.Player || r.Name;
@@ -2014,7 +2014,7 @@ window.openAwardModal = function(awardKey) {
         <summary style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); outline: none; user-select: none;">
           📊 Ver Classificação Completa dos Candidatos
         </summary>
-        <div style="margin-top: 8px; max-height: 180px; overflow-y: auto; font-size: 0.78rem;">
+        <div style="margin-top: 10px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.78rem;">
           <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase;">
@@ -2041,7 +2041,7 @@ window.openAwardModal = function(awardKey) {
     `;
   } else if (awardKey === 'ditto') {
     title = 'Ditto Player';
-    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" style="width:44px; height:44px; object-fit:contain; vertical-align:middle; margin-top:-6px;" alt="Ditto">';
+    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" style="width:60px; height:60px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Ditto">';
     
     const dittoCandidates = [];
     (appData.Ranking || []).forEach(r => {
@@ -2115,7 +2115,7 @@ window.openAwardModal = function(awardKey) {
         <summary style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); outline: none; user-select: none;">
           📊 Ver Classificação Completa dos Candidatos
         </summary>
-        <div style="margin-top: 8px; max-height: 180px; overflow-y: auto; font-size: 0.78rem;">
+        <div style="margin-top: 10px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.78rem;">
           <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase;">
@@ -2141,7 +2141,7 @@ window.openAwardModal = function(awardKey) {
     `;
   } else if (awardKey === 'murcha') {
     title = 'Pokébola Murcha';
-    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png" style="width:44px; height:44px; object-fit:contain; vertical-align:middle; margin-top:-6px;" alt="Magikarp">';
+    icon = '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png" style="width:60px; height:60px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Magikarp">';
     const murchaCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) > 0).map(r => {
       const playerName = r.Jogador || r.Player || r.Name;
       const ratio = toNumber(r.Derrotas) / toNumber(r.Participacoes);
@@ -2185,7 +2185,7 @@ window.openAwardModal = function(awardKey) {
         <summary style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); outline: none; user-select: none;">
           📊 Ver Classificação Completa dos Candidatos
         </summary>
-        <div style="margin-top: 8px; max-height: 180px; overflow-y: auto; font-size: 0.78rem;">
+        <div style="margin-top: 10px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.78rem;">
           <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase;">
@@ -2213,8 +2213,8 @@ window.openAwardModal = function(awardKey) {
   }
   
   contentContainer.innerHTML = `
-    <div style="display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">
-      <span style="display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; background:rgba(255,255,255,0.05); border-radius:50%; border:1px solid rgba(255,255,255,0.1);">${icon}</span>
+    <div style="display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">
+      ${icon}
       <div>
         <h3 style="font-weight:700; color:#fff; font-size:1.2rem; margin:0;">${escapeHTML(title)}</h3>
         <div style="font-size:0.75rem; color:var(--accent-yellow); margin-top:2px;">Detalhamento de Cálculo do Prêmio</div>
@@ -3109,8 +3109,8 @@ function updateMetagameDisplay() {
         const winRatePct = total > 0 ? ((wins / total) * 100).toFixed(0) : '0';
         return `
         <div class="glass-card" onclick="window.openAwardModal('gold')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:rgba(255,255,255,0.05); border-radius:50%; border:1px solid rgba(255,255,255,0.1);"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/luxury-ball.png" style="width:28px; height:28px; object-fit:contain;" alt="Luxury Ball"></span>
+          <div style="display:flex; align-items:center; gap:10px; margin-top:-5px;">
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png" style="width:52px; height:52px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Meowth">
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Pokébola de Ouro</div>
               <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(pokebolaDeOuroPlayer.Jogador)}</div>
@@ -3130,8 +3130,8 @@ function updateMetagameDisplay() {
 
       const gymLeaderCardHtml = liderDeGinasioPlayer ? `
         <div class="glass-card" onclick="window.openAwardModal('gym')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:rgba(255,255,255,0.05); border-radius:50%; border:1px solid rgba(255,255,255,0.1);"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/earth-badge.png" style="width:28px; height:28px; object-fit:contain;" alt="Earth Badge"></span>
+          <div style="display:flex; align-items:center; gap:10px; margin-top:-5px;">
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/68.png" style="width:52px; height:52px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Machamp">
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Líder de Ginásio</div>
               <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(liderDeGinasioPlayer.Jogador)}</div>
@@ -3150,8 +3150,8 @@ function updateMetagameDisplay() {
 
       const dittoCardHtml = dittoPlayer ? `
         <div class="glass-card" onclick="window.openAwardModal('ditto')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:rgba(255,255,255,0.05); border-radius:50%; border:1px solid rgba(255,255,255,0.1);"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" style="width:34px; height:34px; object-fit:contain; margin-top:2px;" alt="Ditto"></span>
+          <div style="display:flex; align-items:center; gap:10px; margin-top:-5px;">
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" style="width:52px; height:52px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Ditto">
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Ditto Player</div>
               <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(dittoPlayer.player)}</div>
@@ -3173,8 +3173,8 @@ function updateMetagameDisplay() {
 
       const murchaCardHtml = murchaPlayer ? `
         <div class="glass-card" onclick="window.openAwardModal('murcha')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:rgba(255,255,255,0.05); border-radius:50%; border:1px solid rgba(255,255,255,0.1);"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png" style="width:34px; height:34px; object-fit:contain; margin-top:-2px;" alt="Magikarp"></span>
+          <div style="display:flex; align-items:center; gap:10px; margin-top:-5px;">
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png" style="width:52px; height:52px; object-fit:contain; margin:-8px -4px -8px -8px;" alt="Magikarp">
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Pokébola Murcha</div>
               <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(murchaPlayer.player)}</div>
