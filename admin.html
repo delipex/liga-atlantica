@@ -335,6 +335,9 @@
             <input type="file" id="file-input" style="display: none;" accept=".tdf,.txt,.tsv" multiple onchange="handleFileSelect(event)">
           </div>
 
+          <!-- Container de informações extraídas do arquivo -->
+          <div id="tdf-file-info" style="margin-bottom: 1.25rem; font-size: 0.85rem; border-radius: 6px; display: none; padding: 12px 14px; background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.2); color: #fff;"></div>
+
           <div style="margin-bottom: 1.25rem; display: flex; align-items: flex-start; gap: 0.5rem; background: rgba(255, 203, 5, 0.05); padding: 0.75rem 1rem; border-radius: var(--radius); border: 1px dashed rgba(255, 203, 5, 0.2);">
             <input type="checkbox" id="accumulate-checkbox" checked style="width: 18px; height: 18px; margin-top: 2px; cursor: pointer;">
             <div style="flex: 1;">
@@ -1148,6 +1151,140 @@ function doGet(e) {
       }
     }
 
+    function extractTDFMetadata(tdfText) {
+      if (!tdfText) return null;
+      const trimmed = tdfText.trim();
+      if (trimmed.startsWith('<?xml') || trimmed.includes('<tournament')) {
+        try {
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(trimmed, "text/xml");
+          const nameNode = xmlDoc.getElementsByTagName("name")[0];
+          const dateNode = xmlDoc.getElementsByTagName("startdate")[0];
+          
+          let tournamentName = nameNode ? nameNode.textContent.trim() : null;
+          let tournamentDate = dateNode ? dateNode.textContent.trim() : null;
+          
+          return { name: tournamentName, date: tournamentDate };
+        } catch (err) {
+          console.warn("Falha ao extrair metadados do TDF:", err);
+        }
+      }
+      return null;
+    }
+
+    function validateTDFMetadata(fileContents) {
+      const fileInfoDiv = document.getElementById('tdf-file-info');
+      if (!fileInfoDiv) return;
+
+      fileInfoDiv.style.display = 'none';
+      fileInfoDiv.innerHTML = '';
+      fileInfoDiv.style.background = '';
+      fileInfoDiv.style.borderColor = '';
+
+      if (!fileContents || fileContents.length === 0) return;
+
+      const firstFile = fileContents[0];
+      const meta = extractTDFMetadata(firstFile.text);
+
+      if (!meta) {
+        return;
+      }
+
+      let fileDateISO = '';
+      if (meta.date) {
+        const parts = meta.date.split('/');
+        if (parts.length === 3) {
+          fileDateISO = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+      }
+
+      let fileNumber = null;
+      let fileType = '';
+      if (meta.name) {
+        const numMatch = meta.name.match(/#(\d+)/) || meta.name.match(/etapa\s*(\d+)/i);
+        if (numMatch) fileNumber = parseInt(numMatch[1], 10);
+
+        const nameLower = meta.name.toLowerCase();
+        if (nameLower.includes('cup') || nameLower.includes('copa')) {
+          fileType = 'Cup';
+        } else if (nameLower.includes('challenge') || nameLower.includes('desafio')) {
+          fileType = 'Challenge';
+        } else if (nameLower.includes('liga') || nameLower.includes('sessão') || nameLower.includes('sessao')) {
+          fileType = 'Liga';
+        }
+      }
+
+      const dateInput = document.getElementById('event-date');
+      const numberInput = document.getElementById('event-number');
+
+      let hasWarning = false;
+      let warningMsg = '';
+
+      if (fileDateISO) {
+        if (!dateInput.value) {
+          dateInput.value = fileDateISO;
+        } else if (dateInput.value !== fileDateISO) {
+          hasWarning = true;
+          warningMsg += `• Data no formulário (${formatDateISOToPT(dateInput.value)}) difere da data do arquivo (${meta.date}).<br>`;
+        }
+      }
+
+      if (fileNumber !== null) {
+        if (!numberInput.value || numberInput.value === '1') {
+          numberInput.value = fileNumber;
+        } else if (parseInt(numberInput.value, 10) !== fileNumber) {
+          hasWarning = true;
+          warningMsg += `• Número no formulário (${numberInput.value}) difere do número no arquivo (#${fileNumber}).<br>`;
+        }
+      }
+
+      if (fileType) {
+        const currentType = document.getElementById('event-type').value;
+        if (currentType !== fileType) {
+          if (currentType === 'Liga' && (fileType === 'Cup' || fileType === 'Challenge')) {
+            if (window.selectEventType) window.selectEventType(fileType);
+          } else {
+            hasWarning = true;
+            warningMsg += `• Tipo de evento selecionado (${currentType}) difere do tipo no arquivo (${fileType}).<br>`;
+          }
+        }
+      }
+
+      fileInfoDiv.style.display = 'block';
+      if (hasWarning) {
+        fileInfoDiv.style.background = 'rgba(245, 158, 11, 0.08)';
+        fileInfoDiv.style.borderColor = 'rgba(245, 158, 11, 0.25)';
+        fileInfoDiv.style.color = '#fbbf24';
+        fileInfoDiv.innerHTML = `
+          <div style="font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            ⚠️ Divergência de Configuração Encontrada!
+          </div>
+          <div style="font-size: 0.8rem; line-height: 1.4; margin-bottom: 8px;">
+            ${warningMsg}
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px;">
+            📄 <strong>Info do Arquivo:</strong> ${escapeHTML(meta.name)} (${meta.date})
+          </div>
+        `;
+      } else {
+        fileInfoDiv.style.background = 'rgba(16, 185, 129, 0.08)';
+        fileInfoDiv.style.borderColor = 'rgba(16, 185, 129, 0.25)';
+        fileInfoDiv.style.color = '#34d399';
+        fileInfoDiv.innerHTML = `
+          <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            ✨ Arquivo validado com sucesso!
+          </div>
+          <div style="font-size: 0.8rem; line-height: 1.4;">
+            📅 Data: <strong>${meta.date}</strong> &nbsp;|&nbsp; 🏆 Torneio: <strong>${escapeHTML(meta.name)}</strong>
+          </div>
+        `;
+      }
+
+      if (typeof handleEventTypeChange === 'function') {
+        handleEventTypeChange();
+      }
+    }
+
     async function handleMultipleFiles(files) {
       if (!files || files.length === 0) return;
 
@@ -1167,6 +1304,9 @@ function doGet(e) {
 
       try {
         const fileContents = await Promise.all(filePromises);
+
+        // Valida metadados e avisa/auto-preenche
+        validateTDFMetadata(fileContents);
 
         if (fileContents.length === 1) {
           document.getElementById('raw-input').value = fileContents[0].text;
