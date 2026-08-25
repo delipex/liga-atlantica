@@ -1933,7 +1933,7 @@ window.openAwardModal = function(awardKey) {
     title = 'Pokébola de Ouro';
     icon = `
       <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0;">
-        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/luxury-ball.png" style="width:36px; height:36px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Luxury Ball">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="width:36px; height:36px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2; filter: sepia(1) saturate(10) hue-rotate(20deg) brightness(1.2);" alt="Golden Pokéball">
       </span>
     `;
     const goldCandidates = [...appData.Ranking].map(r => {
@@ -2015,7 +2015,17 @@ window.openAwardModal = function(awardKey) {
     title = 'Líder de Ginásio';
     icon = `
       <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0;">
-        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/shiny-charm.png" style="width:36px; height:36px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Shiny Charm">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="width:36px; height:36px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;">
+          <path d="M32 4 L48 24 L48 44 L32 60 L16 44 L16 24 Z" fill="#dca300" stroke="#ffcb05" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M32 6 L45 24 L45 42 L32 56 L19 42 L19 24 Z" fill="#1e4620" />
+          <line x1="32" y1="8" x2="32" y2="54" stroke="#ffcb05" stroke-width="2" stroke-linecap="round"/>
+          <line x1="32" y1="20" x2="42" y2="14" stroke="#ffcb05" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="32" y1="20" x2="22" y2="14" stroke="#ffcb05" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="32" y1="32" x2="42" y2="26" stroke="#ffcb05" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="32" y1="32" x2="22" y2="26" stroke="#ffcb05" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="32" y1="44" x2="40" y2="38" stroke="#ffcb05" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="32" y1="44" x2="24" y2="38" stroke="#ffcb05" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
       </span>
     `;
     
@@ -2201,7 +2211,7 @@ window.openAwardModal = function(awardKey) {
     title = 'Pokébola Murcha';
     icon = `
       <span style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0;">
-        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="width:36px; height:36px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2; filter: grayscale(1) brightness(0.4) contrast(0.8);" alt="Murcha Ball">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/black-sludge.png" style="width:36px; height:36px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Black Sludge">
       </span>
     `;
     const murchaCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) > 0).map(r => {
@@ -3187,7 +3197,7 @@ function updateMetagameDisplay() {
         <div class="glass-card" onclick="window.openAwardModal('gold')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
           <div style="display:flex; align-items:center; gap:10px; margin-top:-5px;">
             <span style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0; margin-right:4px;">
-              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/luxury-ball.png" style="width:32px; height:32px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Luxury Ball">
+              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="width:32px; height:32px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2; filter: sepia(1) saturate(10) hue-rotate(20deg) brightness(1.2);" alt="Golden Pokéball">
             </span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Pokébola de Ouro</div>
@@ -3210,7 +3220,17 @@ function updateMetagameDisplay() {
         <div class="glass-card" onclick="window.openAwardModal('gym')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
           <div style="display:flex; align-items:center; gap:10px; margin-top:-5px;">
             <span style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0; margin-right:4px;">
-              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/shiny-charm.png" style="width:30px; height:30px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Shiny Charm">
+              <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="width:28px; height:28px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;">
+                <path d="M32 4 L48 24 L48 44 L32 60 L16 44 L16 24 Z" fill="#dca300" stroke="#ffcb05" stroke-width="2" stroke-linejoin="round"/>
+                <path d="M32 6 L45 24 L45 42 L32 56 L19 42 L19 24 Z" fill="#1e4620" />
+                <line x1="32" y1="8" x2="32" y2="54" stroke="#ffcb05" stroke-width="2" stroke-linecap="round"/>
+                <line x1="32" y1="20" x2="42" y2="14" stroke="#ffcb05" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="32" y1="20" x2="22" y2="14" stroke="#ffcb05" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="32" y1="32" x2="42" y2="26" stroke="#ffcb05" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="32" y1="32" x2="22" y2="26" stroke="#ffcb05" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="32" y1="44" x2="40" y2="38" stroke="#ffcb05" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="32" y1="44" x2="24" y2="38" stroke="#ffcb05" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
             </span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Líder de Ginásio</div>
@@ -3257,7 +3277,7 @@ function updateMetagameDisplay() {
         <div class="glass-card" onclick="window.openAwardModal('murcha')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
           <div style="display:flex; align-items:center; gap:10px; margin-top:-5px;">
             <span style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0; margin-right:4px;">
-              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="width:32px; height:32px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2; filter: grayscale(1) brightness(0.4) contrast(0.8);" alt="Murcha Ball">
+              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/black-sludge.png" style="width:34px; height:34px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Black Sludge">
             </span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Pokébola Murcha</div>
