@@ -68,5 +68,10 @@
     "data": "2026-08-27",
     "tipo": "Liga",
     "multiplicador": 1
+  },
+  {
+    "data": "2026-08-29",
+    "tipo": "TCG WORLD CHAMPIONSHIP",
+    "multiplicador": 1.5
   }
 ]
