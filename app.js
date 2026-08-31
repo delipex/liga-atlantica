@@ -1936,23 +1936,29 @@ window.openAwardModal = function(awardKey) {
         <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="width:36px; height:36px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2; filter: sepia(1) saturate(10) hue-rotate(20deg) brightness(1.2);" alt="Golden Pokéball">
       </span>
     `;
-    const goldCandidates = [...appData.Ranking].map(r => {
+    const goldCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) > 0).map(r => {
       const wins = toNumber(r.Vitorias);
       const losses = toNumber(r.Derrotas);
       const draws = toNumber(r.Empates);
       const total = wins + losses + draws;
       const winRate = total > 0 ? (wins / total) : 0;
+      const participations = toNumber(r.Participacoes);
+      const podiums = toNumber(r.Podio);
+      const score = (winRate * participations) + (podiums * 0.5);
       return {
-        player: r.Jogador || r.Player || r.Name,
+        player: r.Jogador || r.Player || r.Name || 'Desconhecido',
+        score: score,
         winRate: winRate,
-        podiums: toNumber(r.Podio),
+        podiums: podiums,
         wins: wins,
         losses: losses,
         draws: draws,
-        total: total
+        total: total,
+        participations: participations
       };
     });
     goldCandidates.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
       if (b.winRate !== a.winRate) return b.winRate - a.winRate;
       if (b.podiums !== a.podiums) return b.podiums - a.podiums;
       return b.wins - a.wins;
@@ -1960,23 +1966,29 @@ window.openAwardModal = function(awardKey) {
     
     const top = goldCandidates[0];
     winnerName = top ? top.player : 'Nenhum';
-    description = 'Prêmio para o jogador com o melhor desempenho geral, avaliado primariamente por taxa de vitória (winrate), com pódios e vitórias como critérios de desempate.';
+    description = 'Prêmio para o jogador com o melhor desempenho geral da temporada, avaliado por Índice de Eficiência Ponderada (Winrate multiplicado pelo volume de etapas jogadas + bônus de pódios).';
     formulaHtml = `
       <div style="font-size:0.8rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:4px; color:var(--text-secondary); margin-top:8px;">
-        <div><strong>Critérios de Ordenação:</strong></div>
-        <div>1. Taxa de Vitórias (Winrate) = Vitórias / Partidas Totais</div>
-        <div>2. Quantidade total de Pódios na temporada</div>
-        <div>3. Quantidade total de Vitórias na temporada</div>
+        <div><strong>Fórmula do Índice de Eficiência:</strong></div>
+        <div style="color:var(--accent-yellow); font-family:monospace; font-size:0.85rem;">Score = (Winrate × Participações) + (Pódios × 0.5)</div>
+        <div style="font-size:0.75rem; margin-top:4px; line-height:1.4;">
+          • <strong>Winrate:</strong> Vitórias ÷ Total de Partidas Reais ($V+E+D$).<br>
+          • <strong>Participações:</strong> Total de etapas disputadas na temporada.<br>
+          • <strong>Bônus de Pódio:</strong> +0.5 pts por cada Top 4 conquistado.
+        </div>
       </div>
     `;
     if (top) {
+      const winrateComponent = (top.winRate * top.participations).toFixed(2);
+      const podiumComponent = (top.podiums * 0.5).toFixed(2);
       detailHtml = `
         <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; margin-top:8px;">
           <div style="font-weight:600; color:#fff; font-size:1rem; margin-bottom:4px;">Cálculo do Vencedor (${escapeHTML(top.player)}):</div>
-          <div style="display:flex; justify-content:space-between;"><span>Taxa de Vitória (Winrate):</span><strong style="color:var(--accent-yellow);">${(top.winRate * 100).toFixed(1)}%</strong></div>
-          <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:-6px; text-align:right;">(${top.wins} vitórias / ${top.total} partidas)</div>
-          <div style="display:flex; justify-content:space-between; margin-top:4px;"><span>Pódios Conquistados:</span><strong style="color:#fff;">${top.podiums}</strong></div>
-          <div style="display:flex; justify-content:space-between;"><span>Vitórias Totais:</span><strong style="color:#fff;">${top.wins}</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Score de Eficiência:</span><strong style="color:var(--accent-yellow); font-size:1.05rem;">${top.score.toFixed(2)} pts</strong></div>
+          <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:-6px; text-align:right;">[(${ (top.winRate * 100).toFixed(1) }% × ${top.participations} et.) + (${top.podiums} pódios × 0.5) = ${winrateComponent} + ${podiumComponent}]</div>
+          <div style="display:flex; justify-content:space-between; margin-top:4px;"><span>Taxa de Vitória (Winrate):</span><strong style="color:#fff;">${(top.winRate * 100).toFixed(1)}% (${top.wins}V / ${top.total}P)</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Pódios Conquistados:</span><strong style="color:#fff;">${top.podiums} Top 4</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Presença na Temporada:</span><strong style="color:#fff;">${top.participations} etapas</strong></div>
         </div>
       `;
     }
@@ -1992,7 +2004,7 @@ window.openAwardModal = function(awardKey) {
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase;">
                 <th style="padding: 4px 6px;">Pos</th>
                 <th style="padding: 4px 6px;">Jogador</th>
-                <th style="padding: 4px 6px; text-align: right;">Winrate / Partidas</th>
+                <th style="padding: 4px 6px; text-align: right;">Score (Winrate / Etapas)</th>
               </tr>
             </thead>
             <tbody>
@@ -2001,8 +2013,8 @@ window.openAwardModal = function(awardKey) {
                   <td style="padding: 4px 6px; font-weight: bold;">${i + 1}º</td>
                   <td style="padding: 4px 6px;">${escapeHTML(c.player)}</td>
                   <td style="padding: 4px 6px; text-align: right; font-weight: bold;">
-                    ${(c.winRate * 100).toFixed(1)}% 
-                    <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">(${c.wins}/${c.total})</span>
+                    ${c.score.toFixed(2)} pts
+                    <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">(${(c.winRate * 100).toFixed(0)}% · ${c.participations}et)</span>
                   </td>
                 </tr>
               `).join('')}
@@ -2233,21 +2245,26 @@ window.openAwardModal = function(awardKey) {
     
     const top = murchaCandidates[0];
     winnerName = top ? top.player : 'Nenhum';
-    description = 'Prêmio de consolação para o jogador com a maior proporção de derrotas por etapa jogada na temporada, com desempate pela assiduidade em etapas de Cup/Challenge.';
+    description = 'Prêmio de consolação para o jogador com a maior média de derrotas reais por etapa disputada na temporada, com desempate pela assiduidade em etapas de Cup/Challenge.';
     formulaHtml = `
       <div style="font-size:0.8rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:4px; color:var(--text-secondary); margin-top:8px;">
         <div><strong>Critérios de Ordenação:</strong></div>
-        <div>1. Razão Murcha = Total de Derrotas / Total de Participações</div>
-        <div>2. Assiduidade = Participações nas etapas de Cup/Challenge</div>
+        <div style="color:var(--accent-yellow); font-family:monospace; font-size:0.85rem;">Média de Derrotas = Total de Derrotas ÷ Total de Etapas</div>
+        <div style="font-size:0.75rem; margin-top:4px; line-height:1.4;">
+          • <strong>Regra de Derrotas:</strong> Em todos os eventos (mesmo 1.5x ou 2.0x), cada derrota vale sempre <strong>1 derrota física real</strong> (nunca multiplica).<br>
+          • <strong>Valores Decimais:</strong> O número exibido (ex: ${(top ? top.ratio.toFixed(2) : '1.67')}) é a <strong>média aritmética</strong> exata de derrotas por participação.<br>
+          • <strong>Desempate:</strong> Assiduidade em etapas oficiais de League Cup e League Challenge.
+        </div>
       </div>
     `;
     if (top) {
       detailHtml = `
         <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; margin-top:8px;">
           <div style="font-weight:600; color:#fff; font-size:1rem; margin-bottom:4px;">Cálculo do Vencedor (${escapeHTML(top.player)}):</div>
-          <div style="display:flex; justify-content:space-between;"><span>Derrotas/Etapa (Proporção):</span><strong style="color:var(--accent-yellow);">${top.ratio.toFixed(2)}</strong></div>
-          <div style="display:flex; justify-content:space-between;"><span>Derrotas Totais:</span><strong style="color:#fff;">${top.defeats} derrotas em ${top.participations} et.</strong></div>
-          <div style="display:flex; justify-content:space-between;"><span>Presença em Cup/Challenge:</span><strong style="color:#fff;">${top.assiduidade} etapas</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Média de Derrotas/Etapa:</span><strong style="color:var(--accent-yellow); font-size:1.05rem;">${top.ratio.toFixed(2)} por etapa</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Derrotas Reais Totais:</span><strong style="color:#fff;">${top.defeats} derrotas em ${top.participations} etapas</strong></div>
+          <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:-6px; text-align:right;">(${top.defeats} derrotas ÷ ${top.participations} etapas = ${top.ratio.toFixed(2)})</div>
+          <div style="display:flex; justify-content:space-between; margin-top:4px;"><span>Presença em Cup/Challenge:</span><strong style="color:#fff;">${top.assiduidade} etapas</strong></div>
         </div>
       `;
     }
@@ -2263,7 +2280,7 @@ window.openAwardModal = function(awardKey) {
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase;">
                 <th style="padding: 4px 6px;">Pos</th>
                 <th style="padding: 4px 6px;">Jogador</th>
-                <th style="padding: 4px 6px; text-align: right;">Derrotas por Etapa</th>
+                <th style="padding: 4px 6px; text-align: right;">Média (Derrotas / Etapas)</th>
               </tr>
             </thead>
             <tbody>
@@ -2273,7 +2290,7 @@ window.openAwardModal = function(awardKey) {
                   <td style="padding: 4px 6px;">${escapeHTML(c.player)}</td>
                   <td style="padding: 4px 6px; text-align: right; font-weight: bold;">
                     ${c.ratio.toFixed(2)} 
-                    <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">(${c.defeats}/${c.participations})</span>
+                    <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">(${c.defeats}D / ${c.participations}et)</span>
                   </td>
                 </tr>
               `).join('')}
@@ -3089,26 +3106,37 @@ function updateMetagameDisplay() {
       const useFallback = cupChallengeStages.length === 0;
       const targetStages = useFallback ? cleanStages : cupChallengeStages;
 
-      // 1. Pokébola de Ouro: Maior Winrate (desempate por pódios, depois vitórias)
-      const goldCandidates = [...appData.Ranking].map(r => {
+      // 1. Pokébola de Ouro: Índice de Eficiência Ponderada (Option B)
+      const goldCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) > 0).map(r => {
         const wins = toNumber(r.Vitorias);
         const losses = toNumber(r.Derrotas);
         const draws = toNumber(r.Empates);
-        const total = wins + losses + draws;
-        const winRate = total > 0 ? (wins / total) : 0;
+        const totalMatches = wins + losses + draws;
+        const winRate = totalMatches > 0 ? (wins / totalMatches) : 0;
+        const participations = toNumber(r.Participacoes);
+        const podiums = toNumber(r.Podio);
+        const score = (winRate * participations) + (podiums * 0.5);
         return {
           player: r,
+          playerName: r.Jogador || r.Player || r.Name || 'Desconhecido',
+          score: score,
           winRate: winRate,
-          podiums: toNumber(r.Podio),
-          wins: wins
+          podiums: podiums,
+          wins: wins,
+          losses: losses,
+          draws: draws,
+          total: totalMatches,
+          participations: participations
         };
       });
       goldCandidates.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
         if (b.winRate !== a.winRate) return b.winRate - a.winRate;
         if (b.podiums !== a.podiums) return b.podiums - a.podiums;
         return b.wins - a.wins;
       });
-      const pokebolaDeOuroPlayer = goldCandidates[0] ? goldCandidates[0].player : null;
+      const bestGoldCandidate = goldCandidates[0] || null;
+      const pokebolaDeOuroPlayer = bestGoldCandidate ? bestGoldCandidate.player : null;
 
       // 2. Líder de Ginásio: Jogador com maior número de participações (desempates: presenças Cup/Challenge, depois pontuação)
       const liderDeGinasioPlayer = [...appData.Ranking].sort((a, b) => {
@@ -3187,13 +3215,7 @@ function updateMetagameDisplay() {
       });
       const murchaPlayer = murchaCandidates[0];
 
-      const goldCardHtml = pokebolaDeOuroPlayer ? (() => {
-        const wins = toNumber(pokebolaDeOuroPlayer.Vitorias);
-        const losses = toNumber(pokebolaDeOuroPlayer.Derrotas);
-        const draws = toNumber(pokebolaDeOuroPlayer.Empates);
-        const total = wins + losses + draws;
-        const winRatePct = total > 0 ? ((wins / total) * 100).toFixed(0) : '0';
-        return `
+      const goldCardHtml = bestGoldCandidate ? `
         <div class="glass-card" onclick="window.openAwardModal('gold')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
           <div style="display:flex; align-items:center; gap:10px; margin-top:-5px;">
             <span style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18); box-shadow:inset 0 0 6px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); position:relative; flex-shrink:0; margin-right:4px;">
@@ -3201,20 +3223,19 @@ function updateMetagameDisplay() {
             </span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Pokébola de Ouro</div>
-              <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(pokebolaDeOuroPlayer.Jogador)}</div>
+              <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(bestGoldCandidate.playerName)}</div>
             </div>
           </div>
           <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
-            Melhor desempenho geral calculado por winrate geral, pódios e total de vitórias.
+            Índice de consistência ponderando Winrate com volume de etapas e pódios.
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
-            <div>Winrate: <strong>${winRatePct}%</strong></div>
-            <div>Pódios: <strong>${toNumber(pokebolaDeOuroPlayer.Podio)}</strong></div>
+            <div>Score: <strong>${bestGoldCandidate.score.toFixed(2)} pts</strong></div>
+            <div>Winrate: <strong>${(bestGoldCandidate.winRate * 100).toFixed(0)}%</strong> <span style="font-size:0.7rem; color:var(--text-secondary);">(${bestGoldCandidate.wins}V/${bestGoldCandidate.total}P)</span></div>
           </div>
           <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver classificação e detalhes ➔</div>
         </div>
-      `;
-      })() : '';
+      ` : '';
 
       const gymLeaderCardHtml = liderDeGinasioPlayer ? `
         <div class="glass-card" onclick="window.openAwardModal('gym')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
@@ -3285,11 +3306,11 @@ function updateMetagameDisplay() {
             </div>
           </div>
           <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
-            Maior proporção de derrotas por participação na temporada (desempate por assiduidade).
+            Maior média de derrotas reais por etapa jogada na temporada.
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
-            <div>Derrotas/Etapa: <strong>${murchaPlayer.ratio.toFixed(2)}</strong></div>
-            <div>Derrotas Totais: <strong>${murchaPlayer.defeats} em ${murchaPlayer.participations} et.</strong></div>
+            <div>Média/Etapa: <strong>${murchaPlayer.ratio.toFixed(2)}</strong></div>
+            <div>Total: <strong>${murchaPlayer.defeats} em ${murchaPlayer.participations} et.</strong></div>
           </div>
           <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver classificação e detalhes ➔</div>
         </div>
