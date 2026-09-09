@@ -2859,6 +2859,9 @@ function updateMetagameDisplay() {
   let chartDecks = [];
   let accordionDecks = sortedDecks; // Accordion always shows all
   
+  // Total decks in this session / metagame view
+  const totalDecksCount = sortedDecks.reduce((sum, d) => sum + d.count, 0) || 1;
+
   // Doughnut Grouping logic
   if (chartType === 'doughnut') {
     let outrosCount = 0;
@@ -2867,9 +2870,13 @@ function updateMetagameDisplay() {
     const isExpanded = window.outrosExpandedState[selectedSession];
     
     // Categorize decks into main and outros decks
+    // Decks with count === 1, named 'outros', OR whose percentage is <= 1% are grouped into 'Outros Decks'
     sortedDecks.forEach(d => {
       const isOutrosVal = d.deck.toLowerCase() === 'outros' || d.deck.toLowerCase() === 'outros decks';
-      if (d.count === 1 || isOutrosVal) {
+      const pct = Math.round((d.count / totalDecksCount) * 100);
+      const isMinorDeck = d.count === 1 || isOutrosVal || pct <= 1;
+      
+      if (isMinorDeck) {
         outrosCount += d.count;
         outrosDecksList.push(d);
       } else {
@@ -2895,7 +2902,9 @@ function updateMetagameDisplay() {
       // MAIN MODE: Show main decks, group minor into "Outros Decks"
       sortedDecks.forEach(d => {
         const isOutrosVal = d.deck.toLowerCase() === 'outros' || d.deck.toLowerCase() === 'outros decks';
-        if (d.count > 1 && !isOutrosVal) {
+        const pct = Math.round((d.count / totalDecksCount) * 100);
+        const isMinorDeck = d.count === 1 || isOutrosVal || pct <= 1;
+        if (!isMinorDeck) {
           chartDecks.push(d);
         }
       });
