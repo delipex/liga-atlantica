@@ -2840,17 +2840,19 @@ function updateMetagameDisplay() {
   }
   
   const decksTab = appData.Decks || [];
-  const sortedDecks = Object.keys(deckCounts).map(deckName => {
-    const deckInfo = decksTab.find(d => (d.Deck || '').trim().toLowerCase() === deckName.toLowerCase());
-    return {
-      deck: deckName,
-      count: deckCounts[deckName],
-      image: deckInfo ? deckInfo.Imagem : null,
-      icone: deckInfo ? deckInfo.Icone : null,
-      energia: deckInfo ? deckInfo.TipoEnergia : '',
-      limitless: deckInfo ? (deckInfo.Limitless || deckInfo.Link || deckInfo.URL || '#') : '#'
-    };
-  }).sort((a, b) => b.count - a.count);
+  const sortedDecks = Object.keys(deckCounts)
+    .filter(deckName => (deckCounts[deckName] || 0) > 0 && deckName && deckName.trim() !== '')
+    .map(deckName => {
+      const deckInfo = decksTab.find(d => (d.Deck || '').trim().toLowerCase() === deckName.toLowerCase());
+      return {
+        deck: deckName,
+        count: deckCounts[deckName],
+        image: deckInfo ? deckInfo.Imagem : null,
+        icone: deckInfo ? deckInfo.Icone : null,
+        energia: deckInfo ? deckInfo.TipoEnergia : '',
+        limitless: deckInfo ? (deckInfo.Limitless || deckInfo.Link || deckInfo.URL || '#') : '#'
+      };
+    }).sort((a, b) => b.count - a.count);
   
   const chartType = 'doughnut';
   
@@ -2870,11 +2872,11 @@ function updateMetagameDisplay() {
     const isExpanded = window.outrosExpandedState[selectedSession];
     
     // Categorize decks into main and outros decks
-    // Decks with count === 1, named 'outros', OR whose percentage is <= 1% are grouped into 'Outros Decks'
+    // Decks with count === 1, named 'outros'/'outros decks', OR whose rounded percentage is <= 1% are grouped into 'Outros Decks'
     sortedDecks.forEach(d => {
       const isOutrosVal = d.deck.toLowerCase() === 'outros' || d.deck.toLowerCase() === 'outros decks';
-      const pct = Math.round((d.count / totalDecksCount) * 100);
-      const isMinorDeck = d.count === 1 || isOutrosVal || pct <= 1;
+      const pct = (d.count / totalDecksCount) * 100;
+      const isMinorDeck = d.count === 1 || isOutrosVal || pct < 1.5;
       
       if (isMinorDeck) {
         outrosCount += d.count;
@@ -2886,7 +2888,7 @@ function updateMetagameDisplay() {
 
     if (isExpanded) {
       // DRILL-DOWN MODE: Show all minor decks (which are in outrosDecksList)
-      chartDecks = [...outrosDecksList];
+      chartDecks = outrosDecksList.filter(d => d.count > 0);
       // Plus a slice for the rest of the decks named "Voltar para visão geral"
       if (mainDecksCount > 0) {
         // Size of "Voltar para visão geral" slice is scaled down to ~10% of the chart sum to leave room for minor decks
@@ -2902,9 +2904,9 @@ function updateMetagameDisplay() {
       // MAIN MODE: Show main decks, group minor into "Outros Decks"
       sortedDecks.forEach(d => {
         const isOutrosVal = d.deck.toLowerCase() === 'outros' || d.deck.toLowerCase() === 'outros decks';
-        const pct = Math.round((d.count / totalDecksCount) * 100);
-        const isMinorDeck = d.count === 1 || isOutrosVal || pct <= 1;
-        if (!isMinorDeck) {
+        const pct = (d.count / totalDecksCount) * 100;
+        const isMinorDeck = d.count === 1 || isOutrosVal || pct < 1.5;
+        if (!isMinorDeck && d.count > 0) {
           chartDecks.push(d);
         }
       });
@@ -2917,7 +2919,7 @@ function updateMetagameDisplay() {
       }
     }
   } else {
-    chartDecks = sortedDecks;
+    chartDecks = sortedDecks.filter(d => d.count > 0);
   }
   
   const labels = chartDecks.map(d => d.deck);
@@ -2964,11 +2966,14 @@ function updateMetagameDisplay() {
       let innerHtml = '';
       if (deckInfo) {
         const realCount = deckInfo.realCount !== undefined ? deckInfo.realCount : deckInfo.count;
+        const total = totalDecksCount || 1;
+        const rawPct = (realCount / total) * 100;
+        const pctStr = (rawPct < 1 && rawPct > 0) ? rawPct.toFixed(1).replace('.', ',') + '%' : Math.round(rawPct) + '%';
         if (deckInfo.image) {
           innerHtml += `<img src="${safeExternalUrl(deckInfo.image)}" style="width: 100px; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 5px;">`;
         }
         innerHtml += `<div style="font-weight: bold; text-align: center;">${escapeHTML(deckInfo.deck)}</div>`;
-        innerHtml += `<div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">${realCount} jogador(es)</div>`;
+        innerHtml += `<div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">${realCount} jogador(es) (${pctStr})</div>`;
       }
       
       tooltipEl.innerHTML = innerHtml;
@@ -3490,16 +3495,24 @@ function updateMetagameDisplay() {
           afterDraw(chart, args, options) {
             const drawCtx = chart.ctx;
             const meta = chart.getDatasetMeta(0);
+            const drawnIcons = []; // Track drawn icon coordinates to prevent overlapping
             
             meta.data.forEach((element, index) => {
               const val = chart.data.datasets[0].data[index];
               const deckObj = (chart._chartDecks || chartDecks)[index];
               const realCount = deckObj ? (deckObj.realCount !== undefined ? deckObj.realCount : deckObj.count) : val;
-              const percentNum = Math.round((realCount / totalDecksCount) * 100);
               
-              if (val < 1) return;
+              if (val < 1 || realCount <= 0) return;
               
-              const percent = percentNum + '%';
+              const rawPct = (realCount / totalDecksCount) * 100;
+              let percent = '';
+              if (rawPct < 1 && rawPct > 0) {
+                // Show 0,X% (e.g. 0,4%, 0,7%) so it never shows 0% for played decks
+                percent = rawPct.toFixed(1).replace('.', ',') + '%';
+              } else {
+                percent = Math.round(rawPct) + '%';
+              }
+              
               const name = chart.data.labels[index];
               const deckData = (chart._chartDecks || chartDecks).find(d => d.deck === name);
               
@@ -3513,40 +3526,59 @@ function updateMetagameDisplay() {
               const isOutros = name ? (name.toLowerCase() === 'outros' || name.toLowerCase() === 'outros decks') : false;
               const isVisaoGeral = name === 'Voltar para visão geral';
 
-              // Removed the percentNum >= 4 constraint to allow drawing icons for 1-player/2% decks in expanded drilldown view
+              // Icon drawing with collision avoidance so icons NEVER overlap or clump
               if (!isOutros && !isVisaoGeral && deckData && deckData.icone) {
-                // Adjust stagger radius and reduce icon size from 42px to 30px to prevent clipping
-                const offset = index % 3 === 0 ? 20 : index % 3 === 1 ? 36 : 52;
-                const R = outerRadius + offset;
-                const drawX = x0 + Math.cos(angle) * R;
-                const drawY = y0 + Math.sin(angle) * R;
-                
-                drawCtx.save();
+                const iconSize = 28;
+                const possibleOffsets = [20, 38, 56, 74, 92];
+                let chosenOffset = null;
+                let finalDrawX = 0;
+                let finalDrawY = 0;
 
-                drawCtx.beginPath();
-                drawCtx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-                drawCtx.lineWidth = 1;
-                const startX = x0 + Math.cos(angle) * outerRadius;
-                const startY = y0 + Math.sin(angle) * outerRadius;
-                // Connector line stops just outside the icon (icon radius is 15px)
-                const endX = x0 + Math.cos(angle) * (R - 16);
-                const endY = y0 + Math.sin(angle) * (R - 16);
-                drawCtx.moveTo(startX, startY);
-                drawCtx.lineTo(endX, endY);
-                drawCtx.stroke();
-                drawCtx.restore();
+                for (let off of possibleOffsets) {
+                  const testR = outerRadius + off;
+                  const testX = x0 + Math.cos(angle) * testR;
+                  const testY = y0 + Math.sin(angle) * testR;
+                  
+                  const hasCollision = drawnIcons.some(pos => {
+                    const dist = Math.hypot(testX - pos.x, testY - pos.y);
+                    return dist < (iconSize + 6); // Minimum 34px distance
+                  });
 
-                if (!window.chartIconCache[name]) {
-                  const img = new Image();
-                  img.src = safeExternalUrl(deckData.icone);
-                  img.onload = () => chart.update();
-                  window.chartIconCache[name] = img;
-                } else if (window.chartIconCache[name].complete && window.chartIconCache[name].naturalWidth > 0) {
-                  const img = window.chartIconCache[name];
-                  const iconSize = 30; 
+                  if (!hasCollision) {
+                    chosenOffset = off;
+                    finalDrawX = testX;
+                    finalDrawY = testY;
+                    break;
+                  }
+                }
+
+                if (chosenOffset !== null) {
+                  drawnIcons.push({ x: finalDrawX, y: finalDrawY });
+
                   drawCtx.save();
-                  drawCtx.drawImage(img, drawX - (iconSize/2), drawY - (iconSize/2), iconSize, iconSize);
+                  drawCtx.beginPath();
+                  drawCtx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+                  drawCtx.lineWidth = 1;
+                  const startX = x0 + Math.cos(angle) * outerRadius;
+                  const startY = y0 + Math.sin(angle) * outerRadius;
+                  const endX = x0 + Math.cos(angle) * (outerRadius + chosenOffset - (iconSize / 2));
+                  const endY = y0 + Math.sin(angle) * (outerRadius + chosenOffset - (iconSize / 2));
+                  drawCtx.moveTo(startX, startY);
+                  drawCtx.lineTo(endX, endY);
+                  drawCtx.stroke();
                   drawCtx.restore();
+
+                  if (!window.chartIconCache[name]) {
+                    const img = new Image();
+                    img.src = safeExternalUrl(deckData.icone);
+                    img.onload = () => chart.update();
+                    window.chartIconCache[name] = img;
+                  } else if (window.chartIconCache[name].complete && window.chartIconCache[name].naturalWidth > 0) {
+                    const img = window.chartIconCache[name];
+                    drawCtx.save();
+                    drawCtx.drawImage(img, finalDrawX - (iconSize/2), finalDrawY - (iconSize/2), iconSize, iconSize);
+                    drawCtx.restore();
+                  }
                 }
               }
 
@@ -3581,7 +3613,9 @@ function updateMetagameDisplay() {
                 drawCtx.fillText("Voltar para", 0, -6);
                 drawCtx.fillText("visão geral", 0, 4);
               } else {
-                if (percentNum <= 3) {
+                if (rawPct < 1) {
+                  drawCtx.font = "700 7.5px 'Exo 2', sans-serif";
+                } else if (rawPct <= 3) {
                   drawCtx.font = "700 9px 'Exo 2', sans-serif";
                 } else {
                   drawCtx.font = "700 11px 'Exo 2', sans-serif";
@@ -3697,8 +3731,9 @@ function updateMetagameDisplay() {
                 callbacks: {
                   label: function(context) {
                     const val = context.raw;
-                    const pct = Math.round((val / totalDecksCount) * 100);
-                    return ` ${pct}%`;
+                    const rawPct = (val / totalDecksCount) * 100;
+                    const pctStr = (rawPct < 1 && rawPct > 0) ? rawPct.toFixed(1).replace('.', ',') + '%' : Math.round(rawPct) + '%';
+                    return ` ${pctStr}`;
                   }
                 }
               } 
