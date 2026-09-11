@@ -1151,6 +1151,69 @@ function doGet(e) {
       }
     }
 
+    function parseTDFDate(dateStr) {
+      if (!dateStr || typeof dateStr !== 'string') return null;
+      const clean = dateStr.trim();
+      
+      // 1. Formato ISO já pronto: AAAA-MM-DD
+      const isoMatch = clean.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      if (isoMatch) {
+        const y = isoMatch[1];
+        const m = isoMatch[2].padStart(2, '0');
+        const d = isoMatch[3].padStart(2, '0');
+        return {
+          iso: `${y}-${m}-${d}`,
+          pt: `${d}/${m}/${y}`,
+          possibleISOs: [`${y}-${m}-${d}`]
+        };
+      }
+
+      // 2. Formato com separadores (ex: MM/DD/AAAA ou DD/MM/AAAA)
+      const parts = clean.split(/[\/\-\.]/);
+      if (parts.length === 3) {
+        const p1 = parseInt(parts[0], 10);
+        const p2 = parseInt(parts[1], 10);
+        let year = parseInt(parts[2], 10);
+        if (year < 100) year += 2000;
+
+        // Se o 1º número for > 12, é com certeza DIA (DD/MM/AAAA - Brasileiro)
+        if (p1 > 12 && p2 <= 12) {
+          const day = String(p1).padStart(2, '0');
+          const month = String(p2).padStart(2, '0');
+          const iso = `${year}-${month}-${day}`;
+          return { iso, pt: `${day}/${month}/${year}`, possibleISOs: [iso] };
+        }
+
+        // Se o 2º número for > 12, é com certeza DIA (MM/DD/AAAA - Padrão TOM/EUA)
+        if (p2 > 12 && p1 <= 12) {
+          const month = String(p1).padStart(2, '0');
+          const day = String(p2).padStart(2, '0');
+          const iso = `${year}-${month}-${day}`;
+          return { iso, pt: `${day}/${month}/${year}`, possibleISOs: [iso] };
+        }
+
+        // Ambos <= 12 (ambíguo, ex: 07/08/2026)
+        // O padrão nativo do TOM é MM/DD/AAAA (EUA), mas aceitamos ambos sem gerar erro falso
+        const usMonth = String(p1).padStart(2, '0');
+        const usDay = String(p2).padStart(2, '0');
+        const usISO = `${year}-${usMonth}-${usDay}`;
+        const usPT = `${usDay}/${usMonth}/${year}`;
+
+        const brDay = String(p1).padStart(2, '0');
+        const brMonth = String(p2).padStart(2, '0');
+        const brISO = `${year}-${brMonth}-${brDay}`;
+        const brPT = `${brDay}/${brMonth}/${year}`;
+
+        return {
+          iso: usISO,
+          pt: usPT,
+          possibleISOs: [usISO, brISO]
+        };
+      }
+
+      return null;
+    }
+
     function extractTDFMetadata(tdfText) {
       if (!tdfText) return null;
       const trimmed = tdfText.trim();
@@ -1190,11 +1253,22 @@ function doGet(e) {
         return;
       }
 
-      let fileDateISO = '';
-      if (meta.date) {
-        const parts = meta.date.split('/');
-        if (parts.length === 3) {
-          fileDateISO = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      const dateInfo = parseTDFDate(meta.date);
+      const dateInput = document.getElementById('event-date');
+      const numberInput = document.getElementById('event-number');
+
+      let hasWarning = false;
+      let warningMsg = '';
+
+      if (dateInfo) {
+        if (!dateInput.value) {
+          dateInput.value = dateInfo.iso;
+        } else {
+          const matches = dateInfo.possibleISOs.includes(dateInput.value);
+          if (!matches) {
+            hasWarning = true;
+            warningMsg += `• Data no formulário (${formatDateISOToPT(dateInput.value)}) difere da data do arquivo (${dateInfo.pt || meta.date}).<br>`;
+          }
         }
       }
 
@@ -1211,21 +1285,6 @@ function doGet(e) {
           fileType = 'Challenge';
         } else if (nameLower.includes('liga') || nameLower.includes('sessão') || nameLower.includes('sessao')) {
           fileType = 'Liga';
-        }
-      }
-
-      const dateInput = document.getElementById('event-date');
-      const numberInput = document.getElementById('event-number');
-
-      let hasWarning = false;
-      let warningMsg = '';
-
-      if (fileDateISO) {
-        if (!dateInput.value) {
-          dateInput.value = fileDateISO;
-        } else if (dateInput.value !== fileDateISO) {
-          hasWarning = true;
-          warningMsg += `• Data no formulário (${formatDateISOToPT(dateInput.value)}) difere da data do arquivo (${meta.date}).<br>`;
         }
       }
 
@@ -1251,6 +1310,7 @@ function doGet(e) {
       }
 
       fileInfoDiv.style.display = 'block';
+      const displayDate = dateInfo ? dateInfo.pt : meta.date;
       if (hasWarning) {
         fileInfoDiv.style.background = 'rgba(245, 158, 11, 0.08)';
         fileInfoDiv.style.borderColor = 'rgba(245, 158, 11, 0.25)';
@@ -1263,7 +1323,7 @@ function doGet(e) {
             ${warningMsg}
           </div>
           <div style="font-size: 0.75rem; color: var(--text-secondary); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px;">
-            📄 <strong>Info do Arquivo:</strong> ${escapeHTML(meta.name)} (${meta.date})
+            📄 <strong>Info do Arquivo:</strong> ${escapeHTML(meta.name)} (${displayDate})
           </div>
         `;
       } else {
@@ -1275,7 +1335,7 @@ function doGet(e) {
             ✨ Arquivo validado com sucesso!
           </div>
           <div style="font-size: 0.8rem; line-height: 1.4;">
-            📅 Data: <strong>${meta.date}</strong> &nbsp;|&nbsp; 🏆 Torneio: <strong>${escapeHTML(meta.name)}</strong>
+            📅 Data: <strong>${displayDate}</strong> &nbsp;|&nbsp; 🏆 Torneio: <strong>${escapeHTML(meta.name)}</strong>
           </div>
         `;
       }
