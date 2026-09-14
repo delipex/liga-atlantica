@@ -1391,33 +1391,15 @@ function doGet(e) {
           return;
         }
 
-        // Ordenação unificada por pontos, OMW%, colocação oficial (MediaColocacao), vitórias, empates, derrotas (menor é melhor) e nome
+        // Ordenação estrita respeitando a colocação oficial (Pos / MediaColocacao) do TOM
         allPlayers.sort((a, b) => {
+          const posA = Number(a.Pos || a.MediaColocacao) || 999;
+          const posB = Number(b.Pos || b.MediaColocacao) || 999;
+          if (posA !== posB) return posA - posB;
           const ptsA = Number(a.Pontos) || 0;
           const ptsB = Number(b.Pontos) || 0;
           if (ptsB !== ptsA) return ptsB - ptsA;
-
-          const omwA = Number(a.omw) || 0;
-          const omwB = Number(b.omw) || 0;
-          if (omwB !== omwA) return omwB - omwA;
-
-          const medA = Number(a.MediaColocacao) || 999;
-          const medB = Number(b.MediaColocacao) || 999;
-          if (medA !== medB) return medA - medB;
-
-          const vA = Number(a.Vitorias) || 0;
-          const vB = Number(b.Vitorias) || 0;
-          if (vB !== vA) return vB - vA;
-
-          const eA = Number(a.Empates) || 0;
-          const eB = Number(b.Empates) || 0;
-          if (eB !== eA) return eB - eA;
-
-          const dA = Number(a.Derrotas) || 0;
-          const dB = Number(b.Derrotas) || 0;
-          if (dA !== dB) return dA - dB;
-
-          return String(a.Jogador || '').localeCompare(String(b.Jogador || ''), 'pt-BR');
+          return Number(b.Vitorias || 0) - Number(a.Vitorias || 0);
         });
 
         // Reatribuição do Rank unificado e pódio
@@ -1734,38 +1716,20 @@ function doGet(e) {
             });
           }
           
-          // Ordenação unificada por pontos, OMW%, colocação oficial (MediaColocacao), vitórias, empates, derrotas (menor é melhor) e nome
+          // Ordenação estrita respeitando a colocação oficial (Pos / MediaColocacao) do TOM
           playersResult.sort((a, b) => {
+            const posA = Number(a.Pos || a.MediaColocacao) || 999;
+            const posB = Number(b.Pos || b.MediaColocacao) || 999;
+            if (posA !== posB) return posA - posB;
             const ptsA = Number(a.Pontos) || 0;
             const ptsB = Number(b.Pontos) || 0;
             if (ptsB !== ptsA) return ptsB - ptsA;
-
-            const omwA = Number(a.omw) || 0;
-            const omwB = Number(b.omw) || 0;
-            if (omwB !== omwA) return omwB - omwA;
-
-            const medA = Number(a.MediaColocacao) || 999;
-            const medB = Number(b.MediaColocacao) || 999;
-            if (medA !== medB) return medA - medB;
-
-            const vA = Number(a.Vitorias) || 0;
-            const vB = Number(b.Vitorias) || 0;
-            if (vB !== vA) return vB - vA;
-
-            const eA = Number(a.Empates) || 0;
-            const eB = Number(b.Empates) || 0;
-            if (eB !== eA) return eB - eA;
-
-            const dA = Number(a.Derrotas) || 0;
-            const dB = Number(b.Derrotas) || 0;
-            if (dA !== dB) return dA - dB;
-
-            return String(a.Jogador || '').localeCompare(String(b.Jogador || ''), 'pt-BR');
+            return Number(b.Vitorias || 0) - Number(a.Vitorias || 0);
           });
 
-          // Reatribuição do Rank unificado contínuo e cálculo correto do Pódio Geral
+          // Garante numeração contínua e cálculo correto do Pódio Geral da etapa
           playersResult.forEach((p, idx) => {
-            p.Pos = idx + 1;
+            p.Pos = p.Pos > 0 ? p.Pos : (idx + 1);
             p.Podio = (p.Pos <= 4 && !p.isDnf) ? 1 : 0;
           });
           
