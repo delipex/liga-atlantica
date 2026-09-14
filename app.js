@@ -451,11 +451,11 @@ function getLatestDeckFromRow(row) {
   return null;
 }
 
-function normalizeRanking(rankingRows, partidasRows = []) {
+function normalizeRanking(rankingRows, partidasRows = [], isStage = false) {
   const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
-  const isFrozen = window.CONFIG?.dataSource === 'sheets' || 
+  const isFrozen = !isStage && (window.CONFIG?.dataSource === 'sheets' || 
                    (statusPodio === 'congelado' || statusPodio === 'offline') ||
-                   (!rankingRows || rankingRows.length === 0);
+                   (!rankingRows || rankingRows.length === 0));
   
   if (isFrozen && appData.Jogadores && appData.Jogadores.length > 0) {
     rankingRows = appData.Jogadores;
@@ -486,6 +486,7 @@ function normalizeRanking(rankingRows, partidasRows = []) {
       return {
         ...player,
         Jogador: dbPlayer.Jogador || playerName,
+        OriginalPos: toNumber(posRaw, 0),
         Pos: toNumber(posRaw, 0),
         Categoria: categoria.label,
         CategoriaCodigo: categoria.code,
@@ -501,6 +502,14 @@ function normalizeRanking(rankingRows, partidasRows = []) {
       };
     })
     .sort((a, b) => {
+      if (isStage) {
+        const posA = a.OriginalPos > 0 ? a.OriginalPos : 999999;
+        const posB = b.OriginalPos > 0 ? b.OriginalPos : 999999;
+        if (posA !== posB) return posA - posB;
+        if (b.Pontos !== a.Pontos) return b.Pontos - a.Pontos;
+        return Number(b.Vitorias || 0) - Number(a.Vitorias || 0);
+      }
+
       const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
       const isFrozen = window.CONFIG?.dataSource === 'sheets' || 
                        (statusPodio === 'congelado' || statusPodio === 'offline') ||
@@ -525,7 +534,7 @@ function normalizeRanking(rankingRows, partidasRows = []) {
     });
 
   normalized.forEach((player, index) => {
-    player.Pos = index + 1;
+    player.Pos = (isStage && player.OriginalPos > 0) ? player.OriginalPos : (index + 1);
   });
 
   return normalized;
@@ -2556,7 +2565,7 @@ function initEvents() {
         const text = await res.text();
         const stagePlayers = parseTDF(text);
         
-        const normalized = normalizeRanking(stagePlayers, []);
+        const normalized = normalizeRanking(stagePlayers, [], true);
         currentRankingList = normalized;
         renderRankingTable(normalized, 1);
 
