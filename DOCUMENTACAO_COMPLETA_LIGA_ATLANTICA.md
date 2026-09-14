@@ -180,6 +180,21 @@ Resolveu o clássico conflito de localidade entre o TOM (padrão americano `MM/D
 * Para datas ambíguas (ambos $\le 12$, como `06/08/2026`), o sistema aceita ambas as interpretações sem gerar avisos de divergência falsos.
 * Todas as datas na interface do organizador são renderizadas no formato **`DD/MM/AAAA`**.
 
+### 7.2. Soberania dos Resultados e Desempates Oficiais do TOM (`place`)
+O software oficial **TOM (Tournament Official Manager)** da Pokémon Company calcula com precisão suíça os critérios de desempate oficiais de cada torneio (confronto direto, OMW% oficial com drops ajustados e OOMW%) e grava o resultado final na tag:
+```xml
+<standings>
+  <pod category="2" type="finished">
+    <player id="4804029" place="1"/>
+    <player id="5583587" place="2"/>
+    ...
+  </pod>
+</standings>
+```
+* **Regra de Ouro:** A colocação (`place`) extraída do TOM é **100% soberana** e define a posição oficial de cada jogador na etapa.
+* **Proibição de Desempates Caseiros:** O leitor nunca sobrescreve o `place` oficial com fórmulas caseiras de OMW aproximado ou ordenação alfabética em etapas individuais.
+* **Preservação no Site:** O motor `normalizeRanking(..., isStage=true)` no `app.js` preserva o `OriginalPos` exato da etapa, garantindo que o Campeão, Vice e demais colocações apareçam de forma idêntica ao arquivo original do TOM.
+
 ---
 
 ## 8. 🎨 Design System, Glassmorphism e Identidade Visual
