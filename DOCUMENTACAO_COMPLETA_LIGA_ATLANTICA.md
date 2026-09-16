@@ -46,7 +46,9 @@ LigaAtlântica/
 │   ├── admin.html                # Painel de upload de TDFs e gestão do torneio
 │   ├── ranking.tdf               # Base consolidada do ranking atual em formato TDF
 │   ├── etapas.json               # Catálogo e índice de todas as etapas cadastradas
+│   ├── campeoes.json             # Histórico oficial de campeões e premiações das temporadas
 │   └── etapas/                   # Arquivos TDF individuais de cada etapa
+├── campeoes.json                 # Cópia raiz para GitHub Pages
 ├── rebuild_ranking.js            # Script Node.js de reconstrução determinística do ranking
 ├── verify_data_integrity.js      # Script de auditoria matemática entre etapas e ranking
 ├── server.js                     # Servidor local de desenvolvimento

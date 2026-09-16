@@ -1,0 +1,62 @@
+[
+  {
+    "Temporada": "Temporada #4",
+    "Campeao": "Fernando Ribeiro",
+    "Vice": "Washington Neto",
+    "DeckCampeao": "Charizard ex",
+    "Data": "julho/2026",
+    "FotoCampeao": "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/006.png",
+    "URLDeck": "",
+    "ImagemDeck": "https://assets.pokemon.com/static-assets/content-assets/cms2-pt-br/img/cards/web/MEW/MEW_PT-BR_6.png",
+    "ObservacaoDeck": "Lista consistente focada em aceleração rápida e dano progressivo.",
+    "PokebolaOuro": "Fernando Ribeiro",
+    "LiderGinasio": "Washington Neto",
+    "DittoPlayer": "Fernando Ribeiro",
+    "PokebolaMurcha": "Lucas Lima"
+  },
+  {
+    "Temporada": "Temporada #3",
+    "Campeao": "João Pedro Oliveira",
+    "Vice": "Fernando Ribeiro",
+    "DeckCampeao": "Mega Sharpedo",
+    "Data": "abril/2026",
+    "FotoCampeao": "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/319_f2.png",
+    "URLDeck": "",
+    "ImagemDeck": "https://img.mypcards.com/cdn-cgi/image/f=auto,q=85/img/2/2390/pokemon_pfl_061_094/pokemon_pfl_061_094_pt.jpg",
+    "ObservacaoDeck": "Estratégia disruptiva com controle de energia e dano explosivo.",
+    "PokebolaOuro": "João Pedro Oliveira",
+    "LiderGinasio": "Fernando Ribeiro",
+    "DittoPlayer": "João Pedro Oliveira",
+    "PokebolaMurcha": "Pedro Santos"
+  },
+  {
+    "Temporada": "Temporada #2",
+    "Campeao": "Washington Neto",
+    "Vice": "João Pedro Oliveira",
+    "DeckCampeao": "Zoroark ex",
+    "Data": "setembro/2025",
+    "FotoCampeao": "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/571.png",
+    "URLDeck": "",
+    "ImagemDeck": "https://img.mypcards.com/cdn-cgi/image/f=auto,q=85/img/2/2238/pokemon_jtg_098_159/pokemon_jtg_098_159_pt.jpg",
+    "ObservacaoDeck": "Arquétipo versátil com compra massiva de cartas por turno.",
+    "PokebolaOuro": "Washington Neto",
+    "LiderGinasio": "Washington Neto",
+    "DittoPlayer": "Washington Neto",
+    "PokebolaMurcha": "Rafael Souza"
+  },
+  {
+    "Temporada": "Temporada #1",
+    "Campeao": "Washington Neto",
+    "Vice": "Matheus Silva",
+    "DeckCampeao": "Dragapult ex",
+    "Data": "abril/2025",
+    "FotoCampeao": "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/887.png",
+    "URLDeck": "",
+    "ImagemDeck": "https://assets.pokemon.com/static-assets/content-assets/cms2-pt-br/img/cards/web/SV8PT5/SV8PT5_PT-BR_73.png",
+    "ObservacaoDeck": "Espalhe de dano preciso no banco dos oponentes.",
+    "PokebolaOuro": "Washington Neto",
+    "LiderGinasio": "Washington Neto",
+    "DittoPlayer": "Washington Neto",
+    "PokebolaMurcha": "Carlos Eduardo"
+  }
+]

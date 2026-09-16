@@ -847,12 +847,27 @@ async function loadData() {
         })();
       }
 
+      const campeoesPromise = (async () => {
+        try {
+          const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          const url = isLocalHost ? `campeoes.json?v=${new Date().getTime()}` : (githubSources.Ranking ? githubSources.Ranking.replace('ranking.tdf', 'campeoes.json') : `campeoes.json?v=${new Date().getTime()}`);
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length) return data;
+          }
+        } catch (e) {
+          console.info("campeoes.json não encontrado ou falha ao carregar.", e);
+        }
+        return fetchOptionalSheetTab(spreadsheetId, "Campeoes", publishedSheetGids.Campeoes);
+      })();
+
       const [ranking, partidas, scoresAntigos, calendario, campeoes, regras, galeria, loadedStages, jogadoresSheet, metagame, decks] = await Promise.all([
         rankingPromise,
         fetchOptionalSheetTab(spreadsheetId, "Partidas", publishedSheetGids.Partidas),
         fetchOptionalSheetTab(spreadsheetId, historicalScoresTab, publishedSheetGids[historicalScoresTab]),
         fetchOptionalSheetTab(spreadsheetId, "Calendario", publishedSheetGids.Calendario),
-        fetchOptionalSheetTab(spreadsheetId, "Campeoes", publishedSheetGids.Campeoes),
+        campeoesPromise,
         fetchOptionalSheetTab(spreadsheetId, "Regras", publishedSheetGids.Regras),
         fetchOptionalSheetTab(spreadsheetId, "Galeria", publishedSheetGids.Galeria),
         stagesPromise,
@@ -1578,10 +1593,68 @@ function renderChampions() {
     return;
   }
 
-  // Set the container class to champions-accordion to use the premium Hall of Fame accordion layout
-  container.className = "champions-accordion";
+  // 1. Calcular recordes históricos da liga
+  const champWins = {};
+  const deckWins = {};
+  const viceCounts = {};
+  
+  champions.forEach(c => {
+    const champ = (c.Campeao || '').trim();
+    const deck = (c.DeckCampeao || '').trim();
+    const vice = (c.Vice || '').trim();
+    
+    if (champ) champWins[champ] = (champWins[champ] || 0) + 1;
+    if (deck) deckWins[deck] = (deckWins[deck] || 0) + 1;
+    if (vice && vice !== '-' && vice !== '') viceCounts[vice] = (viceCounts[vice] || 0) + 1;
+  });
 
-  container.innerHTML = champions.map((champ, index) => {
+  const topChampion = Object.entries(champWins).sort((a, b) => b[1] - a[1])[0] || ['Nenhum', 0];
+  const topDeck = Object.entries(deckWins).sort((a, b) => b[1] - a[1])[0] || ['Nenhum', 0];
+  const topVice = Object.entries(viceCounts).sort((a, b) => b[1] - a[1])[0] || ['-', 0];
+  const totalSeasons = champions.length;
+
+  const recordsHtml = `
+    <div class="champ-records-grid">
+      <div class="champ-record-card">
+        <div class="champ-record-icon-wrap">👑</div>
+        <div class="champ-record-info">
+          <span class="champ-record-label">Maior Campeão</span>
+          <span class="champ-record-value">${escapeHTML(topChampion[0])}</span>
+          <span class="champ-record-sub">${topChampion[1]}x Campeão da Liga</span>
+        </div>
+      </div>
+      
+      <div class="champ-record-card">
+        <div class="champ-record-icon-wrap">⚡</div>
+        <div class="champ-record-info">
+          <span class="champ-record-label">Deck Mais Vitorioso</span>
+          <span class="champ-record-value">${escapeHTML(topDeck[0])}</span>
+          <span class="champ-record-sub">${topDeck[1]} título${topDeck[1] > 1 ? 's' : ''} conquistado${topDeck[1] > 1 ? 's' : ''}</span>
+        </div>
+      </div>
+      
+      <div class="champ-record-card">
+        <div class="champ-record-icon-wrap">🥈</div>
+        <div class="champ-record-info">
+          <span class="champ-record-label">Maior Finalista</span>
+          <span class="champ-record-value">${escapeHTML(topVice[0])}</span>
+          <span class="champ-record-sub">${topVice[1]} presenças em finais</span>
+        </div>
+      </div>
+      
+      <div class="champ-record-card">
+        <div class="champ-record-icon-wrap">🏆</div>
+        <div class="champ-record-info">
+          <span class="champ-record-label">Histórico Oficial</span>
+          <span class="champ-record-value">${totalSeasons} Temporadas</span>
+          <span class="champ-record-sub">Edições concluídas</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // 2. Renderizar Acordeão do Hall da Fama
+  const accordionHtml = champions.map((champ, index) => {
     const photoUrl = safeExternalUrl(champ.FotoCampeao || champ.Foto || champ.URLFoto || champ.ImagemCampeao);
     const championName = escapeHTML(champ.Campeao || 'Campeão');
     const championInitial = championName ? championName.charAt(0).toUpperCase() : '🏆';
@@ -1592,7 +1665,7 @@ function renderChampions() {
     );
     const isFirstExpanded = index === 0 ? 'expanded' : '';
 
-    // Check for optional seasonal titles columns in the Campeoes sheet row
+    // Títulos da temporada
     const pOuro = champ.PokebolaOuro || champ.PokebolaDeOuro;
     const lGinasio = champ.LiderGinasio || champ.LiderDeGinasio;
     const dPlayer = champ.DittoPlayer;
@@ -1602,32 +1675,37 @@ function renderChampions() {
     let seasonTitlesHtml = '';
     if (hasSeasonTitles) {
       seasonTitlesHtml = `
-        <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08); display:flex; flex-direction:column; gap:6px; font-size:0.75rem; text-align:left; width:100%; max-width:240px; margin-left:auto; margin-right:auto;">
-          <div style="font-weight:600; color:var(--accent-yellow); font-size:0.75rem; margin-bottom:2px; text-transform:uppercase; letter-spacing:0.5px; text-align:center;">Títulos da Temporada:</div>
-          ${pOuro ? `
-            <div style="display:flex; align-items:center; gap:6px; justify-content:flex-start;">
-              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png" style="width:24px; height:24px; object-fit:contain; margin:-4px 0;" alt="Ouro">
-              <span style="color:rgba(255,255,255,0.85); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Ouro: <strong>${escapeHTML(pOuro)}</strong></span>
-            </div>
-          ` : ''}
-          ${lGinasio ? `
-            <div style="display:flex; align-items:center; gap:6px; justify-content:flex-start;">
-              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/68.png" style="width:24px; height:24px; object-fit:contain; margin:-4px 0;" alt="Líder">
-              <span style="color:rgba(255,255,255,0.85); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Líder: <strong>${escapeHTML(lGinasio)}</strong></span>
-            </div>
-          ` : ''}
-          ${dPlayer ? `
-            <div style="display:flex; align-items:center; gap:6px; justify-content:flex-start;">
-              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" style="width:24px; height:24px; object-fit:contain; margin:-4px 0;" alt="Ditto">
-              <span style="color:rgba(255,255,255,0.85); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Ditto: <strong>${escapeHTML(dPlayer)}</strong></span>
-            </div>
-          ` : ''}
-          ${pMurcha ? `
-            <div style="display:flex; align-items:center; gap:6px; justify-content:flex-start;">
-              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png" style="width:24px; height:24px; object-fit:contain; margin:-4px 0;" alt="Murcha">
-              <span style="color:rgba(255,255,255,0.85); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Murcha: <strong>${escapeHTML(pMurcha)}</strong></span>
-            </div>
-          ` : ''}
+        <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08); width:100%; max-width:280px; margin-left:auto; margin-right:auto;">
+          <div style="font-weight:700; color:var(--accent-yellow); font-size:0.72rem; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.06em; text-align:center;">Títulos da Temporada</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:0.72rem;">
+            ${pOuro ? `
+              <div style="display:flex; align-items:center; gap:6px; background:rgba(255,203,5,0.08); border:1px solid rgba(255,203,5,0.25); padding:4px 8px; border-radius:12px;" title="Pokébola de Ouro">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="width:18px; height:18px; object-fit:contain; filter: sepia(1) saturate(10) hue-rotate(20deg) brightness(1.2);" alt="Ouro">
+                <span style="color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><strong>${escapeHTML(pOuro)}</strong></span>
+              </div>
+            ` : ''}
+            ${lGinasio ? `
+              <div style="display:flex; align-items:center; gap:6px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); padding:4px 8px; border-radius:12px;" title="Líder de Ginásio">
+                <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px; flex-shrink:0;">
+                  <path d="M32 4 L48 24 L48 44 L32 60 L16 44 L16 24 Z" fill="#dca300" stroke="#ffcb05" stroke-width="2"/>
+                  <path d="M32 6 L45 24 L45 42 L32 56 L19 42 L19 24 Z" fill="#1e4620" />
+                </svg>
+                <span style="color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><strong>${escapeHTML(lGinasio)}</strong></span>
+              </div>
+            ` : ''}
+            ${dPlayer ? `
+              <div style="display:flex; align-items:center; gap:6px; background:rgba(141,86,255,0.08); border:1px solid rgba(141,86,255,0.25); padding:4px 8px; border-radius:12px;" title="Ditto Player">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png" style="width:20px; height:20px; object-fit:contain; margin:-2px 0;" alt="Ditto">
+                <span style="color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><strong>${escapeHTML(dPlayer)}</strong></span>
+              </div>
+            ` : ''}
+            ${pMurcha ? `
+              <div style="display:flex; align-items:center; gap:6px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); padding:4px 8px; border-radius:12px;" title="Pokébola Murcha">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/black-sludge.png" style="width:16px; height:16px; object-fit:contain;" alt="Murcha">
+                <span style="color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><strong>${escapeHTML(pMurcha)}</strong></span>
+              </div>
+            ` : ''}
+          </div>
         </div>
       `;
     }
@@ -1665,6 +1743,14 @@ function renderChampions() {
       </div>
     `;
   }).join('');
+
+  container.className = "champions-wrapper";
+  container.innerHTML = `
+    ${recordsHtml}
+    <div class="champions-accordion">
+      ${accordionHtml}
+    </div>
+  `;
 }
 
 function renderGallery() {
@@ -1861,6 +1947,52 @@ window.openPlayerModal = function(playerRef) {
     `;
   }
 
+  // 1. Títulos e Medalhas do Hall da Fama
+  const titles = [];
+  (appData.Campeoes || []).forEach(c => {
+    const pNorm = normalizePlayerName(player.Jogador);
+    if (normalizePlayerName(c.Campeao) === pNorm) titles.push(`🏆 Campeão (${c.Temporada})`);
+    if (normalizePlayerName(c.Vice) === pNorm) titles.push(`🥈 Vice (${c.Temporada})`);
+    if (normalizePlayerName(c.PokebolaOuro || c.PokebolaDeOuro) === pNorm) titles.push(`🥇 Pokébola de Ouro (${c.Temporada})`);
+    if (normalizePlayerName(c.LiderGinasio || c.LiderDeGinasio) === pNorm) titles.push(`🥋 Líder de Ginásio (${c.Temporada})`);
+    if (normalizePlayerName(c.DittoPlayer) === pNorm) titles.push(`🧬 Ditto Player (${c.Temporada})`);
+    if (normalizePlayerName(c.PokebolaMurcha) === pNorm) titles.push(`🥀 Pokébola Murcha (${c.Temporada})`);
+  });
+  const titlesContainer = document.getElementById('modal-player-titles');
+  if (titlesContainer) {
+    if (titles.length) {
+      titlesContainer.innerHTML = titles.map(t => `<span class="trainer-title-badge">${escapeHTML(t)}</span>`).join('');
+      titlesContainer.style.display = 'flex';
+    } else {
+      titlesContainer.innerHTML = '';
+      titlesContainer.style.display = 'none';
+    }
+  }
+
+  // 2. Decks Jogados na Temporada
+  const playedDecksMap = {};
+  (stagesIndex || []).forEach(stg => {
+    const dName = getDeckForStage(player.Jogador, stg.data);
+    if (dName && dName.trim() !== '') {
+      playedDecksMap[dName] = (playedDecksMap[dName] || 0) + 1;
+    }
+  });
+  const decksSec = document.getElementById('modal-player-decks-section');
+  const decksList = document.getElementById('modal-player-decks-list');
+  if (decksSec && decksList) {
+    const entries = Object.entries(playedDecksMap);
+    if (entries.length > 0) {
+      decksList.innerHTML = entries.map(([deck, count]) => {
+        const energy = getDeckEnergy(deck);
+        const dot = getEnergyDotHTML(energy);
+        return `<span class="trainer-deck-tag">${dot} <strong>${escapeHTML(deck)}</strong> (${count}x)</span>`;
+      }).join('');
+      decksSec.style.display = 'block';
+    } else {
+      decksSec.style.display = 'none';
+    }
+  }
+
   const timelineContainer = document.getElementById('modal-player-timeline');
   if (timelineContainer) {
     timelineContainer.innerHTML = '';
@@ -1900,9 +2032,362 @@ window.openPlayerModal = function(playerRef) {
 
 function closePlayerModal() {
   const modal = document.getElementById('player-modal');
-  modal.classList.remove('active');
+  if (modal) modal.classList.remove('active');
   document.body.style.overflow = '';
 }
+
+/* ==========================================================================
+   SIMULADOR DE TOP CUT / CLASSIFICAÇÃO
+   ========================================================================== */
+window.openSimulatorModal = function() {
+  const modal = document.getElementById('simulator-modal');
+  const select = document.getElementById('sim-player-select');
+  if (!modal || !select) return;
+
+  const ranking = appData.Ranking || [];
+  if (ranking.length === 0) {
+    alert("Ranking ainda está carregando. Tente novamente em instantes.");
+    return;
+  }
+
+  select.innerHTML = ranking.map(p => `
+    <option value="${escapeHTML(p.Jogador)}">${escapeHTML(p.Pos)}º - ${escapeHTML(p.Jogador)} (${toNumber(p.Pontos)} PTS)</option>
+  `).join('');
+
+  runSimulation();
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeSimulatorModal = function() {
+  const modal = document.getElementById('simulator-modal');
+  if (modal) modal.classList.remove('active');
+  document.body.style.overflow = '';
+};
+
+window.runSimulation = function() {
+  const selectPlayer = document.getElementById('sim-player-select');
+  const selectEvent = document.getElementById('sim-event-type');
+  const selectResult = document.getElementById('sim-result-projected');
+  const resultsCard = document.getElementById('sim-results-card');
+  if (!selectPlayer || !selectEvent || !selectResult || !resultsCard) return;
+
+  const playerName = selectPlayer.value;
+  const multiplier = parseFloat(selectEvent.value) || 1.0;
+  const basePoints = parseInt(selectResult.value, 10) || 0;
+  const addedPoints = Math.round(basePoints * multiplier);
+
+  const ranking = (appData.Ranking || []).map(p => ({
+    ...p,
+    PontosNum: toNumber(p.Pontos),
+    PosNum: parseInt(p.Pos, 10) || 999
+  }));
+
+  const targetPlayer = ranking.find(p => p.Jogador === playerName);
+  if (!targetPlayer) return;
+
+  const currentPoints = targetPlayer.PontosNum;
+  const currentPos = targetPlayer.PosNum;
+  const projectedPoints = currentPoints + addedPoints;
+
+  // Simular novo ranking
+  const simulatedList = ranking.map(p => {
+    if (p.Jogador === playerName) {
+      return { ...p, PontosNum: projectedPoints };
+    }
+    return p;
+  }).sort((a, b) => {
+    if (b.PontosNum !== a.PontosNum) return b.PontosNum - a.PontosNum;
+    if ((b.Podio || 0) !== (a.Podio || 0)) return (b.Podio || 0) - (a.Podio || 0);
+    return (b.Vitorias || 0) - (a.Vitorias || 0);
+  });
+
+  const projectedPos = simulatedList.findIndex(p => p.Jogador === playerName) + 1;
+  const posDiff = currentPos - projectedPos;
+
+  let posDiffHtml = '';
+  if (posDiff > 0) {
+    posDiffHtml = `<span style="color:#10b981; font-weight:700;">▲ Subiu ${posDiff} posições</span>`;
+  } else if (posDiff === 0) {
+    posDiffHtml = `<span style="color:var(--text-secondary);">Manteve a posição</span>`;
+  } else {
+    posDiffHtml = `<span style="color:#ef4444;">▼ Caiu ${Math.abs(posDiff)} posições</span>`;
+  }
+
+  let statusBadge = '';
+  if (projectedPos <= 4) {
+    statusBadge = `<span class="sim-status-badge sim-status-top4">🏆 Top 4 Garantido (Zona de Troféu)</span>`;
+  } else if (projectedPos <= 8) {
+    statusBadge = `<span class="sim-status-badge sim-status-top8">🎖️ Top 8 Garantido (Playoffs)</span>`;
+  } else if (projectedPos <= 12) {
+    statusBadge = `<span class="sim-status-badge sim-status-bubble">⚠️ Na Zona de Bolha (Top 12)</span>`;
+  } else {
+    statusBadge = `<span class="sim-status-badge" style="background:rgba(255,255,255,0.06); color:var(--text-secondary); border:1px solid rgba(255,255,255,0.15);">⚔️ Fase de Classificação</span>`;
+  }
+
+  resultsCard.innerHTML = `
+    <div style="text-align:center; margin-bottom:12px;">
+      ${statusBadge}
+    </div>
+    <div class="sim-metric-row">
+      <span style="color:var(--text-secondary);">Pontuação Atual:</span>
+      <strong>${currentPoints} PTS (${currentPos}º Lugar)</strong>
+    </div>
+    <div class="sim-metric-row">
+      <span style="color:var(--text-secondary);">Pontos Ganhos no Evento:</span>
+      <strong style="color:var(--accent-yellow);">+${addedPoints} PTS (${multiplier}x)</strong>
+    </div>
+    <div class="sim-metric-row">
+      <span style="color:var(--text-secondary);">Nova Pontuação Projetada:</span>
+      <strong style="color:var(--accent-yellow); font-size:1.1rem;">${projectedPoints} PTS</strong>
+    </div>
+    <div class="sim-metric-row">
+      <span style="color:var(--text-secondary);">Nova Colocação Projetada:</span>
+      <strong>${projectedPos}º Lugar (${posDiffHtml})</strong>
+    </div>
+  `;
+};
+
+/* ==========================================================================
+   MODO TELÃO DA LOJA (TV BROADCAST DISPLAY MODE)
+   ========================================================================== */
+let tvModeActive = false;
+let tvCurrentSlide = 0;
+let tvSlideTimer = null;
+let tvClockTimer = null;
+let tvProgressTimer = null;
+let tvIsPaused = false;
+let tvProgress = 0;
+const TV_SLIDE_DURATION = 12000; // 12 segundos por slide
+
+window.openTvMode = function() {
+  const overlay = document.getElementById('tv-mode-overlay');
+  if (!overlay) return;
+
+  tvModeActive = true;
+  tvIsPaused = false;
+  tvCurrentSlide = 0;
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  // Request fullscreen if supported
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  }
+
+  startTvClock();
+  renderTvSlide(0);
+  startTvSlideLoop();
+};
+
+window.closeTvMode = function() {
+  const overlay = document.getElementById('tv-mode-overlay');
+  if (overlay) overlay.style.display = 'none';
+
+  tvModeActive = false;
+  clearInterval(tvSlideTimer);
+  clearInterval(tvClockTimer);
+  clearInterval(tvProgressTimer);
+  document.body.style.overflow = '';
+
+  if (document.fullscreenElement && document.exitFullscreen) {
+    document.exitFullscreen().catch(() => {});
+  }
+};
+
+window.toggleTvPause = function() {
+  tvIsPaused = !tvIsPaused;
+  const btn = document.getElementById('tv-pause-btn');
+  if (btn) btn.innerText = tvIsPaused ? '▶' : '⏸';
+};
+
+window.nextTvSlide = function() {
+  tvCurrentSlide = (tvCurrentSlide + 1) % 3;
+  renderTvSlide(tvCurrentSlide);
+  resetTvProgress();
+};
+
+window.prevTvSlide = function() {
+  tvCurrentSlide = (tvCurrentSlide - 1 + 3) % 3;
+  renderTvSlide(tvCurrentSlide);
+  resetTvProgress();
+};
+
+function startTvClock() {
+  function update() {
+    const now = new Date();
+    const clockEl = document.getElementById('tv-clock');
+    if (clockEl) {
+      clockEl.innerText = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+  }
+  update();
+  tvClockTimer = setInterval(update, 1000);
+}
+
+function resetTvProgress() {
+  tvProgress = 0;
+  const bar = document.getElementById('tv-progress-bar');
+  if (bar) bar.style.width = '0%';
+}
+
+function startTvSlideLoop() {
+  resetTvProgress();
+  clearInterval(tvProgressTimer);
+  clearInterval(tvSlideTimer);
+
+  const stepTime = 100;
+  const stepIncrement = (stepTime / TV_SLIDE_DURATION) * 100;
+
+  tvProgressTimer = setInterval(() => {
+    if (tvIsPaused) return;
+    tvProgress += stepIncrement;
+    const bar = document.getElementById('tv-progress-bar');
+    if (bar) bar.style.width = `${Math.min(tvProgress, 100)}%`;
+
+    if (tvProgress >= 100) {
+      tvProgress = 0;
+      nextTvSlide();
+    }
+  }, stepTime);
+}
+
+function renderTvSlide(slideIdx) {
+  const body = document.getElementById('tv-body');
+  const titleEl = document.getElementById('tv-slide-title');
+  if (!body) return;
+
+  const ranking = appData.Ranking || [];
+
+  if (slideIdx === 0) {
+    // Slide 1: Top 4 Podium
+    if (titleEl) titleEl.innerText = 'TOP 4 DA TEMPORADA';
+    const top4 = ranking.slice(0, 4);
+    const badges = ['🥇', '🥈', '🥉', '🎖️'];
+
+    body.innerHTML = `
+      <div class="tv-podium-grid">
+        ${top4.map((player, idx) => {
+          return `
+            <div class="tv-podium-card rank-${idx + 1}">
+              <div class="tv-podium-badge">${badges[idx]}</div>
+              <div class="tv-podium-name">${escapeHTML(player.Jogador)}</div>
+              <div class="tv-podium-score">${toNumber(player.Pontos)} PTS</div>
+              <div class="tv-podium-deck">${escapeHTML(player.Deck || 'Deck Não Registrado')}</div>
+              <div style="margin-top:10px; font-size:0.85rem; color:var(--text-secondary);">
+                ${player.Vitorias || 0}V • ${player.Empates || 0}E • ${player.Derrotas || 0}D
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  } else if (slideIdx === 1) {
+    // Slide 2: Top 12 Leaderboard
+    if (titleEl) titleEl.innerText = 'CLASSIFICAÇÃO GERAL';
+    const top12 = ranking.slice(0, 12);
+    const col1 = top12.slice(0, 6);
+    const col2 = top12.slice(6, 12);
+
+    body.innerHTML = `
+      <div class="tv-leaderboard-grid">
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          ${col1.map((p, idx) => `
+            <div class="tv-leaderboard-row ${idx < 4 ? 'top-4' : ''}">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <strong style="color:var(--accent-yellow); min-width:28px;">${idx + 1}º</strong>
+                <span>${escapeHTML(p.Jogador)}</span>
+              </div>
+              <strong style="color:#fff;">${toNumber(p.Pontos)} PTS</strong>
+            </div>
+          `).join('')}
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          ${col2.map((p, idx) => `
+            <div class="tv-leaderboard-row">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <strong style="color:var(--text-secondary); min-width:28px;">${idx + 7}º</strong>
+                <span>${escapeHTML(p.Jogador)}</span>
+              </div>
+              <strong style="color:#fff;">${toNumber(p.Pontos)} PTS</strong>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } else if (slideIdx === 2) {
+    // Slide 3: Premiações da Temporada
+    if (titleEl) titleEl.innerText = 'PREMIAÇÕES DA TEMPORADA (EM DISPUTA)';
+
+    // Calcular líderes atuais dos prêmios
+    let bestGold = null;
+    let mostActive = null;
+    let mostVaried = null;
+    let mostLosses = null;
+
+    ranking.forEach(p => {
+      const v = p.Vitorias || 0;
+      const e = p.Empates || 0;
+      const d = p.Derrotas || 0;
+      const total = v + e + d;
+      const part = toNumber(p.Participacoes);
+
+      if (part >= 2 && total > 0) {
+        const wr = (v / total) * 100;
+        if (!bestGold || wr > bestGold.wr) {
+          bestGold = { player: p.Jogador, wr: Math.round(wr), part };
+        }
+      }
+
+      if (!mostActive || part > mostActive.part) {
+        mostActive = { player: p.Jogador, part };
+      }
+
+      if (!mostLosses || d > mostLosses.d) {
+        mostLosses = { player: p.Jogador, d };
+      }
+    });
+
+    body.innerHTML = `
+      <div class="tv-awards-grid">
+        <div class="tv-award-card" style="border-color:rgba(255,203,5,0.4);">
+          <div class="tv-award-icon">🥇</div>
+          <div class="tv-award-title">Pokébola de Ouro</div>
+          <div class="tv-award-player">${bestGold ? escapeHTML(bestGold.player) : '-'}</div>
+          <div class="tv-award-stat">${bestGold ? `${bestGold.wr}% Winrate (${bestGold.part} etapas)` : 'Em disputa'}</div>
+        </div>
+
+        <div class="tv-award-card" style="border-color:rgba(16,185,129,0.4);">
+          <div class="tv-award-icon">🥋</div>
+          <div class="tv-award-title">Líder de Ginásio</div>
+          <div class="tv-award-player">${mostActive ? escapeHTML(mostActive.player) : '-'}</div>
+          <div class="tv-award-stat">${mostActive ? `${mostActive.part} participações` : 'Em disputa'}</div>
+        </div>
+
+        <div class="tv-award-card" style="border-color:rgba(141,86,255,0.4);">
+          <div class="tv-award-icon">🧬</div>
+          <div class="tv-award-title">Ditto Player</div>
+          <div class="tv-award-player">${ranking[0] ? escapeHTML(ranking[0].Jogador) : '-'}</div>
+          <div class="tv-award-stat">Maior versatilidade de decks</div>
+        </div>
+
+        <div class="tv-award-card" style="border-color:rgba(239,68,68,0.4);">
+          <div class="tv-award-icon">🥀</div>
+          <div class="tv-award-title">Pokébola Murcha</div>
+          <div class="tv-award-player">${mostLosses ? escapeHTML(mostLosses.player) : '-'}</div>
+          <div class="tv-award-stat">${mostLosses ? `${mostLosses.d} derrotas acumuladas` : 'Em disputa'}</div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// Fechar modo telão com tecla ESC
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && tvModeActive) {
+    closeTvMode();
+  }
+});
 
 window.openAwardModal = function(awardKey) {
   let modal = document.getElementById('award-detail-modal');

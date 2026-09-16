@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tournament type="1" stage="5" version="1.82" gametype="TRADING_CARD_GAME" mode="CUSTOM">
+	<data>
+		<name>FINAL TEMPORADA 4 POKE ATLANTICA+</name>
+		<id></id>
+		<city>FEIRA DE SANTANA</city>
+		<state></state>
+		<country>Brazil</country>
+		<roundtime>55</roundtime>
+		<finalsroundtime>75</finalsroundtime>
+		<organizer popid="5087810" name="Lucas Araújo"/>
+		<startdate>06/13/2026</startdate>
+		<lessswiss>false</lessswiss>
+		<autotablenumber>false</autotablenumber>
+		<overflowtablestart>0</overflowtablestart>
+	</data>
+	<timeelapsed>9035</timeelapsed>
+	<players>
+		<player userid="4804029">
+			<firstname>Igor</firstname>
+			<lastname>Nunes</lastname>
+			<birthdate>02/27/2002</birthdate>
+			<starter>true</starter>
+			<order>2</order>
+			<creationdate>08/24/2024 16:50:22</creationdate>
+			<lastmodifieddate>02/01/2025 12:33:55</lastmodifieddate>
+		</player>
+		<player userid="5273684">
+			<firstname>João Vitor</firstname>
+			<lastname>Pereira</lastname>
+			<birthdate>02/27/2002</birthdate>
+			<starter>true</starter>
+			<order>5</order>
+			<creationdate>09/20/2025 15:41:38</creationdate>
+			<lastmodifieddate>12/06/2025 17:33:37</lastmodifieddate>
+		</player>
+		<player userid="4719300">
+			<firstname>João Pedro</firstname>
+			<lastname>Oliveira</lastname>
+			<birthdate>02/27/1996</birthdate>
+			<starter>true</starter>
+			<order>4</order>
+			<creationdate>09/28/2024 14:43:47</creationdate>
+			<lastmodifieddate>09/28/2024 14:43:47</lastmodifieddate>
+		</player>
+		<player userid="5374807">
+			<firstname>Fernando</firstname>
+			<lastname>Ribeiro</lastname>
+			<birthdate>02/27/1989</birthdate>
+			<starter>true</starter>
+			<order>3</order>
+			<creationdate>02/08/2025 16:47:40</creationdate>
+			<lastmodifieddate>02/08/2025 16:47:40</lastmodifieddate>
+		</player>
+		<player userid="5374793">
+			<firstname>Pedro</firstname>
+			<lastname>Cardoso</lastname>
+			<birthdate>02/27/2005</birthdate>
+			<starter>true</starter>
+			<order>6</order>
+			<creationdate>12/14/2024 16:35:52</creationdate>
+			<lastmodifieddate>12/14/2024 16:35:52</lastmodifieddate>
+		</player>
+		<player userid="5770809">
+			<firstname>JOAO</firstname>
+			<lastname>GLORIA</lastname>
+			<birthdate>02/27/2006</birthdate>
+			<starter>true</starter>
+			<order>1</order>
+			<creationdate>05/09/2026 14:11:11</creationdate>
+			<lastmodifieddate>05/09/2026 14:11:11</lastmodifieddate>
+		</player>
+		<player userid="5131143">
+			<firstname>Wesllen</firstname>
+			<lastname>Dias</lastname>
+			<birthdate>02/27/1994</birthdate>
+			<starter>true</starter>
+			<order>7</order>
+			<creationdate>06/07/2025 14:20:49</creationdate>
+			<lastmodifieddate>09/14/2025 12:44:13</lastmodifieddate>
+		</player>
+		<player userid="5374806">
+			<firstname>Washington</firstname>
+			<lastname>Neto</lastname>
+			<birthdate>02/27/1999</birthdate>
+			<starter>true</starter>
+			<order>8</order>
+			<creationdate>02/06/2025 18:48:20</creationdate>
+			<lastmodifieddate>07/12/2025 21:55:46</lastmodifieddate>
+		</player>
+	</players>
+	<pods>
+		<pod category="10" stage="0">
+			<poddata>
+				<startingtable>1</startingtable>
+				<playoff3rd4th>true</playoff3rd4th>
+				<subgroupcount>1</subgroupcount>
+				<additionalrounds>0</additionalrounds>
+				<blockedranges>
+				</blockedranges>
+			</poddata>
+			<subgroups>
+				<subgroup number="1">
+					<players>
+						<player userid="5770809" />
+						<player userid="5374806" />
+						<player userid="5273684" />
+						<player userid="4719300" />
+						<player userid="5374807" />
+						<player userid="5374793" />
+						<player userid="5131143" />
+						<player userid="4804029" />
+					</players>
+				</subgroup>
+			</subgroups>
+			<rounds>
+				<round number="1" type="1" stage="6" >
+					<timeleft>0</timeleft>
+					<pairtime>06/13/2026 14:29:43</pairtime>
+					<starttime>06/13/2026 14:33:54</starttime>
+					<matches>
+						<match outcome="2">
+							<player1 userid="5770809"/>
+							<player2 userid="4804029"/>
+							<timestamp>06/13/2026 15:57:32</timestamp>
+							<tablenumber>1</tablenumber>
+						</match>
+						<match outcome="1">
+							<player1 userid="5374807"/>
+							<player2 userid="4719300"/>
+							<timestamp>06/13/2026 15:18:58</timestamp>
+							<tablenumber>2</tablenumber>
+						</match>
+						<match outcome="1">
+							<player1 userid="5273684"/>
+							<player2 userid="5374793"/>
+							<timestamp>06/13/2026 15:19:03</timestamp>
+							<tablenumber>3</tablenumber>
+						</match>
+						<match outcome="2">
+							<player1 userid="5131143"/>
+							<player2 userid="5374806"/>
+							<timestamp>06/13/2026 15:57:31</timestamp>
+							<tablenumber>4</tablenumber>
+						</match>
+					</matches>
+				</round>
+				<round number="2" type="1" stage="6" >
+					<timeleft>0</timeleft>
+					<pairtime>06/13/2026 15:57:44</pairtime>
+					<starttime>06/13/2026 16:07:46</starttime>
+					<matches>
+						<match outcome="1">
+							<player1 userid="4804029"/>
+							<player2 userid="5374807"/>
+							<timestamp>06/13/2026 16:21:28</timestamp>
+							<tablenumber>1</tablenumber>
+						</match>
+						<match outcome="2">
+							<player1 userid="5273684"/>
+							<player2 userid="5374806"/>
+							<timestamp>06/13/2026 16:21:32</timestamp>
+							<tablenumber>2</tablenumber>
+						</match>
+					</matches>
+				</round>
+				<round number="3" type="1" stage="8" >
+					<timeleft>0</timeleft>
+					<pairtime>06/13/2026 16:21:37</pairtime>
+					<starttime>06/13/2026 16:31:28</starttime>
+					<matches>
+						<match outcome="2">
+							<player1 userid="4804029"/>
+							<player2 userid="5374806"/>
+							<timestamp>06/13/2026 16:31:31</timestamp>
+							<tablenumber>1</tablenumber>
+						</match>
+						<match outcome="2">
+							<player1 userid="5273684"/>
+							<player2 userid="5374807"/>
+							<timestamp>06/13/2026 16:59:57</timestamp>
+							<tablenumber>2</tablenumber>
+						</match>
+					</matches>
+				</round>
+			</rounds>
+		</pod>
+	</pods>
+	<standings>
+		<pod category="10" type="finished">
+			<player id="5374806" place="1" />
+			<player id="4804029" place="2" />
+			<player id="5374807" place="3" />
+			<player id="5273684" place="4" />
+			<player id="5131143" place="5" />
+			<player id="4719300" place="6" />
+			<player id="5374793" place="7" />
+			<player id="5770809" place="8" />
+		</pod>
+		<pod category="10" type="dnf">
+		</pod>
+	</standings>
+	<finalsoptions>
+		<categorycut key="2">
+			<options>
+				<value>0</value>
+			</options>
+			<cut>0</cut>
+			<playercount>8</playercount>
+			<paired3rd4th>false</paired3rd4th>
+		</categorycut>
+		<categorycut key="1">
+			<options>
+				<value>0</value>
+			</options>
+			<cut>0</cut>
+			<playercount>8</playercount>
+			<paired3rd4th>false</paired3rd4th>
+		</categorycut>
+		<categorycut key="0">
+			<options>
+				<value>0</value>
+			</options>
+			<cut>0</cut>
+			<playercount>8</playercount>
+			<paired3rd4th>false</paired3rd4th>
+		</categorycut>
+	</finalsoptions>
+</tournament>

@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg width="280mm" height="120mm" viewBox="0 0 280 120" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="280" height="120" rx="10" ry="10" fill="none" stroke="#FF0000" stroke-width="0.1" />
+  <circle cx="10" cy="10" r="2.25" fill="none" stroke="#FF0000" stroke-width="0.1" />
+  <circle cx="270" cy="10" r="2.25" fill="none" stroke="#FF0000" stroke-width="0.1" />
+  <circle cx="10" cy="110" r="2.25" fill="none" stroke="#FF0000" stroke-width="0.1" />
+  <circle cx="270" cy="110" r="2.25" fill="none" stroke="#FF0000" stroke-width="0.1" />
+  <text x="140" y="28" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#000000" text-anchor="middle">ATLÃ‚NTICA +MAIS - 4Âª TEMPORADA</text>
+  <circle cx="40.7" cy="60" r="25" fill="none" stroke="#0000FF" stroke-width="0.2" stroke-dasharray="2,2" />
+  <text x="40.7" y="97.5" font-family="sans-serif" font-size="5.5" font-weight="500" fill="#000000" text-anchor="middle">CAMPEÃ£O GERAL</text>
+  <circle cx="106.9" cy="60" r="25" fill="none" stroke="#0000FF" stroke-width="0.2" stroke-dasharray="2,2" />
+  <text x="106.9" y="97.5" font-family="sans-serif" font-size="5.5" font-weight="500" fill="#000000" text-anchor="middle">ASSIDUIDADE</text>
+  <circle cx="173.1" cy="60" r="25" fill="none" stroke="#0000FF" stroke-width="0.2" stroke-dasharray="2,2" />
+  <text x="173.1" y="97.5" font-family="sans-serif" font-size="5.5" font-weight="500" fill="#000000" text-anchor="middle">VERSATILIDADE</text>
+  <circle cx="239.3" cy="60" r="25" fill="none" stroke="#0000FF" stroke-width="0.2" stroke-dasharray="2,2" />
+  <text x="239.3" y="97.5" font-family="sans-serif" font-size="5.5" font-weight="500" fill="#000000" text-anchor="middle">CONSOLAÃ§Ã£O</text>
+</svg>

@@ -56,6 +56,13 @@
         <a href="#champions" class="nav-link" data-target="champions">Campeões</a>
         <a href="#gallery" class="nav-link" data-target="gallery">Fotos</a>
         
+        <button id="tv-mode-btn" class="theme-toggle-btn" aria-label="Modo Telão da Loja" onclick="openTvMode()" title="Modo Telão / TV Broadcast" style="display:inline-flex; align-items:center; justify-content:center; margin-right: 4px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+            <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+            <polyline points="17 2 12 7 7 2"></polyline>
+          </svg>
+        </button>
+
         <button id="theme-toggle" class="theme-toggle-btn" aria-label="Alternar tema claro/escuro">
           
           <svg class="theme-icon sun-icon" viewBox="0 0 443.74 424.55">
@@ -172,6 +179,11 @@ Siga-nos no Instagram
             <option value="JUNIOR">Junior</option>
           </select>
         </div>
+
+        <button type="button" class="btn" onclick="openSimulatorModal()" style="display:inline-flex; align-items:center; gap:6px; padding:0.6rem 1rem; font-size:0.85rem; border-radius:12px; background:rgba(255,203,5,0.12); border:1px solid rgba(255,203,5,0.3); color:var(--accent-yellow); font-weight:700; cursor:pointer; transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.background='rgba(255,203,5,0.22)'" onmouseout="this.style.background='rgba(255,203,5,0.12)'">
+          <span>🧮</span>
+          <span>Simular Próxima Etapa</span>
+        </button>
         
         <div class="ranking-status-group">
           <div class="offline-badge" id="sheet-status-badge">
@@ -358,8 +370,9 @@ Siga-nos no Instagram
   </main>
 
   
+  <!-- TRAINER CARD HOLOGRÁFICO MODAL -->
   <div class="modal-overlay" id="player-modal">
-    <div class="modal-container">
+    <div class="modal-container trainer-card-holographic">
       <button class="modal-close-btn" id="modal-close-btn" aria-label="Fechar">✕</button>
       <div class="modal-header">
         <div class="modal-avatar" id="modal-avatar">T</div>
@@ -367,6 +380,7 @@ Siga-nos no Instagram
         <div class="podium-deck-info" style="justify-content: center;" id="modal-player-deck">
           
         </div>
+        <div id="modal-player-titles" class="trainer-titles-grid"></div>
       </div>
       <div class="modal-body">
         <div class="modal-stats-grid">
@@ -401,6 +415,10 @@ Siga-nos no Instagram
             <span class="modal-detail-label">Cartel (V-E-D):</span>
             <span class="modal-detail-value" id="modal-detail-ved">0V - 0E - 0D</span>
           </div>
+          <div id="modal-player-decks-section" style="margin-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem; display:none;">
+            <span class="modal-detail-label" style="display:block; margin-bottom:4px;">Decks Pilotados na Temporada:</span>
+            <div id="modal-player-decks-list" class="trainer-decks-wrap"></div>
+          </div>
         </div>
         
         <div class="modal-section-title">Evolução na Temporada</div>
@@ -411,7 +429,83 @@ Siga-nos no Instagram
     </div>
   </div>
 
-  
+  <!-- SIMULADOR DE TOP CUT MODAL -->
+  <div class="modal-overlay" id="simulator-modal">
+    <div class="modal-container simulator-modal-container" style="max-width: 520px; position:relative;">
+      <button class="modal-close-btn" onclick="closeSimulatorModal()" aria-label="Fechar">✕</button>
+      <div class="modal-header" style="text-align:center;">
+        <div class="simulator-modal-icon">🧮</div>
+        <h2 class="modal-player-name" style="font-size:1.4rem;">Simulador de Top Cut</h2>
+        <p class="champion-deck-modal-subtitle" style="font-size:0.85rem; color:var(--text-secondary); margin-top:4px;">Projete seus pontos da próxima etapa e calcule sua classificação!</p>
+      </div>
+      <div class="modal-body">
+        <div class="simulator-form" style="display:flex; flex-direction:column; gap:12px;">
+          <div>
+            <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:4px; font-weight:600;">Selecione o Treinador:</label>
+            <select id="sim-player-select" class="search-input select-input" style="width:100%;" onchange="runSimulation()"></select>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div>
+              <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:4px; font-weight:600;">Tipo de Evento:</label>
+              <select id="sim-event-type" class="search-input select-input" style="width:100%;" onchange="runSimulation()">
+                <option value="1.0">Liga Regular (1.0x)</option>
+                <option value="1.5">League Challenge (1.5x)</option>
+                <option value="2.0">League Cup (2.0x)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:4px; font-weight:600;">Resultado Projetado:</label>
+              <select id="sim-result-projected" class="search-input select-input" style="width:100%;" onchange="runSimulation()">
+                <option value="15">🥇 1º Lugar (+15 pts)</option>
+                <option value="12">🥈 2º Lugar (+12 pts)</option>
+                <option value="10">🥉 Top 4 (+10 pts)</option>
+                <option value="7">🎖️ Top 8 (+7 pts)</option>
+                <option value="4">⚔️ Top 16 (+4 pts)</option>
+                <option value="2">🎮 Participação (+2 pts)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="sim-results-card" style="background:rgba(255,203,5,0.06); border:1px solid rgba(255,203,5,0.25); border-radius:14px; padding:16px; margin-top:16px;">
+          <!-- Resultado da simulação injetado via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODO TELÃO / TV BROADCAST OVERLAY -->
+  <div id="tv-mode-overlay" class="tv-mode-overlay" style="display:none;">
+    <div class="tv-topbar">
+      <div class="tv-logo-wrap">
+        <div class="tv-logo-dot"></div>
+        <span class="tv-logo-text">LIGA ATLÂNTICA TCG</span>
+        <span class="tv-badge-live">AO VIVO</span>
+      </div>
+      <div class="tv-slide-title" id="tv-slide-title">TOP 4 DA TEMPORADA</div>
+      <div class="tv-controls">
+        <button class="tv-btn" onclick="prevTvSlide()" title="Slide Anterior">◀</button>
+        <button class="tv-btn" id="tv-pause-btn" onclick="toggleTvPause()" title="Pausar / Continuar">⏸</button>
+        <button class="tv-btn" onclick="nextTvSlide()" title="Próximo Slide">▶</button>
+        <button class="tv-btn tv-btn-exit" onclick="closeTvMode()" title="Sair do Modo Telão">✕ Sair</button>
+      </div>
+    </div>
+
+    <div class="tv-body" id="tv-body">
+      <!-- Slides dinâmicos -->
+    </div>
+
+    <div class="tv-footer">
+      <div class="tv-progress-bar-wrap">
+        <div class="tv-progress-bar" id="tv-progress-bar"></div>
+      </div>
+      <div class="tv-footer-info">
+        <span>Liga Atlântica de Pokémon TCG • Feira de Santana - BA</span>
+        <span id="tv-clock">--:--</span>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="champion-deck-modal">
     <div class="modal-container champion-deck-modal-container">
       <button class="modal-close-btn" id="champion-deck-close-btn" aria-label="Fechar">✕</button>
@@ -487,7 +581,7 @@ Siga-nos no Instagram
 
   
   <script src="config.js?v=3.0"></script>
-  <script src="app.js?v=7.3"></script>
+  <script src="app.js?v=7.4"></script>
 
 </body>
 </html>

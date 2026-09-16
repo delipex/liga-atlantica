@@ -1,0 +1,13 @@
+# Temporary / Scratch files
+scratch/
+*.log
+
+# Sensitive credentials
+token.pickle
+credentials.json
+client_secret*.json
+
+# OS & Node
+node_modules/
+.DS_Store
+Thumbs.db

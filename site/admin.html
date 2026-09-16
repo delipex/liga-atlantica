@@ -1,0 +1,3379 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Organizador - Liga Atlântica</title>
+  <link rel="stylesheet" href="style.css?v=3.6">
+  <script src="config.js?v=3.7"></script>
+  <style>
+    /* Estilos específicos do Painel Administrativo */
+    .admin-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    
+    .admin-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    
+    .admin-card {
+      margin-bottom: 2rem;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+    
+    .form-group label {
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    
+    @media (max-width: 600px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .login-box {
+      max-width: 400px;
+      margin: 5rem auto;
+    }
+    
+    .dropzone {
+      border: 2px dashed rgba(255, 203, 5, 0.3);
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: var(--radius-lg);
+      padding: 3rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--accent-yellow);
+      background: rgba(255, 203, 5, 0.05);
+      box-shadow: 0 0 15px rgba(255, 203, 5, 0.1);
+    }
+    
+    .dropzone-icon {
+      font-size: 3rem;
+      color: var(--accent-yellow);
+    }
+    
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    
+    .alert-box {
+      padding: 1rem;
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .alert-success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #10b981;
+    }
+    
+    .alert-error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+    }
+    
+    .raw-textarea {
+      width: 100%;
+      height: 120px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 0.75rem;
+      color: #fff;
+      resize: vertical;
+    }
+    
+    .badge-check {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+    }
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: #ef4444;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+    }
+
+    /* Estilos Embelezados do Seletor de Tipo de Evento */
+    .event-type-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    @media (max-width: 600px) {
+      .event-type-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .event-type-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 0.75rem 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.02);
+    }
+    .event-type-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+    .event-type-card.active {
+      background: rgba(255, 203, 5, 0.08);
+      border-color: var(--accent-yellow);
+      box-shadow: 0 0 12px rgba(255, 203, 5, 0.12), inset 1px 1px 0 rgba(255, 203, 5, 0.05);
+    }
+    .event-type-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+    .event-type-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .event-type-sub {
+      font-size: 0.68rem;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body class="bg-dark">
+
+  
+  <div class="admin-container" id="login-screen">
+    <div class="glass-card login-box">
+      <div class="admin-header" style="margin-bottom: 1.5rem;">
+        <h2 class="section-title" style="font-size: 1.75rem;">Acesso Restrito</h2>
+        <p class="section-subtitle">Identifique-se para gerenciar o ranking</p>
+      </div>
+      
+      <div class="alert-box alert-error" id="login-error">Senha incorreta! Tente novamente.</div>
+      
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="admin-password">Senha do Painel</label>
+          <input type="password" id="admin-password" class="search-input" placeholder="Digite a senha..." required>
+        </div>
+        <button type="submit" class="btn btn-whatsapp" style="width: 100%; justify-content: center; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow);">
+          Entrar no Painel
+        </button>
+      </form>
+      <a href="./" class="btn" style="width: 100%; justify-content: center; margin-top: 0.75rem; text-decoration: none; font-weight: 600; background: rgba(255, 255, 255, 0.03); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
+        ← Voltar para o Site
+      </a>
+    </div>
+  </div>
+
+  
+  <div class="admin-container" id="main-panel" style="display: none;">
+    
+    <header class="admin-header">
+      <h1 class="section-title">Painel do <span class="gradient-text">Organizador</span></h1>
+      <p class="section-subtitle">Publique e atualize o ranking oficial da Liga Atlântica via arquivos .tdf</p>
+      <div style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center; align-items: center;">
+        <button class="btn" onclick="handleLogout()" style="padding: 0.4rem 1rem; font-size: 0.8rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.25);">
+          Sair do Painel
+        </button>
+        <button class="btn" onclick="document.getElementById('settings-modal').style.display='flex'" style="padding: 0.4rem; font-size: 1.2rem; background: transparent; border: none; cursor: pointer; color: var(--text-secondary);" title="Configurações">
+          ⚙️
+        </button>
+      </div>
+    </header>
+
+    
+    <div class="alert-box alert-success" id="general-success"></div>
+    <div class="alert-box alert-error" id="general-error"></div>
+
+    <div class="dashboard-grid" style="grid-template-columns: 1fr; max-width: 800px; margin: 0 auto; gap: 2rem; align-items: start;">
+      
+      
+      <div>
+        <section class="glass-card admin-card">
+          <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            📤 Carregar Arquivo de Classificação (.tdf)
+          </h2>
+          <div class="form-row" style="margin-bottom: 1.25rem;">
+            <div class="form-group" style="width: 100%;">
+              <label for="event-date">Data do Evento</label>
+              <input type="date" id="event-date" class="search-input" style="width: 100%; box-sizing: border-box;" onchange="handleDateChange()" required>
+              <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+                A data em que o torneio foi realizado. O sistema criará o arquivo da etapa usando esta data (`etapas/AAAA-MM-DD.tdf`).
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.25rem; width: 100%;">
+            <label style="margin-bottom: 0.5rem; display: block;">Tipo de Evento</label>
+            <div class="event-type-grid">
+              <div class="event-type-card active" data-value="Liga" onclick="selectEventType('Liga')">
+                <div class="event-type-icon">⚔️</div>
+                <div class="event-type-label">Sessão de Liga</div>
+                <div class="event-type-sub">1.0x (Fixo)</div>
+              </div>
+              <div class="event-type-card" data-value="Challenge" onclick="selectEventType('Challenge')">
+                <div class="event-type-icon">🏅</div>
+                <div class="event-type-label">Challenge</div>
+                <div class="event-type-sub">1.5x (Fixo)</div>
+              </div>
+              <div class="event-type-card" data-value="Cup" onclick="selectEventType('Cup')">
+                <div class="event-type-icon">🏆</div>
+                <div class="event-type-label">League Cup</div>
+                <div class="event-type-sub">1.5x (Fixo)</div>
+              </div>
+              <div class="event-type-card" data-value="Personalizado" onclick="selectEventType('Personalizado')">
+                <div class="event-type-icon">⚙️</div>
+                <div class="event-type-label">Personalizado</div>
+                <div class="event-type-sub">Livre</div>
+              </div>
+            </div>
+            <input type="hidden" id="event-type" value="Liga">
+            <span class="small-text-hint" style="display:block; margin-top:0.4rem; font-size:0.75rem; color:var(--text-secondary);">
+              Selecione a categoria do torneio. Para Liga, Cup e Challenge, os multiplicadores oficiais são travados automaticamente.
+            </span>
+          </div>
+
+          <!-- Custom Event Title Input -->
+          <div class="form-group" id="custom-title-group" style="margin-bottom: 1.25rem; display: none;">
+            <label for="event-custom-title">Título/Tipo do Evento Personalizado</label>
+            <input type="text" id="event-custom-title" class="search-input" placeholder="Ex: Championship, Desafio Especial..." style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
+            <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+              Digite o nome customizado do evento. Este nome será salvo no etapas.json e exibido nos detalhes e cabeçalhos de etapa no site.
+            </span>
+          </div>
+          
+          <div class="form-group" id="multiplier-group" style="margin-bottom: 1.25rem;">
+            <label for="event-multiplier">Multiplicador de Pontos</label>
+            <input type="number" id="event-multiplier" class="search-input" step="0.1" min="0.1" value="1.0" style="width: 100%; box-sizing: border-box;">
+            <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+              Define o peso dos pontos do torneio no ranking consolidado. Multiplicadores oficiais: Liga (1.0x), Challenge (1.5x) e Cup (1.5x) são travados automaticamente.
+            </span>
+          </div>
+
+          <!-- Structured Event Fields (Season & Number) -->
+          <div id="structured-fields" class="form-row" style="margin-bottom: 1.25rem; display: flex; gap: 1rem;">
+            <div class="form-group" style="flex: 1;">
+              <label for="event-season">Temporada</label>
+              <input type="number" id="event-season" class="search-input" min="1" value="5" style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
+              <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+                O número da temporada atual. Usado para classificar o histórico e sugerir o nome correto da coluna no Google Sheets.
+              </span>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="event-number">Número da Sessão/Etapa</label>
+              <input type="number" id="event-number" class="search-input" min="1" value="1" style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
+              <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+                A ordem sequencial desta etapa/sessão dentro da temporada vigente.
+              </span>
+            </div>
+          </div>
+
+          <!-- Suggested Column Code Display -->
+          <div id="column-code-suggestion" style="margin-bottom: 1.25rem; font-size: 0.85rem; color: var(--accent-yellow); font-weight: bold; background: rgba(255, 203, 5, 0.08); border: 1px solid rgba(255, 203, 5, 0.2); padding: 8px 12px; border-radius: 6px; display: none;"></div>
+          
+          <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()" style="margin-bottom: 1.25rem;">
+            <div class="dropzone-icon">📄</div>
+            <div>
+              <p style="font-weight: 500; color: #fff;">Arraste um ou mais arquivos .tdf aqui ou clique para buscar</p>
+              <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Suporta seleção múltipla de arquivos para consolidar categorias separadas</p>
+            </div>
+            <input type="file" id="file-input" style="display: none;" accept=".tdf,.txt,.tsv" multiple onchange="handleFileSelect(event)">
+          </div>
+
+          <!-- Container de informações extraídas do arquivo -->
+          <div id="tdf-file-info" style="margin-bottom: 1.25rem; font-size: 0.85rem; border-radius: 6px; display: none; padding: 12px 14px; background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.2); color: #fff;"></div>
+
+          <div style="margin-bottom: 1.25rem; display: flex; align-items: flex-start; gap: 0.5rem; background: rgba(255, 203, 5, 0.05); padding: 0.75rem 1rem; border-radius: var(--radius); border: 1px dashed rgba(255, 203, 5, 0.2);">
+            <input type="checkbox" id="accumulate-checkbox" checked style="width: 18px; height: 18px; margin-top: 2px; cursor: pointer;">
+            <div style="flex: 1;">
+              <label for="accumulate-checkbox" style="font-size: 0.85rem; font-weight: 600; color: #fff; cursor: pointer; user-select: none; display: block; margin-bottom: 0.2rem;">
+                Acumular pontos com o ranking atual do site (Soma automática de etapas)
+              </label>
+              <span class="small-text-hint" style="font-size:0.75rem; color:var(--text-secondary); display: block;">
+                💡 Se ativado (recomendado), o sistema calcula os pontos acumulados da temporada inteira somando as vitórias/empates/derrotas das etapas anteriores. Se desativado, o ranking consolidado será reiniciado mostrando apenas os pontos desta única etapa.
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="raw-input">Ou cole o texto do arquivo abaixo:</label>
+            <textarea id="raw-input" class="raw-textarea" placeholder="Pos&#9;Jogador&#9;Categoria&#9;Pontos&#9;Podio&#9;MediaColocacao&#9;Deck&#9;TipoEnergia..." oninput="handleRawInput()"></textarea>
+            <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+              Cole o texto copiado de um arquivo .tdf ou exportado do Tome. Certifique-se de que os dados estão separados por tabulações.
+            </span>
+          </div>
+        </section>
+
+        <!-- Resolução de Nomes -->
+        <section class="glass-card admin-card" id="name-resolution-section" style="display: none; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.02);">
+          <h2 style="font-size: 1.15rem; color: #f59e0b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            ⚠️ Resolução de Nomes (Jogadores não cadastrados)
+          </h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+            Encontramos jogadores no arquivo enviado que não estão cadastrados na aba <strong>Jogadores</strong> da planilha. Resolva cada um abaixo para evitar duplicatas:
+          </p>
+          <div class="table-responsive" style="max-height: 250px; overflow-y: auto; border: 1px solid rgba(245, 158, 11, 0.2); border-radius: var(--radius); margin-bottom: 1rem;">
+            <table class="ranking-table" style="font-size: 0.85rem;">
+              <thead>
+                <tr>
+                  <th style="padding: 0.5rem; text-align: left;">Nome no Arquivo</th>
+                  <th style="padding: 0.5rem; text-align: center;">Categoria</th>
+                  <th style="padding: 0.5rem; text-align: center;">POP ID</th>
+                  <th style="padding: 0.5rem; text-align: left;">Ação / Associação</th>
+                  <th style="padding: 0.5rem; text-align: center;">Cadastro Rápido</th>
+                </tr>
+              </thead>
+              <tbody id="name-resolution-tbody">
+                <!-- Preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Novos Jogadores para a Planilha -->
+        <section class="glass-card admin-card" id="new-players-section" style="display: none; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.02);">
+          <h2 style="font-size: 1.15rem; color: #10b981; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            📋 Novos Jogadores para o Google Sheets
+          </h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+            Copie as linhas abaixo e cole-as no final da aba <strong>Jogadores</strong> da sua planilha para mantê-la atualizada:
+          </p>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <textarea id="new-players-copy-area" class="raw-textarea" style="height: 80px; font-size: 0.8rem; background: rgba(0, 0, 0, 0.4); border-color: rgba(16, 185, 129, 0.3);" readonly></textarea>
+          </div>
+          <button type="button" class="btn" onclick="copyNewPlayersToClipboard()" style="width: 100%; justify-content: center; background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3); font-weight: 600; padding: 0.5rem;">
+            Copiar Linhas para a Área de Transferência
+          </button>
+        </section>
+
+        <section class="glass-card admin-card" id="preview-section" style="display: none;">
+          <div class="preview-header">
+            <div>
+              <h2 style="font-size: 1.15rem; color: #fff;">👁️ Pré-visualização do Ranking</h2>
+              <p style="font-size: 0.8rem; color: var(--text-secondary);">Verifique as colunas e posições antes de enviar</p>
+            </div>
+            <div id="check-badge" class="badge-check">Estrutura Válida ✓</div>
+          </div>
+
+          <div class="table-responsive" style="max-height: 300px; overflow-y: auto; margin-bottom: 1.5rem; border: 1px solid var(--border-color); border-radius: var(--radius);">
+            <table class="ranking-table">
+              <thead>
+                <tr>
+                  <th class="row-rank">Pos</th>
+                  <th>Treinador</th>
+                  <th style="text-align:center">Cat</th>
+                  <th style="text-align:center">Pontos</th>
+                  <th style="text-align:center">V-E-D</th>
+                  <th style="text-align:center">Pódios</th>
+                  <th style="text-align:center">Média</th>
+                </tr>
+              </thead>
+              <tbody id="preview-tbody">
+                
+              </tbody>
+            </table>
+          </div>
+
+          <button id="btn-validate" onclick="runValidation()" class="btn" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem; background: #2563eb; color: #fff; border-color: #2563eb; margin-bottom: 0.75rem;">
+            🔍 Validar Dados do Arquivo
+          </button>
+
+          <button id="btn-publish" onclick="publishRanking()" class="btn btn-whatsapp" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); display: none;">
+            🚀 Publicar Ranking no Site
+          </button>
+        </section>
+
+        <!-- Gerenciador de Etapas -->
+        <section class="glass-card admin-card" id="stages-manager-section" style="display: none;">
+          <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            📅 Gerenciador de Etapas
+          </h2>
+          <div id="stages-loading-indicator" style="text-align: center; padding: 1.5rem; color: var(--text-secondary);">
+            ⏳ Carregando etapas...
+          </div>
+          <div id="stages-table-wrapper" style="display: none;" class="table-responsive">
+            <table class="ranking-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Tipo / Nome</th>
+                  <th style="text-align: center;">Mult.</th>
+                  <th style="text-align: center;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="stages-tbody">
+                <!-- Preenchido dinamicamente -->
+              </tbody>
+            </table>
+            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.75rem;">
+              <button id="btn-recalculate-all" onclick="recalculateRankingFromStages()" class="btn" style="width: 100%; justify-content: center; padding: 0.75rem; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-color: rgba(245, 158, 11, 0.25);">
+                🔄 Recalcular Ranking Geral do Site
+              </button>
+              <span style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; display: block; text-align: center;">
+                💡 Se houver alguma inconsistência nas pontuações gerais ou se você acabou de remover etapas "fantasma", este botão reconstrói todo o arquivo do ranking do zero cruzando e somando os dados de todos os arquivos <code>.tdf</code> individuais de etapa ativos.
+              </span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </div>
+
+  
+  <div id="settings-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="glass-card" style="width: 90%; max-width: 450px; padding: 2rem; position: relative;">
+      <button onclick="closeSettingsModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      <h3 style="color: #fff; margin-bottom: 1rem; text-align: center;">Acesso e Configurações</h3>
+      <div class="alert-box alert-error" id="settings-error" style="display: none; margin-bottom: 1rem;">Senha incorreta!</div>
+      
+      <div id="settings-pw-group" style="margin-bottom: 1.5rem;">
+        <div class="form-group">
+          <label for="settings-password">Senha de Segurança (Spreadsheet Edit Link)</label>
+          <input type="password" id="settings-password" class="search-input" placeholder="Digite a senha secreta...">
+        </div>
+        <button id="settings-login-btn" onclick="handleSettingsLogin()" class="btn btn-whatsapp" style="width: 100%; justify-content: center; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); margin-top: 1rem;">
+          Desbloquear Link da Planilha
+        </button>
+      </div>
+      
+      <!-- Unlocked Button (initially hidden) -->
+      <a id="modal-sheets-link-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp" style="display: none; background: #0f766e; border-color: #0f766e; color: #fff; margin-top: 1rem; margin-bottom: 1.5rem; justify-content: center; width: 100%; text-decoration: none; font-weight: 700; gap: 0.5rem; align-items: center;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Ir para o Google Sheets
+      </a>
+
+      <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <h4 style="color: #fff; margin-bottom: 0.5rem; font-size: 0.95rem; display: flex; align-items: center; gap: 0.35rem;">
+          ⚡ Cadastro Automático de Jogadores
+        </h4>
+        <p style="font-size: 0.72rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.4;">
+          Para cadastrar novos jogadores na planilha com apenas um clique a partir do validador, insira a URL do Web App do Google Apps Script configurado na sua planilha:
+        </p>
+        <div class="form-group">
+          <label for="apps-script-url">URL do Apps Script (Web App)</label>
+          <input type="url" id="apps-script-url" class="search-input" placeholder="https://script.google.com/macros/s/.../exec" style="font-size: 0.8rem;" oninput="saveAppsScriptUrl()">
+        </div>
+        <details style="font-size: 0.72rem; color: var(--accent-yellow); cursor: pointer; margin-top: 0.5rem;">
+          <summary>Ver código do Google Apps Script para colar na planilha</summary>
+          <pre style="background: rgba(0,0,0,0.4); padding: 0.65rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; color: #fff; font-family: monospace; font-size: 0.65rem; margin-top: 0.5rem; user-select: all; line-height: 1.4;">
+function doGet(e) {
+  var id = e.parameter.id || "";
+  var name = e.parameter.name || "";
+  var cat = e.parameter.category || "";
+  
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Jogadores");
+  if (!sheet) {
+    return ContentService.createTextOutput("ERROR: Aba 'Jogadores' não encontrada.").setMimeType(ContentService.MimeType.TEXT);
+  }
+  
+  // Adiciona a linha no final
+  sheet.appendRow([id, name, cat]);
+  
+  // Retorna sucesso com cabeçalhos de CORS habilitados
+  return ContentService.createTextOutput("SUCCESS")
+    .setMimeType(ContentService.MimeType.TEXT);
+}</pre>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ADMIN_PW_HASH = "c58a87d9fc314bd23638269aeaef6a39dfd625d7b121f9659cade9306c855789";
+    const GOLI_PW_HASH = "49fb9f8b0989a4617b149e1182013f7062af8a0652de84aadbb58bf693b678c5";
+    const ENC_TOKEN = "011b116d7f7d555f3d325b474b5b50442d7307614057190501676b4f0f4534456906025e450c6878";
+    const ENC_SHEET_URL = "0f1b181900555f4000080c1f4714001f080802410f061e40031f16020e081a1b0a151b17480b43581e22182b2824073e363b1a355f52055f0f0d205f233502560825181042132907300a025d4a2b2a18162a08430c17060450030e0b5158475a4956525f5a5a5f5008190b59565b59504a59485a5251";
+    
+    const GITHUB_CONFIG = {
+      owner: "delipex",
+      repo: "liga-atlantica",
+      branch: "main",
+      path: "ranking.tdf"
+    };
+    let activeContent = "";
+    let isFileValidated = false;
+    let runtimeToken = null;
+
+    // Variáveis globais para cache das planilhas Google Sheets
+    let cachedJogadores = null;
+    let cachedMetagame = null;
+    let cachedDecks = null;
+    let isFetchingSheets = false;
+    
+    // Variáveis de estado para Resolução de Nomes
+    let currentRawPlayers = [];
+    let unresolvedPlayers = [];
+    let resolvedNamesMap = {};
+    let newPlayersToRegister = [];
+
+    // --- Helpers de Planilha (Obtidos/adaptados do app.js) ---
+    function getSpreadsheetId(url) {
+      if (!url) return null;
+      const match = url.match(/\/d\/(?:e\/)?([a-zA-Z0-9-_]+)/);
+      return match ? match[1] : null;
+    }
+
+    function parseCSV(csvText) {
+      const lines = [];
+      let currentLine = [];
+      let currentField = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < csvText.length; i++) {
+        const char = csvText[i];
+        const nextChar = csvText[i + 1];
+
+        if (inQuotes) {
+          if (char === '"') {
+            if (nextChar === '"') {
+              currentField += '"';
+              i++; 
+            } else {
+              inQuotes = false;
+            }
+          } else {
+            currentField += char;
+          }
+        } else {
+          if (char === '"') {
+            inQuotes = true;
+          } else if (char === ',') {
+            currentLine.push(currentField.trim());
+            currentField = '';
+          } else if (char === '\n' || char === '\r') {
+            if (char === '\r' && nextChar === '\n') {
+              i++;
+            }
+            currentLine.push(currentField.trim());
+            if (currentLine.length > 0 && currentLine.some(cell => cell !== '')) {
+              lines.push(currentLine);
+            }
+            currentLine = [];
+            currentField = '';
+          } else {
+            currentField += char;
+          }
+        }
+      }
+      
+      if (currentField || currentLine.length > 0) {
+        currentLine.push(currentField.trim());
+        if (currentLine.some(cell => cell !== '')) {
+          lines.push(currentLine);
+        }
+      }
+
+      if (lines.length < 2) return [];
+
+      const headers = lines[0];
+      return lines.slice(1).map(row => {
+        const obj = {};
+        headers.forEach((header, index) => {
+          let val = row[index] || '';
+          if (val !== '' && !isNaN(val)) {
+            obj[header] = Number(val);
+          } else {
+            obj[header] = val;
+          }
+        });
+        return obj;
+      });
+    }
+
+    async function fetchSheetTab(spreadsheetId, tabName, publishedGid = '') {
+      const isPublishedSheet = spreadsheetId.startsWith('2PACX-');
+      let url = '';
+
+      if (isPublishedSheet) {
+        if (!publishedGid) {
+          throw new Error(`Link publicado sem gid cadastrado para a aba ${tabName}`);
+        }
+        url = `https://docs.google.com/spreadsheets/d/e/${spreadsheetId}/pub?gid=${encodeURIComponent(publishedGid)}&single=true&output=csv&t=${new Date().getTime()}`;
+      } else {
+        url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}&t=${new Date().getTime()}`;
+      }
+
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Falha ao buscar a aba ${tabName}`);
+      const csvText = await response.text();
+      return parseCSV(csvText);
+    }
+
+    async function fetchOptionalSheetTab(spreadsheetId, tabName, publishedGid = '') {
+      try {
+        return await fetchSheetTab(spreadsheetId, tabName, publishedGid);
+      } catch (error) {
+        console.info(`Aba opcional "${tabName}" não encontrada ou indisponível.`, error);
+        return [];
+      }
+    }
+
+    // --- Carregamento de Planilhas ---
+    async function ensureSheetsLoaded() {
+      if (cachedJogadores && cachedMetagame && cachedDecks) return;
+      if (isFetchingSheets) {
+        while (isFetchingSheets) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        return;
+      }
+      
+      isFetchingSheets = true;
+      try {
+        const sheetUrl = window.CONFIG ? window.CONFIG.googleSheetCsvUrl : "";
+        const spreadsheetId = getSpreadsheetId(sheetUrl);
+        const publishedSheetGids = window.CONFIG && window.CONFIG.publishedSheetGids ? window.CONFIG.publishedSheetGids : {};
+        
+        if (spreadsheetId) {
+          console.log("Iniciando carregamento das planilhas no admin...");
+          const [jogadores, metagame, decks] = await Promise.all([
+            fetchOptionalSheetTab(spreadsheetId, "Jogadores", publishedSheetGids.Jogadores),
+            fetchOptionalSheetTab(spreadsheetId, "Metagame", publishedSheetGids.Metagame),
+            fetchOptionalSheetTab(spreadsheetId, "Decks", publishedSheetGids.Decks)
+          ]);
+          cachedJogadores = jogadores || [];
+          cachedMetagame = (metagame && metagame.length) ? metagame : cachedJogadores;
+          cachedDecks = decks || [];
+          console.log("Planilhas carregadas com sucesso. Jogadores:", cachedJogadores.length, "Metagame (ou Jogadores fallback):", cachedMetagame.length, "Decks:", cachedDecks.length);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar dados da planilha:", err);
+      } finally {
+        isFetchingSheets = false;
+      }
+    }
+
+    // --- Lógica de Similaridade de Strings (Levenshtein) ---
+    function editDistance(s1, s2) {
+      s1 = s1.toLowerCase();
+      s2 = s2.toLowerCase();
+
+      let costs = new Array();
+      for (let i = 0; i <= s1.length; i++) {
+        let lastValue = i;
+        for (let j = 0; j <= s2.length; j++) {
+          if (i == 0)
+            costs[j] = j;
+          else {
+            if (j > 0) {
+              let newValue = costs[j - 1];
+              if (s1.charAt(i - 1) != s2.charAt(j - 1))
+                newValue = Math.min(Math.min(newValue, lastValue),
+                  costs[j]) + 1;
+              costs[j - 1] = lastValue;
+              lastValue = newValue;
+            }
+          }
+        }
+        if (i > 0)
+          costs[s2.length] = lastValue;
+      }
+      return costs[s2.length];
+    }
+
+    function getSimilarity(s1, s2) {
+      let longer = s1;
+      let shorter = s2;
+      if (s1.length < s2.length) {
+        longer = s2;
+        shorter = s1;
+      }
+      let longerLength = longer.length;
+      if (longerLength === 0) {
+        return 1.0;
+      }
+      return (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength);
+    }
+
+    function normalizePlayerName(name) {
+      if (!name) return "";
+      return name.trim()
+                 .toLowerCase()
+                 .normalize("NFD")
+                 .replace(/[\u0300-\u036f]/g, "")
+                 .replace(/\s+/g, " ");
+    }
+
+    function findBestMatches(tournamentName, dbPlayers) {
+      const normTourney = normalizePlayerName(tournamentName);
+      if (!normTourney) return [];
+      
+      const candidates = [];
+      
+      for (const dbPlayer of dbPlayers) {
+        const dbName = dbPlayer.Jogador || dbPlayer.Name || '';
+        if (!dbName) continue;
+        const normDb = normalizePlayerName(dbName);
+        
+        if (normTourney === normDb) {
+          return [{ player: dbPlayer, similarity: 1.0, exact: true }];
+        }
+        
+        const similarity = getSimilarity(normTourney, normDb);
+        const tourneyParts = normTourney.split(' ');
+        const dbParts = normDb.split(' ');
+        let initialsMatch = false;
+        
+        if (tourneyParts.length > 1 && dbParts.length >= tourneyParts.length) {
+          let matchCount = 0;
+          for (let i = 0; i < tourneyParts.length; i++) {
+            const tp = tourneyParts[i];
+            const dp = dbParts[i];
+            if (dp && (dp === tp || (tp.length === 1 && dp.startsWith(tp)))) {
+              matchCount++;
+            }
+          }
+          if (matchCount === tourneyParts.length) {
+            initialsMatch = true;
+          }
+        }
+        
+        const finalSimilarity = initialsMatch ? Math.max(similarity, 0.85) : similarity;
+        
+        if (finalSimilarity > 0.35) {
+          candidates.push({ player: dbPlayer, similarity: finalSimilarity, exact: false });
+        }
+      }
+      
+      candidates.sort((a, b) => b.similarity - a.similarity);
+      return candidates;
+    }
+
+    // --- Lógica de Mapeamento de Data no Metagame ---
+    function findDateColumn(headers, dateStr) {
+      if (!dateStr) return null;
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return null;
+      
+      const yyyy = parts[0];
+      const mm = parts[1];
+      const dd = parts[2];
+      
+      const dInt = parseInt(dd, 10);
+      const mInt = parseInt(mm, 10);
+      
+      const yy = yyyy.substring(2, 4); // "26"
+      
+      const f1 = `${yyyy}-${mm}-${dd}`;
+      const f2 = `${dd}/${mm}/${yyyy}`;
+      const f3 = `${dd}-${mm}-${yyyy}`;
+      const f4 = `${dInt}/${mInt}/${yyyy}`;
+      const f5 = `${yyyy}-${mInt}-${dInt}`;
+      const f6 = `${dd}${mm}${yy}`; // ex: "210626"
+      
+      for (const header of headers) {
+        const hNorm = header.toLowerCase();
+        if (hNorm.includes(f1) || 
+            hNorm.includes(f2) || 
+            hNorm.includes(f3) || 
+            hNorm.includes(f4) || 
+            hNorm.includes(f5) ||
+            hNorm.includes(f6)) {
+          return header;
+        }
+      }
+      return null;
+    }
+
+    // --- Exportador TSV ---
+    function formatMediaColocacao(val) {
+      if (val === undefined || val === null || val === '') return '';
+      const num = Number(String(val).replace(',', '.'));
+      return Number.isFinite(num) ? num.toFixed(2) : String(val);
+    }
+
+    function parsePlayersToTDFString(players) {
+      const headers = ['Pos', 'ID', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao'];
+      let lines = [headers.join('\t')];
+      
+      players.forEach(p => {
+        const row = [
+          p.Pos || '',
+          p.ID || p.id || '',
+          p.Jogador || '',
+          p.Categoria || 'MASTER',
+          p.Pontos !== undefined ? p.Pontos : 0,
+          p.Vitorias !== undefined ? p.Vitorias : 0,
+          p.Empates !== undefined ? p.Empates : 0,
+          p.Derrotas !== undefined ? p.Derrotas : 0,
+          p.Podio !== undefined ? p.Podio : 0,
+          formatMediaColocacao(p.MediaColocacao)
+        ];
+        lines.push(row.join('\t'));
+      });
+      
+      return lines.join('\n');
+    }
+
+    // --- Manipuladores da Resolução de Nomes ---
+    function handleResolutionChange(rawName, selectedValue) {
+      resetValidation();
+      resolvedNamesMap[rawName] = selectedValue;
+      newPlayersToRegister = unresolvedPlayers.filter(name => resolvedNamesMap[name] === 'new_player');
+      renderEnrichedPreview();
+    }
+
+    async function copyNewPlayersToClipboard() {
+      const area = document.getElementById('new-players-copy-area');
+      if (!area || !area.value) return;
+
+      let copied = false;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(area.value);
+          copied = true;
+        }
+      } catch (err) {
+        console.warn("Falha ao usar navigator.clipboard, usando fallback...", err);
+      }
+
+      if (!copied) {
+        area.select();
+        document.execCommand('copy');
+      }
+      
+      const btn = document.querySelector('#new-players-section button');
+      if (btn) {
+        const originalText = btn.innerText;
+        btn.innerText = "✓ Copiado!";
+        btn.style.background = "rgba(16, 185, 129, 0.3)";
+        setTimeout(() => {
+          btn.innerText = originalText;
+          btn.style.background = "rgba(16, 185, 129, 0.15)";
+        }, 1500);
+      }
+    }
+
+    function resetValidation() {
+      isFileValidated = false;
+      const checkBadge = document.getElementById('check-badge');
+      if (checkBadge) {
+        checkBadge.innerText = "Não Validado ❌";
+        checkBadge.style.background = "rgba(239, 68, 68, 0.15)";
+        checkBadge.style.color = "#ef4444";
+        checkBadge.style.borderColor = "rgba(239, 68, 68, 0.3)";
+      }
+      const validateBtn = document.getElementById('btn-validate');
+      const publishBtn = document.getElementById('btn-publish');
+      if (validateBtn) validateBtn.style.display = 'block';
+      if (publishBtn) publishBtn.style.display = 'none';
+    }
+
+    function runValidation() {
+      hideAlerts();
+      
+      const eventDate = document.getElementById('event-date').value;
+      if (!eventDate) {
+        showError("Erro de Validação: Selecione a data do evento!");
+        return;
+      }
+
+      if (!activeContent) {
+        showError("Erro de Validação: Nenhum arquivo carregado ou dados vazios!");
+        return;
+      }
+
+      // Verifica nomes não resolvidos
+      const unresolvedCount = unresolvedPlayers.filter(name => !resolvedNamesMap[name]).length;
+      if (unresolvedCount > 0) {
+        showError(`Erro de Validação: Existem ${unresolvedCount} nomes não cadastrados/não resolvidos na planilha. Por favor, associe cada um abaixo antes de validar.`);
+        const resSection = document.getElementById('name-resolution-section');
+        if (resSection) resSection.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+
+      // Verifica se existem nomes duplicados na tabela
+      const namesList = currentRawPlayers.map(p => {
+        const rawName = getFirstDefined(p, ['Jogador', 'Player', 'Name', 'Nome']) || '';
+        const resolution = resolvedNamesMap[rawName];
+        return (resolution && resolution !== 'new_player') ? resolution : rawName;
+      }).filter(n => n !== '');
+
+      const duplicates = namesList.filter((item, index) => namesList.indexOf(item) !== index);
+      if (duplicates.length > 0) {
+        showError(`Erro de Validação: O arquivo contém jogadores duplicados após resolução de nomes: ${Array.from(new Set(duplicates)).join(', ')}.`);
+        return;
+      }
+
+      // Validação passou com sucesso!
+      isFileValidated = true;
+      
+      // Atualiza Badge
+      const checkBadge = document.getElementById('check-badge');
+      if (checkBadge) {
+        checkBadge.innerText = "Validado ✓";
+        checkBadge.style.background = "rgba(16, 185, 129, 0.15)";
+        checkBadge.style.color = "#10b981";
+        checkBadge.style.borderColor = "rgba(16, 185, 129, 0.3)";
+      }
+
+      // Altera a exibição dos botões
+      const validateBtn = document.getElementById('btn-validate');
+      const publishBtn = document.getElementById('btn-publish');
+      if (validateBtn) validateBtn.style.display = 'none';
+      if (publishBtn) {
+        publishBtn.style.display = 'block';
+        publishBtn.disabled = false;
+        publishBtn.innerText = "🚀 Publicar Ranking no Site";
+        publishBtn.style.background = "var(--accent-yellow)";
+        publishBtn.style.borderColor = "var(--accent-yellow)";
+        publishBtn.style.color = "#000";
+      }
+
+      showSuccess("✓ Sucesso! O arquivo foi verificado e validado com sucesso. Pronto para publicação.");
+    }
+
+    function handleDateChange() {
+      resetValidation();
+      handleEventTypeChange();
+      const text = document.getElementById('raw-input').value;
+      if (text) {
+        processTDFText(text);
+      }
+    }
+
+    async function sha256(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function decodeToken(encHex, key) {
+      let result = '';
+      for (let i = 0; i < encHex.length; i += 2) {
+        const byte = parseInt(encHex.substr(i, 2), 16);
+        result += String.fromCharCode(byte ^ key.charCodeAt((i/2) % key.length));
+      }
+      return result;
+    }
+
+    async function handleLogin(e) {
+      if (e) e.preventDefault();
+      const password = document.getElementById('admin-password').value;
+      const errorBox = document.getElementById('login-error');
+      
+      const hash = await sha256(password);
+      
+      if (hash === ADMIN_PW_HASH) {
+        runtimeToken = decodeToken(ENC_TOKEN, password);
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-panel').style.display = 'block';
+        
+        const todayStr = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('event-date');
+        if (dateInput) dateInput.value = todayStr;
+
+        // Exibe o gerenciador de etapas e carrega as informações
+        const stagesSection = document.getElementById('stages-manager-section');
+        if (stagesSection) stagesSection.style.display = 'block';
+        
+        ensureSheetsLoaded().then(() => {
+          loadAndRenderStages();
+        });
+      } else {
+        errorBox.style.display = 'block';
+        document.getElementById('admin-password').value = '';
+      }
+    }
+    
+    async function handleSettingsLogin() {
+      const password = document.getElementById('settings-password').value;
+      const errorBox = document.getElementById('settings-error');
+      
+      const hash = await sha256(password);
+      if (hash === GOLI_PW_HASH) {
+        errorBox.style.display = 'none';
+        const url = decodeToken(ENC_SHEET_URL, password);
+        
+        // Hide password input fields and display the direct Sheets link button
+        document.getElementById('settings-pw-group').style.display = 'none';
+        const linkBtn = document.getElementById('modal-sheets-link-btn');
+        linkBtn.href = url;
+        linkBtn.style.display = 'flex';
+      } else {
+        errorBox.style.display = 'block';
+        document.getElementById('settings-password').value = '';
+      }
+    }
+    
+    function closeSettingsModal() {
+      document.getElementById('settings-modal').style.display = 'none';
+      document.getElementById('settings-pw-group').style.display = 'block';
+      const linkBtn = document.getElementById('modal-sheets-link-btn');
+      linkBtn.style.display = 'none';
+      linkBtn.href = '#';
+      document.getElementById('settings-password').value = '';
+      document.getElementById('settings-error').style.display = 'none';
+    }
+    
+    function handleLogout() {
+      runtimeToken = null;
+      document.getElementById('login-screen').style.display = 'block';
+      document.getElementById('main-panel').style.display = 'none';
+      document.getElementById('admin-password').value = '';
+      document.getElementById('login-error').style.display = 'none';
+      closeSettingsModal();
+    }
+
+    window.selectEventType = function(val) {
+      document.getElementById('event-type').value = val;
+      document.querySelectorAll('.event-type-card').forEach(card => {
+        if (card.getAttribute('data-value') === val) {
+          card.classList.add('active');
+        } else {
+          card.classList.remove('active');
+        }
+      });
+      handleEventTypeChange();
+    };
+
+    function handleEventTypeChange() {
+      const eventType = document.getElementById('event-type').value;
+      const multGroup = document.getElementById('multiplier-group');
+      const multInput = document.getElementById('event-multiplier');
+      const structuredFields = document.getElementById('structured-fields');
+      const suggestionDiv = document.getElementById('column-code-suggestion');
+      const customTitleGroup = document.getElementById('custom-title-group');
+      
+      // Multiplier remains visible at all times
+      if (multGroup) multGroup.style.display = 'block';
+      
+      if (eventType === 'Personalizado') {
+        if (customTitleGroup) customTitleGroup.style.display = 'block';
+        multInput.disabled = false;
+        multInput.style.opacity = '1.0';
+        multInput.style.cursor = 'text';
+      } else {
+        if (customTitleGroup) customTitleGroup.style.display = 'none';
+        multInput.disabled = true;
+        multInput.style.opacity = '0.6';
+        multInput.style.cursor = 'not-allowed';
+        
+        // Auto-set multipliers programmatically
+        if (eventType === 'Liga') {
+          multInput.value = '1.0';
+        } else if (eventType === 'Challenge' || eventType === 'Cup') {
+          multInput.value = '1.5';
+        }
+      }
+      
+      // Structured fields always visible
+      if (structuredFields) structuredFields.style.display = 'flex';
+      
+      if (suggestionDiv) {
+        suggestionDiv.style.display = 'block';
+        
+        // Generate suggestion code
+        const dateVal = document.getElementById('event-date').value;
+        const seasonVal = document.getElementById('event-season').value || '5';
+        const numVal = document.getElementById('event-number').value || '1';
+        
+        if (dateVal) {
+          const parts = dateVal.split('-');
+          if (parts.length === 3) {
+            const yy = parts[0].substring(2);
+            const mm = parts[1];
+            const dd = parts[2];
+            const ddmmaa = dd + mm + yy;
+            
+            let prefix = 'S';
+            if (eventType === 'Challenge') prefix = 'CH';
+            else if (eventType === 'Cup') prefix = 'CUP';
+            else if (eventType === 'Personalizado') {
+              const customTitle = document.getElementById('event-custom-title').value.trim() || 'CUSTOM';
+              prefix = customTitle.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 5);
+            }
+            
+            suggestionDiv.innerHTML = `💡 Código da Coluna para criar no Google Sheets: <strong>${prefix}${numVal}T${seasonVal} ${ddmmaa}</strong><br><span style="font-size: 0.75rem; font-weight: normal; color: var(--text-secondary);">⚠️ IMPORTANTE: Crie uma coluna idêntica a este código na aba 'Jogadores' da planilha ANTES de publicar para registrar os decks de etapa corretamente.</span>`;
+          } else {
+            suggestionDiv.innerHTML = '💡 Código da Coluna no Sheets: (data inválida)';
+          }
+        } else {
+          suggestionDiv.innerHTML = '💡 Código da Coluna no Sheets: (selecione uma data)';
+        }
+      }
+    }
+
+    function parseTDFDate(dateStr) {
+      if (!dateStr || typeof dateStr !== 'string') return null;
+      const clean = dateStr.trim();
+      
+      // 1. Formato ISO já pronto: AAAA-MM-DD
+      const isoMatch = clean.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      if (isoMatch) {
+        const y = isoMatch[1];
+        const m = isoMatch[2].padStart(2, '0');
+        const d = isoMatch[3].padStart(2, '0');
+        return {
+          iso: `${y}-${m}-${d}`,
+          pt: `${d}/${m}/${y}`,
+          possibleISOs: [`${y}-${m}-${d}`]
+        };
+      }
+
+      // 2. Formato com separadores (ex: MM/DD/AAAA ou DD/MM/AAAA)
+      const parts = clean.split(/[\/\-\.]/);
+      if (parts.length === 3) {
+        const p1 = parseInt(parts[0], 10);
+        const p2 = parseInt(parts[1], 10);
+        let year = parseInt(parts[2], 10);
+        if (year < 100) year += 2000;
+
+        // Se o 1º número for > 12, é com certeza DIA (DD/MM/AAAA - Brasileiro)
+        if (p1 > 12 && p2 <= 12) {
+          const day = String(p1).padStart(2, '0');
+          const month = String(p2).padStart(2, '0');
+          const iso = `${year}-${month}-${day}`;
+          return { iso, pt: `${day}/${month}/${year}`, possibleISOs: [iso] };
+        }
+
+        // Se o 2º número for > 12, é com certeza DIA (MM/DD/AAAA - Padrão TOM/EUA)
+        if (p2 > 12 && p1 <= 12) {
+          const month = String(p1).padStart(2, '0');
+          const day = String(p2).padStart(2, '0');
+          const iso = `${year}-${month}-${day}`;
+          return { iso, pt: `${day}/${month}/${year}`, possibleISOs: [iso] };
+        }
+
+        // Ambos <= 12 (ambíguo, ex: 07/08/2026)
+        // O padrão nativo do TOM é MM/DD/AAAA (EUA), mas aceitamos ambos sem gerar erro falso
+        const usMonth = String(p1).padStart(2, '0');
+        const usDay = String(p2).padStart(2, '0');
+        const usISO = `${year}-${usMonth}-${usDay}`;
+        const usPT = `${usDay}/${usMonth}/${year}`;
+
+        const brDay = String(p1).padStart(2, '0');
+        const brMonth = String(p2).padStart(2, '0');
+        const brISO = `${year}-${brMonth}-${brDay}`;
+        const brPT = `${brDay}/${brMonth}/${year}`;
+
+        return {
+          iso: usISO,
+          pt: usPT,
+          possibleISOs: [usISO, brISO]
+        };
+      }
+
+      return null;
+    }
+
+    function extractTDFMetadata(tdfText) {
+      if (!tdfText) return null;
+      const trimmed = tdfText.trim();
+      if (trimmed.startsWith('<?xml') || trimmed.includes('<tournament')) {
+        try {
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(trimmed, "text/xml");
+          const nameNode = xmlDoc.getElementsByTagName("name")[0];
+          const dateNode = xmlDoc.getElementsByTagName("startdate")[0];
+          
+          let tournamentName = nameNode ? nameNode.textContent.trim() : null;
+          let tournamentDate = dateNode ? dateNode.textContent.trim() : null;
+          
+          return { name: tournamentName, date: tournamentDate };
+        } catch (err) {
+          console.warn("Falha ao extrair metadados do TDF:", err);
+        }
+      }
+      return null;
+    }
+
+    function validateTDFMetadata(fileContents) {
+      const fileInfoDiv = document.getElementById('tdf-file-info');
+      if (!fileInfoDiv) return;
+
+      fileInfoDiv.style.display = 'none';
+      fileInfoDiv.innerHTML = '';
+      fileInfoDiv.style.background = '';
+      fileInfoDiv.style.borderColor = '';
+
+      if (!fileContents || fileContents.length === 0) return;
+
+      const firstFile = fileContents[0];
+      const meta = extractTDFMetadata(firstFile.text);
+
+      if (!meta) {
+        return;
+      }
+
+      const dateInfo = parseTDFDate(meta.date);
+      const dateInput = document.getElementById('event-date');
+      const numberInput = document.getElementById('event-number');
+
+      let hasWarning = false;
+      let warningMsg = '';
+
+      if (dateInfo) {
+        if (!dateInput.value) {
+          dateInput.value = dateInfo.iso;
+        } else {
+          const matches = dateInfo.possibleISOs.includes(dateInput.value);
+          if (!matches) {
+            hasWarning = true;
+            warningMsg += `• Data no formulário (${formatDateISOToPT(dateInput.value)}) difere da data do arquivo (${dateInfo.pt || meta.date}).<br>`;
+          }
+        }
+      }
+
+      let fileNumber = null;
+      let fileType = '';
+      if (meta.name) {
+        const numMatch = meta.name.match(/#(\d+)/) || meta.name.match(/etapa\s*(\d+)/i);
+        if (numMatch) fileNumber = parseInt(numMatch[1], 10);
+
+        const nameLower = meta.name.toLowerCase();
+        if (nameLower.includes('cup') || nameLower.includes('copa')) {
+          fileType = 'Cup';
+        } else if (nameLower.includes('challenge') || nameLower.includes('desafio')) {
+          fileType = 'Challenge';
+        } else if (nameLower.includes('liga') || nameLower.includes('sessão') || nameLower.includes('sessao')) {
+          fileType = 'Liga';
+        }
+      }
+
+      if (fileNumber !== null) {
+        if (!numberInput.value || numberInput.value === '1') {
+          numberInput.value = fileNumber;
+        } else if (parseInt(numberInput.value, 10) !== fileNumber) {
+          hasWarning = true;
+          warningMsg += `• Número no formulário (${numberInput.value}) difere do número no arquivo (#${fileNumber}).<br>`;
+        }
+      }
+
+      if (fileType) {
+        const currentType = document.getElementById('event-type').value;
+        if (currentType !== fileType) {
+          if (currentType === 'Liga' && (fileType === 'Cup' || fileType === 'Challenge')) {
+            if (window.selectEventType) window.selectEventType(fileType);
+          } else {
+            hasWarning = true;
+            warningMsg += `• Tipo de evento selecionado (${currentType}) difere do tipo no arquivo (${fileType}).<br>`;
+          }
+        }
+      }
+
+      fileInfoDiv.style.display = 'block';
+      const displayDate = dateInfo ? dateInfo.pt : meta.date;
+      if (hasWarning) {
+        fileInfoDiv.style.background = 'rgba(245, 158, 11, 0.08)';
+        fileInfoDiv.style.borderColor = 'rgba(245, 158, 11, 0.25)';
+        fileInfoDiv.style.color = '#fbbf24';
+        fileInfoDiv.innerHTML = `
+          <div style="font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            ⚠️ Divergência de Configuração Encontrada!
+          </div>
+          <div style="font-size: 0.8rem; line-height: 1.4; margin-bottom: 8px;">
+            ${warningMsg}
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px;">
+            📄 <strong>Info do Arquivo:</strong> ${escapeHTML(meta.name)} (${displayDate})
+          </div>
+        `;
+      } else {
+        fileInfoDiv.style.background = 'rgba(16, 185, 129, 0.08)';
+        fileInfoDiv.style.borderColor = 'rgba(16, 185, 129, 0.25)';
+        fileInfoDiv.style.color = '#34d399';
+        fileInfoDiv.innerHTML = `
+          <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            ✨ Arquivo validado com sucesso!
+          </div>
+          <div style="font-size: 0.8rem; line-height: 1.4;">
+            📅 Data: <strong>${displayDate}</strong> &nbsp;|&nbsp; 🏆 Torneio: <strong>${escapeHTML(meta.name)}</strong>
+          </div>
+        `;
+      }
+
+      if (typeof handleEventTypeChange === 'function') {
+        handleEventTypeChange();
+      }
+    }
+
+    async function handleMultipleFiles(files) {
+      if (!files || files.length === 0) return;
+
+      const previewSection = document.getElementById('preview-section');
+      const tbody = document.getElementById('preview-tbody');
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem;">⏳ Processando e consolidando ${files.length} arquivos...</td></tr>`;
+      previewSection.style.display = 'block';
+
+      const filePromises = Array.from(files).map(file => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (evt) => resolve({ name: file.name, text: evt.target.result });
+          reader.onerror = (err) => reject(err);
+          reader.readAsText(file);
+        });
+      });
+
+      try {
+        const fileContents = await Promise.all(filePromises);
+
+        // Valida metadados e avisa/auto-preenche
+        validateTDFMetadata(fileContents);
+
+        if (fileContents.length === 1) {
+          document.getElementById('raw-input').value = fileContents[0].text;
+          processTDFText(fileContents[0].text);
+          return;
+        }
+
+        let allPlayers = [];
+        fileContents.forEach(item => {
+          const parsed = parseTDF(item.text);
+          const mapped = parsed.map(p => {
+            return {
+              ...p,
+              ID: getPlayerId(p) || ''
+            };
+          });
+          allPlayers = allPlayers.concat(mapped);
+        });
+
+        if (allPlayers.length === 0) {
+          showError("Nenhum jogador encontrado nos arquivos carregados.");
+          return;
+        }
+
+        // Ordenação estrita respeitando a colocação oficial (Pos / MediaColocacao) do TOM
+        allPlayers.sort((a, b) => {
+          const posA = Number(a.Pos || a.MediaColocacao) || 999;
+          const posB = Number(b.Pos || b.MediaColocacao) || 999;
+          if (posA !== posB) return posA - posB;
+          const ptsA = Number(a.Pontos) || 0;
+          const ptsB = Number(b.Pontos) || 0;
+          if (ptsB !== ptsA) return ptsB - ptsA;
+          return Number(b.Vitorias || 0) - Number(a.Vitorias || 0);
+        });
+
+        // Reatribuição do Rank unificado e pódio
+        allPlayers.forEach((p, idx) => {
+          p.Pos = idx + 1;
+          p.Podio = (p.Pos <= 4 && !p.isDnf) ? 1 : 0;
+        });
+
+        const consolidatedText = parsePlayersToTDFString(allPlayers);
+        document.getElementById('raw-input').value = consolidatedText;
+        processTDFText(consolidatedText);
+        showSuccess(`Consolidado com sucesso: ${fileContents.length} arquivos combinados em uma única etapa!`);
+      } catch (err) {
+        showError("Erro ao ler ou consolidar arquivos: " + err.message);
+      }
+    }
+
+    function handleFileSelect(e) {
+      resetValidation();
+      if (e.target.files && e.target.files.length > 0) {
+        handleMultipleFiles(e.target.files);
+      }
+    }
+    
+    function handleRawInput() {
+      resetValidation();
+      const text = document.getElementById('raw-input').value;
+      processTDFText(text);
+    }
+
+    const dropzone = document.getElementById('dropzone');
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      }, false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+      }, false);
+    });
+    dropzone.addEventListener('drop', (e) => {
+      resetValidation();
+      const dt = e.dataTransfer;
+      if (dt.files && dt.files.length > 0) {
+        handleMultipleFiles(dt.files);
+      }
+    });
+
+    function toNumber(value, fallback = 0) {
+      const normalizedValue = typeof value === 'string' ? value.replace(',', '.') : value;
+      const number = Number(normalizedValue);
+      return Number.isFinite(number) ? number : fallback;
+    }
+
+    function getFirstDefined(row, fieldNames) {
+      for (const fieldName of fieldNames) {
+        if (row && row[fieldName] !== undefined && row[fieldName] !== '') {
+          return row[fieldName];
+        }
+      }
+      return undefined;
+    }
+
+    function getVED(player) {
+      let v = getFirstDefined(player, ['Vitorias', 'Vitórias', 'Wins', 'Win']);
+      let e = getFirstDefined(player, ['Empates', 'Draws', 'Draw']);
+      let d = getFirstDefined(player, ['Derrotas', 'Losses', 'Loss']);
+
+      if (v !== undefined) v = toNumber(v);
+      if (e !== undefined) e = toNumber(e);
+      if (d !== undefined) d = toNumber(d);
+
+      const keys = Object.keys(player || {});
+      const hasKey = (k) => keys.includes(k);
+
+      if (v === undefined) {
+        if (hasKey('W')) v = toNumber(player['W']);
+        else if (hasKey('V')) v = toNumber(player['V']);
+        else v = 0;
+      }
+
+      if (e === undefined) {
+        if (hasKey('E')) {
+          e = toNumber(player['E']);
+        } else if (hasKey('D') && hasKey('L')) {
+          e = toNumber(player['D']);
+        } else {
+          e = 0;
+        }
+      }
+
+      if (d === undefined) {
+        if (hasKey('L')) {
+          d = toNumber(player['L']);
+        } else if (hasKey('D') && !hasKey('L')) {
+          d = toNumber(player['D']);
+        } else {
+          d = 0;
+        }
+      }
+
+      return { v, e, d };
+    }
+
+    function parseTDF(tdfText) {
+      if (!tdfText || !tdfText.trim()) return [];
+      
+      const trimmedText = tdfText.trim();
+      
+      // Detect XML format
+      if (trimmedText.startsWith('<?xml') || trimmedText.includes('<tournament')) {
+        try {
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(trimmedText, "text/xml");
+          
+          // Get all players details under <players>
+          const playersMap = new Map(); // userid -> { name, birthdate }
+          const playersContainer = xmlDoc.getElementsByTagName("players")[0];
+          if (playersContainer) {
+            const pNodes = playersContainer.getElementsByTagName("player");
+            for (let i = 0; i < pNodes.length; i++) {
+              const node = pNodes[i];
+              const userid = node.getAttribute("userid");
+              const firstname = node.getElementsByTagName("firstname")[0]?.textContent || "";
+              const lastname = node.getElementsByTagName("lastname")[0]?.textContent || "";
+              const birthdate = node.getElementsByTagName("birthdate")[0]?.textContent || "";
+              playersMap.set(userid, {
+                name: `${firstname} ${lastname}`.trim(),
+                birthdate: birthdate
+              });
+            }
+          }
+          
+          // Get pod category from standings or pods
+          let podCategory = "MASTER";
+          const podNodes = xmlDoc.getElementsByTagName("pod");
+          for (let i = 0; i < podNodes.length; i++) {
+            const cat = podNodes[i].getAttribute("category");
+            if (cat) {
+              if (cat === "10") podCategory = "MASTER";
+              else if (cat === "11") podCategory = "SENIOR";
+              else if (cat === "12") podCategory = "JUNIOR";
+              break;
+            }
+          }
+          
+          // Initialize match stats and opponents sets for all players
+          const statsMap = new Map(); // userid -> { v: 0, e: 0, d: 0 }
+          const opponentsMap = new Map(); // userid -> Set
+          playersMap.forEach((p, userid) => {
+            statsMap.set(userid, { v: 0, e: 0, d: 0 });
+            opponentsMap.set(userid, new Set());
+          });
+          
+          // Parse matches inside all rounds containers to calculate Wins, Draws, Losses and opponents
+          const roundsContainers = xmlDoc.getElementsByTagName("rounds");
+          for (let rcIdx = 0; rcIdx < roundsContainers.length; rcIdx++) {
+            const roundsContainer = roundsContainers[rcIdx];
+            const matches = roundsContainer.getElementsByTagName("match");
+            for (let i = 0; i < matches.length; i++) {
+              const match = matches[i];
+              const outcome = Number(match.getAttribute("outcome")); // 1 = player1 wins, 2 = player2 wins, 3 = draw
+              const player1Node = match.getElementsByTagName("player1")[0];
+              const player2Node = match.getElementsByTagName("player2")[0];
+              
+              const p1id = player1Node ? player1Node.getAttribute("userid") : null;
+              const p2id = player2Node ? player2Node.getAttribute("userid") : null;
+              
+              if (p1id && !statsMap.has(p1id)) {
+                statsMap.set(p1id, { v: 0, e: 0, d: 0 });
+                opponentsMap.set(p1id, new Set());
+              }
+              if (p2id && !statsMap.has(p2id)) {
+                statsMap.set(p2id, { v: 0, e: 0, d: 0 });
+                opponentsMap.set(p2id, new Set());
+              }
+              
+              if (p1id && p2id) {
+                // Add to opponents
+                opponentsMap.get(p1id).add(p2id);
+                opponentsMap.get(p2id).add(p1id);
+                
+                if (outcome === 1) {
+                  statsMap.get(p1id).v++;
+                  statsMap.get(p2id).d++;
+                } else if (outcome === 2) {
+                  statsMap.get(p1id).d++;
+                  statsMap.get(p2id).v++;
+                } else {
+                  statsMap.get(p1id).e++;
+                  statsMap.get(p2id).e++;
+                }
+              } else if (p1id && !p2id) {
+                // Bye (TDF older standard)
+                statsMap.get(p1id).v++;
+              } else {
+                // Bye or single player match (Tome XML standard)
+                const singlePlayerNode = match.getElementsByTagName("player")[0];
+                const spid = singlePlayerNode ? singlePlayerNode.getAttribute("userid") : null;
+                if (spid) {
+                  if (!statsMap.has(spid)) {
+                    statsMap.set(spid, { v: 0, e: 0, d: 0 });
+                    opponentsMap.set(spid, new Set());
+                  }
+                  if (outcome === 5) {
+                    statsMap.get(spid).v++; // 3-point Bye (Win)
+                  }
+                }
+              }
+            }
+          }
+          
+          // Calculate individual Win Rates for OMW calculation (max(0.25, points / (rounds * 3)))
+          const winRates = new Map();
+          playersMap.forEach((p, id) => {
+            const stats = statsMap.get(id) || { v: 0, e: 0, d: 0 };
+            const points = stats.v * 3 + stats.e * 1;
+            const opps = opponentsMap.get(id);
+            const totalMatches = opps ? opps.size : 0;
+            if (totalMatches === 0) {
+              winRates.set(id, 0.25);
+            } else {
+              const rate = points / (totalMatches * 3);
+              winRates.set(id, Math.max(0.25, rate));
+            }
+          });
+          
+          // Calculate OMW (Opponent Match Win Percentage)
+          const omwMap = new Map();
+          playersMap.forEach((p, id) => {
+            const opps = opponentsMap.get(id);
+            if (!opps || opps.size === 0) {
+              omwMap.set(id, 0.25);
+            } else {
+              let sum = 0;
+              opps.forEach(oppId => {
+                sum += winRates.get(oppId) || 0.25;
+              });
+              omwMap.set(id, sum / opps.size);
+            }
+          });
+          
+          // Parse standings to get placement
+          const playersResult = [];
+          const standingsContainer = xmlDoc.getElementsByTagName("standings")[0];
+          if (standingsContainer) {
+            const podNodes = standingsContainer.getElementsByTagName("pod");
+            for (let podIdx = 0; podIdx < podNodes.length; podIdx++) {
+              const finishedPod = podNodes[podIdx];
+              const type = finishedPod.getAttribute("type"); // "finished" or "dnf"
+              const categoryAttr = finishedPod.getAttribute("category");
+              
+              let currentCategory = "MASTER";
+              if (categoryAttr === "10" || categoryAttr === "2") currentCategory = "MASTER";
+              else if (categoryAttr === "11" || categoryAttr === "1") currentCategory = "SENIOR";
+              else if (categoryAttr === "12" || categoryAttr === "0") currentCategory = "JUNIOR";
+              
+              const pNodes = finishedPod.getElementsByTagName("player");
+              for (let i = 0; i < pNodes.length; i++) {
+                const node = pNodes[i];
+                const id = node.getAttribute("id");
+                const place = Number(node.getAttribute("place")) || (i + 1);
+                
+                const pInfo = playersMap.get(id) || { name: `Jogador ${id}`, birthdate: "" };
+                const pStats = statsMap.get(id) || { v: 0, e: 0, d: 0 };
+                const points = pStats.v * 3 + pStats.e * 1;
+                
+                playersResult.push({
+                  Pos: place,
+                  Jogador: pInfo.name,
+                  Categoria: currentCategory,
+                  Pontos: points,
+                  Vitorias: pStats.v,
+                  Empates: pStats.e,
+                  Derrotas: pStats.d,
+                  Podio: 0, // Recalculado abaixo com base no ranking geral unificado
+                  MediaColocacao: place,
+                  Deck: "Não registrado",
+                  TipoEnergia: "colorless",
+                  id: id,
+                  omw: omwMap.get(id) || 0.25,
+                  isDnf: type === "dnf"
+                });
+              }
+            }
+          }
+          
+          // If standings was empty but we have players, just list them with default values
+          if (playersResult.length === 0 && playersMap.size > 0) {
+            let idx = 1;
+            playersMap.forEach((pInfo, id) => {
+              const pStats = statsMap.get(id) || { v: 0, e: 0, d: 0 };
+              const points = pStats.v * 3 + pStats.e * 1;
+              playersResult.push({
+                Pos: idx,
+                Jogador: pInfo.name,
+                Categoria: podCategory,
+                Pontos: points,
+                Vitorias: pStats.v,
+                Empates: pStats.e,
+                Derrotas: pStats.d,
+                Podio: 0, // Recalculado abaixo
+                MediaColocacao: idx,
+                Deck: "Não registrado",
+                TipoEnergia: "colorless",
+                id: id,
+                omw: omwMap.get(id) || 0.25,
+                isDnf: false
+              });
+              idx++;
+            });
+          }
+          
+          // Ordenação estrita respeitando a colocação oficial (Pos / MediaColocacao) do TOM
+          playersResult.sort((a, b) => {
+            const posA = Number(a.Pos || a.MediaColocacao) || 999;
+            const posB = Number(b.Pos || b.MediaColocacao) || 999;
+            if (posA !== posB) return posA - posB;
+            const ptsA = Number(a.Pontos) || 0;
+            const ptsB = Number(b.Pontos) || 0;
+            if (ptsB !== ptsA) return ptsB - ptsA;
+            return Number(b.Vitorias || 0) - Number(a.Vitorias || 0);
+          });
+
+          // Garante numeração contínua e cálculo correto do Pódio Geral da etapa
+          playersResult.forEach((p, idx) => {
+            p.Pos = p.Pos > 0 ? p.Pos : (idx + 1);
+            p.Podio = (p.Pos <= 4 && !p.isDnf) ? 1 : 0;
+          });
+          
+          return playersResult;
+        } catch (err) {
+          console.error("Erro ao processar TDF XML:", err);
+          return [];
+        }
+      }
+      
+      // Otherwise, process as plain text TSV/CSV
+      const lines = trimmedText.split(/\r?\n/).filter(line => line.trim() !== '');
+      if (lines.length < 2) return [];
+
+      let delimiter = '\t';
+      if (lines[0].includes('\t')) {
+        delimiter = '\t';
+      } else if (lines[0].includes(';')) {
+        delimiter = ';';
+      } else if (lines[0].includes(',')) {
+        delimiter = ',';
+      }
+
+      const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^["']|["']$/g, ''));
+      return lines.slice(1).map(rowText => {
+        const row = rowText.split(delimiter);
+        const obj = {};
+        headers.forEach((header, index) => {
+          let val = row[index] || '';
+          val = val.trim();
+          if (val.startsWith('"') && val.endsWith('"')) {
+            val = val.substring(1, val.length - 1);
+          } else if (val.startsWith("'") && val.endsWith("'")) {
+            val = val.substring(1, val.length - 1);
+      }
+          val = val.trim();
+          if (val !== '' && !isNaN(val)) {
+            obj[header] = Number(val);
+          } else {
+            obj[header] = val;
+          }
+        });
+        return obj;
+      });
+    }
+
+    function getPlayerId(playerObj) {
+      if (!playerObj) return undefined;
+      return getFirstDefined(playerObj, ['ID', 'Player ID', 'PlayerID', 'POP ID', 'POPID', 'Play! ID', 'PlayID', 'OPID', 'User ID', 'Userid', 'id', 'userid']);
+    }
+
+    function findMatchingPlayer(playersMap, p) {
+      const pId = getPlayerId(p);
+      const pName = getFirstDefined(p, ['Jogador', 'Player', 'Name']);
+      if (!pName) return null;
+      const nameKey = String(pName).trim().toLowerCase();
+      
+      // 1. Tenta correspondência por ID primeiro (se houver ID no objeto)
+      if (pId !== undefined && pId !== '') {
+        for (const [key, player] of playersMap.entries()) {
+          const playerDbId = getPlayerId(player);
+          if (playerDbId !== undefined && playerDbId !== '' && String(playerDbId).trim() === String(pId).trim()) {
+            return player;
+          }
+        }
+      }
+      
+      // 2. Tenta correspondência pelo nome normalizado como fallback
+      return playersMap.get(nameKey) || null;
+    }
+
+    async function processTDFText(text) {
+      if (!text || !text.trim()) {
+        document.getElementById('preview-section').style.display = 'none';
+        document.getElementById('name-resolution-section').style.display = 'none';
+        document.getElementById('new-players-section').style.display = 'none';
+        return;
+      }
+      
+      const players = parseTDF(text);
+      if (players.length === 0) {
+        showError("Formato inválido. O arquivo precisa conter o cabeçalho e pelo menos 1 linha de dados.");
+        document.getElementById('preview-section').style.display = 'none';
+        document.getElementById('name-resolution-section').style.display = 'none';
+        document.getElementById('new-players-section').style.display = 'none';
+        return;
+      }
+      
+      const firstPlayer = players[0];
+      const nameFields = ['Jogador', 'Player', 'Name', 'Nome', 'Treinador', 'Player Name', 'Nome do Jogador'];
+      const pointsFields = ['Pontos', 'Points', 'Pts', 'Pontuacao', 'Pontuação', 'Ptos', 'Score', 'Pontos Totais'];
+      
+      const hasName = getFirstDefined(firstPlayer, nameFields) !== undefined;
+      const hasPoints = getFirstDefined(firstPlayer, pointsFields) !== undefined;
+      
+      if (!hasName || !hasPoints) {
+        showError(`O arquivo TDF está sem as colunas obrigatórias de Jogador/Nome e Pontos. Certifique-se de que a primeira linha contém os nomes corretos separados por tabulações ou ponto e vírgula.`);
+        document.getElementById('preview-section').style.display = 'none';
+        document.getElementById('name-resolution-section').style.display = 'none';
+        document.getElementById('new-players-section').style.display = 'none';
+        return;
+      }
+
+      currentRawPlayers = players;
+      unresolvedPlayers = [];
+      hideAlerts();
+
+      // Exibe indicador de carregamento na área de pré-visualização
+      const previewSection = document.getElementById('preview-section');
+      const tbody = document.getElementById('preview-tbody');
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem;">⏳ Carregando dados da planilha do Google Sheets...</td></tr>`;
+      previewSection.style.display = 'block';
+
+      // Garante carregamento das planilhas
+      await ensureSheetsLoaded();
+
+      // Verifica se o banco de dados de jogadores está disponível
+      if (cachedJogadores && cachedJogadores.length > 0) {
+        const dbNamesNormalized = cachedJogadores.map(j => normalizePlayerName(j.Jogador || j.Name));
+        
+        // Encontra jogadores do arquivo que não estão no banco (e não puderam ser resolvidos por ID)
+        const detectedUnresolved = [];
+        players.forEach(p => {
+          const rawName = getFirstDefined(p, nameFields) || '';
+          if (rawName) {
+            const normName = normalizePlayerName(rawName);
+            
+            // Tenta correspondência por ID primeiro
+            const tId = getPlayerId(p);
+            let resolvedById = null;
+            
+            if (tId !== undefined && tId !== '') {
+              resolvedById = cachedJogadores.find(dbPlayer => {
+                const dbId = getPlayerId(dbPlayer);
+                return dbId !== undefined && dbId !== '' && String(dbId).trim() === String(tId).trim();
+              });
+            }
+            
+            if (resolvedById) {
+              // Se encontrou por ID, já mapeia no resolvedNamesMap!
+              resolvedNamesMap[rawName] = resolvedById.Jogador || resolvedById.Name;
+            } else {
+              // Se não encontrou por ID, verifica pelo nome normalizado
+              if (!dbNamesNormalized.includes(normName)) {
+                if (!detectedUnresolved.includes(rawName)) {
+                  detectedUnresolved.push(rawName);
+                }
+              }
+            }
+          }
+        });
+        
+        unresolvedPlayers = detectedUnresolved;
+        
+        // Limpa e atualiza resolvedNamesMap preservando as resoluções da sessão atual
+        const oldMap = { ...resolvedNamesMap };
+        resolvedNamesMap = {};
+        
+        // Primeiro, mapeia as resoluções por ID de novo para garantir
+        players.forEach(p => {
+          const rawName = getFirstDefined(p, nameFields) || '';
+          if (rawName) {
+            const tId = getPlayerId(p);
+            if (tId !== undefined && tId !== '') {
+              const resolvedById = cachedJogadores.find(dbPlayer => {
+                const dbId = getPlayerId(dbPlayer);
+                return dbId !== undefined && dbId !== '' && String(dbId).trim() === String(tId).trim();
+              });
+              if (resolvedById) {
+                resolvedNamesMap[rawName] = resolvedById.Jogador || resolvedById.Name;
+              }
+            }
+          }
+        });
+        
+        // Em seguida, recupera as seleções manuais salvas
+        unresolvedPlayers.forEach(name => {
+          if (oldMap[name]) {
+            resolvedNamesMap[name] = oldMap[name];
+          }
+        });
+        
+        renderNameResolutionUI();
+      } else {
+        // Fallback: Planilha indisponível
+        console.warn("Sem banco de dados de jogadores (Google Sheets inacessível). Prosseguindo sem validação de nomes.");
+        showError("Aviso: Não foi possível conectar ao Google Sheets para validar nomes e decks. O envio prosseguirá com os dados originais do arquivo.");
+        document.getElementById('name-resolution-section').style.display = 'none';
+        document.getElementById('new-players-section').style.display = 'none';
+      }
+
+      renderEnrichedPreview();
+    }
+
+    function renderNameResolutionUI() {
+      const section = document.getElementById('name-resolution-section');
+      const tbody = document.getElementById('name-resolution-tbody');
+      
+      if (!section || !tbody) return;
+      
+      if (unresolvedPlayers.length === 0) {
+        section.style.display = 'none';
+        tbody.innerHTML = '';
+        return;
+      }
+      
+      tbody.innerHTML = unresolvedPlayers.map(rawName => {
+        const matches = findBestMatches(rawName, cachedJogadores || []);
+        const reasonableCandidates = matches.filter(c => c.similarity >= 0.4);
+        
+        const allDbPlayersSorted = [...(cachedJogadores || [])].sort((a, b) => {
+          const nA = a.Jogador || a.Name || '';
+          const nB = b.Jogador || b.Name || '';
+          return nA.localeCompare(nB, 'pt-BR');
+        });
+
+        // Considera uma correspondência confiável se a similaridade for >= 70%
+        const bestConfMatch = reasonableCandidates.find(c => c.similarity >= 0.70);
+        
+        const currentSelected = resolvedNamesMap[rawName];
+        const defaultValue = currentSelected || (bestConfMatch ? (bestConfMatch.player.Jogador || bestConfMatch.player.Name) : 'new_player');
+        
+        if (!resolvedNamesMap[rawName]) {
+          resolvedNamesMap[rawName] = defaultValue;
+        }
+
+        let selectOptions = `<option value="new_player" ${defaultValue === 'new_player' ? 'selected' : ''}>🆕 Cadastrar como novo jogador</option>`;
+        
+        if (reasonableCandidates.length > 0) {
+          selectOptions += `<optgroup label="Sugestões de correspondência">`;
+          reasonableCandidates.forEach(c => {
+            const pName = c.player.Jogador || c.player.Name || '';
+            const pct = Math.round(c.similarity * 100);
+            selectOptions += `<option value="${escapeHTML(pName)}" ${defaultValue === pName ? 'selected' : ''}>🔗 É o mesmo que: ${escapeHTML(pName)} (${pct}% match)</option>`;
+          });
+          selectOptions += `</optgroup>`;
+        }
+        
+        selectOptions += `<optgroup label="Todos os Jogadores Cadastrados">`;
+        allDbPlayersSorted.forEach(p => {
+          const pName = p.Jogador || p.Name || '';
+          if (!reasonableCandidates.some(c => (c.player.Jogador || c.player.Name) === pName)) {
+            selectOptions += `<option value="${escapeHTML(pName)}" ${defaultValue === pName ? 'selected' : ''}>👤 ${escapeHTML(pName)}</option>`;
+          }
+        });
+        selectOptions += `</optgroup>`;
+
+        const rawPlayer = currentRawPlayers.find(pl => (getFirstDefined(pl, ['Jogador', 'Player', 'Name', 'Nome']) || '') === rawName);
+        const catVal = rawPlayer ? (getFirstDefined(rawPlayer, ['Categoria', 'Category', 'Cat']) || 'MASTER') : 'MASTER';
+        const idVal = rawPlayer ? (getPlayerId(rawPlayer) || '-') : '-';
+        
+        let catLabel = "Mestre";
+        if (catVal.toUpperCase().includes('SENIOR')) catLabel = "Sênior";
+        else if (catVal.toUpperCase().includes('JUNIOR')) catLabel = "Junior";
+
+        return `
+          <tr>
+            <td style="padding: 0.5rem; font-weight: bold; color: #fff;">${escapeHTML(rawName)}</td>
+            <td style="padding: 0.5rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">${escapeHTML(catLabel)}</td>
+            <td style="padding: 0.5rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">${escapeHTML(idVal)}</td>
+            <td style="padding: 0.5rem;">
+              <select class="search-input" style="width: 100%; padding: 0.4rem; font-size: 0.85rem; background: rgba(0,0,0,0.6);" onchange="handleResolutionChange('${escapeHTML(rawName)}', this.value)">
+                ${selectOptions}
+              </select>
+            </td>
+            <td style="padding: 0.5rem; text-align: center; white-space: nowrap;">
+              <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3); margin-right: 0.25rem;" onclick="copySingleRow('${escapeHTML(idVal)}', '${escapeHTML(rawName)}', '${escapeHTML(catVal)}', this)">
+                📋 Copiar
+              </button>
+              <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: #2563eb; color: #fff; border-color: #2563eb;" onclick="registerPlayerDirectly('${escapeHTML(idVal)}', '${escapeHTML(rawName)}', '${escapeHTML(catVal)}', this)">
+                ⚡ Cadastrar
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      
+      section.style.display = 'block';
+    }
+
+    function renderEnrichedPreview() {
+      const nameFields = ['Jogador', 'Player', 'Name', 'Nome', 'Treinador', 'Player Name', 'Nome do Jogador'];
+      const pointsFields = ['Pontos', 'Points', 'Pts', 'Pontuacao', 'Pontuação', 'Ptos', 'Score', 'Pontos Totais'];
+      const posFields = ['Pos', 'Position', 'Placement', 'Rank', 'Colocação', 'Colocacao', 'Classificação', 'Classificacao', 'Posição', 'Posicao', 'Placing'];
+      const catFields = ['Categoria', 'Category', 'Cat', 'Divisão', 'Divisao', 'Division'];
+      const podiumFields = ['Podio', 'Pódio', 'Podios', 'Pódios', 'Podium'];
+      const mediaFields = ['MediaColocacao', 'MédiaColocação', 'Media Colocacao', 'Média Colocação', 'Media', 'Média', 'Média de Colocação', 'Media de Colocacao'];
+
+      const eventDate = document.getElementById('event-date').value;
+      
+      // 1. Processa e mapeia os jogadores aplicando as resoluções
+      const mappedPlayers = currentRawPlayers.map(p => {
+        const rawName = getFirstDefined(p, nameFields) || '';
+        const playerPos = getFirstDefined(p, posFields) || '-';
+        const points = getFirstDefined(p, pointsFields) || 0;
+        const category = getFirstDefined(p, catFields) || 'MASTER';
+        const podium = getFirstDefined(p, podiumFields);
+        const media = getFirstDefined(p, mediaFields);
+        
+        const { v, e, d } = getVED(p);
+        
+        const resolvedPodium = podium !== undefined ? podium : (toNumber(playerPos, 999) <= 4 ? 1 : 0);
+        const resolvedMedia = media !== undefined ? media : playerPos;
+
+        // Aplica o nome oficial corrigido se houver mapeamento
+        let officialName = rawName;
+        const resolution = resolvedNamesMap[rawName];
+        if (resolution && resolution !== 'new_player') {
+          officialName = resolution;
+        }
+
+        // Puxa o ID do jogador (do arquivo original ou do banco do Sheets)
+        const tId = getPlayerId(p) || (cachedJogadores && cachedJogadores.find(dbPlayer => normalizePlayerName(dbPlayer.Jogador || dbPlayer.Name) === normalizePlayerName(officialName))?.ID) || '';
+
+        return {
+          Pos: playerPos,
+          ID: tId,
+          Jogador: officialName,
+          Categoria: category,
+          Pontos: points,
+          Vitorias: v,
+          Empates: e,
+          Derrotas: d,
+          Podio: resolvedPodium,
+          MediaColocacao: resolvedMedia
+        };
+      });
+
+      // 2. Renderiza a tabela de pré-visualização
+      const tbody = document.getElementById('preview-tbody');
+      tbody.innerHTML = mappedPlayers.map(p => {
+        return `
+          <tr>
+            <td class="row-rank">${p.Pos}</td>
+            <td style="font-weight: 600; color: #fff;">${escapeHTML(p.Jogador)}</td>
+            <td style="text-align:center;">${escapeHTML(p.Categoria)}</td>
+            <td style="text-align:center;" class="score-cell">${p.Pontos} PTS</td>
+            <td style="text-align:center;">
+              <span style="color: #10b981; font-weight:700;">${p.Vitorias}V</span> - 
+              <span style="color: #f59e0b; font-weight:700;">${p.Empates}E</span> - 
+              <span style="color: #ef4444; font-weight:700;">${p.Derrotas}D</span>
+            </td>
+            <td style="text-align:center;">${p.Podio}</td>
+            <td style="text-align:center;">${p.MediaColocacao !== '-' ? formatAveragePlacement(p.MediaColocacao) + 'º' : '-'}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // 3. Atualiza o activeContent como string TSV
+      activeContent = parsePlayersToTDFString(mappedPlayers);
+
+      // 4. Atualiza o bloco de Novos Jogadores para copiar
+      const newPlayersCard = document.getElementById('new-players-section');
+      const copyArea = document.getElementById('new-players-copy-area');
+      
+      if (newPlayersToRegister.length > 0) {
+        const firstDbPlayer = (cachedJogadores && cachedJogadores.length > 0) ? cachedJogadores[0] : null;
+        const dbHeaders = firstDbPlayer ? Object.keys(firstDbPlayer) : ['ID', 'Jogador', 'Categoria', 'PosicaoFinal'];
+
+        const sheetsLines = newPlayersToRegister.map(name => {
+          const matchingPlayer = currentRawPlayers.find(p => (getFirstDefined(p, nameFields) || '') === name);
+          const category = matchingPlayer ? (getFirstDefined(matchingPlayer, catFields) || 'MASTER') : 'MASTER';
+          const tId = matchingPlayer ? getPlayerId(matchingPlayer) : '';
+          
+          let catLabel = "Mestre";
+          if (category.toUpperCase().includes('SENIOR')) catLabel = "Sênior";
+          else if (category.toUpperCase().includes('JUNIOR')) catLabel = "Junior";
+          
+          return dbHeaders.map(header => {
+            const hNorm = header.toLowerCase().trim();
+            if (hNorm === 'jogador' || hNorm === 'player' || hNorm === 'nome') {
+              return name;
+            }
+            if (hNorm === 'categoria' || hNorm === 'category' || hNorm === 'cat') {
+              return catLabel;
+            }
+            if (hNorm === 'id' || hNorm === 'popid' || hNorm === 'playid' || hNorm === 'userid') {
+              return tId || '';
+            }
+            return '';
+          }).join('\t');
+        });
+        
+        copyArea.value = sheetsLines.join('\n');
+        newPlayersCard.style.display = 'block';
+      } else {
+        newPlayersCard.style.display = 'none';
+        copyArea.value = '';
+      }
+
+      // 5. Gerencia os botões de validação e publicação
+      const validateBtn = document.getElementById('btn-validate');
+      const publishBtn = document.getElementById('btn-publish');
+      const unresolvedCount = unresolvedPlayers.filter(name => !resolvedNamesMap[name]).length;
+      
+      if (isFileValidated && unresolvedCount === 0) {
+        if (validateBtn) validateBtn.style.display = 'none';
+        if (publishBtn) {
+          publishBtn.style.display = 'block';
+          publishBtn.disabled = false;
+          publishBtn.innerText = "🚀 Publicar Ranking no Site";
+          publishBtn.style.background = "var(--accent-yellow)";
+          publishBtn.style.borderColor = "var(--accent-yellow)";
+          publishBtn.style.color = "#000";
+        }
+      } else {
+        // Se mudou algo ou tem pendências, exige validação novamente
+        isFileValidated = false;
+        if (validateBtn) {
+          validateBtn.style.display = 'block';
+          if (unresolvedCount > 0) {
+            validateBtn.disabled = true;
+            validateBtn.innerText = `⏳ Resolva os nomes pendentes (${unresolvedCount})`;
+            validateBtn.style.background = "#4b5563";
+            validateBtn.style.borderColor = "#4b5563";
+            validateBtn.style.color = "#9ca3af";
+          } else {
+            validateBtn.disabled = false;
+            validateBtn.innerText = "🔍 Validar Dados do Arquivo";
+            validateBtn.style.background = "#2563eb";
+            validateBtn.style.borderColor = "#2563eb";
+            validateBtn.style.color = "#fff";
+          }
+        }
+        if (publishBtn) publishBtn.style.display = 'none';
+        
+        // Mantém o badge como não validado
+        const checkBadge = document.getElementById('check-badge');
+        if (checkBadge) {
+          checkBadge.innerText = "Não Validado ❌";
+          checkBadge.style.background = "rgba(239, 68, 68, 0.15)";
+          checkBadge.style.color = "#ef4444";
+          checkBadge.style.borderColor = "rgba(239, 68, 68, 0.3)";
+        }
+      }
+    }
+
+    function formatAveragePlacement(value) {
+      const number = toNumber(value);
+      return Number.isInteger(number) ? String(number) : number.toFixed(1).replace('.', ',');
+    }
+
+    function encodeBase64UTF8(str) {
+      const bytes = new TextEncoder().encode(str);
+      let binary = '';
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    }
+
+    function decodeBase64UTF8(base64) {
+      const binaryString = atob(base64.replace(/\s/g, ''));
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return new TextDecoder('utf-8').decode(bytes);
+    }
+
+    function rollbackStage(oldRankText, stageTdfText, oldMultiplier, stageIndex) {
+      const oldRankList = parseTDF(oldRankText);
+      const stageList = parseTDF(stageTdfText);
+      
+      const playersMap = new Map();
+      oldRankList.forEach(p => {
+        const playerName = getFirstDefined(p, ['Jogador', 'Player', 'Name']);
+        if (!playerName) return;
+        const nameKey = String(playerName).trim().toLowerCase();
+        
+        const { v, e, d } = getVED(p);
+        playersMap.set(nameKey, {
+          Jogador: playerName,
+          ID: getPlayerId(p) || '',
+          Categoria: getFirstDefined(p, ['Categoria', 'Category', 'Cat']) || 'MASTER',
+          Pontos: Number(getFirstDefined(p, ['Pontos', 'Points', 'Pts'])) || 0,
+          Vitorias: v,
+          Empates: e,
+          Derrotas: d,
+          Podio: 0,
+          MediaColocacao: 0,
+          Participacoes: 0,
+          HistoricoColocacoes: p.HistoricoColocacoes || ''
+        });
+      });
+      
+      stageList.forEach(sp => {
+        const matchingPlayer = findMatchingPlayer(playersMap, sp);
+        if (matchingPlayer) {
+          const stagePts = Number(getFirstDefined(sp, ['Pontos', 'Points', 'Pts'])) || 0;
+          const { v: stageV, e: stageE, d: stageD } = getVED(sp);
+          
+          matchingPlayer.Pontos -= (stagePts * oldMultiplier);
+          matchingPlayer.Vitorias -= stageV;
+          matchingPlayer.Empates -= stageE;
+          matchingPlayer.Derrotas -= stageD;
+
+          let historyArr = matchingPlayer.HistoricoColocacoes ? String(matchingPlayer.HistoricoColocacoes).split(';') : [];
+          if (historyArr.length > stageIndex) {
+            historyArr[stageIndex] = '-';
+          }
+          matchingPlayer.HistoricoColocacoes = historyArr.join(';');
+        }
+      });
+      
+      // Recalcula estatísticas (Participações, Pódios, Média) baseadas na string de histórico
+      playersMap.forEach(p => {
+        let historyArr = p.HistoricoColocacoes ? String(p.HistoricoColocacoes).split(';') : [];
+        let activePlacements = historyArr
+          .map(x => String(x).trim())
+          .filter(x => x !== '-' && x !== '' && !isNaN(Number(x)))
+          .map(Number);
+          
+        p.Participacoes = activePlacements.length;
+        p.Podio = activePlacements.filter(pos => pos <= 4).length;
+        
+        if (p.Participacoes > 0) {
+          p.MediaColocacao = activePlacements.reduce((sum, val) => sum + val, 0) / p.Participacoes;
+        } else {
+          p.MediaColocacao = 0;
+        }
+      });
+      
+      const activePlayers = Array.from(playersMap.values()).filter(p => p.Participacoes > 0);
+      
+      const headers = ['Pos', 'ID', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Participacoes', 'HistoricoColocacoes'];
+      let tdfString = headers.join('\t') + '\n';
+      
+      activePlayers.forEach((p, index) => {
+        const row = [
+          index + 1,
+          p.ID || '',
+          p.Jogador,
+          p.Categoria,
+          p.Pontos,
+          p.Vitorias,
+          p.Empates,
+          p.Derrotas,
+          p.Podio,
+          Number(p.MediaColocacao).toFixed(2),
+          p.Participacoes,
+          p.HistoricoColocacoes || ''
+        ];
+        tdfString += row.join('\t') + '\n';
+      });
+      
+      return tdfString;
+    }
+
+    function mergeRankings(oldTdfText, newTdfText, multiplier = 1.0, existingStageIdx = -1) {
+      const oldList = parseTDF(oldTdfText);
+      const newList = parseTDF(newTdfText);
+      
+      if (newList.length === 0) return oldTdfText;
+      
+      const playersMap = new Map();
+
+      oldList.forEach(p => {
+        const playerName = getFirstDefined(p, ['Jogador', 'Player', 'Name']);
+        if (!playerName) return;
+        const nameKey = String(playerName).trim().toLowerCase();
+        
+        const { v, e, d } = getVED(p);
+        
+        playersMap.set(nameKey, {
+          Jogador: playerName,
+          ID: getPlayerId(p) || '',
+          Categoria: getFirstDefined(p, ['Categoria', 'Category', 'Cat']) || 'MASTER',
+          Pontos: Number(getFirstDefined(p, ['Pontos', 'Points', 'Pts'])) || 0,
+          Vitorias: v,
+          Empates: e,
+          Derrotas: d,
+          Podio: 0,
+          MediaColocacao: 0,
+          Participacoes: 0,
+          HistoricoColocacoes: p.HistoricoColocacoes || ''
+        });
+      });
+
+      let currentStageCount = 0;
+      playersMap.forEach(p => {
+        if (p.HistoricoColocacoes) {
+          const len = String(p.HistoricoColocacoes).split(';').length;
+          if (len > currentStageCount) currentStageCount = len;
+        }
+      });
+      
+      const playersInNewStage = new Set();
+
+      newList.forEach(p => {
+        const playerName = getFirstDefined(p, ['Jogador', 'Player', 'Name']);
+        if (!playerName) return;
+        
+        const existing = findMatchingPlayer(playersMap, p);
+        
+        const newPos = toNumber(getFirstDefined(p, ['Pos', 'Position', 'Placement', 'Rank']), 999);
+        const { v: newV, e: newE, d: newD } = getVED(p);
+        const newPts = Number(getFirstDefined(p, ['Pontos', 'Points', 'Pts'])) || 0;
+        const multipliedNewPts = newPts * multiplier;
+        const newCat = getFirstDefined(p, ['Categoria', 'Category', 'Cat']);
+        const newId = getPlayerId(p) || '';
+        
+        if (existing) {
+          const existingNameKey = String(existing.Jogador).trim().toLowerCase();
+          playersInNewStage.add(existingNameKey);
+          
+          existing.Pontos += multipliedNewPts;
+          existing.Vitorias += newV;
+          existing.Empates += newE;
+          existing.Derrotas += newD;
+          if (newCat) existing.Categoria = newCat;
+          if (newId) existing.ID = newId;
+
+          let historyArr = existing.HistoricoColocacoes ? String(existing.HistoricoColocacoes).split(';') : [];
+          if (existingStageIdx >= 0) {
+            while (historyArr.length <= existingStageIdx) {
+              historyArr.push('-');
+            }
+            historyArr[existingStageIdx] = newPos;
+          } else {
+            while (historyArr.length < currentStageCount) {
+              historyArr.push('-');
+            }
+            historyArr.push(newPos);
+          }
+          existing.HistoricoColocacoes = historyArr.join(';');
+        } else {
+          const newNameKey = String(playerName).trim().toLowerCase();
+          playersInNewStage.add(newNameKey);
+
+          let historyArr = [];
+          if (existingStageIdx >= 0) {
+            historyArr = Array(existingStageIdx).fill('-');
+            historyArr[existingStageIdx] = newPos;
+            while (historyArr.length < currentStageCount) {
+              historyArr.push('-');
+            }
+          } else {
+            historyArr = Array(currentStageCount).fill('-');
+            historyArr.push(newPos);
+          }
+          
+          playersMap.set(newNameKey, {
+            ID: newId,
+            Jogador: playerName,
+            Categoria: newCat || 'MASTER',
+            Pontos: multipliedNewPts,
+            Vitorias: newV,
+            Empates: newE,
+            Derrotas: newD,
+            Podio: 0,
+            MediaColocacao: 0,
+            Participacoes: 0,
+            HistoricoColocacoes: historyArr.join(';')
+          });
+        }
+      });
+
+      playersMap.forEach((p, nameKey) => {
+        if (!playersInNewStage.has(nameKey)) {
+          let historyArr = p.HistoricoColocacoes ? String(p.HistoricoColocacoes).split(';') : [];
+          if (existingStageIdx >= 0) {
+            while (historyArr.length <= existingStageIdx) {
+              historyArr.push('-');
+            }
+            historyArr[existingStageIdx] = '-';
+          } else {
+            while (historyArr.length < currentStageCount) {
+              historyArr.push('-');
+            }
+            historyArr.push('-');
+          }
+          p.HistoricoColocacoes = historyArr.join(';');
+        }
+      });
+      
+      // Recalcula estatísticas (Participações, Pódios, Média) baseadas na string de histórico
+      playersMap.forEach(p => {
+        let historyArr = p.HistoricoColocacoes ? String(p.HistoricoColocacoes).split(';') : [];
+        let activePlacements = historyArr
+          .map(x => String(x).trim())
+          .filter(x => x !== '-' && x !== '' && !isNaN(Number(x)))
+          .map(Number);
+          
+        p.Participacoes = activePlacements.length;
+        p.Podio = activePlacements.filter(pos => pos <= 4).length;
+        
+        if (p.Participacoes > 0) {
+          p.MediaColocacao = activePlacements.reduce((sum, val) => sum + val, 0) / p.Participacoes;
+        } else {
+          p.MediaColocacao = 0;
+        }
+      });
+      
+      const mergedList = Array.from(playersMap.values());
+
+      mergedList.sort((a, b) => {
+        if (b.Pontos !== a.Pontos) return b.Pontos - a.Pontos;
+        if (b.Podio !== a.Podio) return b.Podio - a.Podio;
+        if (a.MediaColocacao !== b.MediaColocacao) return a.MediaColocacao - b.MediaColocacao;
+        return String(a.Jogador).localeCompare(String(b.Jogador), 'pt-BR');
+      });
+      
+      const headers = ['Pos', 'ID', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Participacoes', 'HistoricoColocacoes'];
+      let tdfString = headers.join('\t') + '\n';
+      
+      mergedList.forEach((p, index) => {
+        const row = [
+          index + 1,
+          p.ID || '',
+          p.Jogador,
+          p.Categoria,
+          p.Pontos,
+          p.Vitorias,
+          p.Empates,
+          p.Derrotas,
+          p.Podio,
+          Number(p.MediaColocacao).toFixed(2),
+          p.Participacoes,
+          p.HistoricoColocacoes || ''
+        ];
+        tdfString += row.join('\t') + '\n';
+      });
+      
+      return tdfString;
+    }
+
+    async function getLatestSha(fileUrl) {
+      try {
+        const res = await fetch(`${fileUrl}?ref=${GITHUB_CONFIG.branch}&t=${new Date().getTime()}`, {
+          headers: { 'Authorization': `token ${runtimeToken}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return data.sha;
+        }
+      } catch (e) {
+        console.error("Erro ao buscar SHA atualizado:", e);
+      }
+      return null;
+    }
+
+    async function publishRanking() {
+      const config = GITHUB_CONFIG;
+      if (!runtimeToken) {
+        showError("Token do GitHub não configurado no código. Fale com o administrador.");
+        return;
+      }
+
+      if (!isFileValidated) {
+        showError("O arquivo precisa ser validado clicando em 'Validar Dados do Arquivo' antes de publicar!");
+        return;
+      }
+      
+      const newText = activeContent;
+      if (!newText) {
+        showError("Nenhum arquivo processado para publicar!");
+        return;
+      }
+      
+      const eventDate = document.getElementById('event-date').value;
+      const eventType = document.getElementById('event-type').value;
+      const eventMult = parseFloat(document.getElementById('event-multiplier').value) || 1.0;
+      const savedEventType = eventType === 'Personalizado' ? (document.getElementById('event-custom-title').value.trim() || 'Personalizado') : eventType;
+      
+      if (!eventDate) {
+        showError("Selecione a data do evento!");
+        return;
+      }
+      
+      const btn = document.getElementById('btn-publish');
+      btn.disabled = true;
+      btn.innerText = "⏳ Processando e Publicando...";
+      hideAlerts();
+      
+      const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
+      const shouldAccumulate = document.getElementById('accumulate-checkbox').checked;
+      
+      try {
+        let sha = null;
+        let oldTdfText = "";
+
+        // Busca o ranking consolidado atual no GitHub (com cache buster)
+        try {
+          const res = await fetch(url + `?ref=${config.branch}&t=${new Date().getTime()}`, {
+            headers: { 'Authorization': `token ${runtimeToken}` }
+          });
+          if (res.ok) {
+            const fileData = await res.json();
+            sha = fileData.sha;
+            if (shouldAccumulate && fileData.content) {
+              oldTdfText = decodeBase64UTF8(fileData.content);
+            }
+          }
+        } catch (e) {
+          console.log("Arquivo anterior não encontrado no repositório. Criando ranking inicial.");
+        }
+
+        // Busca o etapas.json no GitHub (com cache buster)
+        let stagesList = [];
+        let etapasSha = null;
+        const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas.json`;
+        try {
+          const res = await fetch(etapasUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
+            headers: { 'Authorization': `token ${runtimeToken}` }
+          });
+          if (res.ok) {
+            const fileData = await res.json();
+            etapasSha = fileData.sha;
+            if (fileData.content) {
+              stagesList = JSON.parse(decodeBase64UTF8(fileData.content));
+            }
+          }
+        } catch (e) {
+          console.log("etapas.json não encontrado no repositório. Será criado um novo.");
+        }
+
+        const existingStageIdx = stagesList.findIndex(s => s.data === eventDate);
+        let oldStageMultiplier = 1.0;
+        if (existingStageIdx >= 0) {
+          oldStageMultiplier = stagesList[existingStageIdx].multiplicador || 1.0;
+        }
+
+        // Se for acumulativo, desfaz a etapa anterior se ela já existia na mesma data (rollback)
+        let baseTdfText = oldTdfText;
+        if (shouldAccumulate && oldTdfText && existingStageIdx >= 0) {
+          const oldStageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas/${eventDate}.tdf`;
+          try {
+            const res = await fetch(oldStageTdfUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
+              headers: { 'Authorization': `token ${runtimeToken}` }
+            });
+            if (res.ok) {
+              const oldStageData = await res.json();
+              if (oldStageData.content) {
+                const oldStageTdfText = decodeBase64UTF8(oldStageData.content);
+                baseTdfText = rollbackStage(oldTdfText, oldStageTdfText, oldStageMultiplier, existingStageIdx);
+              }
+            }
+          } catch (err) {
+            console.warn("Falha ao carregar etapa antiga para rollback. O merge continuará sem rollback.", err);
+          }
+        }
+
+        let finalContent = "";
+        if (shouldAccumulate && baseTdfText) {
+          try {
+            finalContent = mergeRankings(baseTdfText, activeContent, eventMult, existingStageIdx);
+          } catch (mergeErr) {
+            console.warn("Erro ao fazer merge. Publicando arquivo consolidado inicial.", mergeErr);
+            finalContent = mergeRankings("", activeContent, eventMult, -1);
+          }
+        } else {
+          finalContent = mergeRankings("", activeContent, eventMult, -1);
+        }
+
+        const stageTdfContent = mergeRankings("", activeContent, 1.0, -1);
+        const stageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas/${eventDate}.tdf`;
+
+        // 1. Commit da etapa individual (Busca o SHA mais recente em tempo real)
+        let stageSha = await getLatestSha(stageTdfUrl);
+        const commitStagePayload = {
+          message: `Salvar etapa individual ${eventDate} (${savedEventType})`,
+          content: encodeBase64UTF8(stageTdfContent),
+          branch: config.branch
+        };
+        if (stageSha) commitStagePayload.sha = stageSha;
+        
+        const stageRes = await fetch(stageTdfUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitStagePayload)
+        });
+        
+        if (!stageRes.ok) {
+          const data = await stageRes.json();
+          throw new Error("Falha ao salvar arquivo de etapa individual: " + (data.message || stageRes.statusText));
+        }
+
+        // Atualiza a lista de etapas
+        if (existingStageIdx >= 0) {
+          stagesList[existingStageIdx] = { data: eventDate, tipo: savedEventType, multiplicador: eventMult };
+        } else {
+          stagesList.push({ data: eventDate, tipo: savedEventType, multiplicador: eventMult });
+        }
+        stagesList.sort((a, b) => a.data.localeCompare(b.data));
+
+        // 2. Commit do etapas.json (Busca o SHA mais recente em tempo real)
+        let currentEtapasSha = await getLatestSha(etapasUrl);
+        const commitEtapasPayload = {
+          message: `Atualizar índice de etapas (etapas.json)`,
+          content: encodeBase64UTF8(JSON.stringify(stagesList, null, 2)),
+          branch: config.branch
+        };
+        if (currentEtapasSha) commitEtapasPayload.sha = currentEtapasSha;
+        
+        const etapasRes = await fetch(etapasUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitEtapasPayload)
+        });
+        
+        if (!etapasRes.ok) {
+          const data = await etapasRes.json();
+          throw new Error("Falha ao salvar índice de etapas (etapas.json): " + (data.message || etapasRes.statusText));
+        }
+
+        // 3. Commit do ranking geral (Busca o SHA mais recente em tempo real)
+        let currentRankingSha = await getLatestSha(url);
+        const commitRankingPayload = {
+          message: `Atualização de ranking geral - ${shouldAccumulate ? 'Acumulado' : 'Substituído'} (${new Date().toLocaleString('pt-BR')})`,
+          content: encodeBase64UTF8(finalContent),
+          branch: config.branch
+        };
+        if (currentRankingSha) commitRankingPayload.sha = currentRankingSha;
+        
+        const rankingRes = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitRankingPayload)
+        });
+        
+        if (!rankingRes.ok) {
+          const data = await rankingRes.json();
+          throw new Error("Falha ao salvar ranking geral: " + (data.message || rankingRes.statusText));
+        }
+        
+        const successMsg = shouldAccumulate
+          ? "🚀 Ranking acumulado e publicado com sucesso! A etapa foi salva e o ranking consolidado foi atualizado no GitHub."
+          : "🚀 Ranking publicado com sucesso! O arquivo anterior foi substituído por esta etapa.";
+          
+        showSuccess(successMsg);
+        window.scrollTo(0, 0);
+        
+        loadAndRenderStages();
+        
+      } catch (err) {
+        showError("Erro ao publicar: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "🚀 Publicar Ranking no Site";
+      }
+    }
+
+    function showSuccess(msg) {
+      const box = document.getElementById('general-success');
+      box.innerText = msg;
+      box.style.display = 'block';
+      document.getElementById('general-error').style.display = 'none';
+    }
+    
+    function showError(msg) {
+      const box = document.getElementById('general-error');
+      box.innerText = msg;
+      box.style.display = 'block';
+      document.getElementById('general-success').style.display = 'none';
+    }
+    
+    function hideAlerts() {
+      document.getElementById('general-success').style.display = 'none';
+      document.getElementById('general-error').style.display = 'none';
+    }
+    
+    function escapeHTML(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // --- Helpers de Formatação e Exibição de Etapas ---
+    function formatDateDDMMYY(dateStr) {
+      if (!dateStr || dateStr.length !== 6) return dateStr;
+      const dd = dateStr.substring(0, 2);
+      const mm = dateStr.substring(2, 4);
+      const yy = dateStr.substring(4, 6);
+      return `${dd}/${mm}/20${yy}`;
+    }
+
+    function formatSessionName(sessionRaw) {
+      if (!sessionRaw) return '';
+      
+      const cupMatch = sessionRaw.match(/^CUP(\d+)T(\d+)\s+(\d{6})$/i);
+      if (cupMatch) {
+        const cupNum = cupMatch[1];
+        const tempNum = cupMatch[2];
+        const dateStr = cupMatch[3];
+        const formattedDate = formatDateDDMMYY(dateStr);
+        return `League Cup ${cupNum} - Temporada ${tempNum} (${formattedDate})`;
+      }
+
+      const chMatch = sessionRaw.match(/^CH(\d+)T(\d+)\s+(\d{6})$/i);
+      if (chMatch) {
+        const chNum = chMatch[1];
+        const tempNum = chMatch[2];
+        const dateStr = chMatch[3];
+        const formattedDate = formatDateDDMMYY(dateStr);
+        return `League Challenge ${chNum} - Temporada ${tempNum} (${formattedDate})`;
+      }
+
+      const sMatch = sessionRaw.match(/^S(\d+)T(\d+)\s+(\d{6})$/i);
+      if (sMatch) {
+        const sNum = sMatch[1];
+        const tempNum = sMatch[2];
+        const dateStr = sMatch[3];
+        const formattedDate = formatDateDDMMYY(dateStr);
+        return `Sessão de Liga ${sNum} - Temporada ${tempNum} (${formattedDate})`;
+      }
+
+      return sessionRaw;
+    }
+
+    function formatDateISOToPT(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return dateStr;
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function getDisplayEventType(type, dateStr) {
+      if (cachedMetagame && cachedMetagame.length > 0) {
+        const headers = Object.keys(cachedMetagame[0] || {});
+        const dateColumn = findDateColumn(headers, dateStr);
+        if (dateColumn) {
+          const formatted = formatSessionName(dateColumn);
+          if (formatted) return formatted;
+        }
+      }
+      const formattedDate = formatDateISOToPT(dateStr);
+      if (type === 'Liga') return `Sessão de Liga (${formattedDate})`;
+      if (type === 'Challenge') return `League Challenge (${formattedDate})`;
+      if (type === 'Cup') return `League Cup (${formattedDate})`;
+      return `${type} (${formattedDate})`;
+    }
+
+    // --- Carregamento e Renderização de Etapas ---
+    async function loadAndRenderStages() {
+      const config = GITHUB_CONFIG;
+      const loading = document.getElementById('stages-loading-indicator');
+      const wrapper = document.getElementById('stages-table-wrapper');
+      const tbody = document.getElementById('stages-tbody');
+      
+      if (!loading || !wrapper || !tbody) return;
+      
+      loading.style.display = 'block';
+      wrapper.style.display = 'none';
+      tbody.innerHTML = '';
+      
+      const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas.json`;
+      
+      try {
+        const res = await fetch(etapasUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
+          headers: { 'Authorization': `token ${runtimeToken}` }
+        });
+        
+        let stagesList = [];
+        if (res.ok) {
+          const fileData = await res.json();
+          if (fileData.content) {
+            stagesList = JSON.parse(decodeBase64UTF8(fileData.content));
+          }
+        }
+        
+        if (stagesList.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 1.5rem; color: var(--text-secondary);">Nenhuma etapa cadastrada.</td></tr>`;
+        } else {
+          // Ordena pela data decrescente (mais recentes primeiro)
+          const sortedStages = [...stagesList].sort((a, b) => b.data.localeCompare(a.data));
+          
+          tbody.innerHTML = sortedStages.map(s => {
+            const formattedDate = formatDateISOToPT(s.data);
+            const displayType = getDisplayEventType(s.tipo, s.data);
+            return `
+              <tr>
+                <td style="font-weight: 600; color: #fff; padding: 0.75rem 0.5rem;">${formattedDate}</td>
+                <td style="padding: 0.75rem 0.5rem;">${escapeHTML(displayType)}</td>
+                <td style="text-align: center; padding: 0.75rem 0.5rem;">${s.multiplicador.toFixed(1)}x</td>
+                <td style="text-align: center; padding: 0.75rem 0.5rem;">
+                  <button class="btn btn-danger" onclick="deleteStage('${s.data}')" style="padding: 0.3rem 0.7rem; font-size: 0.75rem; font-weight: 600;">
+                    Excluir
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+        
+        loading.style.display = 'none';
+        wrapper.style.display = 'block';
+      } catch (err) {
+        console.error("Erro ao carregar etapas:", err);
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 1.5rem; color: #ef4444;">Erro ao carregar etapas: ${escapeHTML(err.message)}</td></tr>`;
+        loading.style.display = 'none';
+        wrapper.style.display = 'block';
+      }
+    }
+
+    // --- Lógica de Recálculo após exclusão ---
+    function removeStageFromRanking(oldRankText, stageTdfText, stageMultiplier, stageIndex, newStagesList) {
+      const oldRankList = parseTDF(oldRankText);
+      const stageList = parseTDF(stageTdfText);
+      
+      const playersMap = new Map();
+      oldRankList.forEach(p => {
+        const playerName = getFirstDefined(p, ['Jogador', 'Player', 'Name']);
+        if (!playerName) return;
+        const nameKey = String(playerName).trim().toLowerCase();
+        
+        const { v, e, d } = getVED(p);
+        playersMap.set(nameKey, {
+          Jogador: playerName,
+          ID: getPlayerId(p) || '',
+          Categoria: getFirstDefined(p, ['Categoria', 'Category', 'Cat']) || 'MASTER',
+          Pontos: Number(getFirstDefined(p, ['Pontos', 'Points', 'Pts'])) || 0,
+          Vitorias: v,
+          Empates: e,
+          Derrotas: d,
+          Podio: 0,
+          MediaColocacao: 0,
+          Participacoes: 0,
+          HistoricoColocacoes: p.HistoricoColocacoes || ''
+        });
+      });
+      
+      stageList.forEach(sp => {
+        const matchingPlayer = findMatchingPlayer(playersMap, sp);
+        if (matchingPlayer) {
+          const stagePts = Number(getFirstDefined(sp, ['Pontos', 'Points', 'Pts'])) || 0;
+          const { v: stageV, e: stageE, d: stageD } = getVED(sp);
+          
+          matchingPlayer.Pontos -= (stagePts * stageMultiplier);
+          matchingPlayer.Vitorias -= stageV;
+          matchingPlayer.Empates -= stageE;
+          matchingPlayer.Derrotas -= stageD;
+        }
+      });
+      
+      // Ajusta o histórico e estatísticas para todos os jogadores
+      playersMap.forEach(p => {
+        let historyArr = p.HistoricoColocacoes ? String(p.HistoricoColocacoes).split(';') : [];
+        if (stageIndex >= 0 && stageIndex < historyArr.length) {
+          historyArr.splice(stageIndex, 1);
+        }
+        p.HistoricoColocacoes = historyArr.join(';');
+        
+        let activePlacements = historyArr
+          .map(x => String(x).trim())
+          .filter(x => x !== '-' && x !== '' && !isNaN(Number(x)))
+          .map(Number);
+          
+        p.Participacoes = activePlacements.length;
+        p.Podio = activePlacements.filter(pos => pos <= 4).length;
+        
+        if (p.Participacoes > 0) {
+          p.MediaColocacao = activePlacements.reduce((sum, val) => sum + val, 0) / p.Participacoes;
+        } else {
+          p.MediaColocacao = 0;
+        }
+      });
+      
+      // Filtra jogadores que ainda possuem participações
+      const activePlayers = Array.from(playersMap.values()).filter(p => p.Participacoes > 0);
+      
+      // Ordena o ranking
+      activePlayers.sort((a, b) => {
+        if (b.Pontos !== a.Pontos) return b.Pontos - a.Pontos;
+        if (b.Podio !== a.Podio) return b.Podio - a.Podio;
+        if (a.MediaColocacao !== b.MediaColocacao) return a.MediaColocacao - b.MediaColocacao;
+        return String(a.Jogador).localeCompare(String(b.Jogador), 'pt-BR');
+      });
+      
+      const headers = ['Pos', 'ID', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Participacoes', 'HistoricoColocacoes'];
+      let tdfString = headers.join('\t') + '\n';
+      
+      activePlayers.forEach((p, index) => {
+        const row = [
+          index + 1,
+          p.ID || '',
+          p.Jogador,
+          p.Categoria,
+          p.Pontos,
+          p.Vitorias,
+          p.Empates,
+          p.Derrotas,
+          p.Podio,
+          Number(p.MediaColocacao).toFixed(2),
+          p.Participacoes,
+          p.HistoricoColocacoes || ''
+        ];
+        tdfString += row.join('\t') + '\n';
+      });
+      
+      return tdfString;
+    }
+
+    // --- Fluxo de Exclusão de Etapa no GitHub ---
+    async function deleteStage(eventDate) {
+      if (!runtimeToken) {
+        showError("Token do GitHub não configurado. Faça login novamente.");
+        return;
+      }
+      
+      if (!confirm(`Tem certeza que deseja excluir a etapa de ${formatDateISOToPT(eventDate)}? O ranking geral será recalculado permanentemente.`)) {
+        return;
+      }
+      
+      const config = GITHUB_CONFIG;
+      const stagesTbody = document.getElementById('stages-tbody');
+      
+      // Desabilita os botões de exclusão na tabela durante o processo
+      const deleteButtons = stagesTbody.querySelectorAll('button');
+      deleteButtons.forEach(btn => btn.disabled = true);
+      
+      showSuccess(`⏳ Excluindo etapa de ${formatDateISOToPT(eventDate)} e recalculando o ranking...`);
+      window.scrollTo(0, 0);
+      
+      const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas.json`;
+      const rankingUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
+      const stageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas/${eventDate}.tdf`;
+      
+      try {
+        // 1. Busca etapas.json mais recente
+        const etapasRes = await fetch(etapasUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
+          headers: { 'Authorization': `token ${runtimeToken}` }
+        });
+        if (!etapasRes.ok) throw new Error("Não foi possível buscar a lista de etapas (etapas.json).");
+        const etapasData = await etapasRes.json();
+        const stagesList = JSON.parse(decodeBase64UTF8(etapasData.content));
+        const etapasSha = etapasData.sha;
+        
+        // Encontra o index da etapa no histórico
+        const stageIndex = stagesList.findIndex(s => s.data === eventDate);
+        if (stageIndex < 0) throw new Error("A etapa selecionada não foi encontrada no índice etapas.json.");
+        const stageObj = stagesList[stageIndex];
+        const stageMultiplier = stageObj.multiplicador || 1.0;
+        
+        // 2. Busca ranking.tdf consolidado atual
+        const rankingRes = await fetch(rankingUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
+          headers: { 'Authorization': `token ${runtimeToken}` }
+        });
+        if (!rankingRes.ok) throw new Error("Não foi possível buscar o ranking consolidado.");
+        const rankingData = await rankingRes.json();
+        const oldRankText = decodeBase64UTF8(rankingData.content);
+        const rankingSha = rankingData.sha;
+        
+        // 3. Busca o .tdf da etapa individual
+        let stageTdfText = "";
+        let stageTdfSha = null;
+        const stageTdfRes = await fetch(stageTdfUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
+          headers: { 'Authorization': `token ${runtimeToken}` }
+        });
+        if (stageTdfRes.ok) {
+          const stageTdfData = await stageTdfRes.json();
+          stageTdfText = decodeBase64UTF8(stageTdfData.content);
+          stageTdfSha = stageTdfData.sha;
+        } else if (stageTdfRes.status === 404) {
+          const msg = `⚠️ Atenção: O arquivo .tdf desta etapa não foi encontrado no repositório (Etapa Fantasma).\n\nA exclusão removerá o registro desta data e limpará o histórico/participações dos jogadores, mas NÃO conseguirá subtrair automaticamente os pontos e vitórias acumulados no ranking geral.\n\nRecomendamos realizar o recálculo geral do ranking após esta exclusão.\n\nDeseja continuar com a exclusão mesmo assim?`;
+          if (!confirm(msg)) {
+            // Re-habilita os botões e esconde a mensagem de progresso
+            deleteButtons.forEach(btn => btn.disabled = false);
+            hideAlerts();
+            return;
+          }
+        } else {
+          throw new Error("Não foi possível carregar o arquivo .tdf da etapa individual: " + stageTdfRes.statusText);
+        }
+        
+        // Remove a etapa da lista
+        stagesList.splice(stageIndex, 1);
+
+        // 4. Executa a lógica de recálculo (rollback)
+        const newRankText = removeStageFromRanking(oldRankText, stageTdfText, stageMultiplier, stageIndex, stagesList);
+        
+        // 5. Deleta o arquivo da etapa individual no GitHub (apenas se ele existir)
+        if (stageTdfSha) {
+          const deletePayload = {
+            message: `Remover arquivo da etapa ${eventDate}`,
+            sha: stageTdfSha,
+            branch: config.branch
+          };
+          const delRes = await fetch(stageTdfUrl, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `token ${runtimeToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(deletePayload)
+          });
+          if (!delRes.ok) {
+            const errData = await delRes.json();
+            throw new Error("Falha ao excluir arquivo da etapa no GitHub: " + (errData.message || delRes.statusText));
+          }
+        }
+        
+        // 6. Atualiza etapas.json no GitHub (SHA dinâmico)
+        let currentEtapasSha = await getLatestSha(etapasUrl);
+        const commitEtapasPayload = {
+          message: `Excluir etapa ${eventDate} do índice etapas.json`,
+          content: encodeBase64UTF8(JSON.stringify(stagesList, null, 2)),
+          branch: config.branch
+        };
+        if (currentEtapasSha) commitEtapasPayload.sha = currentEtapasSha;
+        const etRes = await fetch(etapasUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitEtapasPayload)
+        });
+        if (!etRes.ok) {
+          const errData = await etRes.json();
+          throw new Error("Falha ao atualizar o índice etapas.json: " + (errData.message || etRes.statusText));
+        }
+        
+        // 7. Atualiza ranking.tdf no GitHub (SHA dinâmico)
+        let currentRankingSha = await getLatestSha(rankingUrl);
+        const commitRankingPayload = {
+          message: `Recalcular ranking geral após exclusão da etapa ${eventDate}`,
+          content: encodeBase64UTF8(newRankText),
+          branch: config.branch
+        };
+        if (currentRankingSha) commitRankingPayload.sha = currentRankingSha;
+        const rkRes = await fetch(rankingUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitRankingPayload)
+        });
+        if (!rkRes.ok) {
+          const errData = await rkRes.json();
+          throw new Error("Falha ao atualizar o ranking geral consolidado: " + (errData.message || rkRes.statusText));
+        }
+        
+        showSuccess(`🚀 Etapa de ${formatDateISOToPT(eventDate)} excluída com sucesso e o ranking consolidado foi recalculado!`);
+        await loadAndRenderStages();
+      } catch (err) {
+        showError("Erro ao excluir etapa: " + err.message);
+        deleteButtons.forEach(btn => btn.disabled = false);
+      }
+    }
+
+    // --- Fluxo de Recálculo Geral do Ranking a partir de todas as Etapas ---
+    async function recalculateRankingFromStages() {
+      if (!runtimeToken) {
+        showError("Token do GitHub não configurado. Faça login novamente.");
+        return;
+      }
+      
+      const config = GITHUB_CONFIG;
+      const stagesTbody = document.getElementById('stages-tbody');
+      const recalculateBtn = document.getElementById('btn-recalculate-all');
+      
+      if (!confirm("Deseja recalcular TODO o ranking consolidado a partir do zero usando todos os arquivos TDF das etapas listadas no etapas.json?\n\nIsso reconstruirá o ranking geral consolidado de forma consistente.")) {
+        return;
+      }
+      
+      // Desabilita botões e o próprio botão de recálculo
+      const deleteButtons = stagesTbody ? stagesTbody.querySelectorAll('button') : [];
+      deleteButtons.forEach(btn => btn.disabled = true);
+      if (recalculateBtn) recalculateBtn.disabled = true;
+      
+      showSuccess("⏳ Iniciando recálculo geral do ranking...");
+      window.scrollTo(0, 0);
+      
+      const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas.json`;
+      const rankingUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
+      
+      try {
+        // 1. Busca etapas.json
+        const etapasRes = await fetch(etapasUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
+          headers: { 'Authorization': `token ${runtimeToken}` }
+        });
+        if (!etapasRes.ok) throw new Error("Não foi possível carregar a lista de etapas (etapas.json).");
+        
+        const etapasData = await etapasRes.json();
+        const stagesList = JSON.parse(decodeBase64UTF8(etapasData.content));
+        
+        if (stagesList.length === 0) {
+          throw new Error("Não há nenhuma etapa cadastrada no etapas.json para recalcular.");
+        }
+        
+        showSuccess(`⏳ Carregando os dados das ${stagesList.length} etapas do GitHub...`);
+        
+        // 2. Busca todos os arquivos TDF das etapas em paralelo
+        const fetchPromises = stagesList.map(async (stage) => {
+          const stageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas/${stage.data}.tdf?ref=${config.branch}&t=${new Date().getTime()}`;
+          const res = await fetch(stageTdfUrl, {
+            headers: { 'Authorization': `token ${runtimeToken}` }
+          });
+          
+          if (!res.ok) {
+            if (res.status === 404) {
+              throw new Error(`O arquivo individual da etapa ${formatDateISOToPT(stage.data)} (.tdf) não existe no repositório. Por favor, exclua a etapa fantasma antes de recalcular o ranking geral.`);
+            } else {
+              throw new Error(`Erro ao carregar etapa ${formatDateISOToPT(stage.data)}: ${res.statusText}`);
+            }
+          }
+          
+          const fileData = await res.json();
+          const text = decodeBase64UTF8(fileData.content);
+          return { stage, text };
+        });
+        
+        const results = await Promise.all(fetchPromises);
+        
+        showSuccess(`⏳ Processando dados e reconstruindo o ranking geral consolidado...`);
+        
+        const calculatedPlayers = new Map();
+        
+        results.forEach((resObj, stageIndex) => {
+          const stageObj = resObj.stage;
+          const stagePlayers = parseTDF(resObj.text);
+          const mult = Number(stageObj.multiplicador) || 1.0;
+          
+          stagePlayers.forEach(sp => {
+            const name = getFirstDefined(sp, ['Jogador', 'Player', 'Name']);
+            if (!name) return;
+            const key = String(name).trim().toLowerCase();
+            
+            if (!calculatedPlayers.has(key)) {
+              calculatedPlayers.set(key, {
+                Jogador: String(name).trim(),
+                ID: getPlayerId(sp) || '',
+                Categoria: getFirstDefined(sp, ['Categoria', 'Category', 'Cat']) || 'MASTER',
+                Pontos: 0,
+                Vitorias: 0,
+                Empates: 0,
+                Derrotas: 0,
+                HistoryPlacements: Array(stagesList.length).fill('-')
+              });
+            }
+            
+            const cp = calculatedPlayers.get(key);
+            const { v, e, d } = getVED(sp);
+            const pts = Number(getFirstDefined(sp, ['Pontos', 'Points', 'Pts'])) || 0;
+            
+            cp.Pontos += (pts * mult);
+            cp.Vitorias += v;
+            cp.Empates += e;
+            cp.Derrotas += d;
+            cp.HistoryPlacements[stageIndex] = sp.HistoricoColocacoes || sp.Pos || '-';
+          });
+        });
+        
+        const finalCalculated = [];
+        calculatedPlayers.forEach(p => {
+          const historyStr = p.HistoryPlacements.join(';');
+          const placements = p.HistoryPlacements
+            .map(x => String(x).trim())
+            .filter(x => x !== '-' && x !== '' && !isNaN(Number(x)))
+            .map(Number);
+            
+          const participacoes = placements.length;
+          const podios = placements.filter(pos => pos <= 4).length;
+          const media = participacoes > 0 ? (placements.reduce((sum, val) => sum + val, 0) / participacoes) : 0;
+          
+          finalCalculated.push({
+            Jogador: p.Jogador,
+            ID: p.ID,
+            Categoria: p.Categoria,
+            Pontos: p.Pontos,
+            Vitorias: p.Vitorias,
+            Empates: p.Empates,
+            Derrotas: p.Derrotas,
+            Podio: podios,
+            MediaColocacao: media,
+            Participacoes: participacoes,
+            HistoricoColocacoes: historyStr
+          });
+        });
+        
+        // Ordena ranking calculado
+        finalCalculated.sort((a, b) => {
+          if (b.Pontos !== a.Pontos) return b.Pontos - a.Pontos;
+          if (b.Podio !== a.Podio) return b.Podio - a.Podio;
+          if (a.MediaColocacao !== b.MediaColocacao) return a.MediaColocacao - b.MediaColocacao;
+          return String(a.Jogador).localeCompare(String(b.Jogador), 'pt-BR');
+        });
+        
+        // Montar TDF consolidado
+        const headers = ['Pos', 'ID', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Participacoes', 'HistoricoColocacoes'];
+        let tdfString = headers.join('\t') + '\n';
+        
+        finalCalculated.forEach((p, index) => {
+          const row = [
+            index + 1,
+            p.ID || '',
+            p.Jogador,
+            p.Categoria,
+            p.Pontos,
+            p.Vitorias,
+            p.Empates,
+            p.Derrotas,
+            p.Podio,
+            Number(p.MediaColocacao).toFixed(2),
+            p.Participacoes,
+            p.HistoricoColocacoes || ''
+          ];
+          tdfString += row.join('\t') + '\n';
+        });
+        
+        showSuccess(`⏳ Fazendo commit do novo ranking geral recalculado no GitHub...`);
+        
+        // 3. Commit no GitHub
+        let currentRankingSha = await getLatestSha(rankingUrl);
+        const commitRankingPayload = {
+          message: `Recalculo geral completo do ranking consolidado a partir das etapas`,
+          content: encodeBase64UTF8(tdfString),
+          branch: config.branch
+        };
+        if (currentRankingSha) commitRankingPayload.sha = currentRankingSha;
+        
+        const rkRes = await fetch(rankingUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitRankingPayload)
+        });
+        
+        if (!rkRes.ok) {
+          const errData = await rkRes.json();
+          throw new Error("Falha ao salvar o ranking geral recalculado no GitHub: " + (errData.message || rkRes.statusText));
+        }
+        
+        showSuccess("🚀 Ranking geral do site recalculado com sucesso a partir de todas as etapas ativas!");
+        await loadAndRenderStages();
+      } catch (err) {
+        showError("Erro ao recalcular ranking: " + err.message);
+      } finally {
+        deleteButtons.forEach(btn => btn.disabled = false);
+        if (recalculateBtn) recalculateBtn.disabled = false;
+      }
+    }
+
+    function saveAppsScriptUrl() {
+      const url = document.getElementById('apps-script-url').value.trim();
+      localStorage.setItem('googleAppsScriptUrl', url);
+    }
+
+    async function copySingleRow(id, name, category, btn) {
+      const firstDbPlayer = (cachedJogadores && cachedJogadores.length > 0) ? cachedJogadores[0] : null;
+      const dbHeaders = firstDbPlayer ? Object.keys(firstDbPlayer) : ['ID', 'Jogador', 'Categoria', 'PosicaoFinal'];
+
+      let catLabel = "Mestre";
+      if (category.toUpperCase().includes('SENIOR')) catLabel = "Sênior";
+      else if (category.toUpperCase().includes('JUNIOR')) catLabel = "Junior";
+
+      const rowText = dbHeaders.map(header => {
+        const hNorm = header.toLowerCase().trim();
+        if (hNorm === 'jogador' || hNorm === 'player' || hNorm === 'nome') return name;
+        if (hNorm === 'categoria' || hNorm === 'category' || hNorm === 'cat') return catLabel;
+        if (hNorm === 'id' || hNorm === 'popid' || hNorm === 'playid' || hNorm === 'userid') return id;
+        return '';
+      }).join('\t');
+
+      let copied = false;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(rowText);
+          copied = true;
+        }
+      } catch (err) {
+        console.warn("Falha no clipboard:", err);
+      }
+
+      const originalText = btn.innerHTML;
+      if (copied) {
+        btn.innerHTML = "✓ Copiado!";
+        btn.style.background = "rgba(16, 185, 129, 0.3)";
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.background = "";
+        }, 1500);
+      } else {
+        alert(`Não foi possível copiar automaticamente. Use a cópia do bloco geral abaixo ou adicione manualmente:\n${rowText}`);
+      }
+    }
+
+    async function registerPlayerDirectly(id, name, category, btn) {
+      const url = localStorage.getItem('googleAppsScriptUrl') || document.getElementById('apps-script-url').value.trim();
+      if (!url) {
+        showError("Configure a URL do Apps Script nas Configurações (ícone de engrenagem) antes de usar o cadastro direto.");
+        document.getElementById('settings-modal').style.display = 'flex';
+        return;
+      }
+
+      btn.disabled = true;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "⏳ Cadastrando...";
+      btn.style.background = "#4b5563";
+
+      try {
+        const targetUrl = `${url}?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&category=${encodeURIComponent(category)}`;
+        await fetch(targetUrl, { mode: 'no-cors' });
+        
+        btn.innerHTML = "✓ Cadastrado!";
+        btn.style.background = "#10b981";
+        btn.style.borderColor = "#10b981";
+        btn.style.color = "#fff";
+        
+        resolvedNamesMap[name] = name;
+        unresolvedPlayers = unresolvedPlayers.filter(pName => pName !== name);
+        
+        setTimeout(() => {
+          renderNameResolutionUI();
+          renderEnrichedPreview();
+        }, 1200);
+
+      } catch (err) {
+        console.error("Erro ao cadastrar jogador:", err);
+        showError("Falha ao registrar jogador na planilha. Verifique a URL do Apps Script.");
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        btn.style.background = "";
+      }
+    }
+
+    // Inicializa os campos e sugestões do evento no carregamento da página
+    handleEventTypeChange();
+
+    // Carrega a URL do Apps Script salva
+    const savedScriptUrl = localStorage.getItem('googleAppsScriptUrl');
+    if (savedScriptUrl) {
+      const urlInput = document.getElementById('apps-script-url');
+      if (urlInput) urlInput.value = savedScriptUrl;
+    }
+  </script>
+</body>
+</html>
+
