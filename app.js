@@ -2062,7 +2062,8 @@ function closePlayerModal() {
    SIMULADOR DE TOP CUT / CLASSIFICAÇÃO (MOBILE-FIRST)
    ========================================================================== */
 let simCurrentMultiplier = 1.0;
-let simCurrentBasePoints = 15;
+let simCurrentVED = { v: 4, e: 0, d: 0 };
+let simCurrentBasePoints = 12;
 
 window.setSimMultiplier = function(mult) {
   simCurrentMultiplier = mult;
@@ -2076,8 +2077,19 @@ window.setSimMultiplier = function(mult) {
   runSimulation();
 };
 
+window.setSimVED = function(v, e, d, btnEl) {
+  simCurrentVED = { v: Number(v) || 0, e: Number(e) || 0, d: Number(d) || 0 };
+  simCurrentBasePoints = (simCurrentVED.v * 3) + (simCurrentVED.e * 1);
+  document.querySelectorAll('.sim-quick-grid .sim-quick-btn').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+  runSimulation();
+};
+
 window.setSimResult = function(basePts, btnEl) {
-  simCurrentBasePoints = basePts;
+  simCurrentBasePoints = Number(basePts) || 0;
+  const v = Math.floor(simCurrentBasePoints / 3);
+  const e = simCurrentBasePoints % 3;
+  simCurrentVED = { v, e, d: Math.max(0, 4 - v - e) };
   document.querySelectorAll('.sim-quick-grid .sim-quick-btn').forEach(b => b.classList.remove('active'));
   if (btnEl) btnEl.classList.add('active');
   runSimulation();
@@ -2099,7 +2111,19 @@ window.openSimulatorModal = function() {
   `).join('');
 
   simCurrentMultiplier = 1.0;
-  simCurrentBasePoints = 15;
+  simCurrentVED = { v: 4, e: 0, d: 0 };
+  simCurrentBasePoints = 12;
+
+  // Reset visual buttons
+  ['sim-mult-1', 'sim-mult-15', 'sim-mult-2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  document.getElementById('sim-mult-1')?.classList.add('active');
+
+  document.querySelectorAll('.sim-quick-grid .sim-quick-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sim-res-4-0')?.classList.add('active');
+
   runSimulation();
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -2119,12 +2143,18 @@ window.runSimulation = function() {
 
   const playerName = selectPlayer.value;
   const multiplier = simCurrentMultiplier;
-  const basePoints = simCurrentBasePoints;
-  const addedPoints = Math.round(basePoints * multiplier);
+  const { v: addV, e: addE, d: addD } = simCurrentVED;
+  const basePoints = (addV * 3) + (addE * 1);
+  const addedPoints = basePoints * multiplier;
 
   const ranking = (appData.Ranking || []).map(p => ({
     ...p,
     PontosNum: toNumber(p.Pontos),
+    VitoriasNum: toNumber(p.Vitorias),
+    EmpatesNum: toNumber(p.Empates),
+    DerrotasNum: toNumber(p.Derrotas),
+    PodiosNum: toNumber(p.Podio),
+    ParticipacoesNum: toNumber(p.Participacoes),
     PosNum: parseInt(p.Pos, 10) || 999
   }));
 
@@ -2133,18 +2163,33 @@ window.runSimulation = function() {
 
   const currentPoints = targetPlayer.PontosNum;
   const currentPos = targetPlayer.PosNum;
-  const projectedPoints = currentPoints + addedPoints;
+  const projectedPoints = Number((currentPoints + addedPoints).toFixed(1));
+  const newV = targetPlayer.VitoriasNum + addV;
+  const newE = targetPlayer.EmpatesNum + addE;
+  const newD = targetPlayer.DerrotasNum + addD;
+  const newTotalMatches = newV + newE + newD;
+  const newWinRate = newTotalMatches > 0 ? ((newV / newTotalMatches) * 100).toFixed(1) : '0.0';
 
-  // Simular novo ranking
+  // Simular novo ranking com ordenação oficial
   const simulatedList = ranking.map(p => {
     if (p.Jogador === playerName) {
-      return { ...p, PontosNum: projectedPoints };
+      return {
+        ...p,
+        PontosNum: projectedPoints,
+        VitoriasNum: newV,
+        EmpatesNum: newE,
+        DerrotasNum: newD,
+        ParticipacoesNum: targetPlayer.ParticipacoesNum + 1
+      };
     }
     return p;
   }).sort((a, b) => {
     if (b.PontosNum !== a.PontosNum) return b.PontosNum - a.PontosNum;
-    if ((b.Podio || 0) !== (a.Podio || 0)) return (b.Podio || 0) - (a.Podio || 0);
-    return (b.Vitorias || 0) - (a.Vitorias || 0);
+    if (b.PodiosNum !== a.PodiosNum) return b.PodiosNum - a.PodiosNum;
+    if (b.VitoriasNum !== a.VitoriasNum) return b.VitoriasNum - a.VitoriasNum;
+    const wrA = (a.VitoriasNum + a.EmpatesNum + a.DerrotasNum) > 0 ? (a.VitoriasNum / (a.VitoriasNum + a.EmpatesNum + a.DerrotasNum)) : 0;
+    const wrB = (b.VitoriasNum + b.EmpatesNum + b.DerrotasNum) > 0 ? (b.VitoriasNum / (b.VitoriasNum + b.EmpatesNum + b.DerrotasNum)) : 0;
+    return wrB - wrA;
   });
 
   const projectedPos = simulatedList.findIndex(p => p.Jogador === playerName) + 1;
@@ -2152,26 +2197,26 @@ window.runSimulation = function() {
 
   let posDiffHtml = '';
   if (posDiff > 0) {
-    posDiffHtml = `<span style="color:#10b981; font-weight:700;">▲ +${posDiff}</span>`;
+    posDiffHtml = `<span style="color:#10b981; font-weight:700;">▲ Subiu ${posDiff} pos.</span>`;
   } else if (posDiff === 0) {
-    posDiffHtml = `<span style="color:var(--text-secondary);">-</span>`;
+    posDiffHtml = `<span style="color:var(--text-secondary); font-weight:600;">= Manteve posição</span>`;
   } else {
-    posDiffHtml = `<span style="color:#ef4444;">▼ ${posDiff}</span>`;
+    posDiffHtml = `<span style="color:#ef4444; font-weight:700;">▼ Desceu ${Math.abs(posDiff)} pos.</span>`;
   }
 
   let statusBadge = '';
   if (projectedPos <= 4) {
-    statusBadge = `<span class="sim-status-badge sim-status-top4">🏆 Top 4 Garantido (Zona de Troféu)</span>`;
+    statusBadge = `<span class="sim-status-badge sim-status-top4">🏆 Top 4 Garantido (Playoffs / Troféu)</span>`;
   } else if (projectedPos <= 8) {
-    statusBadge = `<span class="sim-status-badge sim-status-top8">🎖️ Top 8 Garantido (Playoffs)</span>`;
+    statusBadge = `<span class="sim-status-badge sim-status-top8">🎖️ Top 8 Garantido (Repescagem Top Cut)</span>`;
   } else if (projectedPos <= 12) {
     statusBadge = `<span class="sim-status-badge sim-status-bubble">⚠️ Zona de Bolha (Top 12)</span>`;
   } else {
-    statusBadge = `<span class="sim-status-badge" style="background:rgba(255,255,255,0.06); color:var(--text-secondary); border:1px solid rgba(255,255,255,0.12);">⚔️ Em Disputa</span>`;
+    statusBadge = `<span class="sim-status-badge" style="background:rgba(255,255,255,0.06); color:var(--text-secondary); border:1px solid rgba(255,255,255,0.12);">⚔️ Em Disputa (${projectedPos}º Lugar)</span>`;
   }
 
   resultsCard.innerHTML = `
-    <div style="text-align:center; margin-bottom:6px;">
+    <div style="text-align:center; margin-bottom:8px;">
       ${statusBadge}
     </div>
     <div class="sim-metric-row">
@@ -2182,9 +2227,13 @@ window.runSimulation = function() {
       <span style="color:var(--text-secondary);">Posição:</span>
       <span>${currentPos}º Lugar <strong style="color:#fff;">➔ ${projectedPos}º</strong> (${posDiffHtml})</span>
     </div>
+    <div class="sim-metric-row">
+      <span style="color:var(--text-secondary);">Cartel Simulado:</span>
+      <span>${targetPlayer.VitoriasNum}V-${targetPlayer.EmpatesNum}E-${targetPlayer.DerrotasNum}D ➔ <strong>${newV}V-${newE}E-${newD}D</strong> (${newWinRate}% WR)</span>
+    </div>
   `;
 
-  // Calcular Meta Reversa
+  // Calcular Meta Reversa Inteligente (Top 4 / Top 8)
   if (targetCard) {
     const p4 = ranking[3]; // 4º colocado
     const p8 = ranking[7]; // 8º colocado
@@ -2192,16 +2241,27 @@ window.runSimulation = function() {
 
     if (currentPos <= 4) {
       const p1 = ranking[0];
-      const diff1 = (p1 ? p1.PontosNum : currentPoints) - currentPoints;
-      metaText = `Você já está no <strong>Top 4</strong>! Para alcançar a liderança (1º lugar), faltam <strong>${Math.max(0, diff1)} pontos</strong>.`;
+      const diff1 = p1 ? Math.max(0, p1.PontosNum - currentPoints) : 0;
+      if (currentPos === 1) {
+        metaText = `👑 <strong>Você é o Líder!</strong> Com este resultado você consolida <strong>${projectedPoints} PTS</strong> e se mantém no topo da tabela.`;
+      } else {
+        const ptsNeededFor1st = Number((diff1 + 0.1).toFixed(1));
+        metaText = `🏆 <strong>Você já está no Top 4!</strong> Para alcançar a liderança (1º lugar de ${escapeHTML(p1.Jogador)} com ${p1.PontosNum} pts), você precisa de <strong>+${ptsNeededFor1st} pts</strong>.`;
+      }
     } else if (p4) {
-      const diff4 = (p4.PontosNum - currentPoints) + 0.5;
-      const ptsReq = Math.ceil(diff4);
-      metaText = `🎯 <strong>Meta Top 4:</strong> Faltam <strong>+${ptsReq} pts</strong> para ultrapassar ${escapeHTML(p4.Jogador)} (4º com ${p4.PontosNum} pts).`;
+      const diff4 = Number((p4.PontosNum - currentPoints + 0.1).toFixed(1));
+      const requiredBasePts = Math.ceil(diff4 / multiplier);
+      let possibleCombos = [];
+      if (requiredBasePts <= 12) possibleCombos.push("4V-0D (12 pts)");
+      if (requiredBasePts <= 10) possibleCombos.push("3V-1E (10 pts)");
+      if (requiredBasePts <= 9) possibleCombos.push("3V-1D (9 pts)");
+      if (requiredBasePts <= 7) possibleCombos.push("2V-1E (7 pts)");
+
+      const comboHint = possibleCombos.length > 0 ? ` [Necessário: ${possibleCombos.slice(0, 2).join(' ou ')}]` : ` [Requer múltiplas vitórias em etapas consecutivas]`;
+      metaText = `🎯 <strong>Meta Top 4:</strong> Faltam <strong>+${diff4} pts</strong> para ultrapassar ${escapeHTML(p4.Jogador)} (4º com ${p4.PontosNum} pts).${comboHint}`;
     } else if (p8) {
-      const diff8 = (p8.PontosNum - currentPoints) + 0.5;
-      const ptsReq = Math.ceil(diff8);
-      metaText = `🎯 <strong>Meta Top 8:</strong> Faltam <strong>+${ptsReq} pts</strong> para vaga nos Playoffs.`;
+      const diff8 = Number((p8.PontosNum - currentPoints + 0.1).toFixed(1));
+      metaText = `🎯 <strong>Meta Top 8 (Playoffs):</strong> Faltam <strong>+${diff8} pts</strong> para vaga na repescagem de ${escapeHTML(p8.Jogador)} (8º com ${p8.PontosNum} pts).`;
     }
     targetCard.innerHTML = metaText;
   }
@@ -2385,16 +2445,19 @@ function renderTvSlide(slideIdx) {
     let mostLosses = null;
 
     ranking.forEach(p => {
-      const v = p.Vitorias || 0;
-      const e = p.Empates || 0;
-      const d = p.Derrotas || 0;
+      const v = toNumber(p.Vitorias);
+      const e = toNumber(p.Empates);
+      const d = toNumber(p.Derrotas);
       const total = v + e + d;
       const part = toNumber(p.Participacoes);
+      const pts = toNumber(p.Pontos);
+      const pod = toNumber(p.Podio);
 
       if (part >= 2 && total > 0) {
+        const score = pts + (v * 3) + (e * 1) + (pod * part);
         const wr = (v / total) * 100;
-        if (!bestGold || wr > bestGold.wr) {
-          bestGold = { player: p.Jogador, wr: Math.round(wr), part };
+        if (!bestGold || score > bestGold.score) {
+          bestGold = { player: p.Jogador, score, wr: Math.round(wr), part, v, e, d };
         }
       }
 
@@ -2413,7 +2476,7 @@ function renderTvSlide(slideIdx) {
           <div class="tv-award-icon">🥇</div>
           <div class="tv-award-title">Pokébola de Ouro</div>
           <div class="tv-award-player">${bestGold ? escapeHTML(bestGold.player) : '-'}</div>
-          <div class="tv-award-stat">${bestGold ? `${bestGold.wr}% Winrate (${bestGold.part} etapas)` : 'Em disputa'}</div>
+          <div class="tv-award-stat">${bestGold ? `${bestGold.score.toFixed(0)} PTS • ${bestGold.v}V-${bestGold.e}E-${bestGold.d}D (${bestGold.part} etapas)` : 'Em disputa'}</div>
         </div>
 
         <div class="tv-award-card" style="border-color:rgba(16,185,129,0.4);">
@@ -2498,8 +2561,10 @@ window.openAwardModal = function(awardKey) {
       const participations = toNumber(r.Participacoes);
       const podiums = toNumber(r.Podio);
       const points = toNumber(r.Pontos);
+      const score = points + (wins * 3) + (draws * 1) + (podiums * participations);
       return {
         player: r.Jogador || r.Player || r.Name || 'Desconhecido',
+        score: score,
         winRate: winRate,
         podiums: podiums,
         wins: wins,
@@ -2511,19 +2576,22 @@ window.openAwardModal = function(awardKey) {
       };
     });
     goldCandidates.sort((a, b) => {
-      if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+      if (b.score !== a.score) return b.score - a.score;
       if (b.podiums !== a.podiums) return b.podiums - a.podiums;
       if (b.wins !== a.wins) return b.wins - a.wins;
+      if (b.winRate !== a.winRate) return b.winRate - a.winRate;
       return b.points - a.points;
     });
     
     const top = goldCandidates[0];
     winnerName = top ? top.player : 'Em disputa';
-    description = 'Prêmio de honra máxima individual da temporada, concedido ao treinador com a maior Taxa de Vitória (Winrate %) no Cartel Oficial (V-E-D).';
+    description = 'Prêmio de honra máxima individual da temporada, avaliando o desempenho integral do treinador através de uma fórmula composta de todos os indicadores oficiais.';
     formulaHtml = `
       <div style="font-size:0.75rem; background:rgba(255,203,5,0.06); border:1px solid rgba(255,203,5,0.2); padding:8px 10px; border-radius:10px; color:var(--text-secondary); margin-top:6px;">
-        <div style="color:var(--accent-yellow); font-weight:700;">Critério Oficial:</div>
-        <div>Maior <strong>Winrate (%)</strong> = Vitórias ÷ Total de Partidas (V + E + D)</div>
+        <div style="color:var(--accent-yellow); font-weight:700; margin-bottom:2px;">Fórmula Oficial da Pokébola de Ouro:</div>
+        <div style="font-family:monospace; color:#fff; font-size:0.78rem; background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:6px; margin:4px 0;">
+          Score = Pontos + (V × 3 + E × 1) + (Pódios × Participações)
+        </div>
         <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">• Elegibilidade: Mínimo de 2 participações na temporada.</div>
       </div>
     `;
@@ -2535,12 +2603,16 @@ window.openAwardModal = function(awardKey) {
             <strong style="color:#fff; font-size:0.95rem;">${escapeHTML(top.player)}</strong>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="color:var(--text-secondary);">Winrate do Cartel:</span>
-            <strong style="color:var(--accent-yellow); font-size:1.1rem;">${(top.winRate * 100).toFixed(1)}%</strong>
+            <span style="color:var(--text-secondary);">Score Composto Oficial:</span>
+            <strong style="color:var(--accent-yellow); font-size:1.1rem;">${top.score.toFixed(0)} PTS</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="color:var(--text-secondary);">Composição do Score:</span>
+            <span>${top.points} pts + ${(top.wins * 3 + top.draws * 1)} match pts + ${(top.podiums * top.participations)} pódio/pres.</span>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <span style="color:var(--text-secondary);">Cartel Real:</span>
-            <span>${top.wins}V - ${top.draws}E - ${top.losses}D (${top.total} jogos)</span>
+            <span>${top.wins}V - ${top.draws}E - ${top.losses}D (${(top.winRate * 100).toFixed(1)}% WR)</span>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <span style="color:var(--text-secondary);">Pódios / Presença:</span>
@@ -2561,7 +2633,7 @@ window.openAwardModal = function(awardKey) {
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase;">
                 <th style="padding: 4px 6px;">Pos</th>
                 <th style="padding: 4px 6px;">Jogador</th>
-                <th style="padding: 4px 6px; text-align: right;">Winrate / Cartel</th>
+                <th style="padding: 4px 6px; text-align: right;">Score / Cartel</th>
               </tr>
             </thead>
             <tbody>
@@ -2570,7 +2642,7 @@ window.openAwardModal = function(awardKey) {
                   <td style="padding: 4px 6px; font-weight: bold;">${i + 1}º</td>
                   <td style="padding: 4px 6px;">${escapeHTML(c.player)}</td>
                   <td style="padding: 4px 6px; text-align: right; font-weight: bold;">
-                    ${(c.winRate * 100).toFixed(1)}%
+                    ${c.score.toFixed(0)} pts
                     <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">(${c.wins}V-${c.draws}E-${c.losses}D · ${c.podiums} top4)</span>
                   </td>
                 </tr>
@@ -3677,7 +3749,7 @@ function updateMetagameDisplay() {
       const useFallback = cupChallengeStages.length === 0;
       const targetStages = useFallback ? cleanStages : cupChallengeStages;
 
-      // 1. Pokébola de Ouro: Melhor Desempenho Real (Winrate % com presença >= 2 etapas)
+      // 1. Pokébola de Ouro: Melhor Desempenho Real Composto da Temporada
       const goldCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) >= 2).map(r => {
         const wins = toNumber(r.Vitorias);
         const losses = toNumber(r.Derrotas);
@@ -3687,9 +3759,11 @@ function updateMetagameDisplay() {
         const participations = toNumber(r.Participacoes);
         const podiums = toNumber(r.Podio);
         const points = toNumber(r.Pontos);
+        const score = points + (wins * 3) + (draws * 1) + (podiums * participations);
         return {
           player: r,
           playerName: r.Jogador || r.Player || r.Name || 'Desconhecido',
+          score: score,
           winRate: winRate,
           podiums: podiums,
           wins: wins,
@@ -3701,9 +3775,10 @@ function updateMetagameDisplay() {
         };
       });
       goldCandidates.sort((a, b) => {
-        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+        if (b.score !== a.score) return b.score - a.score;
         if (b.podiums !== a.podiums) return b.podiums - a.podiums;
         if (b.wins !== a.wins) return b.wins - a.wins;
+        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
         return b.points - a.points;
       });
       const bestGoldCandidate = goldCandidates[0] || null;
@@ -3798,13 +3873,13 @@ function updateMetagameDisplay() {
             </div>
           </div>
           <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
-            Maior taxa de vitórias real da temporada (${bestGoldCandidate.participations} etapas disputadas).
+            Maior índice de performance consolidado da temporada (${bestGoldCandidate.participations} etapas disputadas).
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
-            <div>Winrate: <strong style="color:var(--accent-yellow); font-size:1.05rem;">${(bestGoldCandidate.winRate * 100).toFixed(1)}%</strong></div>
+            <div>Score Oficial: <strong style="color:var(--accent-yellow); font-size:1.05rem;">${bestGoldCandidate.score.toFixed(0)} PTS</strong></div>
             <div>Cartel: <strong>${bestGoldCandidate.wins}V - ${bestGoldCandidate.draws}E - ${bestGoldCandidate.losses}D</strong></div>
           </div>
-          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver classificação e detalhes ➔</div>
+          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver classificação e fórmula ➔</div>
         </div>
       ` : '';
 
