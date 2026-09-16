@@ -1921,33 +1921,57 @@ window.openPlayerModal = function(playerRef) {
   if (!player || !modal) return;
 
   const letter = player.Jogador ? player.Jogador.charAt(0).toUpperCase() : '?';
+  const v = player.Vitorias || 0;
+  const e = player.Empates || 0;
+  const d = player.Derrotas || 0;
+  const total = v + e + d;
+  const winRate = total > 0 ? Math.round((v / total) * 100) : 0;
 
-  document.getElementById('modal-avatar').innerText = letter;
+  const avatarEl = document.getElementById('modal-avatar');
+  if (avatarEl) avatarEl.innerText = letter;
+
   const medals = getPlayerMedals(player.Jogador);
-  document.getElementById('modal-player-name').innerHTML = `${escapeHTML(player.Jogador)} ${medals}`;
-  document.getElementById('modal-player-deck').innerHTML = `
-    ${getEnergyDotHTML(getDeckEnergy(player.Deck))}
-    <span>Deck: <strong>${escapeHTML(player.Deck || 'Não registrado')}</strong></span>
-  `;
-  document.getElementById('modal-stat-participations').innerText = toNumber(player.Participacoes);
-  document.getElementById('modal-stat-podiums').innerText = toNumber(player.Podio);
-  document.getElementById('modal-stat-average-placement').innerText = `${formatAveragePlacement(player.MediaColocacao)}º`;
-  document.getElementById('modal-detail-category').innerText = `${player.Categoria || 'MASTER'} (${player.CategoriaCodigo || 'ME'})`;
-  document.getElementById('modal-detail-points').innerText = `${toNumber(player.Pontos)} PTS`;
-  document.getElementById('modal-detail-current-placement').innerText = `${toNumber(player.Pos)}º`;
-  
-  const vedContainer = document.getElementById('modal-detail-ved');
-  if (vedContainer) {
-    vedContainer.innerHTML = `
-      <div class="ved-container" style="justify-content: flex-end;">
-        <span class="ved-badge v-badge" title="Vitórias">${player.Vitorias || 0}V</span>
-        <span class="ved-badge e-badge" title="Empates">${player.Empates || 0}E</span>
-        <span class="ved-badge d-badge" title="Derrotas">${player.Derrotas || 0}D</span>
+  const nameEl = document.getElementById('modal-player-name');
+  if (nameEl) nameEl.innerHTML = `${escapeHTML(player.Jogador)} ${medals}`;
+
+  const deckEl = document.getElementById('modal-player-deck');
+  if (deckEl) {
+    deckEl.innerHTML = `
+      ${getEnergyDotHTML(getDeckEnergy(player.Deck))}
+      <span>Deck: <strong>${escapeHTML(player.Deck || 'Não registrado')}</strong></span>
+    `;
+  }
+
+  // 4 Top Stats
+  const ptsEl = document.getElementById('modal-stat-points');
+  if (ptsEl) ptsEl.innerText = `${toNumber(player.Pontos)}`;
+
+  const posEl = document.getElementById('modal-stat-placement');
+  if (posEl) posEl.innerText = `${toNumber(player.Pos)}º`;
+
+  const podEl = document.getElementById('modal-stat-podiums');
+  if (podEl) podEl.innerText = `${toNumber(player.Podio)}`;
+
+  const wrEl = document.getElementById('modal-stat-winrate');
+  if (wrEl) wrEl.innerText = `${winRate}%`;
+
+  const vedEl = document.getElementById('modal-detail-ved');
+  if (vedEl) {
+    vedEl.innerHTML = `
+      <div class="ved-container" style="justify-content: flex-end; gap: 4px;">
+        <span class="ved-badge v-badge" title="Vitórias">${v}V</span>
+        <span class="ved-badge e-badge" title="Empates">${e}E</span>
+        <span class="ved-badge d-badge" title="Derrotas">${d}D</span>
       </div>
     `;
   }
 
-  // 1. Títulos e Medalhas do Hall da Fama
+  const partMediaEl = document.getElementById('modal-detail-part-media');
+  if (partMediaEl) {
+    partMediaEl.innerText = `${toNumber(player.Participacoes)} etapas • ${formatAveragePlacement(player.MediaColocacao)}º média`;
+  }
+
+  // Títulos no Hall da Fama
   const titles = [];
   (appData.Campeoes || []).forEach(c => {
     const pNorm = normalizePlayerName(player.Jogador);
@@ -1969,7 +1993,7 @@ window.openPlayerModal = function(playerRef) {
     }
   }
 
-  // 2. Decks Jogados na Temporada
+  // Decks Jogados na Temporada (Compact Chips)
   const playedDecksMap = {};
   (stagesIndex || []).forEach(stg => {
     const dName = getDeckForStage(player.Jogador, stg.data);
@@ -1985,7 +2009,7 @@ window.openPlayerModal = function(playerRef) {
       decksList.innerHTML = entries.map(([deck, count]) => {
         const energy = getDeckEnergy(deck);
         const dot = getEnergyDotHTML(energy);
-        return `<span class="trainer-deck-tag">${dot} <strong>${escapeHTML(deck)}</strong> (${count}x)</span>`;
+        return `<span class="trainer-deck-tag">${dot} ${escapeHTML(deck)} (${count}x)</span>`;
       }).join('');
       decksSec.style.display = 'block';
     } else {
@@ -1993,27 +2017,25 @@ window.openPlayerModal = function(playerRef) {
     }
   }
 
+  // Timeline
   const timelineContainer = document.getElementById('modal-player-timeline');
   if (timelineContainer) {
     timelineContainer.innerHTML = '';
     const historyStr = player.HistoricoColocacoes || '';
     if (!historyStr) {
-      timelineContainer.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;padding:0.5rem 0;">Nenhum histórico disponível para esta temporada.</div>';
+      timelineContainer.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;padding:0.25rem 0;">Sem histórico nesta temporada.</div>';
     } else {
       const historyArr = String(historyStr).split(';');
       const stepsHtml = historyArr.map((pos, index) => {
-        const stageLabel = `Etapa ${index + 1}`;
+        const stageLabel = `E${index + 1}`;
         let dateLabel = '-';
-        
         const stageInfo = stagesIndex[index];
         if (stageInfo && stageInfo.data) {
           const parts = stageInfo.data.split('-');
           dateLabel = parts.length === 3 ? `${parts[2]}/${parts[1]}` : stageInfo.data;
         }
-        
         const isPodiumClass = pos !== '-' && toNumber(pos) <= 4 ? 'podium' : '';
         const posText = pos !== '-' ? `${pos}º` : '-';
-        
         return `
           <div class="timeline-step ${isPodiumClass}">
             <span class="step-num">${stageLabel}</span>
@@ -2037,8 +2059,30 @@ function closePlayerModal() {
 }
 
 /* ==========================================================================
-   SIMULADOR DE TOP CUT / CLASSIFICAÇÃO
+   SIMULADOR DE TOP CUT / CLASSIFICAÇÃO (MOBILE-FIRST)
    ========================================================================== */
+let simCurrentMultiplier = 1.0;
+let simCurrentBasePoints = 15;
+
+window.setSimMultiplier = function(mult) {
+  simCurrentMultiplier = mult;
+  ['sim-mult-1', 'sim-mult-15', 'sim-mult-2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  if (mult === 1.0) document.getElementById('sim-mult-1')?.classList.add('active');
+  if (mult === 1.5) document.getElementById('sim-mult-15')?.classList.add('active');
+  if (mult === 2.0) document.getElementById('sim-mult-2')?.classList.add('active');
+  runSimulation();
+};
+
+window.setSimResult = function(basePts, btnEl) {
+  simCurrentBasePoints = basePts;
+  document.querySelectorAll('.sim-quick-grid .sim-quick-btn').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+  runSimulation();
+};
+
 window.openSimulatorModal = function() {
   const modal = document.getElementById('simulator-modal');
   const select = document.getElementById('sim-player-select');
@@ -2046,7 +2090,7 @@ window.openSimulatorModal = function() {
 
   const ranking = appData.Ranking || [];
   if (ranking.length === 0) {
-    alert("Ranking ainda está carregando. Tente novamente em instantes.");
+    alert("Ranking ainda está carregando.");
     return;
   }
 
@@ -2054,6 +2098,8 @@ window.openSimulatorModal = function() {
     <option value="${escapeHTML(p.Jogador)}">${escapeHTML(p.Pos)}º - ${escapeHTML(p.Jogador)} (${toNumber(p.Pontos)} PTS)</option>
   `).join('');
 
+  simCurrentMultiplier = 1.0;
+  simCurrentBasePoints = 15;
   runSimulation();
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -2067,14 +2113,13 @@ window.closeSimulatorModal = function() {
 
 window.runSimulation = function() {
   const selectPlayer = document.getElementById('sim-player-select');
-  const selectEvent = document.getElementById('sim-event-type');
-  const selectResult = document.getElementById('sim-result-projected');
   const resultsCard = document.getElementById('sim-results-card');
-  if (!selectPlayer || !selectEvent || !selectResult || !resultsCard) return;
+  const targetCard = document.getElementById('sim-target-card');
+  if (!selectPlayer || !resultsCard) return;
 
   const playerName = selectPlayer.value;
-  const multiplier = parseFloat(selectEvent.value) || 1.0;
-  const basePoints = parseInt(selectResult.value, 10) || 0;
+  const multiplier = simCurrentMultiplier;
+  const basePoints = simCurrentBasePoints;
   const addedPoints = Math.round(basePoints * multiplier);
 
   const ranking = (appData.Ranking || []).map(p => ({
@@ -2107,11 +2152,11 @@ window.runSimulation = function() {
 
   let posDiffHtml = '';
   if (posDiff > 0) {
-    posDiffHtml = `<span style="color:#10b981; font-weight:700;">▲ Subiu ${posDiff} posições</span>`;
+    posDiffHtml = `<span style="color:#10b981; font-weight:700;">▲ +${posDiff}</span>`;
   } else if (posDiff === 0) {
-    posDiffHtml = `<span style="color:var(--text-secondary);">Manteve a posição</span>`;
+    posDiffHtml = `<span style="color:var(--text-secondary);">-</span>`;
   } else {
-    posDiffHtml = `<span style="color:#ef4444;">▼ Caiu ${Math.abs(posDiff)} posições</span>`;
+    posDiffHtml = `<span style="color:#ef4444;">▼ ${posDiff}</span>`;
   }
 
   let statusBadge = '';
@@ -2120,32 +2165,46 @@ window.runSimulation = function() {
   } else if (projectedPos <= 8) {
     statusBadge = `<span class="sim-status-badge sim-status-top8">🎖️ Top 8 Garantido (Playoffs)</span>`;
   } else if (projectedPos <= 12) {
-    statusBadge = `<span class="sim-status-badge sim-status-bubble">⚠️ Na Zona de Bolha (Top 12)</span>`;
+    statusBadge = `<span class="sim-status-badge sim-status-bubble">⚠️ Zona de Bolha (Top 12)</span>`;
   } else {
-    statusBadge = `<span class="sim-status-badge" style="background:rgba(255,255,255,0.06); color:var(--text-secondary); border:1px solid rgba(255,255,255,0.15);">⚔️ Fase de Classificação</span>`;
+    statusBadge = `<span class="sim-status-badge" style="background:rgba(255,255,255,0.06); color:var(--text-secondary); border:1px solid rgba(255,255,255,0.12);">⚔️ Em Disputa</span>`;
   }
 
   resultsCard.innerHTML = `
-    <div style="text-align:center; margin-bottom:12px;">
+    <div style="text-align:center; margin-bottom:6px;">
       ${statusBadge}
     </div>
     <div class="sim-metric-row">
-      <span style="color:var(--text-secondary);">Pontuação Atual:</span>
-      <strong>${currentPoints} PTS (${currentPos}º Lugar)</strong>
+      <span style="color:var(--text-secondary);">Pontos:</span>
+      <span>${currentPoints} PTS <strong style="color:var(--accent-yellow);">➔ ${projectedPoints} PTS</strong> (+${addedPoints} pts)</span>
     </div>
     <div class="sim-metric-row">
-      <span style="color:var(--text-secondary);">Pontos Ganhos no Evento:</span>
-      <strong style="color:var(--accent-yellow);">+${addedPoints} PTS (${multiplier}x)</strong>
-    </div>
-    <div class="sim-metric-row">
-      <span style="color:var(--text-secondary);">Nova Pontuação Projetada:</span>
-      <strong style="color:var(--accent-yellow); font-size:1.1rem;">${projectedPoints} PTS</strong>
-    </div>
-    <div class="sim-metric-row">
-      <span style="color:var(--text-secondary);">Nova Colocação Projetada:</span>
-      <strong>${projectedPos}º Lugar (${posDiffHtml})</strong>
+      <span style="color:var(--text-secondary);">Posição:</span>
+      <span>${currentPos}º Lugar <strong style="color:#fff;">➔ ${projectedPos}º</strong> (${posDiffHtml})</span>
     </div>
   `;
+
+  // Calcular Meta Reversa
+  if (targetCard) {
+    const p4 = ranking[3]; // 4º colocado
+    const p8 = ranking[7]; // 8º colocado
+    let metaText = '';
+
+    if (currentPos <= 4) {
+      const p1 = ranking[0];
+      const diff1 = (p1 ? p1.PontosNum : currentPoints) - currentPoints;
+      metaText = `Você já está no <strong>Top 4</strong>! Para alcançar a liderança (1º lugar), faltam <strong>${Math.max(0, diff1)} pontos</strong>.`;
+    } else if (p4) {
+      const diff4 = (p4.PontosNum - currentPoints) + 0.5;
+      const ptsReq = Math.ceil(diff4);
+      metaText = `🎯 <strong>Meta Top 4:</strong> Faltam <strong>+${ptsReq} pts</strong> para ultrapassar ${escapeHTML(p4.Jogador)} (4º com ${p4.PontosNum} pts).`;
+    } else if (p8) {
+      const diff8 = (p8.PontosNum - currentPoints) + 0.5;
+      const ptsReq = Math.ceil(diff8);
+      metaText = `🎯 <strong>Meta Top 8:</strong> Faltam <strong>+${ptsReq} pts</strong> para vaga nos Playoffs.`;
+    }
+    targetCard.innerHTML = metaText;
+  }
 };
 
 /* ==========================================================================
@@ -2459,29 +2518,34 @@ window.openAwardModal = function(awardKey) {
     });
     
     const top = goldCandidates[0];
-    winnerName = top ? top.player : 'Nenhum';
-    description = 'Prêmio de maior honra individual da temporada, concedido ao treinador com a maior Taxa de Vitória real (%) nas partidas disputadas (com mínimo de 2 participações para elegibilidade).';
+    winnerName = top ? top.player : 'Em disputa';
+    description = 'Prêmio de honra máxima individual da temporada, concedido ao treinador com a maior Taxa de Vitória (Winrate %) no Cartel Oficial (V-E-D).';
     formulaHtml = `
-      <div style="font-size:0.8rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:4px; color:var(--text-secondary); margin-top:8px;">
-        <div><strong>Critérios Oficiais de Ordenação:</strong></div>
-        <div style="color:var(--accent-yellow); font-family:monospace; font-size:0.85rem;">1. Taxa de Vitória (Winrate %) = Vitórias ÷ Total de Partidas (V + E + D)</div>
-        <div style="font-size:0.75rem; margin-top:4px; line-height:1.4;">
-          • <strong>Filtro de Elegibilidade:</strong> Mínimo de 2 participações na temporada.<br>
-          • <strong>1º Desempate:</strong> Maior número de Pódios (Top 4).<br>
-          • <strong>2º Desempate:</strong> Maior número de Vitórias Totais (V).<br>
-          • <strong>3º Desempate:</strong> Maior pontuação acumulada na Liga.
-        </div>
+      <div style="font-size:0.75rem; background:rgba(255,203,5,0.06); border:1px solid rgba(255,203,5,0.2); padding:8px 10px; border-radius:10px; color:var(--text-secondary); margin-top:6px;">
+        <div style="color:var(--accent-yellow); font-weight:700;">Critério Oficial:</div>
+        <div>Maior <strong>Winrate (%)</strong> = Vitórias ÷ Total de Partidas (V + E + D)</div>
+        <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">• Elegibilidade: Mínimo de 2 participações na temporada.</div>
       </div>
     `;
     if (top) {
       detailHtml = `
-        <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; margin-top:8px;">
-          <div style="font-weight:600; color:#fff; font-size:1rem; margin-bottom:4px;">Cálculo do Vencedor (${escapeHTML(top.player)}):</div>
-          <div style="display:flex; justify-content:space-between;"><span>Taxa de Vitória (Winrate):</span><strong style="color:var(--accent-yellow); font-size:1.15rem;">${(top.winRate * 100).toFixed(1)}%</strong></div>
-          <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:-6px; text-align:right;">(${top.wins} vitórias em ${top.total} partidas reais)</div>
-          <div style="display:flex; justify-content:space-between; margin-top:4px;"><span>Pódios Conquistados:</span><strong style="color:#fff;">${top.podiums} Top 4</strong></div>
-          <div style="display:flex; justify-content:space-between;"><span>Presença na Temporada:</span><strong style="color:#fff;">${top.participations} etapas</strong></div>
-          <div style="display:flex; justify-content:space-between;"><span>Pontos Totais:</span><strong style="color:#fff;">${top.points} PTS</strong></div>
+        <div style="display:flex; flex-direction:column; gap:4px; font-size:0.82rem; border-top:1px solid rgba(255,255,255,0.06); padding-top:8px; margin-top:6px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="color:var(--text-secondary);">Líder Atual:</span>
+            <strong style="color:#fff; font-size:0.95rem;">${escapeHTML(top.player)}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="color:var(--text-secondary);">Winrate do Cartel:</span>
+            <strong style="color:var(--accent-yellow); font-size:1.1rem;">${(top.winRate * 100).toFixed(1)}%</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="color:var(--text-secondary);">Cartel Real:</span>
+            <span>${top.wins}V - ${top.draws}E - ${top.losses}D (${top.total} jogos)</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="color:var(--text-secondary);">Pódios / Presença:</span>
+            <span>${top.podiums} Top 4 • ${top.participations} etapas</span>
+          </div>
         </div>
       `;
     }

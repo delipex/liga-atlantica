@@ -370,58 +370,54 @@ Siga-nos no Instagram
   </main>
 
   
-  <!-- TRAINER CARD HOLOGRÁFICO MODAL -->
+  <!-- TRAINER CARD HOLOGRÁFICO MODAL (MOBILE-FIRST) -->
   <div class="modal-overlay" id="player-modal">
     <div class="modal-container trainer-card-holographic">
       <button class="modal-close-btn" id="modal-close-btn" aria-label="Fechar">✕</button>
       <div class="modal-header">
         <div class="modal-avatar" id="modal-avatar">T</div>
         <h2 class="modal-player-name" id="modal-player-name">Nome do Treinador</h2>
-        <div class="podium-deck-info" style="justify-content: center;" id="modal-player-deck">
+        <div class="podium-deck-info" style="justify-content: center; font-size: 0.8rem;" id="modal-player-deck">
           
         </div>
         <div id="modal-player-titles" class="trainer-titles-grid"></div>
       </div>
       <div class="modal-body">
-        <div class="modal-stats-grid">
+        <div class="modal-stats-grid" style="grid-template-columns: repeat(4, 1fr);">
           <div class="modal-stat-box">
-            <div class="modal-stat-value" id="modal-stat-participations">0</div>
-            <div class="modal-stat-label">Participações</div>
+            <div class="modal-stat-value" id="modal-stat-points" style="color:var(--accent-yellow);">0</div>
+            <div class="modal-stat-label">Pontos</div>
+          </div>
+          <div class="modal-stat-box">
+            <div class="modal-stat-value" id="modal-stat-placement">1º</div>
+            <div class="modal-stat-label">Posição</div>
           </div>
           <div class="modal-stat-box">
             <div class="modal-stat-value" id="modal-stat-podiums">0</div>
             <div class="modal-stat-label">Pódios</div>
           </div>
           <div class="modal-stat-box">
-            <div class="modal-stat-value" id="modal-stat-average-placement">0</div>
-            <div class="modal-stat-label">Média de colocação</div>
+            <div class="modal-stat-value" id="modal-stat-winrate" style="color:#10b981;">0%</div>
+            <div class="modal-stat-label">Winrate</div>
           </div>
         </div>
         
         <div class="modal-details">
           <div class="modal-detail-row">
-            <span class="modal-detail-label">Categoria:</span>
-            <span class="modal-detail-value" id="modal-detail-category">MASTER (ME)</span>
-          </div>
-          <div class="modal-detail-row">
-            <span class="modal-detail-label">Pontuação Total:</span>
-            <span class="modal-detail-value score-cell" id="modal-detail-points">0 PTS</span>
-          </div>
-          <div class="modal-detail-row">
-            <span class="modal-detail-label">Colocação Atual:</span>
-            <span class="modal-detail-value" id="modal-detail-current-placement">0º</span>
-          </div>
-          <div class="modal-detail-row" style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem;">
-            <span class="modal-detail-label">Cartel (V-E-D):</span>
+            <span class="modal-detail-label">Cartel Oficial (V-E-D):</span>
             <span class="modal-detail-value" id="modal-detail-ved">0V - 0E - 0D</span>
           </div>
-          <div id="modal-player-decks-section" style="margin-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem; display:none;">
-            <span class="modal-detail-label" style="display:block; margin-bottom:4px;">Decks Pilotados na Temporada:</span>
+          <div class="modal-detail-row">
+            <span class="modal-detail-label">Participações / Média:</span>
+            <span class="modal-detail-value" id="modal-detail-part-media">0 etapas • 0º média</span>
+          </div>
+          <div id="modal-player-decks-section" style="display:none; padding-top:4px;">
+            <span class="modal-detail-label" style="display:block; margin-bottom:4px; font-size:0.72rem; font-weight:700;">Decks Pilotados na Temporada:</span>
             <div id="modal-player-decks-list" class="trainer-decks-wrap"></div>
           </div>
         </div>
         
-        <div class="modal-section-title">Evolução na Temporada</div>
+        <div class="modal-section-title">Evolução nas Etapas</div>
         <div class="modal-timeline" id="modal-player-timeline">
           
         </div>
@@ -429,46 +425,50 @@ Siga-nos no Instagram
     </div>
   </div>
 
-  <!-- SIMULADOR DE TOP CUT MODAL -->
+  <!-- SIMULADOR DE TOP CUT MODAL (MOBILE-FIRST) -->
   <div class="modal-overlay" id="simulator-modal">
-    <div class="modal-container simulator-modal-container" style="max-width: 520px; position:relative;">
+    <div class="modal-container simulator-modal-container" style="max-width: 440px; position:relative;">
       <button class="modal-close-btn" onclick="closeSimulatorModal()" aria-label="Fechar">✕</button>
-      <div class="modal-header" style="text-align:center;">
-        <div class="simulator-modal-icon">🧮</div>
-        <h2 class="modal-player-name" style="font-size:1.4rem;">Simulador de Top Cut</h2>
-        <p class="champion-deck-modal-subtitle" style="font-size:0.85rem; color:var(--text-secondary); margin-top:4px;">Projete seus pontos da próxima etapa e calcule sua classificação!</p>
+      <div class="modal-header" style="padding:1rem 1rem 0.5rem 1rem;">
+        <h2 class="modal-player-name" style="font-size:1.2rem; display:flex; align-items:center; justify-content:center; gap:6px;">
+          <span>🧮</span> Simulador de Top Cut
+        </h2>
+        <p style="font-size:0.75rem; color:var(--text-secondary); margin:0;">Projete seus pontos e preveja sua vaga nos Playoffs</p>
       </div>
-      <div class="modal-body">
-        <div class="simulator-form" style="display:flex; flex-direction:column; gap:12px;">
-          <div>
-            <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:4px; font-weight:600;">Selecione o Treinador:</label>
-            <select id="sim-player-select" class="search-input select-input" style="width:100%;" onchange="runSimulation()"></select>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <div>
-              <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:4px; font-weight:600;">Tipo de Evento:</label>
-              <select id="sim-event-type" class="search-input select-input" style="width:100%;" onchange="runSimulation()">
-                <option value="1.0">Liga Regular (1.0x)</option>
-                <option value="1.5">League Challenge (1.5x)</option>
-                <option value="2.0">League Cup (2.0x)</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:4px; font-weight:600;">Resultado Projetado:</label>
-              <select id="sim-result-projected" class="search-input select-input" style="width:100%;" onchange="runSimulation()">
-                <option value="15">🥇 1º Lugar (+15 pts)</option>
-                <option value="12">🥈 2º Lugar (+12 pts)</option>
-                <option value="10">🥉 Top 4 (+10 pts)</option>
-                <option value="7">🎖️ Top 8 (+7 pts)</option>
-                <option value="4">⚔️ Top 16 (+4 pts)</option>
-                <option value="2">🎮 Participação (+2 pts)</option>
-              </select>
-            </div>
+      <div class="modal-body" style="padding:0.85rem 1rem; gap:0.6rem;">
+        <div>
+          <label style="font-size:0.75rem; color:var(--text-secondary); display:block; margin-bottom:3px; font-weight:700;">Selecione o Treinador:</label>
+          <select id="sim-player-select" class="search-input select-input" style="width:100%; min-height:40px; font-size:0.85rem; padding-left:0.75rem !important;" onchange="runSimulation()"></select>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+          <span style="font-size:0.75rem; color:var(--text-secondary); font-weight:700;">Evento:</span>
+          <div style="display:flex; gap:4px;">
+            <button type="button" class="sim-quick-btn active" id="sim-mult-1" onclick="setSimMultiplier(1.0)">Liga (1x)</button>
+            <button type="button" class="sim-quick-btn" id="sim-mult-15" onclick="setSimMultiplier(1.5)">Challenge (1.5x)</button>
+            <button type="button" class="sim-quick-btn" id="sim-mult-2" onclick="setSimMultiplier(2.0)">Cup (2x)</button>
           </div>
         </div>
 
-        <div id="sim-results-card" style="background:rgba(255,203,5,0.06); border:1px solid rgba(255,203,5,0.25); border-radius:14px; padding:16px; margin-top:16px;">
-          <!-- Resultado da simulação injetado via JS -->
+        <div>
+          <span style="font-size:0.75rem; color:var(--text-secondary); display:block; margin-bottom:4px; font-weight:700;">Selecione o Resultado da Etapa:</span>
+          <div class="sim-quick-grid">
+            <button type="button" class="sim-quick-btn active" id="sim-res-15" onclick="setSimResult(15, this)">🥇 1º (+15)</button>
+            <button type="button" class="sim-quick-btn" id="sim-res-12" onclick="setSimResult(12, this)">🥈 2º (+12)</button>
+            <button type="button" class="sim-quick-btn" id="sim-res-10" onclick="setSimResult(10, this)">🥉 Top 4 (+10)</button>
+            <button type="button" class="sim-quick-btn" id="sim-res-7" onclick="setSimResult(7, this)">🎖️ Top 8 (+7)</button>
+            <button type="button" class="sim-quick-btn" id="sim-res-4" onclick="setSimResult(4, this)">⚔️ Top 16 (+4)</button>
+            <button type="button" class="sim-quick-btn" id="sim-res-2" onclick="setSimResult(2, this)">🎮 Part. (+2)</button>
+          </div>
+        </div>
+
+        <div id="sim-results-card" style="background:rgba(255,203,5,0.06); border:1px solid rgba(255,203,5,0.25); border-radius:12px; padding:10px 12px; margin-top:2px;">
+          <!-- Resultado dinâmico -->
+        </div>
+
+        <!-- Meta Reversa -->
+        <div id="sim-target-card" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:8px 10px; font-size:0.75rem; color:var(--text-secondary);">
+          <!-- Meta calculada -->
         </div>
       </div>
     </div>
