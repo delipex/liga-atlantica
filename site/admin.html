@@ -1560,6 +1560,31 @@ function doGet(e) {
         </div>
       </div>
 
+      <!-- Painel de Soluções Rápidas & Ações em Massa -->
+      <div class="glass-card" style="margin-bottom: 1.5rem; padding: 1.25rem; border: 1px solid rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.03); border-radius: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; color: #10b981; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem;">
+              🛠️ Centro de Soluções & Correções Rápidas
+            </div>
+            <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;">
+              Resolva alertas e inconsistências encontradas com 1 clique diretamente no repositório:
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+          <button type="button" class="btn" onclick="recalculateRankingFromAllStages()" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3); font-weight: 600; font-size: 0.82rem; display: flex; align-items: center; gap: 0.35rem;">
+            ⚡ 1. Recalcular & Sincronizar Ranking Geral
+          </button>
+          <button type="button" class="btn" onclick="autoAssignAllMissingDecks()" style="background: rgba(129, 140, 248, 0.15); color: #818cf8; border-color: rgba(129, 140, 248, 0.3); font-weight: 600; font-size: 0.82rem; display: flex; align-items: center; gap: 0.35rem;">
+            ✨ 2. Auto-Preencher Decks Ausentes no Metagame
+          </button>
+          <button type="button" class="btn" onclick="switchAdminTab('jogadores')" style="background: rgba(255, 203, 5, 0.12); color: var(--accent-yellow); border-color: rgba(255, 203, 5, 0.3); font-weight: 600; font-size: 0.82rem; display: flex; align-items: center; gap: 0.35rem;">
+            👤 3. Base Oficial de Jogadores (Cadastrar POP IDs)
+          </button>
+        </div>
+      </div>
+
       <!-- Filtros do Auditor -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 0.5rem; flex-wrap: wrap;">
         <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -7541,7 +7566,13 @@ function doGet(e) {
               const recordedPts = Number(getFirstDefined(p, ['Pontos', 'Points', 'Pts'])) || 0;
               const basePts = (v * 3) + (e * 1);
               const expectedPts = basePts * mult;
-              const isPointMatch = Math.abs(recordedPts - expectedPts) < 0.01;
+              
+              // No formato TOM oficial, o arquivo da etapa armazena os pontos brutos de vitórias/empates (basePts).
+              // No ranking consolidado da Liga, esses pontos são multiplicados pelo peso do evento (expectedPts).
+              // Se recordedPts bater com basePts OU com expectedPts, a matemática do torneio está 100% íntegra!
+              const isBaseMatch = Math.abs(recordedPts - basePts) < 0.01;
+              const isMultipliedMatch = Math.abs(recordedPts - expectedPts) < 0.01;
+              const isPointMatch = isBaseMatch || isMultipliedMatch;
 
               if (isPointMatch) {
                 totalVedCompliant++;
@@ -7596,8 +7627,10 @@ function doGet(e) {
                 e: e,
                 d: d,
                 recordedPts: recordedPts,
+                basePts: basePts,
                 expectedPts: expectedPts,
                 isPointMatch: isPointMatch,
+                isBaseMatch: isBaseMatch,
                 deck: registeredDeck || 'Sem deck registrado',
                 deckStatus: deckStatus,
                 rankSyncStatus: rankSyncStatus
@@ -7710,7 +7743,23 @@ function doGet(e) {
         }
 
         const playersRowsHtml = stg.players.map(p => {
-          const ptStyle = p.isPointMatch ? 'color: #fff;' : 'color: #ef4444; font-weight: 700; background: rgba(239,68,68,0.15); border-radius: 4px; padding: 2px 4px;';
+          let ptDisplayHtml = '';
+          if (p.isPointMatch) {
+            if (stg.multiplier !== 1 && p.isBaseMatch) {
+              ptDisplayHtml = `
+                <span style="color: #10b981; font-weight: 700;">${p.recordedPts} PTS</span>
+                <div style="font-size: 0.68rem; color: #93c5fd;">(${p.recordedPts} base &times; ${stg.multiplier}x = ${p.expectedPts} no ranking)</div>
+              `;
+            } else {
+              ptDisplayHtml = `<span style="color: #10b981; font-weight: 700;">${p.recordedPts} PTS</span>`;
+            }
+          } else {
+            ptDisplayHtml = `
+              <span style="color: #ef4444; font-weight: 700; background: rgba(239,68,68,0.15); border-radius: 4px; padding: 2px 4px;">${p.recordedPts} PTS</span>
+              <div style="font-size: 0.68rem; color: #ef4444;">Esperado: ${p.basePts} pts (ou ${p.expectedPts} com ${stg.multiplier}x)</div>
+            `;
+          }
+
           const idBadge = p.id 
             ? `<span style="color:var(--text-secondary); font-size:0.72rem; font-family:monospace;">#${escapeHTML(p.id)}</span>` 
             : `<span style="color:#f59e0b; font-size:0.7rem;">⚠️ Sem ID</span>`;
@@ -7732,8 +7781,7 @@ function doGet(e) {
                 <span style="color:#ef4444; font-weight:700;">${p.d}D</span>
               </td>
               <td style="padding: 6px 8px; text-align: center;">
-                <span style="${ptStyle}">${p.recordedPts} PTS</span>
-                ${!p.isPointMatch ? `<div style="font-size:0.68rem; color:#ef4444;">Esperado: ${p.expectedPts} pts</div>` : ''}
+                ${ptDisplayHtml}
               </td>
               <td style="padding: 6px 8px; text-align: left;">${deckBadge}</td>
             </tr>
@@ -7761,6 +7809,22 @@ function doGet(e) {
             </div>
 
             <div id="audit-detail-${idx}" style="display: none; padding: 1rem; border-top: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.3);">
+              
+              <!-- Barra de Soluções Rápidas da Etapa -->
+              <div style="display: flex; gap: 0.5rem; margin-bottom: 0.85rem; flex-wrap: wrap; background: rgba(255,255,255,0.03); padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06); align-items: center; justify-content: space-between;">
+                <div style="font-size: 0.78rem; font-weight: 600; color: var(--accent-yellow); display: flex; align-items: center; gap: 0.35rem;">
+                  💡 Soluções para esta Etapa:
+                </div>
+                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                  <button type="button" class="btn" onclick="openStageMetagameEditor('${stg.date}')" style="padding: 0.3rem 0.65rem; font-size: 0.75rem; background: rgba(129, 140, 248, 0.15); color: #818cf8; border-color: rgba(129, 140, 248, 0.3);" title="Atribuir decks no metagame desta etapa">
+                    🎴 Atribuir Decks no Metagame
+                  </button>
+                  <button type="button" class="btn" onclick="autoAssignDecksForStage('${stg.date}')" style="padding: 0.3rem 0.65rem; font-size: 0.75rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3);" title="Preencher decks conhecidos automaticamente">
+                    ✨ Auto-Preencher Decks Conhecidos
+                  </button>
+                </div>
+              </div>
+
               ${stg.fetchError ? `
                 <div style="color: #ef4444; padding: 1rem; background: rgba(239,68,68,0.1); border-radius: 6px;">
                   ⚠️ ${escapeHTML(stg.fetchError)}
@@ -7798,6 +7862,187 @@ function doGet(e) {
       const isHidden = detailEl.style.display === 'none';
       detailEl.style.display = isHidden ? 'block' : 'none';
       if (chevronEl) chevronEl.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+
+    // --- Funções de Solução Rápida do Auditor ---
+    function openStageMetagameEditor(stageDate) {
+      switchAdminTab('metagame');
+      const selector = document.getElementById('admin-meta-stage-selector');
+      if (selector) {
+        selector.value = stageDate;
+        renderAdminStageMetagame();
+      }
+      showSuccess(`Aba Metagame aberta para a etapa ${formatDateISOToPT(stageDate)}!`);
+    }
+
+    function findKnownDeckForPlayer(playerName) {
+      if (!cachedMetagameData) return '';
+      const normName = normalizePlayerName(playerName);
+      
+      const dates = Object.keys(cachedMetagameData).sort().reverse();
+      for (const d of dates) {
+        const session = cachedMetagameData[d];
+        if (!session || !session.decks) continue;
+        for (const [p, dk] of Object.entries(session.decks)) {
+          if (normalizePlayerName(p) === normName && dk && dk !== 'Não registrado' && dk !== 'Sem deck registrado') {
+            return dk;
+          }
+        }
+      }
+
+      if (cachedJogadores && cachedJogadores.length > 0) {
+        const dbP = cachedJogadores.find(j => normalizePlayerName(j.Jogador || j.Name) === normName);
+        if (dbP && dbP.Deck) return dbP.Deck;
+      }
+
+      return '';
+    }
+
+    async function autoAssignDecksForStage(stageDate) {
+      if (!runtimeToken) {
+        showError("Token do GitHub não configurado. Faça login no painel.");
+        return;
+      }
+
+      showSuccess(`Buscando decks conhecidos para os jogadores da etapa ${formatDateISOToPT(stageDate)}...`);
+      await ensureSheetsLoaded();
+
+      const stageObj = auditResults.find(s => s.date === stageDate);
+      if (!stageObj || !stageObj.players) {
+        showError("Etapa não encontrada no auditor.");
+        return;
+      }
+
+      if (!cachedMetagameData[stageDate]) {
+        cachedMetagameData[stageDate] = {
+          sessionCode: `Etapa ${stageObj.stageNumber}`,
+          decks: {}
+        };
+      }
+      if (!cachedMetagameData[stageDate].decks) {
+        cachedMetagameData[stageDate].decks = {};
+      }
+
+      let assignedCount = 0;
+      stageObj.players.forEach(p => {
+        const currentDeck = cachedMetagameData[stageDate].decks[p.officialName] || cachedMetagameData[stageDate].decks[p.rawName];
+        if (!currentDeck || currentDeck === 'Não registrado' || currentDeck === 'Sem deck registrado') {
+          const knownDeck = findKnownDeckForPlayer(p.officialName) || findKnownDeckForPlayer(p.rawName);
+          if (knownDeck) {
+            cachedMetagameData[stageDate].decks[p.officialName] = knownDeck;
+            assignedCount++;
+          }
+        }
+      });
+
+      if (assignedCount === 0) {
+        showError(`Nenhum deck anterior conhecido encontrado para esta etapa. Clique em "Atribuir Decks no Metagame" para selecionar.`);
+        return;
+      }
+
+      try {
+        const config = GITHUB_CONFIG;
+        const metaUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/metagame.json`;
+        let metaSha = await getLatestSha(metaUrl);
+
+        const commitPayload = {
+          message: `Auto-atribuir ${assignedCount} decks conhecidos no metagame da etapa ${stageDate}`,
+          content: encodeBase64UTF8(JSON.stringify(cachedMetagameData, null, 2)),
+          branch: config.branch
+        };
+        if (metaSha) commitPayload.sha = metaSha;
+
+        const res = await fetch(metaUrl, {
+          method: 'PUT',
+          headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || "Erro ao salvar metagame.json");
+        }
+
+        showSuccess(`✨ Sucesso! ${assignedCount} decks foram preenchidos e salvos no Metagame para a etapa ${formatDateISOToPT(stageDate)}!`);
+        await runFullAudit();
+      } catch (err) {
+        console.error("Erro ao auto-atribuir decks:", err);
+        showError("Falha ao salvar metagame no GitHub: " + err.message);
+      }
+    }
+
+    async function autoAssignAllMissingDecks() {
+      if (!runtimeToken) {
+        showError("Token do GitHub não configurado. Faça login no painel.");
+        return;
+      }
+
+      if (!confirm("Deseja preencher automaticamente todos os jogadores sem deck em todas as etapas usando o histórico anterior conhecido?")) {
+        return;
+      }
+
+      showSuccess("Executando auto-preenchimento de decks em todas as etapas...");
+      await ensureSheetsLoaded();
+
+      let totalAssigned = 0;
+      auditResults.forEach(stageObj => {
+        const stageDate = stageObj.date;
+        if (!cachedMetagameData[stageDate]) {
+          cachedMetagameData[stageDate] = {
+            sessionCode: `Etapa ${stageObj.stageNumber}`,
+            decks: {}
+          };
+        }
+        if (!cachedMetagameData[stageDate].decks) {
+          cachedMetagameData[stageDate].decks = {};
+        }
+
+        stageObj.players.forEach(p => {
+          const currentDeck = cachedMetagameData[stageDate].decks[p.officialName] || cachedMetagameData[stageDate].decks[p.rawName];
+          if (!currentDeck || currentDeck === 'Não registrado' || currentDeck === 'Sem deck registrado') {
+            const knownDeck = findKnownDeckForPlayer(p.officialName) || findKnownDeckForPlayer(p.rawName);
+            if (knownDeck) {
+              cachedMetagameData[stageDate].decks[p.officialName] = knownDeck;
+              totalAssigned++;
+            }
+          }
+        });
+      });
+
+      if (totalAssigned === 0) {
+        showSuccess("Todos os decks já estão preenchidos ou nenhum deck anterior conhecido foi encontrado.");
+        return;
+      }
+
+      try {
+        const config = GITHUB_CONFIG;
+        const metaUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/metagame.json`;
+        let metaSha = await getLatestSha(metaUrl);
+
+        const commitPayload = {
+          message: `Auto-atribuir ${totalAssigned} decks ausentes em todas as etapas no metagame`,
+          content: encodeBase64UTF8(JSON.stringify(cachedMetagameData, null, 2)),
+          branch: config.branch
+        };
+        if (metaSha) commitPayload.sha = metaSha;
+
+        const res = await fetch(metaUrl, {
+          method: 'PUT',
+          headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || "Erro ao salvar metagame.json");
+        }
+
+        showSuccess(`✨ Sucesso! ${totalAssigned} decks foram preenchidos e salvos no Metagame em todas as etapas!`);
+        await runFullAudit();
+      } catch (err) {
+        console.error("Erro ao auto-atribuir decks globais:", err);
+        showError("Falha ao salvar metagame global no GitHub: " + err.message);
+      }
     }
 
     async function recalculateRankingFromAllStages() {
