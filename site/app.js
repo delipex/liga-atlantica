@@ -2268,6 +2268,81 @@ window.runSimulation = function() {
 };
 
 /* ==========================================================================
+   CÁLCULO DA POKÉBOLA DE OURO - MÉTODO 2 (RANKING MULTIDIMENSIONAL / DECATLO)
+   ========================================================================== */
+function calculatePokebolaDeOuroCandidates(rankingData) {
+  const eligible = (rankingData || []).filter(r => r && toNumber(r.Participacoes) >= 2).map(r => {
+    const wins = toNumber(r.Vitorias);
+    const losses = toNumber(r.Derrotas);
+    const draws = toNumber(r.Empates);
+    const total = wins + losses + draws;
+    const winRate = total > 0 ? (wins / total) : 0;
+    const participations = toNumber(r.Participacoes);
+    const podiums = toNumber(r.Podio);
+    const points = toNumber(r.Pontos);
+    return {
+      player: r.Jogador || r.Player || r.Name || 'Desconhecido',
+      raw: r,
+      wins,
+      losses,
+      draws,
+      total,
+      winRate,
+      participations,
+      podiums,
+      points,
+      rankWR: 0,
+      rankV: 0,
+      rankPod: 0,
+      rankPart: 0,
+      ptsWR: 0,
+      ptsV: 0,
+      ptsPod: 0,
+      ptsPart: 0,
+      score: 0,
+      firstPlaces: 0
+    };
+  });
+
+  const N = eligible.length;
+  if (N === 0) return [];
+
+  // Helper para ranquear e pontuar um pilar
+  function rankPillar(getValue, setRank, setPts) {
+    const sorted = [...eligible].sort((a, b) => getValue(b) - getValue(a));
+    let currentRank = 1;
+    for (let i = 0; i < sorted.length; i++) {
+      if (i > 0 && getValue(sorted[i]) < getValue(sorted[i - 1])) {
+        currentRank = i + 1;
+      }
+      setRank(sorted[i], currentRank);
+      setPts(sorted[i], Math.max(1, N - currentRank + 1));
+    }
+  }
+
+  rankPillar(p => p.winRate, (p, r) => p.rankWR = r, (p, pts) => p.ptsWR = pts);
+  rankPillar(p => p.wins, (p, r) => p.rankV = r, (p, pts) => p.ptsV = pts);
+  rankPillar(p => p.podiums, (p, r) => p.rankPod = r, (p, pts) => p.ptsPod = pts);
+  rankPillar(p => p.participations, (p, r) => p.rankPart = r, (p, pts) => p.ptsPart = pts);
+
+  eligible.forEach(p => {
+    p.score = p.ptsWR + p.ptsV + p.ptsPod + p.ptsPart;
+    p.firstPlaces = (p.rankWR === 1 ? 1 : 0) + (p.rankV === 1 ? 1 : 0) + (p.rankPod === 1 ? 1 : 0) + (p.rankPart === 1 ? 1 : 0);
+  });
+
+  eligible.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (b.firstPlaces !== a.firstPlaces) return b.firstPlaces - a.firstPlaces;
+    if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    if (b.podiums !== a.podiums) return b.podiums - a.podiums;
+    return b.participations - a.participations;
+  });
+
+  return eligible;
+}
+
+/* ==========================================================================
    MODO TELÃO DA LOJA (TV BROADCAST DISPLAY MODE)
    ========================================================================== */
 let tvModeActive = false;
@@ -2294,9 +2369,9 @@ window.openTvMode = function() {
     document.documentElement.requestFullscreen().catch(() => {});
   }
 
-  startTvClock();
   renderTvSlide(0);
-  startTvSlideLoop();
+  startTvTimers();
+  updateTvClock();
 };
 
 window.closeTvMode = function() {
@@ -2321,57 +2396,46 @@ window.toggleTvPause = function() {
 };
 
 window.nextTvSlide = function() {
-  tvCurrentSlide = (tvCurrentSlide + 1) % 3;
-  renderTvSlide(tvCurrentSlide);
-  resetTvProgress();
+  tvProgress = 0;
+  renderTvSlide((tvCurrentSlide + 1) % 4);
 };
 
 window.prevTvSlide = function() {
-  tvCurrentSlide = (tvCurrentSlide - 1 + 3) % 3;
-  renderTvSlide(tvCurrentSlide);
-  resetTvProgress();
+  tvProgress = 0;
+  renderTvSlide((tvCurrentSlide - 1 + 4) % 4);
 };
 
-function startTvClock() {
-  function update() {
-    const now = new Date();
-    const clockEl = document.getElementById('tv-clock');
-    if (clockEl) {
-      clockEl.innerText = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    }
-  }
-  update();
-  tvClockTimer = setInterval(update, 1000);
-}
-
-function resetTvProgress() {
-  tvProgress = 0;
-  const bar = document.getElementById('tv-progress-bar');
-  if (bar) bar.style.width = '0%';
-}
-
-function startTvSlideLoop() {
-  resetTvProgress();
-  clearInterval(tvProgressTimer);
+function startTvTimers() {
   clearInterval(tvSlideTimer);
+  clearInterval(tvClockTimer);
+  clearInterval(tvProgressTimer);
 
-  const stepTime = 100;
-  const stepIncrement = (stepTime / TV_SLIDE_DURATION) * 100;
+  tvClockTimer = setInterval(updateTvClock, 1000);
 
+  const stepMs = 100;
   tvProgressTimer = setInterval(() => {
-    if (tvIsPaused) return;
-    tvProgress += stepIncrement;
-    const bar = document.getElementById('tv-progress-bar');
-    if (bar) bar.style.width = `${Math.min(tvProgress, 100)}%`;
+    if (!tvIsPaused) {
+      tvProgress += (stepMs / TV_SLIDE_DURATION) * 100;
+      const bar = document.getElementById('tv-progress-bar');
+      if (bar) bar.style.width = Math.min(tvProgress, 100) + '%';
 
-    if (tvProgress >= 100) {
-      tvProgress = 0;
-      nextTvSlide();
+      if (tvProgress >= 100) {
+        tvProgress = 0;
+        renderTvSlide((tvCurrentSlide + 1) % 4);
+      }
     }
-  }, stepTime);
+  }, stepMs);
+}
+
+function updateTvClock() {
+  const clockEl = document.getElementById('tv-clock');
+  if (!clockEl) return;
+  const now = new Date();
+  clockEl.innerText = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 function renderTvSlide(slideIdx) {
+  tvCurrentSlide = slideIdx;
   const body = document.getElementById('tv-body');
   const titleEl = document.getElementById('tv-slide-title');
   if (!body) return;
@@ -2438,28 +2502,15 @@ function renderTvSlide(slideIdx) {
     // Slide 3: Premiações da Temporada
     if (titleEl) titleEl.innerText = 'PREMIAÇÕES DA TEMPORADA (EM DISPUTA)';
 
-    // Calcular líderes atuais dos prêmios
-    let bestGold = null;
+    const goldCandidates = calculatePokebolaDeOuroCandidates(ranking);
+    const bestGold = goldCandidates[0] || null;
+
     let mostActive = null;
-    let mostVaried = null;
     let mostLosses = null;
 
     ranking.forEach(p => {
-      const v = toNumber(p.Vitorias);
-      const e = toNumber(p.Empates);
       const d = toNumber(p.Derrotas);
-      const total = v + e + d;
       const part = toNumber(p.Participacoes);
-      const pts = toNumber(p.Pontos);
-      const pod = toNumber(p.Podio);
-
-      if (part >= 2 && total > 0) {
-        const score = pts + (v * 3) + (e * 1) + (pod * part);
-        const wr = (v / total) * 100;
-        if (!bestGold || score > bestGold.score) {
-          bestGold = { player: p.Jogador, score, wr: Math.round(wr), part, v, e, d };
-        }
-      }
 
       if (!mostActive || part > mostActive.part) {
         mostActive = { player: p.Jogador, part };
@@ -2476,7 +2527,7 @@ function renderTvSlide(slideIdx) {
           <div class="tv-award-icon">🥇</div>
           <div class="tv-award-title">Pokébola de Ouro</div>
           <div class="tv-award-player">${bestGold ? escapeHTML(bestGold.player) : '-'}</div>
-          <div class="tv-award-stat">${bestGold ? `${bestGold.score.toFixed(0)} PTS • ${bestGold.v}V-${bestGold.e}E-${bestGold.d}D (${bestGold.part} etapas)` : 'Em disputa'}</div>
+          <div class="tv-award-stat">${bestGold ? `${bestGold.score} PTS Decatlo • WR ${bestGold.rankWR}º | Vit ${bestGold.rankV}º | Pod ${bestGold.rankPod}º` : 'Em disputa'}</div>
         </div>
 
         <div class="tv-award-card" style="border-color:rgba(16,185,129,0.4);">
@@ -2552,47 +2603,17 @@ window.openAwardModal = function(awardKey) {
         <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="width:36px; height:36px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2; filter: sepia(1) saturate(10) hue-rotate(20deg) brightness(1.2);" alt="Golden Pokéball">
       </span>
     `;
-    const goldCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) >= 2).map(r => {
-      const wins = toNumber(r.Vitorias);
-      const losses = toNumber(r.Derrotas);
-      const draws = toNumber(r.Empates);
-      const total = wins + losses + draws;
-      const winRate = total > 0 ? (wins / total) : 0;
-      const participations = toNumber(r.Participacoes);
-      const podiums = toNumber(r.Podio);
-      const points = toNumber(r.Pontos);
-      const score = points + (wins * 3) + (draws * 1) + (podiums * participations);
-      return {
-        player: r.Jogador || r.Player || r.Name || 'Desconhecido',
-        score: score,
-        winRate: winRate,
-        podiums: podiums,
-        wins: wins,
-        losses: losses,
-        draws: draws,
-        total: total,
-        points: points,
-        participations: participations
-      };
-    });
-    goldCandidates.sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      if (b.podiums !== a.podiums) return b.podiums - a.podiums;
-      if (b.wins !== a.wins) return b.wins - a.wins;
-      if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-      return b.points - a.points;
-    });
-    
+    const goldCandidates = calculatePokebolaDeOuroCandidates(appData.Ranking || []);
     const top = goldCandidates[0];
     winnerName = top ? top.player : 'Em disputa';
-    description = 'Prêmio de honra máxima individual da temporada, avaliando o desempenho integral do treinador através de uma fórmula composta de todos os indicadores oficiais.';
+    description = 'Prêmio de honra máxima individual da temporada pelo Método Multidimensional (Decatlo), premiando o treinador mais completo e constante em todos os 4 pilares oficiais.';
     formulaHtml = `
       <div style="font-size:0.75rem; background:rgba(255,203,5,0.06); border:1px solid rgba(255,203,5,0.2); padding:8px 10px; border-radius:10px; color:var(--text-secondary); margin-top:6px;">
-        <div style="color:var(--accent-yellow); font-weight:700; margin-bottom:2px;">Fórmula Oficial da Pokébola de Ouro:</div>
-        <div style="font-family:monospace; color:#fff; font-size:0.78rem; background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:6px; margin:4px 0;">
-          Score = Pontos + (V × 3 + E × 1) + (Pódios × Participações)
+        <div style="color:var(--accent-yellow); font-weight:700; margin-bottom:2px;">Regra Oficial Multidimensional (Decatlo):</div>
+        <div style="color:#fff; font-size:0.75rem; margin:3px 0; line-height:1.3;">
+          Ranking ponderado nos 4 pilares: <strong>Winrate %</strong>, <strong>Vitórias (V)</strong>, <strong>Pódios</strong> e <strong>Presença</strong>.
         </div>
-        <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">• Elegibilidade: Mínimo de 2 participações na temporada.</div>
+        <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">• Em cada pilar, o líder ganha pontuação máxima. Vence a maior soma combinada de posições.</div>
       </div>
     `;
     if (top) {
@@ -2603,12 +2624,12 @@ window.openAwardModal = function(awardKey) {
             <strong style="color:#fff; font-size:0.95rem;">${escapeHTML(top.player)}</strong>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="color:var(--text-secondary);">Score Composto Oficial:</span>
-            <strong style="color:var(--accent-yellow); font-size:1.1rem;">${top.score.toFixed(0)} PTS</strong>
+            <span style="color:var(--text-secondary);">Pontuação Decatlo:</span>
+            <strong style="color:var(--accent-yellow); font-size:1.1rem;">${top.score} PTS</strong>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="color:var(--text-secondary);">Composição do Score:</span>
-            <span>${top.points} pts + ${(top.wins * 3 + top.draws * 1)} match pts + ${(top.podiums * top.participations)} pódio/pres.</span>
+            <span style="color:var(--text-secondary);">Posições nos 4 Pilares:</span>
+            <span>WR: <strong>${top.rankWR}º</strong> | Vit: <strong>${top.rankV}º</strong> | Pódios: <strong>${top.rankPod}º</strong> | Pres: <strong>${top.rankPart}º</strong></span>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <span style="color:var(--text-secondary);">Cartel Real:</span>
@@ -2625,25 +2646,26 @@ window.openAwardModal = function(awardKey) {
     rankingHtml = `
       <details style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; cursor: pointer;">
         <summary style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); outline: none; user-select: none;">
-          📊 Ver Classificação Completa dos Candidatos
+          📊 Ver Classificação Completa do Decatlo
         </summary>
-        <div style="margin-top: 10px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.78rem;">
+        <div style="margin-top: 10px; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.78rem;">
           <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase;">
-                <th style="padding: 4px 6px;">Pos</th>
-                <th style="padding: 4px 6px;">Jogador</th>
-                <th style="padding: 4px 6px; text-align: right;">Score / Cartel</th>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.68rem; text-transform: uppercase;">
+                <th style="padding: 4px 5px;">Pos</th>
+                <th style="padding: 4px 5px;">Jogador</th>
+                <th style="padding: 4px 5px; text-align: center;">PTS</th>
+                <th style="padding: 4px 5px; text-align: right;">Ranks (WR/V/Pod/Pres)</th>
               </tr>
             </thead>
             <tbody>
               ${goldCandidates.map((c, i) => `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); color: ${i === 0 ? 'var(--accent-yellow)' : '#fff'}">
-                  <td style="padding: 4px 6px; font-weight: bold;">${i + 1}º</td>
-                  <td style="padding: 4px 6px;">${escapeHTML(c.player)}</td>
-                  <td style="padding: 4px 6px; text-align: right; font-weight: bold;">
-                    ${c.score.toFixed(0)} pts
-                    <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">(${c.wins}V-${c.draws}E-${c.losses}D · ${c.podiums} top4)</span>
+                  <td style="padding: 4px 5px; font-weight: bold;">${i + 1}º</td>
+                  <td style="padding: 4px 5px;">${escapeHTML(c.player)}</td>
+                  <td style="padding: 4px 5px; text-align: center; font-weight: bold; color:var(--accent-yellow);">${c.score}</td>
+                  <td style="padding: 4px 5px; text-align: right; font-size:0.72rem; color:var(--text-secondary);">
+                    ${c.rankWR}º WR • ${c.rankV}º V • ${c.rankPod}º Pód • ${c.rankPart}º Pres
                   </td>
                 </tr>
               `).join('')}
@@ -3749,40 +3771,10 @@ function updateMetagameDisplay() {
       const useFallback = cupChallengeStages.length === 0;
       const targetStages = useFallback ? cleanStages : cupChallengeStages;
 
-      // 1. Pokébola de Ouro: Melhor Desempenho Real Composto da Temporada
-      const goldCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) >= 2).map(r => {
-        const wins = toNumber(r.Vitorias);
-        const losses = toNumber(r.Derrotas);
-        const draws = toNumber(r.Empates);
-        const totalMatches = wins + losses + draws;
-        const winRate = totalMatches > 0 ? (wins / totalMatches) : 0;
-        const participations = toNumber(r.Participacoes);
-        const podiums = toNumber(r.Podio);
-        const points = toNumber(r.Pontos);
-        const score = points + (wins * 3) + (draws * 1) + (podiums * participations);
-        return {
-          player: r,
-          playerName: r.Jogador || r.Player || r.Name || 'Desconhecido',
-          score: score,
-          winRate: winRate,
-          podiums: podiums,
-          wins: wins,
-          losses: losses,
-          draws: draws,
-          total: totalMatches,
-          points: points,
-          participations: participations
-        };
-      });
-      goldCandidates.sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        if (b.podiums !== a.podiums) return b.podiums - a.podiums;
-        if (b.wins !== a.wins) return b.wins - a.wins;
-        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-        return b.points - a.points;
-      });
+      // 1. Pokébola de Ouro: Treinador Mais Completo (Método 2 - Ranking Multidimensional Decatlo)
+      const goldCandidates = calculatePokebolaDeOuroCandidates(appData.Ranking || []);
       const bestGoldCandidate = goldCandidates[0] || null;
-      const pokebolaDeOuroPlayer = bestGoldCandidate ? bestGoldCandidate.player : null;
+      const pokebolaDeOuroPlayer = bestGoldCandidate ? bestGoldCandidate.raw : null;
 
       // 2. Líder de Ginásio: Jogador com maior número de participações (desempates: presenças Cup/Challenge, depois pontuação)
       const liderDeGinasioPlayer = [...appData.Ranking].sort((a, b) => {
@@ -3869,17 +3861,17 @@ function updateMetagameDisplay() {
             </span>
             <div>
               <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Pokébola de Ouro</div>
-              <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(bestGoldCandidate.playerName)}</div>
+              <div style="font-weight:700; color:#fff; font-size:1.1rem; line-height:1.2; margin-top:2px;">${escapeHTML(bestGoldCandidate.player)}</div>
             </div>
           </div>
           <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
-            Maior índice de performance consolidado da temporada (${bestGoldCandidate.participations} etapas disputadas).
+            Líder multidimensional (Decatlo) nos 4 pilares: Winrate, Vitórias, Pódios e Presença.
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
-            <div>Score Oficial: <strong style="color:var(--accent-yellow); font-size:1.05rem;">${bestGoldCandidate.score.toFixed(0)} PTS</strong></div>
-            <div>Cartel: <strong>${bestGoldCandidate.wins}V - ${bestGoldCandidate.draws}E - ${bestGoldCandidate.losses}D</strong></div>
+            <div>Decatlo: <strong style="color:var(--accent-yellow); font-size:1.05rem;">${bestGoldCandidate.score} PTS</strong></div>
+            <div>Ranks: <strong>${bestGoldCandidate.rankWR}º WR • ${bestGoldCandidate.rankV}º V</strong></div>
           </div>
-          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver classificação e fórmula ➔</div>
+          <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver classificação completa ➔</div>
         </div>
       ` : '';
 
