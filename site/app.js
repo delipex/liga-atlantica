@@ -2268,7 +2268,7 @@ window.runSimulation = function() {
 };
 
 /* ==========================================================================
-   CÁLCULO DA POKÉBOLA DE OURO - MÉTODO 2 (RANKING MULTIDIMENSIONAL / DECATLO)
+   CÁLCULO DA POKÉBOLA DE OURO - RANKING MULTIDIMENSIONAL DE PERFORMANCE
    ========================================================================== */
 function calculatePokebolaDeOuroCandidates(rankingData) {
   const eligible = (rankingData || []).filter(r => r && toNumber(r.Participacoes) >= 2).map(r => {
@@ -2294,11 +2294,9 @@ function calculatePokebolaDeOuroCandidates(rankingData) {
       rankWR: 0,
       rankV: 0,
       rankPod: 0,
-      rankPart: 0,
       ptsWR: 0,
       ptsV: 0,
       ptsPod: 0,
-      ptsPart: 0,
       score: 0,
       firstPlaces: 0
     };
@@ -2323,11 +2321,10 @@ function calculatePokebolaDeOuroCandidates(rankingData) {
   rankPillar(p => p.winRate, (p, r) => p.rankWR = r, (p, pts) => p.ptsWR = pts);
   rankPillar(p => p.wins, (p, r) => p.rankV = r, (p, pts) => p.ptsV = pts);
   rankPillar(p => p.podiums, (p, r) => p.rankPod = r, (p, pts) => p.ptsPod = pts);
-  rankPillar(p => p.participations, (p, r) => p.rankPart = r, (p, pts) => p.ptsPart = pts);
 
   eligible.forEach(p => {
-    p.score = p.ptsWR + p.ptsV + p.ptsPod + p.ptsPart;
-    p.firstPlaces = (p.rankWR === 1 ? 1 : 0) + (p.rankV === 1 ? 1 : 0) + (p.rankPod === 1 ? 1 : 0) + (p.rankPart === 1 ? 1 : 0);
+    p.score = p.ptsWR + p.ptsV + p.ptsPod;
+    p.firstPlaces = (p.rankWR === 1 ? 1 : 0) + (p.rankV === 1 ? 1 : 0) + (p.rankPod === 1 ? 1 : 0);
   });
 
   eligible.sort((a, b) => {
@@ -2336,7 +2333,7 @@ function calculatePokebolaDeOuroCandidates(rankingData) {
     if (b.winRate !== a.winRate) return b.winRate - a.winRate;
     if (b.wins !== a.wins) return b.wins - a.wins;
     if (b.podiums !== a.podiums) return b.podiums - a.podiums;
-    return b.participations - a.participations;
+    return b.points - a.points;
   });
 
   return eligible;
@@ -2527,7 +2524,7 @@ function renderTvSlide(slideIdx) {
           <div class="tv-award-icon">🥇</div>
           <div class="tv-award-title">Pokébola de Ouro</div>
           <div class="tv-award-player">${bestGold ? escapeHTML(bestGold.player) : '-'}</div>
-          <div class="tv-award-stat">${bestGold ? `${bestGold.score} PTS Decatlo • WR ${bestGold.rankWR}º | Vit ${bestGold.rankV}º | Pod ${bestGold.rankPod}º` : 'Em disputa'}</div>
+          <div class="tv-award-stat">${bestGold ? `${bestGold.score} PTS • WR ${bestGold.rankWR}º | Vit ${bestGold.rankV}º | Pod ${bestGold.rankPod}º` : 'Em disputa'}</div>
         </div>
 
         <div class="tv-award-card" style="border-color:rgba(16,185,129,0.4);">
@@ -2606,14 +2603,14 @@ window.openAwardModal = function(awardKey) {
     const goldCandidates = calculatePokebolaDeOuroCandidates(appData.Ranking || []);
     const top = goldCandidates[0];
     winnerName = top ? top.player : 'Em disputa';
-    description = 'Prêmio de honra máxima individual da temporada pelo Método Multidimensional (Decatlo), premiando o treinador mais completo e constante em todos os 4 pilares oficiais.';
+    description = 'Prêmio de honra máxima individual da temporada pelo Ranking Multidimensional de Performance, avaliando o desempenho do treinador nos 3 pilares competitivos.';
     formulaHtml = `
       <div style="font-size:0.75rem; background:rgba(255,203,5,0.06); border:1px solid rgba(255,203,5,0.2); padding:8px 10px; border-radius:10px; color:var(--text-secondary); margin-top:6px;">
-        <div style="color:var(--accent-yellow); font-weight:700; margin-bottom:2px;">Regra Oficial Multidimensional (Decatlo):</div>
+        <div style="color:var(--accent-yellow); font-weight:700; margin-bottom:2px;">3 Pilares de Performance Oficial:</div>
         <div style="color:#fff; font-size:0.75rem; margin:3px 0; line-height:1.3;">
-          Ranking ponderado nos 4 pilares: <strong>Winrate %</strong>, <strong>Vitórias (V)</strong>, <strong>Pódios</strong> e <strong>Presença</strong>.
+          Ranking ponderado em: <strong>Winrate %</strong>, <strong>Vitórias (V)</strong> e <strong>Pódios (Top 4)</strong>.
         </div>
-        <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">• Em cada pilar, o líder ganha pontuação máxima. Vence a maior soma combinada de posições.</div>
+        <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">• Em cada pilar, o líder ganha pontuação máxima. Vence a maior soma combinada de posições (mín. 2 etapas disputadas).</div>
       </div>
     `;
     if (top) {
@@ -2624,20 +2621,20 @@ window.openAwardModal = function(awardKey) {
             <strong style="color:#fff; font-size:0.95rem;">${escapeHTML(top.player)}</strong>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="color:var(--text-secondary);">Pontuação Decatlo:</span>
+            <span style="color:var(--text-secondary);">Pontuação Geral:</span>
             <strong style="color:var(--accent-yellow); font-size:1.1rem;">${top.score} PTS</strong>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="color:var(--text-secondary);">Posições nos 4 Pilares:</span>
-            <span>WR: <strong>${top.rankWR}º</strong> | Vit: <strong>${top.rankV}º</strong> | Pódios: <strong>${top.rankPod}º</strong> | Pres: <strong>${top.rankPart}º</strong></span>
+            <span style="color:var(--text-secondary);">Posições nos 3 Pilares:</span>
+            <span>WR: <strong>${top.rankWR}º</strong> | Vitórias: <strong>${top.rankV}º</strong> | Pódios: <strong>${top.rankPod}º</strong></span>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <span style="color:var(--text-secondary);">Cartel Real:</span>
             <span>${top.wins}V - ${top.draws}E - ${top.losses}D (${(top.winRate * 100).toFixed(1)}% WR)</span>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="color:var(--text-secondary);">Pódios / Presença:</span>
-            <span>${top.podiums} Top 4 • ${top.participations} etapas</span>
+            <span style="color:var(--text-secondary);">Pódios Conquistados:</span>
+            <span>${top.podiums} Top 4 (${top.participations} etapas disputadas)</span>
           </div>
         </div>
       `;
@@ -2646,7 +2643,7 @@ window.openAwardModal = function(awardKey) {
     rankingHtml = `
       <details style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; cursor: pointer;">
         <summary style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); outline: none; user-select: none;">
-          📊 Ver Classificação Completa do Decatlo
+          📊 Ver Classificação Completa da Pokébola de Ouro
         </summary>
         <div style="margin-top: 10px; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.78rem;">
           <table style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -2655,7 +2652,7 @@ window.openAwardModal = function(awardKey) {
                 <th style="padding: 4px 5px;">Pos</th>
                 <th style="padding: 4px 5px;">Jogador</th>
                 <th style="padding: 4px 5px; text-align: center;">PTS</th>
-                <th style="padding: 4px 5px; text-align: right;">Ranks (WR/V/Pod/Pres)</th>
+                <th style="padding: 4px 5px; text-align: right;">Ranks (WR / Vit / Pód)</th>
               </tr>
             </thead>
             <tbody>
@@ -2665,7 +2662,7 @@ window.openAwardModal = function(awardKey) {
                   <td style="padding: 4px 5px;">${escapeHTML(c.player)}</td>
                   <td style="padding: 4px 5px; text-align: center; font-weight: bold; color:var(--accent-yellow);">${c.score}</td>
                   <td style="padding: 4px 5px; text-align: right; font-size:0.72rem; color:var(--text-secondary);">
-                    ${c.rankWR}º WR • ${c.rankV}º V • ${c.rankPod}º Pód • ${c.rankPart}º Pres
+                    ${c.rankWR}º WR • ${c.rankV}º Vit • ${c.rankPod}º Pód
                   </td>
                 </tr>
               `).join('')}
@@ -3865,11 +3862,11 @@ function updateMetagameDisplay() {
             </div>
           </div>
           <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
-            Líder multidimensional (Decatlo) nos 4 pilares: Winrate, Vitórias, Pódios e Presença.
+            Líder multidimensional de performance nos 3 pilares: Winrate, Vitórias e Pódios.
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
-            <div>Decatlo: <strong style="color:var(--accent-yellow); font-size:1.05rem;">${bestGoldCandidate.score} PTS</strong></div>
-            <div>Ranks: <strong>${bestGoldCandidate.rankWR}º WR • ${bestGoldCandidate.rankV}º V</strong></div>
+            <div>Performance: <strong style="color:var(--accent-yellow); font-size:1.05rem;">${bestGoldCandidate.score} PTS</strong></div>
+            <div>Ranks: <strong>${bestGoldCandidate.rankWR}º WR • ${bestGoldCandidate.rankV}º V • ${bestGoldCandidate.rankPod}º Pód</strong></div>
           </div>
           <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver classificação completa ➔</div>
         </div>
