@@ -7747,8 +7747,8 @@ function doGet(e) {
           if (p.isPointMatch) {
             if (stg.multiplier !== 1 && p.isBaseMatch) {
               ptDisplayHtml = `
-                <span style="color: #10b981; font-weight: 700;">${p.recordedPts} PTS</span>
-                <div style="font-size: 0.68rem; color: #93c5fd;">(${p.recordedPts} base &times; ${stg.multiplier}x = ${p.expectedPts} no ranking)</div>
+                <div style="color: #10b981; font-weight: 700; font-size: 0.85rem;">${p.recordedPts} PTS <span style="font-size: 0.68rem; color: var(--text-secondary); font-weight: normal;">(TOM)</span></div>
+                <div style="font-size: 0.7rem; color: #93c5fd; font-weight: 600;">&rarr; ${p.expectedPts} PTS na Liga (${stg.multiplier}x)</div>
               `;
             } else {
               ptDisplayHtml = `<span style="color: #10b981; font-weight: 700;">${p.recordedPts} PTS</span>`;
@@ -7813,7 +7813,7 @@ function doGet(e) {
               <!-- Barra de Soluções Rápidas da Etapa -->
               <div style="display: flex; gap: 0.5rem; margin-bottom: 0.85rem; flex-wrap: wrap; background: rgba(255,255,255,0.03); padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06); align-items: center; justify-content: space-between;">
                 <div style="font-size: 0.78rem; font-weight: 600; color: var(--accent-yellow); display: flex; align-items: center; gap: 0.35rem;">
-                  💡 Soluções para esta Etapa:
+                  💡 Ações do Metagame para esta Etapa:
                 </div>
                 <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
                   <button type="button" class="btn" onclick="openStageMetagameEditor('${stg.date}')" style="padding: 0.3rem 0.65rem; font-size: 0.75rem; background: rgba(129, 140, 248, 0.15); color: #818cf8; border-color: rgba(129, 140, 248, 0.3);" title="Atribuir decks no metagame desta etapa">
@@ -7838,7 +7838,7 @@ function doGet(e) {
                         <th style="padding: 6px 8px;">Jogador Oficial</th>
                         <th style="padding: 6px 8px; text-align: center;">Play! ID</th>
                         <th style="padding: 6px 8px; text-align: center;">Cartel (V-E-D)</th>
-                        <th style="padding: 6px 8px; text-align: center;">Pontos / Auditoria</th>
+                        <th style="padding: 6px 8px; text-align: center;">Pontos (TOM & Liga)</th>
                         <th style="padding: 6px 8px;">Deck no Metagame</th>
                       </tr>
                     </thead>
