@@ -191,6 +191,76 @@
       font-size: 0.68rem;
       color: var(--text-secondary);
     }
+
+    /* Estilos das Abas do Painel */
+    .admin-nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .admin-tab-btn {
+      padding: 0.6rem 1.1rem;
+      font-weight: 700;
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .admin-tab-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .admin-tab-btn.active {
+      background: var(--accent-yellow);
+      color: #000;
+      border-color: var(--accent-yellow);
+      box-shadow: 0 0 15px rgba(255, 203, 5, 0.25);
+    }
+
+    /* Grid do Catálogo de Decks */
+    .deck-catalog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+    .deck-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.75rem;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+    .deck-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 203, 5, 0.4);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .deck-card-thumb {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 3px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body class="bg-dark">
@@ -237,260 +307,427 @@
     </header>
 
     
-    <div class="alert-box alert-success" id="general-success"></div>
-    <div class="alert-box alert-error" id="general-error"></div>
-
-    <div class="dashboard-grid" style="grid-template-columns: 1fr; max-width: 800px; margin: 0 auto; gap: 2rem; align-items: start;">
-      
-      
-      <div>
-        <section class="glass-card admin-card">
-          <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-            📤 Carregar Arquivo de Classificação (.tdf)
-          </h2>
-          <div class="form-row" style="margin-bottom: 1.25rem;">
-            <div class="form-group" style="width: 100%;">
-              <label for="event-date">Data do Evento</label>
-              <input type="date" id="event-date" class="search-input" style="width: 100%; box-sizing: border-box;" onchange="handleDateChange()" required>
-              <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
-                A data em que o torneio foi realizado. O sistema criará o arquivo da etapa usando esta data (`etapas/AAAA-MM-DD.tdf`).
-              </span>
-            </div>
-          </div>
-
-          <div class="form-group" style="margin-bottom: 1.25rem; width: 100%;">
-            <label style="margin-bottom: 0.5rem; display: block;">Tipo de Evento</label>
-            <div class="event-type-grid">
-              <div class="event-type-card active" data-value="Liga" onclick="selectEventType('Liga')">
-                <div class="event-type-icon">⚔️</div>
-                <div class="event-type-label">Sessão de Liga</div>
-                <div class="event-type-sub">1.0x (Fixo)</div>
-              </div>
-              <div class="event-type-card" data-value="Challenge" onclick="selectEventType('Challenge')">
-                <div class="event-type-icon">🏅</div>
-                <div class="event-type-label">Challenge</div>
-                <div class="event-type-sub">1.5x (Fixo)</div>
-              </div>
-              <div class="event-type-card" data-value="Cup" onclick="selectEventType('Cup')">
-                <div class="event-type-icon">🏆</div>
-                <div class="event-type-label">League Cup</div>
-                <div class="event-type-sub">1.5x (Fixo)</div>
-              </div>
-              <div class="event-type-card" data-value="Personalizado" onclick="selectEventType('Personalizado')">
-                <div class="event-type-icon">⚙️</div>
-                <div class="event-type-label">Personalizado</div>
-                <div class="event-type-sub">Livre</div>
-              </div>
-            </div>
-            <input type="hidden" id="event-type" value="Liga">
-            <span class="small-text-hint" style="display:block; margin-top:0.4rem; font-size:0.75rem; color:var(--text-secondary);">
-              Selecione a categoria do torneio. Para Liga, Cup e Challenge, os multiplicadores oficiais são travados automaticamente.
-            </span>
-          </div>
-
-          <!-- Custom Event Title Input -->
-          <div class="form-group" id="custom-title-group" style="margin-bottom: 1.25rem; display: none;">
-            <label for="event-custom-title">Título/Tipo do Evento Personalizado</label>
-            <input type="text" id="event-custom-title" class="search-input" placeholder="Ex: Championship, Desafio Especial..." style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
-            <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
-              Digite o nome customizado do evento. Este nome será salvo no etapas.json e exibido nos detalhes e cabeçalhos de etapa no site.
-            </span>
-          </div>
-          
-          <div class="form-group" id="multiplier-group" style="margin-bottom: 1.25rem;">
-            <label for="event-multiplier">Multiplicador de Pontos</label>
-            <input type="number" id="event-multiplier" class="search-input" step="0.1" min="0.1" value="1.0" style="width: 100%; box-sizing: border-box;">
-            <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
-              Define o peso dos pontos do torneio no ranking consolidado. Multiplicadores oficiais: Liga (1.0x), Challenge (1.5x) e Cup (1.5x) são travados automaticamente.
-            </span>
-          </div>
-
-          <!-- Structured Event Fields (Season & Number) -->
-          <div id="structured-fields" class="form-row" style="margin-bottom: 1.25rem; display: flex; gap: 1rem;">
-            <div class="form-group" style="flex: 1;">
-              <label for="event-season">Temporada</label>
-              <input type="number" id="event-season" class="search-input" min="1" value="5" style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
-              <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
-                O número da temporada atual. Usado para classificar o histórico e sugerir o nome correto da coluna no Google Sheets.
-              </span>
-            </div>
-            <div class="form-group" style="flex: 1;">
-              <label for="event-number">Número da Sessão/Etapa</label>
-              <input type="number" id="event-number" class="search-input" min="1" value="1" style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
-              <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
-                A ordem sequencial desta etapa/sessão dentro da temporada vigente.
-              </span>
-            </div>
-          </div>
-
-          <!-- Suggested Column Code Display -->
-          <div id="column-code-suggestion" style="margin-bottom: 1.25rem; font-size: 0.85rem; color: var(--accent-yellow); font-weight: bold; background: rgba(255, 203, 5, 0.08); border: 1px solid rgba(255, 203, 5, 0.2); padding: 8px 12px; border-radius: 6px; display: none;"></div>
-          
-          <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()" style="margin-bottom: 1.25rem;">
-            <div class="dropzone-icon">📄</div>
-            <div>
-              <p style="font-weight: 500; color: #fff;">Arraste um ou mais arquivos .tdf aqui ou clique para buscar</p>
-              <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Suporta seleção múltipla de arquivos para consolidar categorias separadas</p>
-            </div>
-            <input type="file" id="file-input" style="display: none;" accept=".tdf,.txt,.tsv" multiple onchange="handleFileSelect(event)">
-          </div>
-
-          <!-- Container de informações extraídas do arquivo -->
-          <div id="tdf-file-info" style="margin-bottom: 1.25rem; font-size: 0.85rem; border-radius: 6px; display: none; padding: 12px 14px; background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.2); color: #fff;"></div>
-
-          <div style="margin-bottom: 1.25rem; display: flex; align-items: flex-start; gap: 0.5rem; background: rgba(255, 203, 5, 0.05); padding: 0.75rem 1rem; border-radius: var(--radius); border: 1px dashed rgba(255, 203, 5, 0.2);">
-            <input type="checkbox" id="accumulate-checkbox" checked style="width: 18px; height: 18px; margin-top: 2px; cursor: pointer;">
-            <div style="flex: 1;">
-              <label for="accumulate-checkbox" style="font-size: 0.85rem; font-weight: 600; color: #fff; cursor: pointer; user-select: none; display: block; margin-bottom: 0.2rem;">
-                Acumular pontos com o ranking atual do site (Soma automática de etapas)
-              </label>
-              <span class="small-text-hint" style="font-size:0.75rem; color:var(--text-secondary); display: block;">
-                💡 Se ativado (recomendado), o sistema calcula os pontos acumulados da temporada inteira somando as vitórias/empates/derrotas das etapas anteriores. Se desativado, o ranking consolidado será reiniciado mostrando apenas os pontos desta única etapa.
-              </span>
-            </div>
-          </div>
-
-          <div class="form-group" style="margin-bottom: 0;">
-            <label for="raw-input">Ou cole o texto do arquivo abaixo:</label>
-            <textarea id="raw-input" class="raw-textarea" placeholder="Pos&#9;Jogador&#9;Categoria&#9;Pontos&#9;Podio&#9;MediaColocacao&#9;Deck&#9;TipoEnergia..." oninput="handleRawInput()"></textarea>
-            <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
-              Cole o texto copiado de um arquivo .tdf ou exportado do Tome. Certifique-se de que os dados estão separados por tabulações.
-            </span>
-          </div>
-        </section>
-
-        <!-- Resolução de Nomes -->
-        <section class="glass-card admin-card" id="name-resolution-section" style="display: none; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.02);">
-          <h2 style="font-size: 1.15rem; color: #f59e0b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            ⚠️ Resolução de Nomes (Jogadores não cadastrados)
-          </h2>
-          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
-            Encontramos jogadores no arquivo enviado que não estão cadastrados na aba <strong>Jogadores</strong> da planilha. Resolva cada um abaixo para evitar duplicatas:
-          </p>
-          <div class="table-responsive" style="max-height: 250px; overflow-y: auto; border: 1px solid rgba(245, 158, 11, 0.2); border-radius: var(--radius); margin-bottom: 1rem;">
-            <table class="ranking-table" style="font-size: 0.85rem;">
-              <thead>
-                <tr>
-                  <th style="padding: 0.5rem; text-align: left;">Nome no Arquivo</th>
-                  <th style="padding: 0.5rem; text-align: center;">Categoria</th>
-                  <th style="padding: 0.5rem; text-align: center;">POP ID</th>
-                  <th style="padding: 0.5rem; text-align: left;">Ação / Associação</th>
-                  <th style="padding: 0.5rem; text-align: center;">Cadastro Rápido</th>
-                </tr>
-              </thead>
-              <tbody id="name-resolution-tbody">
-                <!-- Preenchido via JS -->
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- Novos Jogadores para a Planilha -->
-        <section class="glass-card admin-card" id="new-players-section" style="display: none; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.02);">
-          <h2 style="font-size: 1.15rem; color: #10b981; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            📋 Novos Jogadores para o Google Sheets
-          </h2>
-          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
-            Copie as linhas abaixo e cole-as no final da aba <strong>Jogadores</strong> da sua planilha para mantê-la atualizada:
-          </p>
-          <div class="form-group" style="margin-bottom: 0.75rem;">
-            <textarea id="new-players-copy-area" class="raw-textarea" style="height: 80px; font-size: 0.8rem; background: rgba(0, 0, 0, 0.4); border-color: rgba(16, 185, 129, 0.3);" readonly></textarea>
-          </div>
-          <button type="button" class="btn" onclick="copyNewPlayersToClipboard()" style="width: 100%; justify-content: center; background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3); font-weight: 600; padding: 0.5rem;">
-            Copiar Linhas para a Área de Transferência
-          </button>
-        </section>
-
-        <section class="glass-card admin-card" id="preview-section" style="display: none;">
-          <div class="preview-header">
-            <div>
-              <h2 style="font-size: 1.15rem; color: #fff;">👁️ Pré-visualização do Ranking</h2>
-              <p style="font-size: 0.8rem; color: var(--text-secondary);">Verifique as colunas e posições antes de enviar</p>
-            </div>
-            <div id="check-badge" class="badge-check">Estrutura Válida ✓</div>
-          </div>
-
-          <div class="table-responsive" style="max-height: 300px; overflow-y: auto; margin-bottom: 1.5rem; border: 1px solid var(--border-color); border-radius: var(--radius);">
-            <table class="ranking-table">
-              <thead>
-                <tr>
-                  <th class="row-rank">Pos</th>
-                  <th>Treinador</th>
-                  <th style="text-align:center">Cat</th>
-                  <th style="text-align:center">Pontos</th>
-                  <th style="text-align:center">V-E-D</th>
-                  <th style="text-align:center">Pódios</th>
-                  <th style="text-align:center">Média</th>
-                </tr>
-              </thead>
-              <tbody id="preview-tbody">
-                
-              </tbody>
-            </table>
-          </div>
-
-          <button id="btn-validate" onclick="runValidation()" class="btn" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem; background: #2563eb; color: #fff; border-color: #2563eb; margin-bottom: 0.75rem;">
-            🔍 Validar Dados do Arquivo
-          </button>
-
-          <button id="btn-publish" onclick="publishRanking()" class="btn btn-whatsapp" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); display: none;">
-            🚀 Publicar Ranking no Site
-          </button>
-        </section>
-
-        <!-- Gerenciador de Etapas -->
-        <section class="glass-card admin-card" id="stages-manager-section" style="display: none;">
-          <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-            📅 Gerenciador de Etapas
-          </h2>
-          <div id="stages-loading-indicator" style="text-align: center; padding: 1.5rem; color: var(--text-secondary);">
-            ⏳ Carregando etapas...
-          </div>
-          <div id="stages-table-wrapper" style="display: none;" class="table-responsive">
-            <table class="ranking-table">
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Tipo / Nome</th>
-                  <th style="text-align: center;">Mult.</th>
-                  <th style="text-align: center;">Ações</th>
-                </tr>
-              </thead>
-              <tbody id="stages-tbody">
-                <!-- Preenchido dinamicamente -->
-              </tbody>
-            </table>
-            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.75rem;">
-              <button id="btn-recalculate-all" onclick="recalculateRankingFromStages()" class="btn" style="width: 100%; justify-content: center; padding: 0.75rem; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-color: rgba(245, 158, 11, 0.25);">
-                🔄 Recalcular Ranking Geral do Site
-              </button>
-              <span style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; display: block; text-align: center;">
-                💡 Se houver alguma inconsistência nas pontuações gerais ou se você acabou de remover etapas "fantasma", este botão reconstrói todo o arquivo do ranking do zero cruzando e somando os dados de todos os arquivos <code>.tdf</code> individuais de etapa ativos.
-              </span>
-            </div>
-          </div>
-        </section>
-
-        <!-- Seção: Encerrar e Arquivar Temporada -->
-        <section class="glass-card admin-card" style="border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.03);">
-          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-            <h2 style="font-size: 1.15rem; color: #ef4444; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-              🏆 Encerrar e Arquivar Temporada
-            </h2>
-            <span style="font-size: 0.75rem; color: var(--text-secondary); background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 0.2rem 0.6rem; border-radius: 4px;">
-              Protegido por Senha 🔒
-            </span>
-          </div>
-          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
-            Ao finalizar a temporada, todos os dados atuais (.tdf consolidado e etapas) serão salvos permanentemente em um arquivo isolado no histórico (ex: <code>temporadas/temporada-5/</code>), o Campeão será registrado no Hall da Fama e o ranking ativo será zerado para a próxima temporada.
-          </p>
-          <button type="button" class="btn" onclick="openCloseSeasonModal()" style="width: 100%; justify-content: center; padding: 0.75rem; font-size: 0.95rem; font-weight: 700; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); display: flex; align-items: center; gap: 0.5rem;">
-            🔒 Encerrar Temporada Vigente...
-          </button>
-        </section>
-      </div>
-
+    <!-- Navegação por Abas do Painel -->
+    <div class="admin-nav-tabs">
+      <button type="button" class="admin-tab-btn active" id="nav-btn-upload" onclick="switchAdminTab('upload')">
+        📤 Publicar Etapa (.tdf)
+      </button>
+      <button type="button" class="admin-tab-btn" id="nav-btn-decks" onclick="switchAdminTab('decks')">
+        🎴 Catálogo de Decks
+      </button>
+      <button type="button" class="admin-tab-btn" id="nav-btn-metagame" onclick="switchAdminTab('metagame')">
+        📊 Metagame por Etapa
+      </button>
+      <button type="button" class="admin-tab-btn" id="nav-btn-seasons" onclick="switchAdminTab('seasons')">
+        🏆 Temporadas & Etapas
+      </button>
     </div>
+
+    <!-- Datalist global com todos os decks para autocompletar instantâneo -->
+    <datalist id="all-decks-datalist">
+      <!-- Preenchido dinamicamente via JS -->
+    </datalist>
+
+    <!-- ABA 1: UPLOAD E PUBLICAÇÃO DE ETAPA -->
+    <div id="pane-upload" class="tab-pane-content" style="display: block; max-width: 800px; margin: 0 auto;">
+      <section class="glass-card admin-card">
+        <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          📤 Carregar Arquivo de Classificação (.tdf)
+        </h2>
+        <div class="form-row" style="margin-bottom: 1.25rem;">
+          <div class="form-group" style="width: 100%;">
+            <label for="event-date">Data do Evento</label>
+            <input type="date" id="event-date" class="search-input" style="width: 100%; box-sizing: border-box;" onchange="handleDateChange()" required>
+            <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+              A data em que o torneio foi realizado. O sistema criará o arquivo da etapa usando esta data (`etapas/AAAA-MM-DD.tdf`).
+            </span>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.25rem; width: 100%;">
+          <label style="margin-bottom: 0.5rem; display: block;">Tipo de Evento</label>
+          <div class="event-type-grid">
+            <div class="event-type-card active" data-value="Liga" onclick="selectEventType('Liga')">
+              <div class="event-type-icon">⚔️</div>
+              <div class="event-type-label">Sessão de Liga</div>
+              <div class="event-type-sub">1.0x (Fixo)</div>
+            </div>
+            <div class="event-type-card" data-value="Challenge" onclick="selectEventType('Challenge')">
+              <div class="event-type-icon">🏅</div>
+              <div class="event-type-label">Challenge</div>
+              <div class="event-type-sub">1.5x (Fixo)</div>
+            </div>
+            <div class="event-type-card" data-value="Cup" onclick="selectEventType('Cup')">
+              <div class="event-type-icon">🏆</div>
+              <div class="event-type-label">League Cup</div>
+              <div class="event-type-sub">1.5x (Fixo)</div>
+            </div>
+            <div class="event-type-card" data-value="Personalizado" onclick="selectEventType('Personalizado')">
+              <div class="event-type-icon">⚙️</div>
+              <div class="event-type-label">Personalizado</div>
+              <div class="event-type-sub">Livre</div>
+            </div>
+          </div>
+          <input type="hidden" id="event-type" value="Liga">
+          <span class="small-text-hint" style="display:block; margin-top:0.4rem; font-size:0.75rem; color:var(--text-secondary);">
+            Selecione a categoria do torneio. Para Liga, Cup e Challenge, os multiplicadores oficiais são travados automaticamente.
+          </span>
+        </div>
+
+        <!-- Custom Event Title Input -->
+        <div class="form-group" id="custom-title-group" style="margin-bottom: 1.25rem; display: none;">
+          <label for="event-custom-title">Título/Tipo do Evento Personalizado</label>
+          <input type="text" id="event-custom-title" class="search-input" placeholder="Ex: Championship, Desafio Especial..." style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
+          <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+            Digite o nome customizado do evento. Este nome será salvo no etapas.json e exibido nos detalhes e cabeçalhos de etapa no site.
+          </span>
+        </div>
+        
+        <div class="form-group" id="multiplier-group" style="margin-bottom: 1.25rem;">
+          <label for="event-multiplier">Multiplicador de Pontos</label>
+          <input type="number" id="event-multiplier" class="search-input" step="0.1" min="0.1" value="1.0" style="width: 100%; box-sizing: border-box;">
+          <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+            Define o peso dos pontos do torneio no ranking consolidado. Multiplicadores oficiais: Liga (1.0x), Challenge (1.5x) e Cup (1.5x) são travados automaticamente.
+          </span>
+        </div>
+
+        <!-- Structured Event Fields (Season & Number) -->
+        <div id="structured-fields" class="form-row" style="margin-bottom: 1.25rem; display: flex; gap: 1rem;">
+          <div class="form-group" style="flex: 1;">
+            <label for="event-season">Temporada</label>
+            <input type="number" id="event-season" class="search-input" min="1" value="5" style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
+            <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+              O número da temporada atual. Usado para classificar o histórico no metagame.
+            </span>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="event-number">Número da Sessão/Etapa</label>
+            <input type="number" id="event-number" class="search-input" min="1" value="1" style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
+            <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+              A ordem sequencial desta etapa/sessão dentro da temporada vigente.
+            </span>
+          </div>
+        </div>
+
+        <!-- Suggested Column Code Display -->
+        <div id="column-code-suggestion" style="margin-bottom: 1.25rem; font-size: 0.85rem; color: var(--accent-yellow); font-weight: bold; background: rgba(255, 203, 5, 0.08); border: 1px solid rgba(255, 203, 5, 0.2); padding: 8px 12px; border-radius: 6px; display: none;"></div>
+        
+        <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()" style="margin-bottom: 1.25rem;">
+          <div class="dropzone-icon">📄</div>
+          <div>
+            <p style="font-weight: 500; color: #fff;">Arraste um ou mais arquivos .tdf aqui ou clique para buscar</p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Suporta seleção múltipla de arquivos para consolidar categorias separadas</p>
+          </div>
+          <input type="file" id="file-input" style="display: none;" accept=".tdf,.txt,.tsv" multiple onchange="handleFileSelect(event)">
+        </div>
+
+        <!-- Container de informações extraídas do arquivo -->
+        <div id="tdf-file-info" style="margin-bottom: 1.25rem; font-size: 0.85rem; border-radius: 6px; display: none; padding: 12px 14px; background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.2); color: #fff;"></div>
+
+        <div style="margin-bottom: 1.25rem; display: flex; align-items: flex-start; gap: 0.5rem; background: rgba(255, 203, 5, 0.05); padding: 0.75rem 1rem; border-radius: var(--radius); border: 1px dashed rgba(255, 203, 5, 0.2);">
+          <input type="checkbox" id="accumulate-checkbox" checked style="width: 18px; height: 18px; margin-top: 2px; cursor: pointer;">
+          <div style="flex: 1;">
+            <label for="accumulate-checkbox" style="font-size: 0.85rem; font-weight: 600; color: #fff; cursor: pointer; user-select: none; display: block; margin-bottom: 0.2rem;">
+              Acumular pontos com o ranking atual do site (Soma automática de etapas)
+            </label>
+            <span class="small-text-hint" style="font-size:0.75rem; color:var(--text-secondary); display: block;">
+              💡 Se ativado (recomendado), o sistema calcula os pontos acumulados da temporada inteira somando as vitórias/empates/derrotas das etapas anteriores.
+            </span>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="raw-input">Ou cole o texto do arquivo abaixo:</label>
+          <textarea id="raw-input" class="raw-textarea" placeholder="Pos&#9;Jogador&#9;Categoria&#9;Pontos&#9;Podio&#9;MediaColocacao&#9;Deck&#9;TipoEnergia..." oninput="handleRawInput()"></textarea>
+          <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+            Cole o texto copiado de um arquivo .tdf ou exportado do TOM. Certifique-se de que os dados estão separados por tabulações.
+          </span>
+        </div>
+      </section>
+
+      <!-- Resolução de Nomes -->
+      <section class="glass-card admin-card" id="name-resolution-section" style="display: none; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.02);">
+        <h2 style="font-size: 1.15rem; color: #f59e0b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+          ⚠️ Resolução de Nomes (Jogadores não cadastrados)
+        </h2>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          Encontramos jogadores no arquivo enviado que não estão cadastrados na base de jogadores. Resolva cada um abaixo para evitar duplicatas:
+        </p>
+        <div class="table-responsive" style="max-height: 250px; overflow-y: auto; border: 1px solid rgba(245, 158, 11, 0.2); border-radius: var(--radius); margin-bottom: 1rem;">
+          <table class="ranking-table" style="font-size: 0.85rem;">
+            <thead>
+              <tr>
+                <th style="padding: 0.5rem; text-align: left;">Nome no Arquivo</th>
+                <th style="padding: 0.5rem; text-align: center;">Categoria</th>
+                <th style="padding: 0.5rem; text-align: center;">POP ID</th>
+                <th style="padding: 0.5rem; text-align: left;">Ação / Associação</th>
+                <th style="padding: 0.5rem; text-align: center;">Cadastro Rápido</th>
+              </tr>
+            </thead>
+            <tbody id="name-resolution-tbody">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Novos Jogadores para Cópia -->
+      <section class="glass-card admin-card" id="new-players-section" style="display: none; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.02);">
+        <h2 style="font-size: 1.15rem; color: #10b981; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+          📋 Novos Jogadores Detectados
+        </h2>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+          Copie as linhas abaixo caso queira adicionar na sua planilha de backup:
+        </p>
+        <div class="form-group" style="margin-bottom: 0.75rem;">
+          <textarea id="new-players-copy-area" class="raw-textarea" style="height: 80px; font-size: 0.8rem; background: rgba(0, 0, 0, 0.4); border-color: rgba(16, 185, 129, 0.3);" readonly></textarea>
+        </div>
+        <button type="button" class="btn" onclick="copyNewPlayersToClipboard()" style="width: 100%; justify-content: center; background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3); font-weight: 600; padding: 0.5rem;">
+          Copiar Linhas para a Área de Transferência
+        </button>
+      </section>
+
+      <section class="glass-card admin-card" id="preview-section" style="display: none;">
+        <div class="preview-header">
+          <div>
+            <h2 style="font-size: 1.15rem; color: #fff;">👁️ Pré-visualização do Ranking & Atribuição de Decks</h2>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">Verifique as colocações e atribua o deck de cada jogador antes de publicar</p>
+          </div>
+          <div id="check-badge" class="badge-check">Estrutura Válida ✓</div>
+        </div>
+
+        <div class="table-responsive" style="max-height: 420px; overflow-y: auto; margin-bottom: 1.5rem; border: 1px solid var(--border-color); border-radius: var(--radius);">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th class="row-rank">Pos</th>
+                <th>Treinador</th>
+                <th style="text-align:center">Cat</th>
+                <th style="text-align:center">Pontos</th>
+                <th style="text-align:center">V-E-D</th>
+                <th style="text-align:center">Pódios</th>
+                <th style="text-align:left; min-width: 160px;">Deck Utilizado</th>
+              </tr>
+            </thead>
+            <tbody id="preview-tbody">
+              <!-- Preenchido via JS com seletor de decks -->
+            </tbody>
+          </table>
+        </div>
+
+        <button id="btn-validate" onclick="runValidation()" class="btn" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem; background: #2563eb; color: #fff; border-color: #2563eb; margin-bottom: 0.75rem;">
+          🔍 Validar Dados do Arquivo
+        </button>
+
+        <button id="btn-publish" onclick="publishRanking()" class="btn btn-whatsapp" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); display: none;">
+          🚀 Publicar Ranking e Salvar Metagame no Site
+        </button>
+      </section>
+    </div>
+
+    <!-- ABA 2: CATÁLOGO DE DECKS -->
+    <div id="pane-decks" class="tab-pane-content" style="display: none; max-width: 950px; margin: 0 auto;">
+      <section class="glass-card admin-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <h2 style="font-size: 1.2rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              🎴 Catálogo Oficial de Decks
+            </h2>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              Gerencie os arquétipos registrados, energias, fotos e links do Limitless
+            </p>
+          </div>
+          <button type="button" class="btn" onclick="openNewDeckModal()" style="background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); font-weight: 700; padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.4rem;">
+            + Novo Deck
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap;">
+          <input type="text" id="deck-catalog-search" class="search-input" placeholder="🔍 Buscar por nome do deck ou tipo de energia..." oninput="filterDeckCatalog()" style="flex: 1; min-width: 240px;">
+          <div id="deck-count-badge" style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); background: rgba(255, 203, 5, 0.08); border: 1px solid rgba(255, 203, 5, 0.2); padding: 0.45rem 0.85rem; border-radius: 6px; white-space: nowrap;">
+            0 Decks Cadastrados
+          </div>
+        </div>
+
+        <div id="decks-catalog-grid" class="deck-catalog-grid">
+          <!-- Renderizado via JS -->
+        </div>
+      </section>
+    </div>
+
+    <!-- ABA 3: METAGAME POR ETAPA -->
+    <div id="pane-metagame" class="tab-pane-content" style="display: none; max-width: 900px; margin: 0 auto;">
+      <section class="glass-card admin-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <h2 style="font-size: 1.2rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              📊 Metagame e Decks por Etapa
+            </h2>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              Consulte e edite os decks utilizados pelos jogadores em cada torneio
+            </p>
+          </div>
+          <button type="button" id="btn-save-metagame" class="btn" onclick="saveAdminStageMetagame()" style="background: #10b981; color: #fff; border-color: #10b981; font-weight: 700; padding: 0.5rem 1.2rem; display: flex; align-items: center; gap: 0.4rem;">
+            💾 Salvar Alterações na Etapa
+          </button>
+        </div>
+
+        <div class="form-row" style="margin-bottom: 1.25rem; align-items: flex-end;">
+          <div class="form-group" style="flex: 2;">
+            <label for="admin-meta-stage-selector">Selecione a Etapa para Visualizar/Editar</label>
+            <select id="admin-meta-stage-selector" class="search-input" onchange="renderAdminStageMetagame()" style="width: 100%;">
+              <!-- Preenchido dinamicamente -->
+            </select>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="admin-meta-player-filter">Filtrar Jogador</label>
+            <input type="text" id="admin-meta-player-filter" class="search-input" placeholder="🔍 Digite um nome..." oninput="filterAdminStageMetagame()">
+          </div>
+        </div>
+
+        <div id="admin-meta-stage-stats" style="margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-secondary); display: flex; gap: 1rem; flex-wrap: wrap;"></div>
+
+        <div class="table-responsive" style="max-height: 480px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius);">
+          <table class="ranking-table" style="font-size: 0.85rem;">
+            <thead>
+              <tr>
+                <th style="width: 60px; text-align: center;">Pos</th>
+                <th style="text-align: left;">Jogador</th>
+                <th style="text-align: center; width: 100px;">Categoria</th>
+                <th style="text-align: left;">Deck Utilizado</th>
+              </tr>
+            </thead>
+            <tbody id="admin-meta-tbody">
+              <!-- Renderizado dinamicamente -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- ABA 4: TEMPORADAS E HISTÓRICO -->
+    <div id="pane-seasons" class="tab-pane-content" style="display: none; max-width: 800px; margin: 0 auto;">
+      <!-- Gerenciador de Etapas -->
+      <section class="glass-card admin-card" id="stages-manager-section">
+        <h2 style="font-size: 1.15rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          📅 Gerenciador de Etapas da Temporada
+        </h2>
+        <div id="stages-loading-indicator" style="text-align: center; padding: 1.5rem; color: var(--text-secondary);">
+          ⏳ Carregando etapas...
+        </div>
+        <div id="stages-table-wrapper" style="display: none;" class="table-responsive">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Tipo / Nome</th>
+                <th style="text-align: center;">Mult.</th>
+                <th style="text-align: center;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="stages-tbody">
+              <!-- Preenchido dinamicamente -->
+            </tbody>
+          </table>
+          <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.75rem;">
+            <button id="btn-recalculate-all" onclick="recalculateRankingFromStages()" class="btn" style="width: 100%; justify-content: center; padding: 0.75rem; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-color: rgba(245, 158, 11, 0.25);">
+              🔄 Recalcular Ranking Geral do Site
+            </button>
+            <span style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; display: block; text-align: center;">
+              💡 Se houver alguma inconsistência nas pontuações gerais ou se você acabou de remover etapas "fantasma", este botão reconstrói todo o arquivo do ranking do zero cruzando e somando os dados de todos os arquivos <code>.tdf</code> individuais de etapa ativos.
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Seção: Encerrar e Arquivar Temporada -->
+      <section class="glass-card admin-card" style="border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.03);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+          <h2 style="font-size: 1.15rem; color: #ef4444; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            🏆 Encerrar e Arquivar Temporada
+          </h2>
+          <span style="font-size: 0.75rem; color: var(--text-secondary); background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 0.2rem 0.6rem; border-radius: 4px;">
+            Protegido por Senha 🔒
+          </span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
+          Ao finalizar a temporada, todos os dados atuais (.tdf consolidado e etapas) serão salvos permanentemente em um arquivo isolado no histórico (ex: <code>temporadas/temporada-5/</code>), o Campeão será registrado no Hall da Fama e o ranking ativo será zerado para a próxima temporada.
+        </p>
+        <button type="button" class="btn" onclick="openCloseSeasonModal()" style="width: 100%; justify-content: center; padding: 0.75rem; font-size: 0.95rem; font-weight: 700; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); display: flex; align-items: center; gap: 0.5rem;">
+          🔒 Encerrar Temporada Vigente...
+        </button>
+      </section>
+    </div>
+
+  </div>
+
+  <!-- Modal: Adicionar / Editar Deck no Catálogo -->
+  <div id="deck-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1040; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
+    <div class="glass-card" style="width: 100%; max-width: 480px; padding: 2rem; position: relative;">
+      <button onclick="closeDeckEditModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      
+      <h3 id="deck-modal-title" style="color: #fff; font-size: 1.25rem; margin-bottom: 1.25rem; text-align: center;">
+        🎴 Editar Deck
+      </h3>
+
+      <div class="alert-box alert-error" id="deck-modal-error" style="display: none; margin-bottom: 1rem;"></div>
+
+      <form id="deck-edit-form" onsubmit="handleSaveDeck(event)">
+        <input type="hidden" id="deck-edit-original-name" value="">
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="deck-edit-name">Nome Oficial do Deck</label>
+          <input type="text" id="deck-edit-name" class="search-input" placeholder="Ex: Charizard ex, Gardevoir ex..." required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="deck-edit-energy">Tipo de Energia Pokémon</label>
+          <select id="deck-edit-energy" class="search-input" required style="width: 100%;">
+            <option value="grass">🌿 Planta (Grass)</option>
+            <option value="fire">🔥 Fogo (Fire)</option>
+            <option value="water">💧 Água (Water)</option>
+            <option value="lightning">⚡ Elétrico (Lightning)</option>
+            <option value="psychic">🔮 Psíquico (Psychic)</option>
+            <option value="fighting">🥊 Lutador (Fighting)</option>
+            <option value="darkness">🌑 Sombrio (Darkness)</option>
+            <option value="metal">⚙️ Metal (Metal)</option>
+            <option value="dragon">🐉 Dragão (Dragon)</option>
+            <option value="colorless">⚪ Incolor (Colorless)</option>
+            <option value="fire+darkness">🔥+🌑 Fogo / Sombrio</option>
+            <option value="fire+psychic">🔥+🔮 Fogo / Psíquico</option>
+            <option value="fire+fighting">🔥+🥊 Fogo / Lutador</option>
+            <option value="psychic+grass">🔮+🌿 Psíquico / Planta</option>
+            <option value="water+lightning">💧+⚡ Água / Elétrico</option>
+            <option value="metal+darkness">⚙️+🌑 Metal / Sombrio</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="deck-edit-image">URL da Imagem da Carta Principal (Opcional)</label>
+          <input type="url" id="deck-edit-image" class="search-input" placeholder="https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/..." style="font-size: 0.8rem;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="deck-edit-icon">URL do Ícone Pokémon / Pokedex (Opcional)</label>
+          <input type="url" id="deck-edit-icon" class="search-input" placeholder="https://www.pokemon.com/static-assets/.../006.png" style="font-size: 0.8rem;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label for="deck-edit-limitless">Link da Lista no Limitless TCG (Opcional)</label>
+          <input type="url" id="deck-edit-limitless" class="search-input" placeholder="https://limitlesstcg.com/decks/..." style="font-size: 0.8rem;">
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn" onclick="closeDeckEditModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-save-deck-submit" class="btn btn-whatsapp" style="background: var(--accent-yellow); border-color: var(--accent-yellow); color: #000; font-weight: 700;">
+            💾 Salvar no Catálogo
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
   </div>
 
   <!-- Modal: Encerrar e Arquivar Temporada -->
@@ -642,17 +879,72 @@ function doGet(e) {
     let isFileValidated = false;
     let runtimeToken = null;
 
-    // Variáveis globais para cache das planilhas Google Sheets
+    // Variáveis globais para cache das planilhas e arquivos JSON
     let cachedJogadores = null;
     let cachedMetagame = null;
-    let cachedDecks = null;
+    let cachedMetagameData = {}; // Estrutura: { "YYYY-MM-DD": { sessionCode: "...", decks: { "Jogador": "Deck" } } }
+    let cachedDecks = [];
     let isFetchingSheets = false;
+    let currentAdminTab = 'upload';
     
     // Variáveis de estado para Resolução de Nomes
     let currentRawPlayers = [];
     let unresolvedPlayers = [];
     let resolvedNamesMap = {};
     let newPlayersToRegister = [];
+
+    // --- Configurações de Tipos de Energia ---
+    const ENERGY_CONFIG = {
+      grass: { label: "Planta", color: "#78C850", icon: "🌿" },
+      fire: { label: "Fogo", color: "#FF4216", icon: "🔥" },
+      water: { label: "Água", color: "#1593F5", icon: "💧" },
+      lightning: { label: "Elétrico", color: "#EBC816", icon: "⚡" },
+      psychic: { label: "Psíquico", color: "#D94293", icon: "🔮" },
+      fighting: { label: "Lutador", color: "#C55E13", icon: "🥊" },
+      darkness: { label: "Sombrio", color: "#0c4a6e", icon: "🌑" },
+      metal: { label: "Metal", color: "#7E8E9E", icon: "⚙️" },
+      dragon: { label: "Dragão", color: "#8D56FF", icon: "🐉" },
+      colorless: { label: "Incolor", color: "#94a3b8", icon: "⚪" }
+    };
+
+    function getEnergyBadge(energyType) {
+      if (!energyType) energyType = 'colorless';
+      const parts = energyType.toLowerCase().split('+').map(s => s.trim());
+      
+      if (parts.length > 1) {
+        const e1 = ENERGY_CONFIG[parts[0]] || ENERGY_CONFIG.colorless;
+        const e2 = ENERGY_CONFIG[parts[1]] || ENERGY_CONFIG.colorless;
+        const gradient = `linear-gradient(135deg, ${e1.color}, ${e2.color})`;
+        return `<span style="background:${gradient}; color:#fff; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:12px; display:inline-flex; align-items:center; gap:3px; box-shadow:0 2px 5px rgba(0,0,0,0.3); text-shadow:0 1px 2px rgba(0,0,0,0.8);">${e1.icon}${e2.icon} ${e1.label}/${e2.label}</span>`;
+      }
+      
+      const e = ENERGY_CONFIG[parts[0]] || ENERGY_CONFIG.colorless;
+      return `<span style="background:${e.color}; color:#fff; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:12px; display:inline-flex; align-items:center; gap:3px; box-shadow:0 2px 5px rgba(0,0,0,0.3); text-shadow:0 1px 2px rgba(0,0,0,0.8);">${e.icon} ${e.label}</span>`;
+    }
+
+    // --- Alternador de Abas do Painel ---
+    function switchAdminTab(tabName) {
+      currentAdminTab = tabName;
+      const tabs = ['upload', 'decks', 'metagame', 'seasons'];
+      tabs.forEach(t => {
+        const pane = document.getElementById(`pane-${t}`);
+        const btn = document.getElementById(`nav-btn-${t}`);
+        if (pane) pane.style.display = (t === tabName) ? 'block' : 'none';
+        if (btn) {
+          if (t === tabName) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+      });
+
+      if (tabName === 'decks') {
+        renderDeckCatalog();
+      } else if (tabName === 'metagame') {
+        renderAdminMetagameSelector();
+        renderAdminStageMetagame();
+      } else if (tabName === 'seasons') {
+        loadAndRenderStages();
+      }
+    }
 
     // --- Helpers de Planilha (Obtidos/adaptados do app.js) ---
     function getSpreadsheetId(url) {
@@ -756,9 +1048,9 @@ function doGet(e) {
       }
     }
 
-    // --- Carregamento de Planilhas ---
+    // --- Carregamento de Dados (Decks, Metagame e Planilha) ---
     async function ensureSheetsLoaded() {
-      if (cachedJogadores && cachedMetagame && cachedDecks) return;
+      if (cachedJogadores && cachedDecks && cachedDecks.length > 0) return;
       if (isFetchingSheets) {
         while (isFetchingSheets) {
           await new Promise(resolve => setTimeout(resolve, 100));
@@ -768,24 +1060,79 @@ function doGet(e) {
       
       isFetchingSheets = true;
       try {
+        console.log("Carregando decks.json e metagame.json...");
+        
+        // 1. Carrega decks.json
+        try {
+          const decksRes = await fetch(`decks.json?v=${new Date().getTime()}`);
+          if (decksRes.ok) {
+            cachedDecks = await decksRes.json();
+          }
+        } catch (e) {
+          console.warn("Falha ao carregar decks.json local:", e);
+        }
+
+        // 2. Carrega metagame.json
+        try {
+          const metaRes = await fetch(`metagame.json?v=${new Date().getTime()}`);
+          if (metaRes.ok) {
+            cachedMetagameData = await metaRes.json();
+            
+            // Converte metagameData para rows compatíveis com cachedMetagame
+            const playerRowsMap = new Map();
+            Object.entries(cachedMetagameData || {}).forEach(([isoDate, sessionObj]) => {
+              const sessionCode = sessionObj.sessionCode || isoDate;
+              const decksMap = sessionObj.decks || {};
+              Object.entries(decksMap).forEach(([playerName, deckName]) => {
+                const key = String(playerName).trim().toLowerCase();
+                if (!playerRowsMap.has(key)) {
+                  playerRowsMap.set(key, { Jogador: playerName });
+                }
+                playerRowsMap.get(key)[sessionCode] = deckName;
+              });
+            });
+            cachedMetagame = Array.from(playerRowsMap.values());
+          }
+        } catch (e) {
+          console.warn("Falha ao carregar metagame.json local:", e);
+        }
+
+        // 3. Carrega Jogadores (do Sheets ou fallback)
         const sheetUrl = window.CONFIG ? window.CONFIG.googleSheetCsvUrl : "";
         const spreadsheetId = getSpreadsheetId(sheetUrl);
         const publishedSheetGids = window.CONFIG && window.CONFIG.publishedSheetGids ? window.CONFIG.publishedSheetGids : {};
         
         if (spreadsheetId) {
-          console.log("Iniciando carregamento das planilhas no admin...");
-          const [jogadores, metagame, decks] = await Promise.all([
-            fetchOptionalSheetTab(spreadsheetId, "Jogadores", publishedSheetGids.Jogadores),
-            fetchOptionalSheetTab(spreadsheetId, "Metagame", publishedSheetGids.Metagame),
-            fetchOptionalSheetTab(spreadsheetId, "Decks", publishedSheetGids.Decks)
-          ]);
-          cachedJogadores = jogadores || [];
-          cachedMetagame = (metagame && metagame.length) ? metagame : cachedJogadores;
-          cachedDecks = decks || [];
-          console.log("Planilhas carregadas com sucesso. Jogadores:", cachedJogadores.length, "Metagame (ou Jogadores fallback):", cachedMetagame.length, "Decks:", cachedDecks.length);
+          try {
+            const [jogadores, metaSheet, decksSheet] = await Promise.all([
+              fetchOptionalSheetTab(spreadsheetId, "Jogadores", publishedSheetGids.Jogadores),
+              (!cachedMetagame || !cachedMetagame.length) ? fetchOptionalSheetTab(spreadsheetId, "Metagame", publishedSheetGids.Metagame) : Promise.resolve([]),
+              (!cachedDecks || !cachedDecks.length) ? fetchOptionalSheetTab(spreadsheetId, "Decks", publishedSheetGids.Decks) : Promise.resolve([])
+            ]);
+            if (jogadores && jogadores.length) cachedJogadores = jogadores;
+            if (metaSheet && metaSheet.length && (!cachedMetagame || !cachedMetagame.length)) cachedMetagame = metaSheet;
+            if (decksSheet && decksSheet.length && (!cachedDecks || !cachedDecks.length)) {
+              cachedDecks = decksSheet.map(d => ({
+                deck: d.Deck || d.deck || "",
+                tipoEnergia: d.TipoEnergia || d.tipoEnergia || "colorless",
+                imagem: d.Imagem || d.imagem || "",
+                limitless: d.Limitless || d.limitless || "",
+                icone: d.Icone || d.icone || ""
+              }));
+            }
+          } catch (sheetErr) {
+            console.warn("Planilha Sheets indisponível no momento:", sheetErr);
+          }
         }
+
+        if (!cachedJogadores || !cachedJogadores.length) {
+          if (cachedMetagame && cachedMetagame.length) cachedJogadores = cachedMetagame;
+        }
+
+        renderDeckDatalist();
+        console.log(`Dados carregados: ${cachedDecks ? cachedDecks.length : 0} decks, ${Object.keys(cachedMetagameData).length} etapas de metagame.`);
       } catch (err) {
-        console.error("Erro ao carregar dados da planilha:", err);
+        console.error("Erro geral em ensureSheetsLoaded:", err);
       } finally {
         isFetchingSheets = false;
       }
@@ -1118,6 +1465,9 @@ function doGet(e) {
         
         ensureSheetsLoaded().then(() => {
           loadAndRenderStages();
+          renderDeckDatalist();
+          renderDeckCatalog();
+          renderAdminMetagameSelector();
         });
       } else {
         errorBox.style.display = 'block';
@@ -2136,6 +2486,24 @@ function doGet(e) {
         // Puxa o ID do jogador (do arquivo original ou do banco do Sheets)
         const tId = getPlayerId(p) || (cachedJogadores && cachedJogadores.find(dbPlayer => normalizePlayerName(dbPlayer.Jogador || dbPlayer.Name) === normalizePlayerName(officialName))?.ID) || '';
 
+        // Busca deck registrado para esta etapa ou deck mais recente do jogador
+        let playerDeck = '';
+        if (eventDate && cachedMetagameData && cachedMetagameData[eventDate] && cachedMetagameData[eventDate].decks) {
+          playerDeck = cachedMetagameData[eventDate].decks[officialName] || '';
+        }
+        if (!playerDeck && p.Deck && p.Deck !== 'Não registrado' && p.Deck !== 'Sem deck registrado') {
+          playerDeck = p.Deck;
+        }
+        if (!playerDeck && cachedMetagameData) {
+          const dates = Object.keys(cachedMetagameData).sort().reverse();
+          for (const d of dates) {
+            if (cachedMetagameData[d].decks && cachedMetagameData[d].decks[officialName]) {
+              playerDeck = cachedMetagameData[d].decks[officialName];
+              break;
+            }
+          }
+        }
+
         return {
           Pos: playerPos,
           ID: tId,
@@ -2146,7 +2514,8 @@ function doGet(e) {
           Empates: e,
           Derrotas: d,
           Podio: resolvedPodium,
-          MediaColocacao: resolvedMedia
+          MediaColocacao: resolvedMedia,
+          Deck: playerDeck
         };
       });
 
@@ -2165,7 +2534,9 @@ function doGet(e) {
               <span style="color: #ef4444; font-weight:700;">${p.Derrotas}D</span>
             </td>
             <td style="text-align:center;">${p.Podio}</td>
-            <td style="text-align:center;">${p.MediaColocacao !== '-' ? formatAveragePlacement(p.MediaColocacao) + 'º' : '-'}</td>
+            <td style="text-align:left;">
+              <input type="text" list="all-decks-datalist" class="search-input player-stage-deck-input" data-player="${escapeHTML(p.Jogador)}" value="${escapeHTML(p.Deck || '')}" placeholder="Selecione ou digite..." style="padding: 0.35rem 0.6rem; font-size: 0.82rem; width: 100%; min-width: 150px; background: rgba(0,0,0,0.5);">
+            </td>
           </tr>
         `;
       }).join('');
@@ -2736,7 +3107,90 @@ function doGet(e) {
           throw new Error("Falha ao salvar índice de etapas (etapas.json): " + (data.message || etapasRes.statusText));
         }
 
-        // 3. Commit do ranking geral (Busca o SHA mais recente em tempo real)
+        // 3. Commit do metagame.json da etapa
+        try {
+          const seasonVal = document.getElementById('event-season')?.value || '5';
+          const numVal = document.getElementById('event-number')?.value || '1';
+          let prefix = 'S';
+          if (eventType === 'Challenge') prefix = 'CH';
+          else if (eventType === 'Cup') prefix = 'CUP';
+          else if (eventType === 'Personalizado') {
+            const customTitle = document.getElementById('event-custom-title')?.value.trim() || 'CUSTOM';
+            prefix = customTitle.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 5);
+          }
+          const parts = eventDate.split('-');
+          const ddmmaa = (parts.length === 3) ? (parts[2] + parts[1] + parts[0].substring(2)) : '';
+          const sessionCode = `${prefix}${numVal}T${seasonVal} ${ddmmaa}`.trim();
+
+          const deckInputs = document.querySelectorAll('.player-stage-deck-input');
+          const stageDecksMap = {};
+          const newDecksToRegister = [];
+
+          deckInputs.forEach(inp => {
+            const plName = inp.getAttribute('data-player');
+            const deckVal = inp.value.trim();
+            if (plName && deckVal) {
+              stageDecksMap[plName] = deckVal;
+              if (!cachedDecks.some(d => (d.deck || '').toLowerCase() === deckVal.toLowerCase())) {
+                if (!newDecksToRegister.includes(deckVal)) {
+                  newDecksToRegister.push(deckVal);
+                }
+              }
+            }
+          });
+
+          if (!cachedMetagameData) cachedMetagameData = {};
+          cachedMetagameData[eventDate] = {
+            sessionCode: sessionCode,
+            decks: stageDecksMap
+          };
+
+          const metaUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/metagame.json`;
+          let metaSha = await getLatestSha(metaUrl);
+          const commitMetaPayload = {
+            message: `Salvar metagame da etapa ${eventDate} (${sessionCode})`,
+            content: encodeBase64UTF8(JSON.stringify(cachedMetagameData, null, 4)),
+            branch: config.branch
+          };
+          if (metaSha) commitMetaPayload.sha = metaSha;
+          
+          await fetch(metaUrl, {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(commitMetaPayload)
+          });
+
+          if (newDecksToRegister.length > 0) {
+            newDecksToRegister.forEach(deckName => {
+              cachedDecks.push({
+                deck: deckName,
+                tipoEnergia: 'colorless',
+                imagem: '',
+                limitless: '',
+                icone: ''
+              });
+            });
+            cachedDecks.sort((a, b) => (a.deck || '').localeCompare(b.deck || '', 'pt-BR'));
+            const decksUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/decks.json`;
+            let decksSha = await getLatestSha(decksUrl);
+            const commitDecksPayload = {
+              message: `Auto-cadastrar decks da etapa: ${newDecksToRegister.join(', ')}`,
+              content: encodeBase64UTF8(JSON.stringify(cachedDecks, null, 4)),
+              branch: config.branch
+            };
+            if (decksSha) commitDecksPayload.sha = decksSha;
+            await fetch(decksUrl, {
+              method: 'PUT',
+              headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify(commitDecksPayload)
+            });
+            renderDeckDatalist();
+          }
+        } catch (metaErr) {
+          console.warn("Aviso ao sincronizar metagame.json:", metaErr);
+        }
+
+        // 4. Commit do ranking geral (Busca o SHA mais recente em tempo real)
         let currentRankingSha = await getLatestSha(url);
         const commitRankingPayload = {
           message: `Atualização de ranking geral - ${shouldAccumulate ? 'Acumulado' : 'Substituído'} (${new Date().toLocaleString('pt-BR')})`,
@@ -2760,7 +3214,7 @@ function doGet(e) {
         }
         
         const successMsg = shouldAccumulate
-          ? "🚀 Ranking acumulado e publicado com sucesso! A etapa foi salva e o ranking consolidado foi atualizado no GitHub."
+          ? "🚀 Ranking e Metagame acumulados e publicados com sucesso! A etapa foi salva e os dados foram atualizados no repositório."
           : "🚀 Ranking publicado com sucesso! O arquivo anterior foi substituído por esta etapa.";
           
         showSuccess(successMsg);
@@ -2773,6 +3227,562 @@ function doGet(e) {
       } finally {
         btn.disabled = false;
         btn.innerText = "🚀 Publicar Ranking no Site";
+      }
+    }
+
+    // ==========================================
+    // CATÁLOGO DE DECKS (ABA 2)
+    // ==========================================
+    function renderDeckDatalist() {
+      const datalist = document.getElementById('all-decks-datalist');
+      if (!datalist) return;
+      const sorted = [...(cachedDecks || [])].sort((a, b) => (a.deck || '').localeCompare(b.deck || '', 'pt-BR'));
+      datalist.innerHTML = sorted.map(d => `<option value="${escapeHTML(d.deck || '')}">`).join('');
+    }
+
+    function renderDeckCatalog() {
+      const grid = document.getElementById('decks-catalog-grid');
+      const badge = document.getElementById('deck-count-badge');
+      if (!grid) return;
+
+      const searchInput = document.getElementById('deck-catalog-search');
+      const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+      const filtered = (cachedDecks || []).filter(d => {
+        if (!searchVal) return true;
+        const nameMatch = (d.deck || '').toLowerCase().includes(searchVal);
+        const energyMatch = (d.tipoEnergia || '').toLowerCase().includes(searchVal);
+        return nameMatch || energyMatch;
+      });
+
+      if (badge) {
+        badge.innerText = `${cachedDecks.length} Decks Cadastrados`;
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔍</div>
+            <div style="font-size: 1rem; color: #fff; font-weight: 600;">Nenhum deck encontrado</div>
+            <div style="font-size: 0.8rem; margin-top: 0.25rem;">Tente buscar com outro termo ou clique em "+ Novo Deck" para cadastrar.</div>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.sort((a, b) => (a.deck || '').localeCompare(b.deck || '', 'pt-BR'));
+
+      grid.innerHTML = filtered.map(d => {
+        const deckName = escapeHTML(d.deck || 'Sem nome');
+        const energyBadge = getEnergyBadge(d.tipoEnergia);
+        const thumbUrl = d.icone || d.imagem || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+        const limitlessBtn = d.limitless ? `
+          <a href="${escapeHTML(d.limitless)}" target="_blank" rel="noopener noreferrer" class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.72rem; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3); text-decoration: none;" title="Abrir no Limitless TCG">
+            🌐 Limitless
+          </a>
+        ` : '';
+
+        return `
+          <div class="deck-card">
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+              <img src="${escapeHTML(thumbUrl)}" alt="${deckName}" class="deck-card-thumb" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'">
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 700; color: #fff; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${deckName}">
+                  ${deckName}
+                </div>
+                <div style="margin-top: 0.35rem;">
+                  ${energyBadge}
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 0.6rem; margin-top: 0.25rem;">
+              ${limitlessBtn}
+              <button type="button" class="btn" onclick="openEditDeckModal('${escapeHTML(d.deck)}')" style="padding: 0.3rem 0.65rem; font-size: 0.75rem; background: rgba(255, 203, 5, 0.15); color: var(--accent-yellow); border-color: rgba(255, 203, 5, 0.3);">
+                ✏️ Editar
+              </button>
+              <button type="button" class="btn btn-danger" onclick="handleDeleteDeck('${escapeHTML(d.deck)}')" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterDeckCatalog() {
+      renderDeckCatalog();
+    }
+
+    function openNewDeckModal() {
+      document.getElementById('deck-modal-title').innerText = '🎴 Cadastrar Novo Deck';
+      document.getElementById('deck-edit-original-name').value = '';
+      document.getElementById('deck-edit-name').value = '';
+      document.getElementById('deck-edit-energy').value = 'colorless';
+      document.getElementById('deck-edit-image').value = '';
+      document.getElementById('deck-edit-icon').value = '';
+      document.getElementById('deck-edit-limitless').value = '';
+      document.getElementById('deck-modal-error').style.display = 'none';
+      document.getElementById('deck-edit-modal').style.display = 'flex';
+    }
+
+    function openEditDeckModal(deckName) {
+      const deckObj = (cachedDecks || []).find(d => (d.deck || '').toLowerCase() === String(deckName).toLowerCase());
+      if (!deckObj) {
+        showError(`Deck "${deckName}" não encontrado no catálogo.`);
+        return;
+      }
+
+      document.getElementById('deck-modal-title').innerText = `🎴 Editar Deck: ${deckObj.deck}`;
+      document.getElementById('deck-edit-original-name').value = deckObj.deck;
+      document.getElementById('deck-edit-name').value = deckObj.deck;
+      document.getElementById('deck-edit-energy').value = deckObj.tipoEnergia || 'colorless';
+      document.getElementById('deck-edit-image').value = deckObj.imagem || '';
+      document.getElementById('deck-edit-icon').value = deckObj.icone || '';
+      document.getElementById('deck-edit-limitless').value = deckObj.limitless || '';
+      document.getElementById('deck-modal-error').style.display = 'none';
+      document.getElementById('deck-edit-modal').style.display = 'flex';
+    }
+
+    function closeDeckEditModal() {
+      document.getElementById('deck-edit-modal').style.display = 'none';
+      document.getElementById('deck-modal-error').style.display = 'none';
+    }
+
+    async function handleSaveDeck(e) {
+      if (e) e.preventDefault();
+      const errBox = document.getElementById('deck-modal-error');
+      const submitBtn = document.getElementById('btn-save-deck-submit');
+      if (errBox) errBox.style.display = 'none';
+
+      if (!runtimeToken) {
+        if (errBox) {
+          errBox.innerText = "Sessão expirada. Faça login novamente no painel.";
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      const origName = document.getElementById('deck-edit-original-name').value.trim();
+      const name = document.getElementById('deck-edit-name').value.trim();
+      const energy = document.getElementById('deck-edit-energy').value.trim();
+      const image = document.getElementById('deck-edit-image').value.trim();
+      const icon = document.getElementById('deck-edit-icon').value.trim();
+      const limitless = document.getElementById('deck-edit-limitless').value.trim();
+
+      if (!name) {
+        if (errBox) {
+          errBox.innerText = "Por favor, informe o nome oficial do deck.";
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      if ((!origName || origName.toLowerCase() !== name.toLowerCase()) && 
+          cachedDecks.some(d => (d.deck || '').toLowerCase() === name.toLowerCase())) {
+        if (errBox) {
+          errBox.innerText = `Já existe um deck cadastrado com o nome "${name}".`;
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "⏳ Salvando...";
+
+      try {
+        const updatedDecks = [...cachedDecks];
+        const newRecord = {
+          deck: name,
+          tipoEnergia: energy,
+          imagem: image,
+          limitless: limitless,
+          icone: icon
+        };
+
+        if (origName) {
+          const idx = updatedDecks.findIndex(d => (d.deck || '').toLowerCase() === origName.toLowerCase());
+          if (idx >= 0) {
+            updatedDecks[idx] = newRecord;
+          } else {
+            updatedDecks.push(newRecord);
+          }
+        } else {
+          updatedDecks.push(newRecord);
+        }
+
+        updatedDecks.sort((a, b) => (a.deck || '').localeCompare(b.deck || '', 'pt-BR'));
+
+        const config = GITHUB_CONFIG;
+        const decksUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/decks.json`;
+        let decksSha = await getLatestSha(decksUrl);
+        
+        const commitPayload = {
+          message: origName ? `Atualizar deck "${name}" no catálogo` : `Cadastrar novo deck "${name}" no catálogo`,
+          content: encodeBase64UTF8(JSON.stringify(updatedDecks, null, 4)),
+          branch: config.branch
+        };
+        if (decksSha) commitPayload.sha = decksSha;
+
+        const res = await fetch(decksUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao salvar decks.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedDecks = updatedDecks;
+        renderDeckDatalist();
+        renderDeckCatalog();
+        closeDeckEditModal();
+        showSuccess(`🎴 Deck "${name}" salvo com sucesso no catálogo e no repositório!`);
+
+      } catch (err) {
+        console.error("Erro ao salvar deck:", err);
+        if (errBox) {
+          errBox.innerText = "Erro: " + err.message;
+          errBox.style.display = 'block';
+        }
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "💾 Salvar no Catálogo";
+      }
+    }
+
+    async function handleDeleteDeck(deckName) {
+      if (!confirm(`Deseja realmente excluir o deck "${deckName}" do catálogo oficial?`)) return;
+
+      if (!runtimeToken) {
+        showError("Token expirado. Faça login novamente.");
+        return;
+      }
+
+      showSuccess(`⏳ Excluindo deck "${deckName}" do catálogo...`);
+
+      try {
+        const updatedDecks = cachedDecks.filter(d => (d.deck || '').toLowerCase() !== String(deckName).toLowerCase());
+
+        const config = GITHUB_CONFIG;
+        const decksUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/decks.json`;
+        let decksSha = await getLatestSha(decksUrl);
+        
+        const commitPayload = {
+          message: `Excluir deck "${deckName}" do catálogo`,
+          content: encodeBase64UTF8(JSON.stringify(updatedDecks, null, 4)),
+          branch: config.branch
+        };
+        if (decksSha) commitPayload.sha = decksSha;
+
+        const res = await fetch(decksUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao atualizar decks.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedDecks = updatedDecks;
+        renderDeckDatalist();
+        renderDeckCatalog();
+        showSuccess(`🗑️ Deck "${deckName}" excluído do catálogo com sucesso.`);
+
+      } catch (err) {
+        showError("Erro ao excluir deck: " + err.message);
+      }
+    }
+
+    // ==========================================
+    // METAGAME POR ETAPA (ABA 3)
+    // ==========================================
+    let currentAdminStagePlayers = [];
+
+    async function renderAdminMetagameSelector() {
+      const selector = document.getElementById('admin-meta-stage-selector');
+      if (!selector) return;
+
+      const previousVal = selector.value;
+      selector.innerHTML = '<option value="">⏳ Carregando etapas disponíveis...</option>';
+
+      let stagesList = [];
+      try {
+        const config = GITHUB_CONFIG;
+        const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas.json?ref=${config.branch}&t=${new Date().getTime()}`;
+        const res = await fetch(etapasUrl, {
+          headers: { 'Authorization': `token ${runtimeToken}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.content) stagesList = JSON.parse(decodeBase64UTF8(data.content));
+        }
+      } catch (e) {
+        console.warn("Falha ao carregar etapas.json:", e);
+      }
+
+      if (stagesList.length === 0 && cachedMetagameData) {
+        Object.keys(cachedMetagameData).forEach(date => {
+          stagesList.push({ data: date, tipo: 'Liga', multiplicador: 1.0 });
+        });
+      }
+
+      if (stagesList.length === 0) {
+        selector.innerHTML = '<option value="">Nenhuma etapa cadastrada</option>';
+        return;
+      }
+
+      stagesList.sort((a, b) => b.data.localeCompare(a.data));
+
+      selector.innerHTML = stagesList.map(s => {
+        const formattedDate = formatDateISOToPT(s.data);
+        const metaInfo = cachedMetagameData[s.data];
+        const codeLabel = metaInfo && metaInfo.sessionCode ? `[${metaInfo.sessionCode}] ` : '';
+        return `<option value="${s.data}">${codeLabel}${formattedDate} - ${s.tipo || 'Liga'} (${s.multiplicador || 1.0}x)</option>`;
+      }).join('');
+
+      if (previousVal && stagesList.some(s => s.data === previousVal)) {
+        selector.value = previousVal;
+      } else {
+        selector.value = stagesList[0].data;
+      }
+
+      await renderAdminStageMetagame();
+    }
+
+    async function renderAdminStageMetagame() {
+      const selector = document.getElementById('admin-meta-stage-selector');
+      const tbody = document.getElementById('admin-meta-tbody');
+      const statsDiv = document.getElementById('admin-meta-stage-stats');
+      if (!selector || !tbody) return;
+
+      const stageDate = selector.value;
+      if (!stageDate) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Selecione uma etapa acima.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">⏳ Carregando jogadores e decks da etapa ${formatDateISOToPT(stageDate)}...</td></tr>`;
+
+      try {
+        let stagePlayers = [];
+        const config = GITHUB_CONFIG;
+        const stageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas/${stageDate}.tdf?ref=${config.branch}&t=${new Date().getTime()}`;
+        
+        try {
+          const res = await fetch(stageTdfUrl, {
+            headers: { 'Authorization': `token ${runtimeToken}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.content) {
+              stagePlayers = parseTDF(decodeBase64UTF8(data.content));
+            }
+          }
+        } catch (e) {
+          console.warn("Arquivo da etapa individual não carregado:", e);
+        }
+
+        const stageMeta = cachedMetagameData[stageDate] || { decks: {} };
+        const decksMap = stageMeta.decks || {};
+
+        if (stagePlayers.length === 0) {
+          const registeredNames = Object.keys(decksMap);
+          stagePlayers = registeredNames.map((name, i) => ({
+            Pos: i + 1,
+            Jogador: name,
+            Categoria: 'MASTER'
+          }));
+        }
+
+        currentAdminStagePlayers = stagePlayers;
+
+        const total = stagePlayers.length;
+        const filled = stagePlayers.filter(p => {
+          const d = decksMap[p.Jogador] || decksMap[p.Player] || decksMap[p.Name];
+          return d && d.trim() !== '' && d.toLowerCase() !== 'não registrado';
+        }).length;
+
+        if (statsDiv) {
+          statsDiv.innerHTML = `
+            <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); padding: 0.4rem 0.8rem; border-radius: 6px;">
+              👥 Total de Jogadores: <strong style="color: #fff;">${total}</strong>
+            </div>
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); color: #34d399; padding: 0.4rem 0.8rem; border-radius: 6px;">
+              🎴 Decks Preenchidos: <strong>${filled}/${total} (${total > 0 ? Math.round((filled/total)*100) : 0}%)</strong>
+            </div>
+          `;
+        }
+
+        filterAdminStageMetagame();
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #ef4444;">Erro ao carregar dados da etapa: ${escapeHTML(err.message)}</td></tr>`;
+      }
+    }
+
+    function filterAdminStageMetagame() {
+      const tbody = document.getElementById('admin-meta-tbody');
+      const selector = document.getElementById('admin-meta-stage-selector');
+      const filterInput = document.getElementById('admin-meta-player-filter');
+      if (!tbody || !selector) return;
+
+      const stageDate = selector.value;
+      const stageMeta = cachedMetagameData[stageDate] || { decks: {} };
+      const decksMap = stageMeta.decks || {};
+      const filterVal = filterInput ? filterInput.value.toLowerCase().trim() : '';
+
+      const playersToRender = currentAdminStagePlayers.filter(p => {
+        const name = p.Jogador || p.Player || p.Name || '';
+        return !filterVal || name.toLowerCase().includes(filterVal);
+      });
+
+      if (playersToRender.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Nenhum jogador encontrado com o filtro atual.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = playersToRender.map(p => {
+        const name = p.Jogador || p.Player || p.Name || '';
+        const cat = p.Categoria || p.Category || 'MASTER';
+        const pos = p.Pos || '-';
+        const currentDeck = decksMap[name] || '';
+
+        return `
+          <tr>
+            <td style="text-align: center; font-weight: 700; color: #fff;">${pos}º</td>
+            <td style="font-weight: 600; color: #fff;">${escapeHTML(name)}</td>
+            <td style="text-align: center; color: var(--text-secondary); font-size: 0.8rem;">${escapeHTML(cat)}</td>
+            <td>
+              <input type="text" list="all-decks-datalist" class="search-input stage-deck-row-input" data-player="${escapeHTML(name)}" value="${escapeHTML(currentDeck)}" placeholder="Digite ou selecione o deck..." style="padding: 0.35rem 0.6rem; font-size: 0.85rem; width: 100%; min-width: 180px; background: rgba(0,0,0,0.4);">
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function saveAdminStageMetagame() {
+      if (!runtimeToken) {
+        showError("Sessão expirada. Faça login novamente no painel.");
+        return;
+      }
+
+      const selector = document.getElementById('admin-meta-stage-selector');
+      const saveBtn = document.getElementById('btn-save-metagame');
+      const stageDate = selector ? selector.value : '';
+
+      if (!stageDate) {
+        showError("Selecione uma etapa para salvar.");
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.innerText = "⏳ Salvando Decks no GitHub...";
+      hideAlerts();
+
+      try {
+        const rowInputs = document.querySelectorAll('.stage-deck-row-input');
+        const updatedDecksMap = { ...(cachedMetagameData[stageDate]?.decks || {}) };
+        const newDecksToRegister = [];
+
+        rowInputs.forEach(inp => {
+          const playerName = inp.getAttribute('data-player');
+          const deckValue = inp.value.trim();
+          if (playerName) {
+            if (deckValue) {
+              updatedDecksMap[playerName] = deckValue;
+              if (!cachedDecks.some(d => (d.deck || '').toLowerCase() === deckValue.toLowerCase())) {
+                if (!newDecksToRegister.includes(deckValue)) {
+                  newDecksToRegister.push(deckValue);
+                }
+              }
+            } else {
+              delete updatedDecksMap[playerName];
+            }
+          }
+        });
+
+        const existingSessionCode = cachedMetagameData[stageDate]?.sessionCode || `ETAPA ${formatDateISOToPT(stageDate)}`;
+        cachedMetagameData[stageDate] = {
+          sessionCode: existingSessionCode,
+          decks: updatedDecksMap
+        };
+
+        const config = GITHUB_CONFIG;
+        const metaUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/metagame.json`;
+        let metaSha = await getLatestSha(metaUrl);
+
+        const commitMetaPayload = {
+          message: `Atualizar decks do metagame da etapa ${stageDate}`,
+          content: encodeBase64UTF8(JSON.stringify(cachedMetagameData, null, 4)),
+          branch: config.branch
+        };
+        if (metaSha) commitMetaPayload.sha = metaSha;
+
+        const metaRes = await fetch(metaUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitMetaPayload)
+        });
+
+        if (!metaRes.ok) {
+          const errData = await metaRes.json();
+          throw new Error("Falha ao salvar metagame.json: " + (errData.message || metaRes.statusText));
+        }
+
+        if (newDecksToRegister.length > 0) {
+          newDecksToRegister.forEach(deckName => {
+            cachedDecks.push({
+              deck: deckName,
+              tipoEnergia: 'colorless',
+              imagem: '',
+              limitless: '',
+              icone: ''
+            });
+          });
+          cachedDecks.sort((a, b) => (a.deck || '').localeCompare(b.deck || '', 'pt-BR'));
+
+          const decksUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/decks.json`;
+          let decksSha = await getLatestSha(decksUrl);
+          const commitDecksPayload = {
+            message: `Auto-cadastrar decks da etapa: ${newDecksToRegister.join(', ')}`,
+            content: encodeBase64UTF8(JSON.stringify(cachedDecks, null, 4)),
+            branch: config.branch
+          };
+          if (decksSha) commitDecksPayload.sha = decksSha;
+
+          await fetch(decksUrl, {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(commitDecksPayload)
+          });
+
+          renderDeckDatalist();
+          renderDeckCatalog();
+        }
+
+        showSuccess(`💾 Decks da etapa de ${formatDateISOToPT(stageDate)} atualizados com sucesso no repositório!`);
+        await renderAdminStageMetagame();
+
+      } catch (err) {
+        console.error("Erro ao salvar metagame:", err);
+        showError("Erro ao salvar metagame: " + err.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerText = "💾 Salvar Alterações na Etapa";
       }
     }
 

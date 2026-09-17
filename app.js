@@ -276,8 +276,8 @@ function renderTimelineThumb(url, eventTitle) {
 function getDeckEnergy(deckName) {
   if (!deckName || !appData.Decks) return '';
   const dName = String(deckName).trim().toLowerCase();
-  const deckInfo = appData.Decks.find(d => (d.Deck || '').trim().toLowerCase() === dName);
-  return deckInfo ? (deckInfo.TipoEnergia || '') : '';
+  const deckInfo = appData.Decks.find(d => (d.Deck || d.deck || '').trim().toLowerCase() === dName);
+  return deckInfo ? (deckInfo.TipoEnergia || deckInfo.tipoEnergia || '') : '';
 }
 
 function getEnergyDotHTML(value) {
@@ -862,6 +862,51 @@ async function loadData() {
         return fetchOptionalSheetTab(spreadsheetId, "Campeoes", publishedSheetGids.Campeoes);
       })();
 
+      const decksPromise = (async () => {
+        try {
+          const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          const url = isLocalHost ? `decks.json?v=${new Date().getTime()}` : (githubSources.Ranking ? githubSources.Ranking.replace('ranking.tdf', 'decks.json') : `decks.json?v=${new Date().getTime()}`);
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length) return data;
+          }
+        } catch (e) {
+          console.info("decks.json não encontrado ou falha ao carregar.", e);
+        }
+        return fetchOptionalSheetTab(spreadsheetId, "Decks", publishedSheetGids.Decks);
+      })();
+
+      const metagamePromise = (async () => {
+        try {
+          const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          const url = isLocalHost ? `metagame.json?v=${new Date().getTime()}` : (githubSources.Ranking ? githubSources.Ranking.replace('ranking.tdf', 'metagame.json') : `metagame.json?v=${new Date().getTime()}`);
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && typeof data === 'object') {
+              const playerRowsMap = new Map();
+              Object.entries(data).forEach(([isoDate, sessionObj]) => {
+                const sessionCode = sessionObj.sessionCode || isoDate;
+                const decksMap = sessionObj.decks || {};
+                Object.entries(decksMap).forEach(([playerName, deckName]) => {
+                  const key = String(playerName).trim().toLowerCase();
+                  if (!playerRowsMap.has(key)) {
+                    playerRowsMap.set(key, { Jogador: playerName });
+                  }
+                  playerRowsMap.get(key)[sessionCode] = deckName;
+                });
+              });
+              return Array.from(playerRowsMap.values());
+            }
+          }
+        } catch (e) {
+          console.info("metagame.json não encontrado ou falha ao carregar.", e);
+        }
+        const metaSheet = await fetchOptionalSheetTab(spreadsheetId, "Metagame", publishedSheetGids.Metagame);
+        return (metaSheet && metaSheet.length) ? metaSheet : null;
+      })();
+
       const [ranking, partidas, scoresAntigos, calendario, campeoes, regras, galeria, loadedStages, jogadoresSheet, metagame, decks] = await Promise.all([
         rankingPromise,
         fetchOptionalSheetTab(spreadsheetId, "Partidas", publishedSheetGids.Partidas),
@@ -872,8 +917,8 @@ async function loadData() {
         fetchOptionalSheetTab(spreadsheetId, "Galeria", publishedSheetGids.Galeria),
         stagesPromise,
         fetchOptionalSheetTab(spreadsheetId, "Jogadores", publishedSheetGids.Jogadores),
-        fetchOptionalSheetTab(spreadsheetId, "Metagame", publishedSheetGids.Metagame),
-        fetchOptionalSheetTab(spreadsheetId, "Decks", publishedSheetGids.Decks)
+        metagamePromise,
+        decksPromise
       ]);
 
       stagesIndex = loadedStages || [];
@@ -1342,8 +1387,8 @@ function renderRankingTable(players, page = 1) {
         const energyDot = getEnergyDotHTML(energy);
         
         const decksTab = appData.Decks || [];
-        const deckInfo = decksTab.find(d => (d.Deck || '').trim().toLowerCase() === deckName.toLowerCase());
-        const customIconUrl = deckInfo ? safeExternalUrl(deckInfo.Icone || deckInfo.Imagem) : null;
+        const deckInfo = decksTab.find(d => (d.Deck || d.deck || '').trim().toLowerCase() === deckName.toLowerCase());
+        const customIconUrl = deckInfo ? safeExternalUrl(deckInfo.Icone || deckInfo.icone || deckInfo.Imagem || deckInfo.imagem) : null;
         
         if (customIconUrl) {
           deckIconHtml = `
@@ -3491,14 +3536,14 @@ function updateMetagameDisplay() {
   const sortedDecks = Object.keys(deckCounts)
     .filter(deckName => (deckCounts[deckName] || 0) > 0 && deckName && deckName.trim() !== '')
     .map(deckName => {
-      const deckInfo = decksTab.find(d => (d.Deck || '').trim().toLowerCase() === deckName.toLowerCase());
+      const deckInfo = decksTab.find(d => (d.Deck || d.deck || '').trim().toLowerCase() === deckName.toLowerCase());
       return {
         deck: deckName,
         count: deckCounts[deckName],
-        image: deckInfo ? deckInfo.Imagem : null,
-        icone: deckInfo ? deckInfo.Icone : null,
-        energia: deckInfo ? deckInfo.TipoEnergia : '',
-        limitless: deckInfo ? (deckInfo.Limitless || deckInfo.Link || deckInfo.URL || '#') : '#'
+        image: deckInfo ? (deckInfo.Imagem || deckInfo.imagem) : null,
+        icone: deckInfo ? (deckInfo.Icone || deckInfo.icone) : null,
+        energia: deckInfo ? (deckInfo.TipoEnergia || deckInfo.tipoEnergia || '') : '',
+        limitless: deckInfo ? (deckInfo.Limitless || deckInfo.limitless || deckInfo.Link || deckInfo.URL || '#') : '#'
       };
     }).sort((a, b) => b.count - a.count);
   

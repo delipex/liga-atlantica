@@ -1,0 +1,366 @@
+﻿[
+    {
+        "deck":  "Alakazam",
+        "tipoEnergia":  "psychic",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/MEG/MEG_056_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/350",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/065.png"
+    },
+    {
+        "deck":  "Azumarill Ex",
+        "tipoEnergia":  "psychic",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/ASC/ASC_084_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/cards/ASC/84/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/184.png"
+    },
+    {
+        "deck":  "Beedrill Ex",
+        "tipoEnergia":  "grass",
+        "imagem":  "https://assets.tcgdex.net/pt/me/me04/003/high.webp",
+        "limitless":  "https://limitlesstcg.com/decks/371",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/015.png"
+    },
+    {
+        "deck":  "Bellibolt Ex da Kissera",
+        "tipoEnergia":  "electric",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/ASC/ASC_070_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/cards/ASC/70/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/939.png"
+    },
+    {
+        "deck":  "Ceruledge Ex",
+        "tipoEnergia":  "fire+fighting",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/SSP/SSP_036_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/299",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/937.png"
+    },
+    {
+        "deck":  "Cinderace",
+        "tipoEnergia":  "metal",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/MEG/MEG_028_R_PT_LG.png",
+        "limitless":  "https://limitlesstcg.com/decks/list/jp/71374",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/815.png"
+    },
+    {
+        "deck":  "Clefairy Slopbox",
+        "tipoEnergia":  "psychic+grass",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/ASC/ASC_076_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/326",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/035.png"
+    },
+    {
+        "deck":  "Crustle",
+        "tipoEnergia":  "grass",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/DRI/DRI_012_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/341",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/558.png"
+    },
+    {
+        "deck":  "Doublade",
+        "tipoEnergia":  "metal",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/POR/POR_057_R_PT_LG.png",
+        "limitless":  "https://limitlesstcg.com/decks/list/jp/69429",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/680.png"
+    },
+    {
+        "deck":  "Dragapult Ex",
+        "tipoEnergia":  "fire+psychic",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/TWM/TWM_130_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/list/27941",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/887.png"
+    },
+    {
+        "deck":  "Dragapult Ex + Blaziken Ex",
+        "tipoEnergia":  "fire",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/JTG/JTG_024_R_PT_SM.png",
+        "limitless":  "https://limitlesstcg.com/decks/284?variant=9",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/887.png"
+    },
+    {
+        "deck":  "Eevee Box",
+        "tipoEnergia":  "multi",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PRE/PRE_074_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/cards/PRE/74/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/133.png"
+    },
+    {
+        "deck":  "Esconde e Some",
+        "tipoEnergia":  "psychic+grass",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PBL/PBL_039_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/list/28812",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/781.png"
+    },
+    {
+        "deck":  "Garchomp Ex da Cíntia",
+        "tipoEnergia":  "fighting",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/DRI/DRI_104_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/list/28994",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/445.png"
+    },
+    {
+        "deck":  "Grimmsnarl da Marine",
+        "tipoEnergia":  "darkness",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/DRI/DRI_136_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/329",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/861.png"
+    },
+    {
+        "deck":  "Honchkrow da Equipe Rocket",
+        "tipoEnergia":  "darkness",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/ASC/ASC_127_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/356",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/430.png"
+    },
+    {
+        "deck":  "Hydrapple Ex",
+        "tipoEnergia":  "grass",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/SCR/SCR_014_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/352",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/1019.png"
+    },
+    {
+        "deck":  "Mega Abomasnow Ex",
+        "tipoEnergia":  "water",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/MEG/MEG_036_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/cards/MEG/36/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/460_f2.png"
+    },
+    {
+        "deck":  "Mega Absol Ex Box",
+        "tipoEnergia":  "darkness",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/MEG/MEG_086_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/list/28917",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/359_f2.png"
+    },
+    {
+        "deck":  "Mega Charizard Y Ex",
+        "tipoEnergia":  "fire",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/ASC/ASC_022_R_PT_LG.png",
+        "limitless":  "https://limitlesstcg.com/decks/list/jp/71982",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/006_f3.png"
+    },
+    {
+        "deck":  "Mega Darkrai Ex",
+        "tipoEnergia":  "darkness",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PBL/PBL_048_R_PT_LG.png",
+        "limitless":  "https://limitlesstcg.com/cards/PBL/48/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/491_f2.png"
+    },
+    {
+        "deck":  "Mega Delphox Box",
+        "tipoEnergia":  "fire",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PBL/PBL_008_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/cards/PBL/8/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/655_f2.png"
+    },
+    {
+        "deck":  "Mega Diancie Ex",
+        "tipoEnergia":  "psychic",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PFL/PFL_041_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/365",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/719_f2.png"
+    },
+    {
+        "deck":  "Mega Dragalge Ex",
+        "tipoEnergia":  "multi",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/CRI/CRI_065_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/cards/CRI/65/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/691_f2.png"
+    },
+    {
+        "deck":  "Mega Dragonite Ex",
+        "tipoEnergia":  "water+lightning",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/ASC/ASC_152_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/cards/ASC/152/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/149_f2.png"
+    },
+    {
+        "deck":  "Mega Excadrill Ex",
+        "tipoEnergia":  "metal",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PBL/PBL_065_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/376",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/530_f2.png"
+    },
+    {
+        "deck":  "Mega Gardevoir Ex",
+        "tipoEnergia":  "psychic",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/MEG/MEG_060_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/366",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/282_f2.png"
+    },
+    {
+        "deck":  "Mega Greninja Ex",
+        "tipoEnergia":  "water",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/CRI/CRI_022_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/370",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/658_f3.png"
+    },
+    {
+        "deck":  "Mega Starmie Ex",
+        "tipoEnergia":  "water",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/POR/POR_021_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/362",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/121_f2.png"
+    },
+    {
+        "deck":  "Mega Kangaskhan Ex + Bastiodon",
+        "tipoEnergia":  "multi",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PBL/PBL_062_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/cards/PBL/62/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/411.png"
+    },
+    {
+        "deck":  "Mega Lopunny Ex",
+        "tipoEnergia":  "colorless",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PFL/PFL_084_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/353",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/428_f2.png"
+    },
+    {
+        "deck":  "Mega Lucario Ex",
+        "tipoEnergia":  "fighting",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/MEG/MEG_077_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/345",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/448_f2.png"
+    },
+    {
+        "deck":  "Mega Sharpedo Ex",
+        "tipoEnergia":  "darkness",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PFL/PFL_061_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/354",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/319_f2.png"
+    },
+    {
+        "deck":  "Mega Slowbro Ex",
+        "tipoEnergia":  "psychic",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PBL/PBL_031_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/cards/PBL/31/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/080_f2.png"
+    },
+    {
+        "deck":  "Mega Venusaur Ex",
+        "tipoEnergia":  "grass",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/MEG/MEG_003_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/346",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/003_f2.png"
+    },
+    {
+        "deck":  "Mega Zeraora Ex",
+        "tipoEnergia":  "electric",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PBL/PBL_027_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/cards/PBL/27",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/807_f2.png"
+    },
+    {
+        "deck":  "Mewtwo Ex da Equipe Rocket",
+        "tipoEnergia":  "psychic+grass",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/DRI/DRI_081_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/337",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/150.png"
+    },
+    {
+        "deck":  "Okidogi",
+        "tipoEnergia":  "fighting+darkness",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PRE/PRE_057_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/293",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/1014.png"
+    },
+    {
+        "deck":  "Outros",
+        "tipoEnergia":  "colorless",
+        "imagem":  "https://tcg.pokemon.com/assets/img/global/tcg-card-back.jpg",
+        "limitless":  "",
+        "icone":  "https://img.pokemondb.net/sprites/home/normal/unown-qm.png"
+    },
+    {
+        "deck":  "Pikachu Box",
+        "tipoEnergia":  "lightning+grass",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/ASC/ASC_057_R_PT_LG.png",
+        "limitless":  "https://limitlesstcg.com/cards/ASC/57/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/025.png"
+    },
+    {
+        "deck":  "Praça de Festas",
+        "tipoEnergia":  "grass",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/TWM/TWM_018_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/336",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/811.png"
+    },
+    {
+        "deck":  "Raio Fúria Ex",
+        "tipoEnergia":  "lightning+grass",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/TEF/TEF_123_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/280",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/1021.png"
+    },
+    {
+        "deck":  "Rampardos Ex",
+        "tipoEnergia":  "fighting",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PBL/PBL_045_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/cards/PBL/45/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/409.png"
+    },
+    {
+        "deck":  "Slowking",
+        "tipoEnergia":  "psychic",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/SCR/SCR_058_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/322",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/199.png"
+    },
+    {
+        "deck":  "Tauros",
+        "tipoEnergia":  "multi",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/CRI/CRI_069_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/cards/CRI/69/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/128.png"
+    },
+    {
+        "deck":  "Terazard",
+        "tipoEnergia":  "fire+psychic",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/TWM/TWM_130_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/list/27941",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/887.png"
+    },
+    {
+        "deck":  "Toucannon",
+        "tipoEnergia":  "multi",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PBL/PBL_068_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/cards/PBL/68/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/733.png"
+    },
+    {
+        "deck":  "Trevenant do Lupo",
+        "tipoEnergia":  "psychic",
+        "imagem":  "https://assets.pokemon.com/static-assets/content-assets/cms2-pt-br/img/cards/web/ME2PT5/ME2PT5_PT-BR_96.png",
+        "limitless":  "https://limitlesstcg.com/decks/363",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/709.png"
+    },
+    {
+        "deck":  "Typhlosion do Ethan",
+        "tipoEnergia":  "fire",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/DRI/DRI_034_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/333",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/157.png"
+    },
+    {
+        "deck":  "Tyrantrum",
+        "tipoEnergia":  "fighting",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/MEP/MEP_066_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/cards/MEP/66/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/detail/697.png"
+    },
+    {
+        "deck":  "Wailord Ex",
+        "tipoEnergia":  "water",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PBL/PBL_016_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/cards/PBL/16/decklists/jp",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/321.png"
+    },
+    {
+        "deck":  "Zoroark Ex do N",
+        "tipoEnergia":  "darkness",
+        "imagem":  "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/JTG/JTG_098_R_PT.png",
+        "limitless":  "https://limitlesstcg.com/decks/320",
+        "icone":  "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/571.png"
+    }
+]
