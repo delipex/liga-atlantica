@@ -705,22 +705,22 @@
         <div class="form-group" style="margin-bottom: 1rem;">
           <label for="deck-edit-energy">Tipo de Energia Pokémon</label>
           <select id="deck-edit-energy" class="search-input" required style="width: 100%;">
-            <option value="grass">🌿 Planta (Grass)</option>
-            <option value="fire">🔥 Fogo (Fire)</option>
-            <option value="water">💧 Água (Water)</option>
-            <option value="lightning">⚡ Elétrico (Lightning)</option>
-            <option value="psychic">🔮 Psíquico (Psychic)</option>
-            <option value="fighting">🥊 Lutador (Fighting)</option>
-            <option value="darkness">🌑 Sombrio (Darkness)</option>
-            <option value="metal">⚙️ Metal (Metal)</option>
-            <option value="dragon">🐉 Dragão (Dragon)</option>
+            <option value="grass">🟢 Planta (Grass)</option>
+            <option value="fire">🔴 Fogo (Fire)</option>
+            <option value="water">🔵 Água (Water)</option>
+            <option value="lightning">🟡 Elétrico (Lightning)</option>
+            <option value="psychic">🟣 Psíquico (Psychic)</option>
+            <option value="fighting">🟤 Lutador (Fighting)</option>
+            <option value="darkness">⚫ Sombrio (Darkness)</option>
+            <option value="metal">🔘 Metal (Metal)</option>
+            <option value="dragon">🟣 Dragão (Dragon)</option>
             <option value="colorless">⚪ Incolor (Colorless)</option>
-            <option value="fire+darkness">🔥+🌑 Fogo / Sombrio</option>
-            <option value="fire+psychic">🔥+🔮 Fogo / Psíquico</option>
-            <option value="fire+fighting">🔥+🥊 Fogo / Lutador</option>
-            <option value="psychic+grass">🔮+🌿 Psíquico / Planta</option>
-            <option value="water+lightning">💧+⚡ Água / Elétrico</option>
-            <option value="metal+darkness">⚙️+🌑 Metal / Sombrio</option>
+            <option value="fire+darkness">🔴⚫ Fogo / Sombrio</option>
+            <option value="fire+psychic">🔴🟣 Fogo / Psíquico</option>
+            <option value="fire+fighting">🔴🟤 Fogo / Lutador</option>
+            <option value="psychic+grass">🟣🟢 Psíquico / Planta</option>
+            <option value="water+lightning">🔵🟡 Água / Elétrico</option>
+            <option value="metal+darkness">🔘⚫ Metal / Sombrio</option>
           </select>
         </div>
 
@@ -917,16 +917,16 @@ function doGet(e) {
 
     // --- Configurações de Tipos de Energia ---
     const ENERGY_CONFIG = {
-      grass: { label: "Planta", color: "#78C850", icon: "🌿" },
-      fire: { label: "Fogo", color: "#FF4216", icon: "🔥" },
-      water: { label: "Água", color: "#1593F5", icon: "💧" },
-      lightning: { label: "Elétrico", color: "#EBC816", icon: "⚡" },
-      psychic: { label: "Psíquico", color: "#D94293", icon: "🔮" },
-      fighting: { label: "Lutador", color: "#C55E13", icon: "🥊" },
-      darkness: { label: "Sombrio", color: "#0c4a6e", icon: "🌑" },
-      metal: { label: "Metal", color: "#7E8E9E", icon: "⚙️" },
-      dragon: { label: "Dragão", color: "#8D56FF", icon: "🐉" },
-      colorless: { label: "Incolor", color: "#94a3b8", icon: "⚪" }
+      grass: { label: "Planta", color: "#78C850", dot: "🟢" },
+      fire: { label: "Fogo", color: "#FF4216", dot: "🔴" },
+      water: { label: "Água", color: "#1593F5", dot: "🔵" },
+      lightning: { label: "Elétrico", color: "#EBC816", dot: "🟡" },
+      psychic: { label: "Psíquico", color: "#D94293", dot: "🟣" },
+      fighting: { label: "Lutador", color: "#C55E13", dot: "🟤" },
+      darkness: { label: "Sombrio", color: "#0c4a6e", dot: "⚫" },
+      metal: { label: "Metal", color: "#7E8E9E", dot: "🔘" },
+      dragon: { label: "Dragão", color: "#8D56FF", dot: "🟣" },
+      colorless: { label: "Incolor", color: "#94a3b8", dot: "⚪" }
     };
 
     function getEnergyBadge(energyType) {
@@ -937,11 +937,11 @@ function doGet(e) {
         const e1 = ENERGY_CONFIG[parts[0]] || ENERGY_CONFIG.colorless;
         const e2 = ENERGY_CONFIG[parts[1]] || ENERGY_CONFIG.colorless;
         const gradient = `linear-gradient(135deg, ${e1.color}, ${e2.color})`;
-        return `<span style="background:${gradient}; color:#fff; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:12px; display:inline-flex; align-items:center; gap:3px; box-shadow:0 2px 5px rgba(0,0,0,0.3); text-shadow:0 1px 2px rgba(0,0,0,0.8);">${e1.icon}${e2.icon} ${e1.label}/${e2.label}</span>`;
+        return `<span style="background:${gradient}; color:#fff; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:12px; display:inline-flex; align-items:center; gap:5px; box-shadow:0 2px 5px rgba(0,0,0,0.3); text-shadow:0 1px 2px rgba(0,0,0,0.8);"><span style="width:7px;height:7px;border-radius:50%;background:#fff;display:inline-block;"></span> ${e1.label}/${e2.label}</span>`;
       }
       
       const e = ENERGY_CONFIG[parts[0]] || ENERGY_CONFIG.colorless;
-      return `<span style="background:${e.color}; color:#fff; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:12px; display:inline-flex; align-items:center; gap:3px; box-shadow:0 2px 5px rgba(0,0,0,0.3); text-shadow:0 1px 2px rgba(0,0,0,0.8);">${e.icon} ${e.label}</span>`;
+      return `<span style="background:${e.color}; color:#fff; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:12px; display:inline-flex; align-items:center; gap:5px; box-shadow:0 2px 5px rgba(0,0,0,0.3); text-shadow:0 1px 2px rgba(0,0,0,0.8);"><span style="width:7px;height:7px;border-radius:50%;background:#fff;display:inline-block;"></span> ${e.label}</span>`;
     }
 
     // --- Alternador de Abas do Painel ---
@@ -3270,18 +3270,18 @@ function doGet(e) {
         
         const energy = (d.tipoEnergia || '').toLowerCase();
         const parts = energy.split('+').map(s => s.trim());
-        let icon = '⚪';
+        let dot = '⚪';
         if (parts.length > 1) {
-          icon = `${ENERGY_CONFIG[parts[0]]?.icon || '⚪'}${ENERGY_CONFIG[parts[1]]?.icon || ''}`;
+          dot = `${ENERGY_CONFIG[parts[0]]?.dot || '⚪'}${ENERGY_CONFIG[parts[1]]?.dot || ''}`;
         } else {
-          icon = ENERGY_CONFIG[parts[0]]?.icon || '⚪';
+          dot = ENERGY_CONFIG[parts[0]]?.dot || '⚪';
         }
         
-        optionsHtml += `<option value="${escapeHTML(d.deck)}" ${isSelected ? 'selected' : ''}>${icon} ${escapeHTML(d.deck)}</option>`;
+        optionsHtml += `<option value="${escapeHTML(d.deck)}" ${isSelected ? 'selected' : ''}>${dot} ${escapeHTML(d.deck)}</option>`;
       });
       
       if (normCurrent && !found) {
-        optionsHtml += `<option value="${escapeHTML(currentValue)}" selected>🏷️ ${escapeHTML(currentValue)}</option>`;
+        optionsHtml += `<option value="${escapeHTML(currentValue)}" selected>⚪ ${escapeHTML(currentValue)}</option>`;
       }
       
       optionsHtml += `<option value="__NEW_DECK__" style="color: var(--accent-yellow); font-weight: bold;">➕ Cadastrar Novo Deck...</option>`;
@@ -3631,10 +3631,8 @@ function doGet(e) {
       stagesList.sort((a, b) => b.data.localeCompare(a.data));
 
       selector.innerHTML = stagesList.map(s => {
-        const formattedDate = formatDateISOToPT(s.data);
-        const metaInfo = cachedMetagameData[s.data];
-        const codeLabel = metaInfo && metaInfo.sessionCode ? `[${metaInfo.sessionCode}] ` : '';
-        return `<option value="${s.data}">${codeLabel}${formattedDate} - ${s.tipo || 'Liga'} (${s.multiplicador || 1.0}x)</option>`;
+        const displayType = getDisplayEventType(s.tipo, s.data, stagesList);
+        return `<option value="${s.data}">${escapeHTML(displayType)} (${s.multiplicador || 1.0}x)</option>`;
       }).join('');
 
       if (previousVal && stagesList.some(s => s.data === previousVal)) {
@@ -3913,32 +3911,33 @@ function doGet(e) {
 
     function formatSessionName(sessionRaw) {
       if (!sessionRaw) return '';
+      const clean = String(sessionRaw).trim();
       
-      const cupMatch = sessionRaw.match(/^CUP(\d+)T(\d+)\s+(\d{6})$/i);
+      const cupMatch = clean.match(/^CUP(\d+)T(\d+)(?:\s+(\d{6}))?$/i);
       if (cupMatch) {
         const cupNum = cupMatch[1];
         const tempNum = cupMatch[2];
         const dateStr = cupMatch[3];
-        const formattedDate = formatDateDDMMYY(dateStr);
-        return `League Cup ${cupNum} - Temporada ${tempNum} (${formattedDate})`;
+        const formattedDate = dateStr ? ` (${formatDateDDMMYY(dateStr)})` : '';
+        return `League Cup ${cupNum} - Temporada ${tempNum}${formattedDate}`;
       }
 
-      const chMatch = sessionRaw.match(/^CH(\d+)T(\d+)\s+(\d{6})$/i);
+      const chMatch = clean.match(/^CH(\d+)T(\d+)(?:\s+(\d{6}))?$/i);
       if (chMatch) {
         const chNum = chMatch[1];
         const tempNum = chMatch[2];
         const dateStr = chMatch[3];
-        const formattedDate = formatDateDDMMYY(dateStr);
-        return `League Challenge ${chNum} - Temporada ${tempNum} (${formattedDate})`;
+        const formattedDate = dateStr ? ` (${formatDateDDMMYY(dateStr)})` : '';
+        return `League Challenge ${chNum} - Temporada ${tempNum}${formattedDate}`;
       }
 
-      const sMatch = sessionRaw.match(/^S(\d+)T(\d+)\s+(\d{6})$/i);
+      const sMatch = clean.match(/^S(\d+)T(\d+)(?:\s+(\d{6}))?$/i);
       if (sMatch) {
         const sNum = sMatch[1];
         const tempNum = sMatch[2];
         const dateStr = sMatch[3];
-        const formattedDate = formatDateDDMMYY(dateStr);
-        return `Sessão de Liga ${sNum} - Temporada ${tempNum} (${formattedDate})`;
+        const formattedDate = dateStr ? ` (${formatDateDDMMYY(dateStr)})` : '';
+        return `Sessão de Liga ${sNum} - Temporada ${tempNum}${formattedDate}`;
       }
 
       return sessionRaw;
@@ -3951,7 +3950,14 @@ function doGet(e) {
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
 
-    function getDisplayEventType(type, dateStr) {
+    function getDisplayEventType(type, dateStr, allStagesList = []) {
+      // 1. Verifica sessionCode em cachedMetagameData
+      if (cachedMetagameData && cachedMetagameData[dateStr] && cachedMetagameData[dateStr].sessionCode) {
+        const formatted = formatSessionName(cachedMetagameData[dateStr].sessionCode);
+        if (formatted) return formatted;
+      }
+
+      // 2. Fallback: verifica se há cabeçalhos no cachedMetagame
       if (cachedMetagame && cachedMetagame.length > 0) {
         const headers = Object.keys(cachedMetagame[0] || {});
         const dateColumn = findDateColumn(headers, dateStr);
@@ -3960,7 +3966,20 @@ function doGet(e) {
           if (formatted) return formatted;
         }
       }
+
+      // 3. Fallback inteligente: calcula a numeração ordinal das etapas da mesma categoria
       const formattedDate = formatDateISOToPT(dateStr);
+      if (allStagesList && allStagesList.length > 0) {
+        const sortedChrono = [...allStagesList].sort((a, b) => (a.data || '').localeCompare(b.data || ''));
+        const typeStages = sortedChrono.filter(s => (s.tipo || 'Liga') === (type || 'Liga'));
+        const indexInType = typeStages.findIndex(s => s.data === dateStr);
+        const stageNum = indexInType >= 0 ? (indexInType + 1) : '';
+        
+        if (type === 'Liga') return stageNum ? `Sessão de Liga ${stageNum} - Temporada 5 (${formattedDate})` : `Sessão de Liga (${formattedDate})`;
+        if (type === 'Challenge') return stageNum ? `League Challenge ${stageNum} - Temporada 5 (${formattedDate})` : `League Challenge (${formattedDate})`;
+        if (type === 'Cup') return stageNum ? `League Cup ${stageNum} - Temporada 5 (${formattedDate})` : `League Cup (${formattedDate})`;
+      }
+
       if (type === 'Liga') return `Sessão de Liga (${formattedDate})`;
       if (type === 'Challenge') return `League Challenge (${formattedDate})`;
       if (type === 'Cup') return `League Cup (${formattedDate})`;
@@ -4003,7 +4022,7 @@ function doGet(e) {
           
           tbody.innerHTML = sortedStages.map(s => {
             const formattedDate = formatDateISOToPT(s.data);
-            const displayType = getDisplayEventType(s.tipo, s.data);
+            const displayType = getDisplayEventType(s.tipo, s.data, stagesList);
             return `
               <tr>
                 <td style="font-weight: 600; color: #fff; padding: 0.75rem 0.5rem;">${formattedDate}</td>
