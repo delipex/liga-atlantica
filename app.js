@@ -563,20 +563,33 @@ function normalizeHistoricalScores(rows) {
   if (!Array.isArray(rows)) return [];
 
   return rows
-    .filter(row => row && row.Temporada && row.Jogador)
-    .map(row => ({
-      ...row,
-      Temporada: String(row.Temporada || '').trim(),
-      DataFechamento: row.DataFechamento || '',
-      Pos: toNumber(row.Pos, 0),
-      Categoria: normalizeCategory(row).label,
-      CategoriaCodigo: normalizeCategory(row).code,
-      Pontos: toNumber(row.Pontos),
-      Podio: getPodiumCount(row),
-      MediaColocacao: getAveragePlacement(row),
-      Deck: row.Deck || 'Não registrado',
-      TipoEnergia: safeEnergyClass(row.TipoEnergia)
-    }))
+    .filter(row => row && (row.Temporada || row.temporada) && (row.Jogador || row.jogador || row.Nome || row.nome))
+    .map(row => {
+      const temporada = String(row.Temporada || row.temporada || '').trim();
+      const jogador = String(row.Jogador || row.jogador || row.Nome || row.nome || '').trim();
+      const dataFechamento = row.DataFechamento || row.dataFechamento || '';
+      const pos = toNumber(row.Pos || row.pos, 0);
+      const rawCat = row.Categoria || row.categoria || 'MASTER';
+      const categoriaObj = normalizeCategory({ Categoria: rawCat });
+      const pontos = toNumber(row.Pontos || row.pontos, 0);
+      const deck = row.Deck || row.deck || 'Não registrado';
+      const tipoEnergia = safeEnergyClass(row.TipoEnergia || row.tipoEnergia);
+
+      return {
+        ...row,
+        Temporada: temporada,
+        Jogador: jogador,
+        DataFechamento: dataFechamento,
+        Pos: pos,
+        Categoria: categoriaObj.label,
+        CategoriaCodigo: categoriaObj.code,
+        Pontos: pontos,
+        Podio: getPodiumCount({ Podio: row.Podio || row.podio, Pos: pos }),
+        MediaColocacao: getAveragePlacement({ MediaColocacao: row.MediaColocacao || row.mediaColocacao, Pos: pos }),
+        Deck: deck,
+        TipoEnergia: tipoEnergia
+      };
+    })
     .sort((a, b) => {
       const seasonCompare = String(b.DataFechamento || b.Temporada).localeCompare(String(a.DataFechamento || a.Temporada), 'pt-BR');
       if (seasonCompare !== 0) return seasonCompare;
@@ -586,7 +599,7 @@ function normalizeHistoricalScores(rows) {
 
 function getHistoricalScoreSeasons() {
   const rows = appData.ScoresAntigos || [];
-  const uniqueSeasons = [...new Set(rows.map(row => row.Temporada).filter(Boolean))];
+  const uniqueSeasons = [...new Set(rows.map(row => row.Temporada || row.temporada).filter(Boolean))];
 
   return uniqueSeasons.sort((a, b) => b.localeCompare(a, 'pt-BR', { numeric: true }));
 }
@@ -881,6 +894,7 @@ async function loadData() {
         const res = await fetch(`metagame.json?v=${timestamp}`);
         if (res.ok) {
           const data = await res.json();
+          appData.RawMetagame = data;
           if (data && typeof data === 'object') {
             const playerRowsMap = new Map();
             Object.entries(data).forEach(([isoDate, sessionObj]) => {
@@ -892,6 +906,7 @@ async function loadData() {
                   playerRowsMap.set(key, { Jogador: playerName });
                 }
                 playerRowsMap.get(key)[sessionCode] = deckName;
+                playerRowsMap.get(key)[isoDate] = deckName;
               });
             });
             return Array.from(playerRowsMap.values());
@@ -1326,67 +1341,106 @@ function renderDashboard() {
 }
 
 function getDeckForStage(playerName, stageDateStr, playerId = '') {
-  if ((!playerName && !playerId) || !stageDateStr || typeof stageDateStr !== 'string' || !appData.Jogadores) return null;
-  
-  const parts = stageDateStr.split('-');
-  if (parts.length !== 3) return null;
-  const dd = parts[2];
-  const mm = parts[1];
-  const yy = parts[0].substring(2);
-  const dateDDMMYY = `${dd}${mm}${yy}`;
+  if ((!playerName && !playerId) || !stageDateStr || typeof stageDateStr !== 'string') return null;
   
   const cleanId = String(playerId || '').trim();
   const normPlayerName = normalizePlayerName(playerName);
 
-  // FIRMEZA DE DADOS: Prioridade 1 é o ID Play! Pokémon (Chave Primária)
+  // 1. Obtém o nome oficial do jogador se tiver ID
+  let officialName = playerName;
   let dbPlayer = null;
   if (cleanId && appData.Jogadores && appData.Jogadores.length > 0) {
     dbPlayer = appData.Jogadores.find(j => {
       const jId = String(j.ID || j.id || j.POPID || j['Player ID'] || j['Play! ID'] || '').trim();
       return jId && jId === cleanId;
     });
-  }
-
-  // Prioridade 2: Match por Nome normalizado (apenas como fallback se não houver ID)
-  if (!dbPlayer && normPlayerName && appData.Jogadores && appData.Jogadores.length > 0) {
-    dbPlayer = appData.Jogadores.find(j => {
-      return normalizePlayerName(j.Jogador || j.Name) === normPlayerName;
-    });
-  }
-
-  if (!dbPlayer) return null;
-  
-  // Calcula o número da etapa cronológico para match inteligente (ex: S9T5)
-  const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
-  const chronologicalStages = [...cleanStages].sort((a, b) => a.data.localeCompare(b.data));
-  const stageNumber = chronologicalStages.findIndex(s => s.data === stageDateStr) + 1;
-  
-  const columnKey = Object.keys(dbPlayer).find(k => {
-    const normalizedKey = k.toLowerCase().trim();
-    
-    // 1. Match por data ddmmyy ou data formatada completa
-    if (normalizedKey.includes(dateDDMMYY) || normalizedKey.includes(stageDateStr)) {
-      return true;
+    if (dbPlayer && (dbPlayer.Jogador || dbPlayer.jogador || dbPlayer.Name)) {
+      officialName = dbPlayer.Jogador || dbPlayer.jogador || dbPlayer.Name;
     }
-    
-    // 2. Match inteligente por Número da Etapa (S[numero]T...)
-    if (stageNumber > 0) {
-      const stagePrefix = `s${stageNumber}`;
-      const regex = new RegExp(`^${stagePrefix}\\D`, 'i');
-      if (regex.test(normalizedKey)) {
-        return true;
+  }
+
+  // Se não encontrou por ID, busca por nome normalizado em Jogadores
+  if (!dbPlayer && normPlayerName && appData.Jogadores && appData.Jogadores.length > 0) {
+    dbPlayer = appData.Jogadores.find(j => normalizePlayerName(j.Jogador || j.Name || j.jogador) === normPlayerName);
+    if (dbPlayer && (dbPlayer.Jogador || dbPlayer.jogador || dbPlayer.Name)) {
+      officialName = dbPlayer.Jogador || dbPlayer.jogador || dbPlayer.Name;
+    }
+  }
+
+  const normOfficial = normalizePlayerName(officialName);
+
+  // 2. BUSCA DIRETA NO RawMetagame (metagame.json) - Fonte principal dos decks por etapa!
+  if (appData.RawMetagame && typeof appData.RawMetagame === 'object') {
+    const sessionObj = appData.RawMetagame[stageDateStr];
+    if (sessionObj && sessionObj.decks) {
+      if (sessionObj.decks[officialName]) return sessionObj.decks[officialName];
+      if (sessionObj.decks[playerName]) return sessionObj.decks[playerName];
+      for (const [pName, dName] of Object.entries(sessionObj.decks)) {
+        const pNorm = normalizePlayerName(pName);
+        if (pNorm === normOfficial || pNorm === normPlayerName) {
+          return dName;
+        }
       }
     }
-    
-    return false;
-  });
-  
-  if (columnKey) {
-    const deckName = dbPlayer[columnKey];
-    if (deckName && typeof deckName === 'string' && deckName.trim() !== '') {
-      return deckName.trim();
+  }
+
+  // 3. BUSCA NA MATRIZ appData.Metagame
+  if (appData.Metagame && appData.Metagame.length > 0) {
+    const metaPlayer = appData.Metagame.find(j => {
+      const jNameNorm = normalizePlayerName(j.Jogador || j.jogador || j.Name || '');
+      return jNameNorm === normOfficial || jNameNorm === normPlayerName;
+    });
+    if (metaPlayer) {
+      if (metaPlayer[stageDateStr]) return metaPlayer[stageDateStr];
+
+      const parts = stageDateStr.split('-');
+      const dateDDMMYY = parts.length === 3 ? `${parts[2]}${parts[1]}${parts[0].substring(2)}` : '';
+
+      const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
+      const chronologicalStages = [...cleanStages].sort((a, b) => a.data.localeCompare(b.data));
+      const stageNumber = chronologicalStages.findIndex(s => s.data === stageDateStr) + 1;
+
+      const columnKey = Object.keys(metaPlayer).find(k => {
+        const normalizedKey = k.toLowerCase().trim();
+        if (normalizedKey.includes(stageDateStr) || (dateDDMMYY && normalizedKey.includes(dateDDMMYY))) return true;
+        if (stageNumber > 0) {
+          const stagePrefix = `s${stageNumber}`;
+          const regex = new RegExp(`^${stagePrefix}\\D`, 'i');
+          if (regex.test(normalizedKey)) return true;
+        }
+        return false;
+      });
+
+      if (columnKey && metaPlayer[columnKey] && typeof metaPlayer[columnKey] === 'string') {
+        return metaPlayer[columnKey].trim();
+      }
     }
   }
+
+  // 4. FALLBACK: Verifica se dbPlayer possui coluna da etapa
+  if (dbPlayer) {
+    const parts = stageDateStr.split('-');
+    const dateDDMMYY = parts.length === 3 ? `${parts[2]}${parts[1]}${parts[0].substring(2)}` : '';
+    const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
+    const chronologicalStages = [...cleanStages].sort((a, b) => a.data.localeCompare(b.data));
+    const stageNumber = chronologicalStages.findIndex(s => s.data === stageDateStr) + 1;
+
+    const columnKey = Object.keys(dbPlayer).find(k => {
+      const normalizedKey = k.toLowerCase().trim();
+      if (normalizedKey.includes(dateDDMMYY) || normalizedKey.includes(stageDateStr)) return true;
+      if (stageNumber > 0) {
+        const stagePrefix = `s${stageNumber}`;
+        const regex = new RegExp(`^${stagePrefix}\\D`, 'i');
+        if (regex.test(normalizedKey)) return true;
+      }
+      return false;
+    });
+
+    if (columnKey && dbPlayer[columnKey] && typeof dbPlayer[columnKey] === 'string') {
+      return dbPlayer[columnKey].trim();
+    }
+  }
+
   return null;
 }
 

@@ -355,6 +355,9 @@
       <button type="button" class="admin-tab-btn" id="nav-btn-seasons" onclick="switchAdminTab('seasons')">
         🏆 Temporadas
       </button>
+      <button type="button" class="admin-tab-btn" id="nav-btn-auditoria" onclick="switchAdminTab('auditoria')">
+        🔍 Auditoria
+      </button>
       <button type="button" class="admin-tab-btn" id="nav-btn-config" onclick="switchAdminTab('config')">
         ⚙️ Configurações
       </button>
@@ -1297,6 +1300,71 @@ function doGet(e) {
     </div>
   </div>
 
+  <!-- ABA 10: AUDITORIA DE DADOS & INTEGRIDADE DE ETAPAS -->
+  <div id="pane-auditoria" class="tab-pane-content" style="display: none; max-width: 1050px; margin: 0 auto;">
+    <section class="glass-card admin-card" style="margin-bottom: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1.25rem;">
+        <div>
+          <h2 style="font-size: 1.25rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            🔍 Auditoria de Dados & Integridade de Etapas
+          </h2>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;">
+            Auditoria profunda de cada etapa, cartel de vitórias (V-E-D), cálculo de pontuação, conferência de IDs e consistência do Metagame.
+          </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" class="btn" style="background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.4); color: #93c5fd; font-weight: 600; font-size: 0.82rem;" onclick="runFullAudit()">
+            🔄 Executar Auditoria Completa
+          </button>
+          <button type="button" class="btn btn-whatsapp" style="font-size: 0.82rem; background: #0f766e; border-color: #0f766e; color: #fff;" onclick="recalculateRankingFromAllStages()">
+            ⚡ Recalcular & Sincronizar Ranking Geral
+          </button>
+        </div>
+      </div>
+
+      <!-- Cards de Resumo da Auditoria -->
+      <div id="audit-metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+        <div class="glass-card" style="padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Etapas Auditadas</div>
+          <div id="audit-stat-stages" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 4px 0;">--</div>
+          <div id="audit-stat-stages-sub" style="font-size: 0.72rem; color: var(--text-secondary);">Aguardando execução...</div>
+        </div>
+        <div class="glass-card" style="padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Conformidade Pontos / V-E-D</div>
+          <div id="audit-stat-ved" style="font-size: 1.6rem; font-weight: 700; color: #10b981; margin: 4px 0;">--</div>
+          <div id="audit-stat-ved-sub" style="font-size: 0.72rem; color: var(--text-secondary);">Fórmula: (V*3 + E*1) * Mult</div>
+        </div>
+        <div class="glass-card" style="padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Identificação por POP ID</div>
+          <div id="audit-stat-ids" style="font-size: 1.6rem; font-weight: 700; color: var(--accent-yellow); margin: 4px 0;">--</div>
+          <div id="audit-stat-ids-sub" style="font-size: 0.72rem; color: var(--text-secondary);">Integridade de chaves primárias</div>
+        </div>
+        <div class="glass-card" style="padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Cobertura do Metagame</div>
+          <div id="audit-stat-decks" style="font-size: 1.6rem; font-weight: 700; color: #818cf8; margin: 4px 0;">--</div>
+          <div id="audit-stat-decks-sub" style="font-size: 0.72rem; color: var(--text-secondary);">Decks registrados por etapa</div>
+        </div>
+      </div>
+
+      <!-- Filtros do Auditor -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 0.5rem; flex-wrap: wrap;">
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <span style="font-size: 0.8rem; color: var(--text-secondary);">Filtrar:</span>
+          <button type="button" class="btn active" id="audit-filter-all" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="filterAuditView('all')">Todas as Etapas</button>
+          <button type="button" class="btn" id="audit-filter-warn" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="filterAuditView('warn')">Com Alertas/Divergências</button>
+        </div>
+        <div id="audit-status-badge" style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);"></div>
+      </div>
+
+      <!-- Lista de Etapas Auditadas -->
+      <div id="audit-stages-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div style="text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
+          Clique em <strong>"Executar Auditoria Completa"</strong> para inspecionar todas as etapas e gerar o diagnóstico.
+        </div>
+      </div>
+    </section>
+  </div>
+
   <script>
     const ADMIN_PW_HASH = "c58a87d9fc314bd23638269aeaef6a39dfd625d7b121f9659cade9306c855789";
     const GOLI_PW_HASH = "49fb9f8b0989a4617b149e1182013f7062af8a0652de84aadbb58bf693b678c5";
@@ -1369,7 +1437,7 @@ function doGet(e) {
     // --- Alternador de Abas do Painel ---
     function switchAdminTab(tabName) {
       currentAdminTab = tabName;
-      const tabs = ['upload', 'jogadores', 'decks', 'metagame', 'calendario', 'regras', 'galeria', 'seasons', 'config'];
+      const tabs = ['upload', 'jogadores', 'decks', 'metagame', 'calendario', 'regras', 'galeria', 'seasons', 'auditoria', 'config'];
       tabs.forEach(t => {
         const pane = document.getElementById(`pane-${t}`);
         const btn = document.getElementById(`nav-btn-${t}`);
@@ -1395,6 +1463,8 @@ function doGet(e) {
         renderGalleryCatalog();
       } else if (tabName === 'seasons') {
         loadAndRenderStages();
+      } else if (tabName === 'auditoria') {
+        runFullAudit();
       } else if (tabName === 'config') {
         renderConfigPanel();
       }
@@ -6488,6 +6558,570 @@ function doGet(e) {
       } finally {
         submitBtn.disabled = false;
         submitBtn.innerText = "⚠️ Confirmar e Encerrar Temporada";
+      }
+    }
+
+    // =========================================================================
+    // AUDITOR DE DADOS & INTEGRIDADE DE ETAPAS (SISTEMA DE AUDITORIA PROFUNDA)
+    // =========================================================================
+    let auditResults = [];
+    let currentAuditFilter = 'all';
+
+    async function runFullAudit() {
+      const container = document.getElementById('audit-stages-container');
+      const statusBadge = document.getElementById('audit-status-badge');
+      if (!container) return;
+
+      container.innerHTML = `
+        <div style="text-align:center; padding: 3rem 1rem; color: var(--text-secondary);">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem; animation: spin 1s linear infinite; display: inline-block;">⚙️</div>
+          <div>Auditando todas as etapas, TDFs e consistência de pontuações...</div>
+        </div>
+      `;
+      if (statusBadge) statusBadge.innerText = "⏳ Executando auditoria...";
+
+      try {
+        await ensureSheetsLoaded();
+
+        const timestamp = new Date().getTime();
+        const etapasRes = await fetch(`etapas.json?v=${timestamp}`);
+        if (!etapasRes.ok) throw new Error("Não foi possível carregar etapas.json");
+        const stages = await etapasRes.json();
+
+        if (!Array.isArray(stages) || stages.length === 0) {
+          container.innerHTML = `<div style="text-align:center; padding: 2rem; color: var(--text-secondary);">Nenhuma etapa encontrada em etapas.json para auditar.</div>`;
+          return;
+        }
+
+        // Carrega o ranking.tdf atual para auditoria cruzada
+        let rankingMap = new Map();
+        try {
+          const rankRes = await fetch(`ranking.tdf?v=${timestamp}`);
+          if (rankRes.ok) {
+            const rankText = await rankRes.text();
+            const parsedRank = parseTDF(rankText);
+            parsedRank.forEach(r => {
+              const rId = getPlayerId(r);
+              const rName = r.Jogador || r.Player || r.Name || '';
+              if (rId) rankingMap.set(String(rId).trim(), r);
+              if (rName) rankingMap.set(normalizePlayerName(rName), r);
+            });
+          }
+        } catch (e) {
+          console.warn("Ranking geral indisponível para auditoria cruzada:", e);
+        }
+
+        const cleanStages = stages.filter(s => s && typeof s.data === 'string');
+        const chronologicalStages = [...cleanStages].sort((a, b) => a.data.localeCompare(b.data));
+
+        let totalPlayersAudited = 0;
+        let totalVedCompliant = 0;
+        let totalWithPopId = 0;
+        let totalWithDeck = 0;
+        let totalErrors = 0;
+        let totalWarnings = 0;
+
+        auditResults = [];
+
+        for (let i = 0; i < chronologicalStages.length; i++) {
+          const stage = chronologicalStages[i];
+          const stageIndex = i;
+          const stageNumber = i + 1;
+          const mult = Number(stage.multiplicador) || 1;
+          const stageDate = stage.data;
+
+          let stageTdfRows = [];
+          let fetchError = null;
+
+          try {
+            const tdfRes = await fetch(`etapas/${stageDate}.tdf?v=${timestamp}`);
+            if (tdfRes.ok) {
+              const tdfText = await tdfRes.text();
+              stageTdfRows = parseTDF(tdfText);
+            } else {
+              fetchError = `Arquivo etapas/${stageDate}.tdf não encontrado no repositório.`;
+            }
+          } catch (err) {
+            fetchError = err.message;
+          }
+
+          const stageAudit = {
+            stageNumber: stageNumber,
+            date: stageDate,
+            type: stage.tipo || 'Liga',
+            multiplier: mult,
+            fetchError: fetchError,
+            players: [],
+            errorCount: 0,
+            warningCount: 0,
+            status: 'perfeito' // 'perfeito', 'alerta', 'erro'
+          };
+
+          if (fetchError) {
+            stageAudit.status = 'erro';
+            stageAudit.errorCount++;
+            totalErrors++;
+          } else {
+            const sessionObj = cachedMetagameData ? cachedMetagameData[stageDate] : null;
+            const metagameDecks = sessionObj ? (sessionObj.decks || {}) : {};
+
+            stageTdfRows.forEach((p, pIdx) => {
+              totalPlayersAudited++;
+              const rawName = p.Jogador || p.Player || p.Name || `Jogador ${pIdx + 1}`;
+              const rawId = getPlayerId(p);
+              const cleanId = rawId ? String(rawId).trim() : '';
+
+              // 1. Checagem de ID
+              let idStatus = 'ok';
+              let officialName = rawName;
+              if (cleanId) {
+                totalWithPopId++;
+                const dbP = cachedJogadores.find(j => {
+                  const jId = getPlayerId(j);
+                  return jId && String(jId).trim() === cleanId;
+                });
+                if (dbP) {
+                  officialName = dbP.Jogador || dbP.Name || rawName;
+                }
+              } else {
+                idStatus = 'missing_id';
+                stageAudit.warningCount++;
+                totalWarnings++;
+              }
+
+              // 2. Checagem de Cartel V-E-D e Pontos
+              const { v, e, d } = getVED(p);
+              const recordedPts = Number(getFirstDefined(p, ['Pontos', 'Points', 'Pts'])) || 0;
+              const basePts = (v * 3) + (e * 1);
+              const expectedPts = basePts * mult;
+              const isPointMatch = Math.abs(recordedPts - expectedPts) < 0.01;
+
+              if (isPointMatch) {
+                totalVedCompliant++;
+              } else {
+                stageAudit.errorCount++;
+                totalErrors++;
+              }
+
+              // 3. Checagem de Deck no Metagame
+              let registeredDeck = metagameDecks[officialName] || metagameDecks[rawName] || '';
+              if (!registeredDeck) {
+                for (const [pKey, dVal] of Object.entries(metagameDecks)) {
+                  if (normalizePlayerName(pKey) === normalizePlayerName(officialName) || normalizePlayerName(pKey) === normalizePlayerName(rawName)) {
+                    registeredDeck = dVal;
+                    break;
+                  }
+                }
+              }
+
+              let deckStatus = 'ok';
+              if (registeredDeck && registeredDeck !== 'Sem deck registrado' && registeredDeck !== 'Não registrado') {
+                totalWithDeck++;
+              } else {
+                deckStatus = 'missing_deck';
+                stageAudit.warningCount++;
+                totalWarnings++;
+              }
+
+              // 4. Checagem no Ranking Geral
+              const rankPlayer = cleanId ? rankingMap.get(cleanId) : rankingMap.get(normalizePlayerName(officialName));
+              let rankSyncStatus = 'ok';
+              if (rankPlayer && rankPlayer.HistoricoColocacoes) {
+                const histArr = String(rankPlayer.HistoricoColocacoes).split(';');
+                if (histArr.length > stageIndex) {
+                  const histPos = histArr[stageIndex];
+                  const stagePos = String(p.Pos || p.Position || pIdx + 1);
+                  if (histPos === '-' || histPos !== stagePos) {
+                    rankSyncStatus = 'mismatch';
+                    stageAudit.warningCount++;
+                    totalWarnings++;
+                  }
+                }
+              }
+
+              stageAudit.players.push({
+                pos: p.Pos || (pIdx + 1),
+                rawName: rawName,
+                officialName: officialName,
+                id: cleanId,
+                idStatus: idStatus,
+                v: v,
+                e: e,
+                d: d,
+                recordedPts: recordedPts,
+                expectedPts: expectedPts,
+                isPointMatch: isPointMatch,
+                deck: registeredDeck || 'Sem deck registrado',
+                deckStatus: deckStatus,
+                rankSyncStatus: rankSyncStatus
+              });
+            });
+
+            if (stageAudit.errorCount > 0) {
+              stageAudit.status = 'erro';
+            } else if (stageAudit.warningCount > 0) {
+              stageAudit.status = 'alerta';
+            } else {
+              stageAudit.status = 'perfeito';
+            }
+          }
+
+          auditResults.push(stageAudit);
+        }
+
+        // Atualiza Cards Executivos
+        const stagesCard = document.getElementById('audit-stat-stages');
+        const stagesCardSub = document.getElementById('audit-stat-stages-sub');
+        if (stagesCard) stagesCard.innerText = `${chronologicalStages.length}`;
+        if (stagesCardSub) stagesCardSub.innerText = `${totalPlayersAudited} participações auditadas`;
+
+        const vedCard = document.getElementById('audit-stat-ved');
+        const vedCardSub = document.getElementById('audit-stat-ved-sub');
+        const vedPercent = totalPlayersAudited > 0 ? ((totalVedCompliant / totalPlayersAudited) * 100).toFixed(1) : '100';
+        if (vedCard) {
+          vedCard.innerText = `${vedPercent}%`;
+          vedCard.style.color = Number(vedPercent) >= 99 ? '#10b981' : '#ef4444';
+        }
+        if (vedCardSub) vedCardSub.innerText = `${totalVedCompliant}/${totalPlayersAudited} partidas conferidas`;
+
+        const idsCard = document.getElementById('audit-stat-ids');
+        const idsCardSub = document.getElementById('audit-stat-ids-sub');
+        const idPercent = totalPlayersAudited > 0 ? ((totalWithPopId / totalPlayersAudited) * 100).toFixed(1) : '100';
+        if (idsCard) idsCard.innerText = `${idPercent}%`;
+        if (idsCardSub) idsCardSub.innerText = `${totalWithPopId} identificados com POP ID`;
+
+        const decksCard = document.getElementById('audit-stat-decks');
+        const decksCardSub = document.getElementById('audit-stat-decks-sub');
+        const deckPercent = totalPlayersAudited > 0 ? ((totalWithDeck / totalPlayersAudited) * 100).toFixed(1) : '100';
+        if (decksCard) decksCard.innerText = `${deckPercent}%`;
+        if (decksCardSub) decksCardSub.innerText = `${totalWithDeck} com deck no Metagame`;
+
+        if (statusBadge) {
+          if (totalErrors === 0 && totalWarnings === 0) {
+            statusBadge.innerHTML = `<span style="color:#10b981">🟢 Todas as ${chronologicalStages.length} etapas estão 100% íntegras!</span>`;
+          } else if (totalErrors === 0) {
+            statusBadge.innerHTML = `<span style="color:#f59e0b">🟡 ${totalWarnings} avisos detectados (IDs/Decks ausentes).</span>`;
+          } else {
+            statusBadge.innerHTML = `<span style="color:#ef4444">🔴 ${totalErrors} divergências críticas encontradas!</span>`;
+          }
+        }
+
+        renderAuditStagesView();
+
+      } catch (err) {
+        console.error("Erro na auditoria:", err);
+        container.innerHTML = `<div style="text-align:center; padding: 2rem; color: #ef4444;">Erro ao executar auditoria: ${escapeHTML(err.message)}</div>`;
+      }
+    }
+
+    function filterAuditView(filterType) {
+      currentAuditFilter = filterType;
+      const btnAll = document.getElementById('audit-filter-all');
+      const btnWarn = document.getElementById('audit-filter-warn');
+      if (btnAll) btnAll.classList.toggle('active', filterType === 'all');
+      if (btnWarn) btnWarn.classList.toggle('active', filterType === 'warn');
+      renderAuditStagesView();
+    }
+
+    function renderAuditStagesView() {
+      const container = document.getElementById('audit-stages-container');
+      if (!container) return;
+
+      const filtered = auditResults.filter(stg => {
+        if (currentAuditFilter === 'warn') {
+          return stg.status === 'alerta' || stg.status === 'erro';
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
+            Nenhuma etapa correspondente ao filtro selecionado.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map((stg, idx) => {
+        const parts = stg.date.split('-');
+        const dateFormatted = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : stg.date;
+
+        let statusBadgeHtml = '';
+        let borderColor = 'rgba(255,255,255,0.08)';
+        let headerBg = 'rgba(255,255,255,0.02)';
+
+        if (stg.status === 'perfeito') {
+          statusBadgeHtml = `<span style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">🟢 100% Íntegro</span>`;
+        } else if (stg.status === 'alerta') {
+          statusBadgeHtml = `<span style="background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">🟡 ${stg.warningCount} Alerta${stg.warningCount > 1 ? 's' : ''}</span>`;
+          borderColor = 'rgba(245,158,11,0.25)';
+        } else {
+          statusBadgeHtml = `<span style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3); padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">🔴 ${stg.errorCount} Divergência${stg.errorCount > 1 ? 's' : ''}</span>`;
+          borderColor = 'rgba(239,68,68,0.3)';
+          headerBg = 'rgba(239,68,68,0.05)';
+        }
+
+        const playersRowsHtml = stg.players.map(p => {
+          const ptStyle = p.isPointMatch ? 'color: #fff;' : 'color: #ef4444; font-weight: 700; background: rgba(239,68,68,0.15); border-radius: 4px; padding: 2px 4px;';
+          const idBadge = p.id 
+            ? `<span style="color:var(--text-secondary); font-size:0.72rem; font-family:monospace;">#${escapeHTML(p.id)}</span>` 
+            : `<span style="color:#f59e0b; font-size:0.7rem;">⚠️ Sem ID</span>`;
+          const deckBadge = p.deckStatus === 'ok'
+            ? `<span style="color:#818cf8; font-size:0.78rem; font-weight:600;">${escapeHTML(p.deck)}</span>`
+            : `<span style="color:var(--text-muted); font-size:0.72rem; font-style:italic;">Não registrado</span>`;
+
+          return `
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+              <td style="padding: 6px 8px; font-weight: 700; color: #fff;">${p.pos}º</td>
+              <td style="padding: 6px 8px;">
+                <div style="font-weight: 600; color: #fff;">${escapeHTML(p.officialName)}</div>
+                ${p.officialName !== p.rawName ? `<div style="font-size:0.7rem; color:var(--text-secondary); font-style:italic;">TDF: ${escapeHTML(p.rawName)}</div>` : ''}
+              </td>
+              <td style="padding: 6px 8px; text-align: center;">${idBadge}</td>
+              <td style="padding: 6px 8px; text-align: center;">
+                <span style="color:#10b981; font-weight:700;">${p.v}V</span> - 
+                <span style="color:#f59e0b; font-weight:700;">${p.e}E</span> - 
+                <span style="color:#ef4444; font-weight:700;">${p.d}D</span>
+              </td>
+              <td style="padding: 6px 8px; text-align: center;">
+                <span style="${ptStyle}">${p.recordedPts} PTS</span>
+                ${!p.isPointMatch ? `<div style="font-size:0.68rem; color:#ef4444;">Esperado: ${p.expectedPts} pts</div>` : ''}
+              </td>
+              <td style="padding: 6px 8px; text-align: left;">${deckBadge}</td>
+            </tr>
+          `;
+        }).join('');
+
+        return `
+          <div class="glass-card" style="border: 1px solid ${borderColor}; border-radius: 8px; overflow: hidden; background: rgba(0,0,0,0.2);">
+            <div style="padding: 0.85rem 1.25rem; background: ${headerBg}; display: flex; justify-content: space-between; align-items: center; cursor: pointer; flex-wrap: wrap; gap: 0.5rem;" onclick="toggleAuditStageDetails(${idx})">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span style="font-size: 1.1rem;">🏆</span>
+                <div>
+                  <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">
+                    Etapa ${stg.stageNumber} — ${dateFormatted} (${escapeHTML(stg.type)})
+                  </div>
+                  <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                    ${stg.players.length} jogadores &bull; Multiplicador: ${stg.multiplier}x &bull; Arquivo: <code>etapas/${stg.date}.tdf</code>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                ${statusBadgeHtml}
+                <span id="audit-chevron-${idx}" style="color: var(--text-secondary); transition: transform 0.2s;">▼</span>
+              </div>
+            </div>
+
+            <div id="audit-detail-${idx}" style="display: none; padding: 1rem; border-top: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.3);">
+              ${stg.fetchError ? `
+                <div style="color: #ef4444; padding: 1rem; background: rgba(239,68,68,0.1); border-radius: 6px;">
+                  ⚠️ ${escapeHTML(stg.fetchError)}
+                </div>
+              ` : `
+                <div style="overflow-x: auto;">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left;">
+                    <thead>
+                      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.72rem; text-transform: uppercase;">
+                        <th style="padding: 6px 8px;">Pos</th>
+                        <th style="padding: 6px 8px;">Jogador Oficial</th>
+                        <th style="padding: 6px 8px; text-align: center;">Play! ID</th>
+                        <th style="padding: 6px 8px; text-align: center;">Cartel (V-E-D)</th>
+                        <th style="padding: 6px 8px; text-align: center;">Pontos / Auditoria</th>
+                        <th style="padding: 6px 8px;">Deck no Metagame</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${playersRowsHtml}
+                    </tbody>
+                  </table>
+                </div>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleAuditStageDetails(idx) {
+      const detailEl = document.getElementById(`audit-detail-${idx}`);
+      const chevronEl = document.getElementById(`audit-chevron-${idx}`);
+      if (!detailEl) return;
+
+      const isHidden = detailEl.style.display === 'none';
+      detailEl.style.display = isHidden ? 'block' : 'none';
+      if (chevronEl) chevronEl.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+
+    async function recalculateRankingFromAllStages() {
+      if (!runtimeToken) {
+        showError("Token do GitHub não configurado. Faça login no painel para sincronizar.");
+        return;
+      }
+
+      if (!confirm("Deseja recalcular e sincronizar o Ranking Geral (ranking.tdf) a partir de TODOS os arquivos TDF de etapas existentes?")) {
+        return;
+      }
+
+      try {
+        showSuccess("Iniciando recálculo integral do ranking geral a partir de todas as etapas...");
+        await ensureSheetsLoaded();
+
+        const timestamp = new Date().getTime();
+        const etapasRes = await fetch(`etapas.json?v=${timestamp}`);
+        if (!etapasRes.ok) throw new Error("Não foi possível carregar etapas.json");
+        const stages = await etapasRes.json();
+
+        const cleanStages = (stages || []).filter(s => s && typeof s.data === 'string');
+        const chronologicalStages = [...cleanStages].sort((a, b) => a.data.localeCompare(b.data));
+
+        if (chronologicalStages.length === 0) {
+          throw new Error("Nenhuma etapa encontrada em etapas.json.");
+        }
+
+        const consolidatedPlayersMap = new Map(); // key = cleanId || normName
+
+        for (let i = 0; i < chronologicalStages.length; i++) {
+          const stage = chronologicalStages[i];
+          const stageIdx = i;
+          const mult = Number(stage.multiplicador) || 1;
+
+          const tdfRes = await fetch(`etapas/${stage.data}.tdf?v=${timestamp}`);
+          if (!tdfRes.ok) continue;
+
+          const tdfText = await tdfRes.text();
+          const stageRows = parseTDF(tdfText);
+
+          stageRows.forEach((p, pIdx) => {
+            const rawName = p.Jogador || p.Player || p.Name || `Jogador ${pIdx + 1}`;
+            const rawId = getPlayerId(p);
+            const cleanId = rawId ? String(rawId).trim() : '';
+
+            // Resolução por ID primeiro
+            let officialName = rawName;
+            let playerCategory = p.Categoria || p.Category || 'MASTER';
+            if (cleanId && cachedJogadores && cachedJogadores.length > 0) {
+              const dbP = cachedJogadores.find(j => {
+                const jId = getPlayerId(j);
+                return jId && String(jId).trim() === cleanId;
+              });
+              if (dbP) {
+                officialName = dbP.Jogador || dbP.Name || rawName;
+                if (dbP.Categoria) playerCategory = dbP.Categoria;
+              }
+            } else if (cachedJogadores && cachedJogadores.length > 0) {
+              const dbP = cachedJogadores.find(j => normalizePlayerName(j.Jogador || j.Name) === normalizePlayerName(rawName));
+              if (dbP) {
+                officialName = dbP.Jogador || dbP.Name || rawName;
+                if (dbP.Categoria) playerCategory = dbP.Categoria;
+              }
+            }
+
+            const mapKey = cleanId || normalizePlayerName(officialName);
+
+            if (!consolidatedPlayersMap.has(mapKey)) {
+              consolidatedPlayersMap.set(mapKey, {
+                ID: cleanId,
+                Jogador: officialName,
+                Categoria: playerCategory,
+                Pontos: 0,
+                Vitorias: 0,
+                Empates: 0,
+                Derrotas: 0,
+                Podio: 0,
+                MediaColocacao: 0,
+                Participacoes: 0,
+                placements: Array(chronologicalStages.length).fill('-')
+              });
+            }
+
+            const cPlayer = consolidatedPlayersMap.get(mapKey);
+            if (!cPlayer.ID && cleanId) cPlayer.ID = cleanId;
+
+            const { v, e, d } = getVED(p);
+            const rawPts = Number(getFirstDefined(p, ['Pontos', 'Points', 'Pts'])) || 0;
+            const finalPts = rawPts * mult;
+            const stagePos = toNumber(p.Pos || (pIdx + 1), 999);
+
+            cPlayer.Pontos += finalPts;
+            cPlayer.Vitorias += v;
+            cPlayer.Empates += e;
+            cPlayer.Derrotas += d;
+            cPlayer.placements[stageIdx] = stagePos;
+          });
+        }
+
+        // Calcula estatísticas finais
+        consolidatedPlayersMap.forEach(p => {
+          const activePlacements = p.placements
+            .filter(x => x !== '-' && !isNaN(Number(x)))
+            .map(Number);
+
+          p.Participacoes = activePlacements.length;
+          p.Podio = activePlacements.filter(pos => pos <= 4).length;
+          p.MediaColocacao = p.Participacoes > 0 ? (activePlacements.reduce((a, b) => a + b, 0) / p.Participacoes) : 0;
+          p.HistoricoColocacoes = p.placements.join(';');
+        });
+
+        const activePlayers = Array.from(consolidatedPlayersMap.values()).filter(p => p.Participacoes > 0);
+
+        // Ordenação oficial do ranking
+        activePlayers.sort((a, b) => {
+          if (b.Pontos !== a.Pontos) return b.Pontos - a.Pontos;
+          if (b.Podio !== a.Podio) return b.Podio - a.Podio;
+          if (a.MediaColocacao !== b.MediaColocacao) return a.MediaColocacao - b.MediaColocacao;
+          return String(a.Jogador).localeCompare(String(b.Jogador), 'pt-BR');
+        });
+
+        const headers = ['Pos', 'ID', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Participacoes', 'HistoricoColocacoes'];
+        let recalculatedTdf = headers.join('\t') + '\n';
+        activePlayers.forEach((p, idx) => {
+          const row = [
+            idx + 1,
+            p.ID || '',
+            p.Jogador,
+            p.Categoria,
+            p.Pontos,
+            p.Vitorias,
+            p.Empates,
+            p.Derrotas,
+            p.Podio,
+            Number(p.MediaColocacao).toFixed(2),
+            p.Participacoes,
+            p.HistoricoColocacoes
+          ];
+          recalculatedTdf += row.join('\t') + '\n';
+        });
+
+        // Envia para o GitHub
+        const config = GITHUB_CONFIG;
+        const rankingUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/ranking.tdf`;
+        const currentSha = await getLatestSha(rankingUrl);
+
+        const commitPayload = {
+          message: `Recalcular e sincronizar ranking.tdf a partir de todas as ${chronologicalStages.length} etapas`,
+          content: encodeBase64UTF8(recalculatedTdf),
+          branch: config.branch
+        };
+        if (currentSha) commitPayload.sha = currentSha;
+
+        const putRes = await fetch(rankingUrl, {
+          method: 'PUT',
+          headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!putRes.ok) {
+          const errData = await putRes.json().catch(() => ({}));
+          throw new Error(errData.message || "Erro ao salvar ranking.tdf no GitHub");
+        }
+
+        showSuccess(`⚡ Ranking Geral recalculado e sincronizado com sucesso no GitHub com base nas ${chronologicalStages.length} etapas!`);
+        await runFullAudit();
+
+      } catch (err) {
+        console.error("Erro no recálculo geral:", err);
+        showError("Falha ao recalcular ranking geral: " + err.message);
       }
     }
 

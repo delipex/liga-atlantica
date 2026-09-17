@@ -13,5 +13,85 @@
     "data": "2026-07-16",
     "tipo": "Liga",
     "multiplicador": 1
+  },
+  {
+    "data": "2026-07-23",
+    "tipo": "Liga",
+    "multiplicador": 1
+  },
+  {
+    "data": "2026-07-25",
+    "tipo": "Liga",
+    "multiplicador": 1
+  },
+  {
+    "data": "2026-07-30",
+    "tipo": "Liga",
+    "multiplicador": 1
+  },
+  {
+    "data": "2026-08-01",
+    "tipo": "Liga",
+    "multiplicador": 1
+  },
+  {
+    "data": "2026-08-06",
+    "tipo": "Liga",
+    "multiplicador": 1
+  },
+  {
+    "data": "2026-08-08",
+    "tipo": "Liga",
+    "multiplicador": 1
+  },
+  {
+    "data": "2026-08-13",
+    "tipo": "Liga",
+    "multiplicador": 1
+  },
+  {
+    "data": "2026-08-15",
+    "tipo": "Liga",
+    "multiplicador": 1
+  },
+  {
+    "data": "2026-08-20",
+    "tipo": "Off-meta",
+    "multiplicador": 1
+  },
+  {
+    "data": "2026-08-22",
+    "tipo": "Liga",
+    "multiplicador": 1
+  },
+  {
+    "data": "2026-08-27",
+    "tipo": "Liga",
+    "multiplicador": 1
+  },
+  {
+    "data": "2026-08-29",
+    "tipo": "TCG WORLD CHAMPIONSHIP",
+    "multiplicador": 1.5
+  },
+  {
+    "data": "2026-09-03",
+    "tipo": "Liga",
+    "multiplicador": 1
+  },
+  {
+    "data": "2026-09-05",
+    "tipo": "Liga",
+    "multiplicador": 1
+  },
+  {
+    "data": "2026-09-10",
+    "tipo": "Liga",
+    "multiplicador": 1
+  },
+  {
+    "data": "2026-09-12",
+    "tipo": "Liga",
+    "multiplicador": 1
   }
 ]
