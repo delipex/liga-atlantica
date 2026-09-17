@@ -3649,6 +3649,52 @@ function doGet(e) {
         });
         if (!putArchEtRes.ok) throw new Error("Falha ao criar snapshot das etapas em " + archiveBasePath);
 
+        // 2.3 Copia cada etapa individual (.tdf) para temporadas/temporada-{N}/etapas/ e limpa a pasta etapas/ ativa
+        for (const stage of currentEtapasList) {
+          const rootStageUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas/${stage.data}.tdf`;
+          try {
+            const stageRes = await fetch(rootStageUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
+              headers: { 'Authorization': `token ${runtimeToken}` }
+            });
+            if (stageRes.ok) {
+              const stageData = await stageRes.json();
+              const stageContent = stageData.content;
+              const rootStageSha = stageData.sha;
+              
+              // Salva na subpasta arquivada da temporada
+              const archiveStageUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${archiveBasePath}/etapas/${stage.data}.tdf`;
+              let archStageSha = await getLatestSha(archiveStageUrl);
+              const commitArchStagePayload = {
+                message: `Arquivar etapa ${stage.data} na Temporada #${seasonCurrent}`,
+                content: stageContent,
+                branch: config.branch
+              };
+              if (archStageSha) commitArchStagePayload.sha = archStageSha;
+              
+              await fetch(archiveStageUrl, {
+                method: 'PUT',
+                headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(commitArchStagePayload)
+              });
+              
+              // Deleta da pasta raiz ativa etapas/ para deixar 100% limpa para a nova temporada
+              if (rootStageSha) {
+                await fetch(rootStageUrl, {
+                  method: 'DELETE',
+                  headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    message: `Remover etapa ${stage.data} da pasta ativa após arquivamento na Temporada #${seasonCurrent}`,
+                    sha: rootStageSha,
+                    branch: config.branch
+                  })
+                });
+              }
+            }
+          } catch (stageErr) {
+            console.warn(`Aviso ao arquivar arquivo individual da etapa ${stage.data}:`, stageErr);
+          }
+        }
+
         // 2.3 Cria resumo.json com metadados do fechamento
         const archiveResumoUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${archiveBasePath}/resumo.json`;
         let archiveResumoSha = await getLatestSha(archiveResumoUrl);
