@@ -818,7 +818,11 @@ strong, b {
   color-scheme: dark;
 }
 
-.select-input option {
+select, input, textarea {
+  color-scheme: dark;
+}
+
+select option, select optgroup, .search-input option {
   background-color: #0f172a !important;
   color: #f8fafc !important;
 }
