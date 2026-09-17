@@ -1,0 +1,839 @@
+[
+    {
+        "temporada":  "Temporada #1",
+        "dataFechamento":  "19-04-2025",
+        "pos":  1,
+        "jogador":  "Washington Neto",
+        "categoria":  "ME",
+        "pontos":  "",
+        "deck":  "Dragapult ex"
+    },
+    {
+        "temporada":  "Temporada #2",
+        "dataFechamento":  "20-09-2025",
+        "pos":  1,
+        "jogador":  "Washington Neto",
+        "categoria":  "ME",
+        "pontos":  "",
+        "deck":  "Zoroark ex"
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  1,
+        "jogador":  "João Pedro Oliveira",
+        "categoria":  "ME",
+        "pontos":  "320",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  2,
+        "jogador":  "Fernando Ribeiro",
+        "categoria":  "ME",
+        "pontos":  "315",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  3,
+        "jogador":  "Washington Neto",
+        "categoria":  "ME",
+        "pontos":  "280",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  4,
+        "jogador":  "Bruno Bittencourt",
+        "categoria":  "ME",
+        "pontos":  "250",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  5,
+        "jogador":  "Igor Nunes",
+        "categoria":  "ME",
+        "pontos":  "230",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  6,
+        "jogador":  "João Vitor",
+        "categoria":  "ME",
+        "pontos":  "210",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  7,
+        "jogador":  "Noide Neto",
+        "categoria":  "ME",
+        "pontos":  "170",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  8,
+        "jogador":  "Enzo dos Anjos",
+        "categoria":  "ME",
+        "pontos":  "130",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  9,
+        "jogador":  "Carlos Junior",
+        "categoria":  "ME",
+        "pontos":  "125",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  10,
+        "jogador":  "Davi Soledade",
+        "categoria":  "ME",
+        "pontos":  "120",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  11,
+        "jogador":  "João Pedro Magalhães",
+        "categoria":  "ME",
+        "pontos":  "100",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  12,
+        "jogador":  "Caio Costa",
+        "categoria":  "ME",
+        "pontos":  "100",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  13,
+        "jogador":  "Igor Melo",
+        "categoria":  "ME",
+        "pontos":  "100",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  14,
+        "jogador":  "Carlos Paes",
+        "categoria":  "ME",
+        "pontos":  "90",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  15,
+        "jogador":  "Matheus Mascarenhas",
+        "categoria":  "ME",
+        "pontos":  "85",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  16,
+        "jogador":  "Carlos Nunes",
+        "categoria":  "ME",
+        "pontos":  "80",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  17,
+        "jogador":  "Caio da Silva",
+        "categoria":  "ME",
+        "pontos":  "75",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  18,
+        "jogador":  "Adriel Nunes",
+        "categoria":  "ME",
+        "pontos":  "70",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  19,
+        "jogador":  "Arun Coronel",
+        "categoria":  "ME",
+        "pontos":  "60",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  20,
+        "jogador":  "Leilson Silva",
+        "categoria":  "ME",
+        "pontos":  "60",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  21,
+        "jogador":  "Gabriel Barros",
+        "categoria":  "ME",
+        "pontos":  "60",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  22,
+        "jogador":  "Phelipe Santos",
+        "categoria":  "ME",
+        "pontos":  "55",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  23,
+        "jogador":  "Phelipe R.",
+        "categoria":  "ME",
+        "pontos":  "50",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  24,
+        "jogador":  "Felipe Queiroz",
+        "categoria":  "ME",
+        "pontos":  "50",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  25,
+        "jogador":  "Yuri Aoki",
+        "categoria":  "ME",
+        "pontos":  "45",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  26,
+        "jogador":  "Samuel Boaventura",
+        "categoria":  "ME",
+        "pontos":  "40",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  27,
+        "jogador":  "José Adalid Dubon",
+        "categoria":  "ME",
+        "pontos":  "40",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  28,
+        "jogador":  "Guilherme Oliveira",
+        "categoria":  "ME",
+        "pontos":  "40",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  29,
+        "jogador":  "Pedro Cardoso",
+        "categoria":  "ME",
+        "pontos":  "30",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  30,
+        "jogador":  "Luiz Gustavo",
+        "categoria":  "ME",
+        "pontos":  "30",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  31,
+        "jogador":  "João Miguel Rodrigues",
+        "categoria":  "ME",
+        "pontos":  "30",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  32,
+        "jogador":  "Yasmin Lima",
+        "categoria":  "ME",
+        "pontos":  "30",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  33,
+        "jogador":  "Lucas Livraria",
+        "categoria":  "ME",
+        "pontos":  "30",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  34,
+        "jogador":  "Paulo Amorim",
+        "categoria":  "ME",
+        "pontos":  "30",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  35,
+        "jogador":  "Thales Coutinho",
+        "categoria":  "ME",
+        "pontos":  "20",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  36,
+        "jogador":  "Samuel Nunes",
+        "categoria":  "ME",
+        "pontos":  "20",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  37,
+        "jogador":  "Daniel Passos",
+        "categoria":  "ME",
+        "pontos":  "20",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  38,
+        "jogador":  "Felipe Damasceno",
+        "categoria":  "ME",
+        "pontos":  "15",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  39,
+        "jogador":  "Paulo Queiroz",
+        "categoria":  "ME",
+        "pontos":  "15",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  40,
+        "jogador":  "Roberto Maia",
+        "categoria":  "ME",
+        "pontos":  "15",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  41,
+        "jogador":  "Heron Passos",
+        "categoria":  "ME",
+        "pontos":  "15",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  42,
+        "jogador":  "Moises Almeida",
+        "categoria":  "ME",
+        "pontos":  "15",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #3",
+        "dataFechamento":  "11-04-2026",
+        "pos":  43,
+        "jogador":  "Marcos Melo",
+        "categoria":  "ME",
+        "pontos":  "15",
+        "deck":  ""
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  1,
+        "jogador":  "Washington Neto",
+        "categoria":  "Mestre",
+        "pontos":  "290",
+        "deck":  "Zoroark ex"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  2,
+        "jogador":  "João Vitor Pereira",
+        "categoria":  "Mestre",
+        "pontos":  "250",
+        "deck":  "Mega Lucario ex"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  3,
+        "jogador":  "Wesllen Dias",
+        "categoria":  "Mestre",
+        "pontos":  "225",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  4,
+        "jogador":  "Pedro Cardoso",
+        "categoria":  "Mestre",
+        "pontos":  "220",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  5,
+        "jogador":  "João Pedro Oliveira",
+        "categoria":  "Mestre",
+        "pontos":  "215",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  6,
+        "jogador":  "Fernando Ribeiro",
+        "categoria":  "Mestre",
+        "pontos":  "205",
+        "deck":  "Alakazam"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  7,
+        "jogador":  "Igor Nunes",
+        "categoria":  "Mestre",
+        "pontos":  "195",
+        "deck":  "Raio Fúria"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  8,
+        "jogador":  "Joao Gloria",
+        "categoria":  "Mestre",
+        "pontos":  "190",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  9,
+        "jogador":  "Lucas Linard",
+        "categoria":  "Mestre",
+        "pontos":  "190",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  10,
+        "jogador":  "Luis H. Silva",
+        "categoria":  "Mestre",
+        "pontos":  "185",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  11,
+        "jogador":  "Carlos Junior",
+        "categoria":  "Mestre",
+        "pontos":  "185",
+        "deck":  "Praça de Festas"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  12,
+        "jogador":  "Noide Neto",
+        "categoria":  "Mestre",
+        "pontos":  "180",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  13,
+        "jogador":  "Lucas Costa",
+        "categoria":  "Mestre",
+        "pontos":  "180",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  14,
+        "jogador":  "Caio R",
+        "categoria":  "Sênior",
+        "pontos":  "175",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  15,
+        "jogador":  "Phelipe Santos",
+        "categoria":  "Mestre",
+        "pontos":  "155",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  16,
+        "jogador":  "Felipe Damasceno",
+        "categoria":  "Mestre",
+        "pontos":  "140",
+        "deck":  "Rocket Mewtwo"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  17,
+        "jogador":  "Wallyson Oliveira",
+        "categoria":  "Mestre",
+        "pontos":  "115",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  18,
+        "jogador":  "Caio Da Silva",
+        "categoria":  "Mestre",
+        "pontos":  "100",
+        "deck":  "Rocket Mewtwo"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  19,
+        "jogador":  "Enzo Dos Anjos",
+        "categoria":  "Mestre",
+        "pontos":  "100",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  20,
+        "jogador":  "Carlos Morais",
+        "categoria":  "Mestre",
+        "pontos":  "95",
+        "deck":  "Hydrapple"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  21,
+        "jogador":  "Carlos Paes",
+        "categoria":  "Mestre",
+        "pontos":  "90",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  22,
+        "jogador":  "Igor Melo",
+        "categoria":  "Mestre",
+        "pontos":  "90",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  23,
+        "jogador":  "Leilson Filho",
+        "categoria":  "Sênior",
+        "pontos":  "80",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  24,
+        "jogador":  "Israel Silva",
+        "categoria":  "Mestre",
+        "pontos":  "75",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  25,
+        "jogador":  "Antonio Neto",
+        "categoria":  "Mestre",
+        "pontos":  "70",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  26,
+        "jogador":  "Bruno Bittencourt",
+        "categoria":  "Mestre",
+        "pontos":  "70",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  27,
+        "jogador":  "Felipe Queiroz",
+        "categoria":  "Sênior",
+        "pontos":  "65",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  28,
+        "jogador":  "Lara Carvalho",
+        "categoria":  "Mestre",
+        "pontos":  "60",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  29,
+        "jogador":  "Adriel Nunes",
+        "categoria":  "Mestre",
+        "pontos":  "60",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  30,
+        "jogador":  "Matheus Mascarenhas",
+        "categoria":  "Sênior",
+        "pontos":  "60",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  31,
+        "jogador":  "Davi Soledade",
+        "categoria":  "Sênior",
+        "pontos":  "50",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  32,
+        "jogador":  "Gabriel Seixas",
+        "categoria":  "Mestre",
+        "pontos":  "50",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  33,
+        "jogador":  "Juarez Junior",
+        "categoria":  "Mestre",
+        "pontos":  "50",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  34,
+        "jogador":  "João Santos",
+        "categoria":  "Mestre",
+        "pontos":  "45",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  35,
+        "jogador":  "Aldair Reis",
+        "categoria":  "Mestre",
+        "pontos":  "45",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  36,
+        "jogador":  "Guilherme Oliveira",
+        "categoria":  "Mestre",
+        "pontos":  "45",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  37,
+        "jogador":  "Yuri Aoki",
+        "categoria":  "Mestre",
+        "pontos":  "35",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  38,
+        "jogador":  "Paulo Amorim",
+        "categoria":  "Mestre",
+        "pontos":  "35",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  39,
+        "jogador":  "Moisés Farias",
+        "categoria":  "Mestre",
+        "pontos":  "30",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  40,
+        "jogador":  "Arun Coronel",
+        "categoria":  "Mestre",
+        "pontos":  "30",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  41,
+        "jogador":  "Joao Prazeres",
+        "categoria":  "Mestre",
+        "pontos":  "30",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  42,
+        "jogador":  "Filipe Miranda",
+        "categoria":  "Mestre",
+        "pontos":  "30",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  43,
+        "jogador":  "Alex Correa",
+        "categoria":  "Sênior",
+        "pontos":  "30",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  44,
+        "jogador":  "João Pedro Magalhães",
+        "categoria":  "Júnior",
+        "pontos":  "20",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  45,
+        "jogador":  "Guilherme Borges",
+        "categoria":  "Mestre",
+        "pontos":  "20",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  46,
+        "jogador":  "Samuel Nunes",
+        "categoria":  "Mestre",
+        "pontos":  "15",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  47,
+        "jogador":  "Massao F",
+        "categoria":  "Mestre",
+        "pontos":  "15",
+        "deck":  "Outros"
+    },
+    {
+        "temporada":  "Temporada #4",
+        "dataFechamento":  "13-06-2026",
+        "pos":  48,
+        "jogador":  "Igor Costa",
+        "categoria":  "Mestre",
+        "pontos":  "5",
+        "deck":  "Outros"
+    }
+]

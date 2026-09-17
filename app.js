@@ -722,251 +722,305 @@ async function loadData() {
   const sourceParam = urlParams.get('source');
   let dataSource = (sourceParam && ["sheets", "github"].includes(sourceParam))
     ? sourceParam
-    : (window.CONFIG ? window.CONFIG.dataSource : "sheets");
+    : (window.CONFIG ? window.CONFIG.dataSource : "github");
 
   const githubSources = window.CONFIG && window.CONFIG.githubSources ? window.CONFIG.githubSources : {};
 
   appData = { ...MOCK_DATA, Configuracoes: { StatusPodio: 'auto' }, Jogadores: [] };
 
-  if (spreadsheetId) {
-    try {
-      if (statusBadge) {
-        statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#3b82f6;border-radius:50%;animation:pulse 1.5s infinite"></span> Conectando...`;
-        statusBadge.className = "offline-badge";
-        statusBadge.style.color = "#3b82f6";
-        statusBadge.style.borderColor = "rgba(59, 130, 246, 0.3)";
-      }
+  if (statusBadge) {
+    statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#3b82f6;border-radius:50%;animation:pulse 1.5s infinite"></span> Carregando...`;
+    statusBadge.className = "offline-badge";
+    statusBadge.style.color = "#3b82f6";
+    statusBadge.style.borderColor = "rgba(59, 130, 246, 0.3)";
+  }
 
+  try {
+    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const timestamp = new Date().getTime();
+
+    // 1. Configurações gerais (config.json com fallback Sheets)
+    let configObj = null;
+    try {
+      const confRes = await fetch(`config.json?v=${timestamp}`);
+      if (confRes.ok) configObj = await confRes.json();
+    } catch (e) {
+      console.warn("Falha ao carregar config.json local:", e);
+    }
+
+    if (configObj) {
+      appData.Configuracoes = {
+        StatusPodio: (configObj.statusPodio || 'auto').toLowerCase(),
+        ExibirMetagame: configObj.exibirMetagame || 'ambos',
+        TemporadaAtual: configObj.temporadaAtual || 5,
+        NomeLiga: configObj.leagueName || 'Liga Atlântica',
+        SubtituloLiga: configObj.leagueSubtitle || 'Liga de Pokémon TCG - FSA'
+      };
+    } else if (spreadsheetId) {
       let configuracoes = [];
       try {
         const res = await fetchOptionalSheetTab(spreadsheetId, "Configuracoes", publishedSheetGids.Configuracoes);
         if (res && res.length) configuracoes = res;
-      } catch(e) {
-        console.warn("Falha ao carregar aba Configuracoes");
-      }
-
+      } catch(e) {}
       configuracoes.forEach(row => {
         const param = (row.Parametro || "").trim().toLowerCase();
         const val = (row.Valor || "").trim();
-        // NOTE: fonteranking is obsolete. The site always uses github (TDF) for active ranking.
-        if (param === "statuspodio") {
-          appData.Configuracoes.StatusPodio = val.toLowerCase();
-        }
-        if (param === "avisotopo" || param === "aviso-topo" || param === "aviso_topo") {
-          appData.Configuracoes.AvisoTopo = val;
-        }
-        if (param === "linkwhatsapp" || param === "link-whatsapp" || param === "link_whatsapp" || param === "whatsapp") {
-          appData.Configuracoes.LinkWhatsApp = val;
-        }
-        if (param === "linkinstagram" || param === "link-instagram" || param === "link_instagram" || param === "instagram") {
-          appData.Configuracoes.LinkInstagram = val;
-        }
-        if (param === "temapadrao" || param === "tema-padrao" || param === "tema_padrao" || param === "tema") {
-          appData.Configuracoes.TemaPadrao = val;
-        }
-        if (param === "exibirmetagame" || param === "exibir-metagame" || param === "exibir_metagame" || param === "metagame") {
-          appData.Configuracoes.ExibirMetagame = val;
-        }
+        if (param === "statuspodio") appData.Configuracoes.StatusPodio = val.toLowerCase();
+        if (param === "avisotopo" || param === "aviso-topo" || param === "aviso_topo") appData.Configuracoes.AvisoTopo = val;
+        if (param === "linkwhatsapp" || param === "link-whatsapp" || param === "link_whatsapp" || param === "whatsapp") appData.Configuracoes.LinkWhatsApp = val;
+        if (param === "linkinstagram" || param === "link-instagram" || param === "link_instagram" || param === "instagram") appData.Configuracoes.LinkInstagram = val;
+        if (param === "temapadrao" || param === "tema-padrao" || param === "tema_padrao" || param === "tema") appData.Configuracoes.TemaPadrao = val;
+        if (param === "exibirmetagame" || param === "exibir-metagame" || param === "exibir_metagame" || param === "metagame") appData.Configuracoes.ExibirMetagame = val;
       });
+    }
 
-      // CORREÇÃO: Sincroniza a variável global para que a tabela não congele o ranking TDF
-      if (window.CONFIG) {
-        window.CONFIG.dataSource = dataSource;
-      }
-
-      const rankingTabName = "Ranking";
-      const historicalScoresTab = window.CONFIG && window.CONFIG.historicalScoresTab ? window.CONFIG.historicalScoresTab : "ScoresAntigos";
-
-      let rankingPromise;
-      let stagesPromise;
-      if (dataSource === "github" && githubSources.Ranking) {
-        // Resolve a fresh commit SHA dynamically to bypass the Fastly CDN cache of raw.githubusercontent.com
+    // 2. Ranking e Etapas
+    let rankingPromise = (async () => {
+      try {
         let commitSha = "main";
-        try {
-          const match = githubSources.Ranking.match(/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)/);
-          if (match) {
-            const owner = match[1];
-            const repo = match[2];
-            const branch = match[3];
-            commitSha = branch; // Default fallback
-            
-            const shaRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits/${branch}?t=${new Date().getTime()}`);
-            if (shaRes.ok) {
-              const shaData = await shaRes.json();
-              if (shaData && shaData.sha) {
-                commitSha = shaData.sha;
-                window.latestCommitSha = commitSha;
+        if (githubSources.Ranking && !isLocalHost) {
+          try {
+            const match = githubSources.Ranking.match(/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)/);
+            if (match) {
+              const shaRes = await fetch(`https://api.github.com/repos/${match[1]}/${match[2]}/commits/${match[3]}?t=${timestamp}`);
+              if (shaRes.ok) {
+                const shaData = await shaRes.json();
+                if (shaData && shaData.sha) commitSha = shaData.sha;
               }
             }
-          }
-        } catch (e) {
-          console.warn("Falha ao obter commit SHA dinâmico. Usando branch padrão.", e);
+          } catch(e) {}
         }
-
-        let resolvedRankingUrl = githubSources.Ranking.replace(/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)/, `/raw.githubusercontent.com/$1/$2/${commitSha}`);
-        let resolvedStagesUrl = resolvedRankingUrl.replace('ranking.tdf', 'etapas.json');
-
-        // Se estiver rodando localmente (localhost ou 127.0.0.1), carrega os arquivos locais do servidor
-        const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        if (isLocalHost) {
-          resolvedRankingUrl = `ranking.tdf?v=${new Date().getTime()}`;
-          resolvedStagesUrl = `etapas.json?v=${new Date().getTime()}`;
+        let rankingUrl = isLocalHost ? `ranking.tdf?v=${timestamp}` : (githubSources.Ranking ? githubSources.Ranking.replace(/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)/, `/raw.githubusercontent.com/$1/$2/${commitSha}`) : `ranking.tdf?v=${timestamp}`);
+        const res = await fetch(rankingUrl);
+        if (res.ok) {
+          const text = await res.text();
+          return parseTDF(text);
         }
-
-        rankingPromise = (async () => {
-          try {
-            const res = await fetch(resolvedRankingUrl);
-            if (!res.ok) throw new Error("Erro ao carregar ranking TDF.");
-            const text = await res.text();
-            return parseTDF(text);
-          } catch (e) {
-            console.warn("Falha ao carregar ranking.tdf", e);
-            return [];
-          }
-        })();
-
-        stagesPromise = (async () => {
-          try {
-            const res = await fetch(resolvedStagesUrl);
-            if (res.ok) return await res.json();
-          } catch (e) {
-            console.warn("etapas.json não encontrado ou falha ao carregar.");
-          }
-          return [];
-        })();
-      } else {
-        rankingPromise = fetchSheetTab(spreadsheetId, rankingTabName, publishedSheetGids.Ranking || publishedGid);
-        stagesPromise = (async () => {
-          try {
-            const res = await fetch(`etapas.json?v=${new Date().getTime()}`);
-            if (res.ok) return await res.json();
-          } catch (e) {
-            console.info("etapas.json local não encontrado ou falha ao carregar.");
-          }
-          return [];
-        })();
+      } catch (e) {
+        console.warn("Falha ao carregar ranking.tdf:", e);
       }
+      if (spreadsheetId) {
+        return fetchOptionalSheetTab(spreadsheetId, "Ranking", publishedSheetGids.Ranking || publishedGid);
+      }
+      return [];
+    })();
 
-      const campeoesPromise = (async () => {
-        try {
-          const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-          const url = isLocalHost ? `campeoes.json?v=${new Date().getTime()}` : (githubSources.Ranking ? githubSources.Ranking.replace('ranking.tdf', 'campeoes.json') : `campeoes.json?v=${new Date().getTime()}`);
-          const res = await fetch(url);
-          if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data) && data.length) return data;
+    let stagesPromise = (async () => {
+      try {
+        const res = await fetch(`etapas.json?v=${timestamp}`);
+        if (res.ok) return await res.json();
+      } catch (e) {
+        console.warn("Falha ao carregar etapas.json:", e);
+      }
+      return [];
+    })();
+
+    // 3. Jogadores
+    let jogadoresPromise = (async () => {
+      try {
+        const res = await fetch(`jogadores.json?v=${timestamp}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length) {
+            return data.map(j => ({
+              Jogador: j.jogador || j.Jogador || j.Name || j.name || '',
+              ID: j.id || j.ID || '',
+              Categoria: j.categoria || j.Categoria || 'Master',
+              PosicaoFinal: j.posicaoFinal || j.PosicaoFinal || ''
+            }));
           }
-        } catch (e) {
-          console.info("campeoes.json não encontrado ou falha ao carregar.", e);
         }
-        return fetchOptionalSheetTab(spreadsheetId, "Campeoes", publishedSheetGids.Campeoes);
-      })();
+      } catch (e) {}
+      if (spreadsheetId) return fetchOptionalSheetTab(spreadsheetId, "Jogadores", publishedSheetGids.Jogadores);
+      return [];
+    })();
 
-      const decksPromise = (async () => {
-        try {
-          const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-          const url = isLocalHost ? `decks.json?v=${new Date().getTime()}` : (githubSources.Ranking ? githubSources.Ranking.replace('ranking.tdf', 'decks.json') : `decks.json?v=${new Date().getTime()}`);
-          const res = await fetch(url);
-          if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data) && data.length) return data;
+    // 4. Decks
+    let decksPromise = (async () => {
+      try {
+        const res = await fetch(`decks.json?v=${timestamp}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length) {
+            return data.map(d => ({
+              Deck: d.deck || d.Deck || '',
+              TipoEnergia: d.tipoEnergia || d.TipoEnergia || 'colorless',
+              Imagem: d.imagem || d.Imagem || '',
+              Limitless: d.limitless || d.Limitless || '',
+              Icone: d.icone || d.Icone || ''
+            }));
           }
-        } catch (e) {
-          console.info("decks.json não encontrado ou falha ao carregar.", e);
         }
-        return fetchOptionalSheetTab(spreadsheetId, "Decks", publishedSheetGids.Decks);
-      })();
+      } catch (e) {}
+      if (spreadsheetId) return fetchOptionalSheetTab(spreadsheetId, "Decks", publishedSheetGids.Decks);
+      return [];
+    })();
 
-      const metagamePromise = (async () => {
-        try {
-          const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-          const url = isLocalHost ? `metagame.json?v=${new Date().getTime()}` : (githubSources.Ranking ? githubSources.Ranking.replace('ranking.tdf', 'metagame.json') : `metagame.json?v=${new Date().getTime()}`);
-          const res = await fetch(url);
-          if (res.ok) {
-            const data = await res.json();
-            if (data && typeof data === 'object') {
-              const playerRowsMap = new Map();
-              Object.entries(data).forEach(([isoDate, sessionObj]) => {
-                const sessionCode = sessionObj.sessionCode || isoDate;
-                const decksMap = sessionObj.decks || {};
-                Object.entries(decksMap).forEach(([playerName, deckName]) => {
-                  const key = String(playerName).trim().toLowerCase();
-                  if (!playerRowsMap.has(key)) {
-                    playerRowsMap.set(key, { Jogador: playerName });
-                  }
-                  playerRowsMap.get(key)[sessionCode] = deckName;
-                });
+    // 5. Metagame
+    let metagamePromise = (async () => {
+      try {
+        const res = await fetch(`metagame.json?v=${timestamp}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data === 'object') {
+            const playerRowsMap = new Map();
+            Object.entries(data).forEach(([isoDate, sessionObj]) => {
+              const sessionCode = sessionObj.sessionCode || isoDate;
+              const decksMap = sessionObj.decks || {};
+              Object.entries(decksMap).forEach(([playerName, deckName]) => {
+                const key = String(playerName).trim().toLowerCase();
+                if (!playerRowsMap.has(key)) {
+                  playerRowsMap.set(key, { Jogador: playerName });
+                }
+                playerRowsMap.get(key)[sessionCode] = deckName;
               });
-              return Array.from(playerRowsMap.values());
-            }
+            });
+            return Array.from(playerRowsMap.values());
           }
-        } catch (e) {
-          console.info("metagame.json não encontrado ou falha ao carregar.", e);
         }
-        const metaSheet = await fetchOptionalSheetTab(spreadsheetId, "Metagame", publishedSheetGids.Metagame);
-        return (metaSheet && metaSheet.length) ? metaSheet : null;
-      })();
+      } catch (e) {}
+      if (spreadsheetId) return fetchOptionalSheetTab(spreadsheetId, "Metagame", publishedSheetGids.Metagame);
+      return null;
+    })();
 
-      const [ranking, partidas, scoresAntigos, calendario, campeoes, regras, galeria, loadedStages, jogadoresSheet, metagame, decks] = await Promise.all([
-        rankingPromise,
-        fetchOptionalSheetTab(spreadsheetId, "Partidas", publishedSheetGids.Partidas),
-        fetchOptionalSheetTab(spreadsheetId, historicalScoresTab, publishedSheetGids[historicalScoresTab]),
-        fetchOptionalSheetTab(spreadsheetId, "Calendario", publishedSheetGids.Calendario),
-        campeoesPromise,
-        fetchOptionalSheetTab(spreadsheetId, "Regras", publishedSheetGids.Regras),
-        fetchOptionalSheetTab(spreadsheetId, "Galeria", publishedSheetGids.Galeria),
-        stagesPromise,
-        fetchOptionalSheetTab(spreadsheetId, "Jogadores", publishedSheetGids.Jogadores),
-        metagamePromise,
-        decksPromise
-      ]);
-
-      stagesIndex = loadedStages || [];
-      populateStageSelector();
-
-      if (jogadoresSheet && jogadoresSheet.length) appData.Jogadores = jogadoresSheet;
-      if (ranking && ranking.length) appData.Ranking = normalizeRanking(ranking, partidas);
-      if (partidas && partidas.length) appData.Partidas = partidas;
-      appData.ScoresAntigos = normalizeHistoricalScores(scoresAntigos || []);
-      if (calendario && calendario.length) appData.Calendario = calendario;
-      if (campeoes && campeoes.length) appData.Campeoes = campeoes;
-      if (regras && regras.length) appData.Regras = regras;
-      if (galeria && galeria.length) appData.Galeria = galeria;
-      appData.Metagame = (metagame && metagame.length) ? metagame : (jogadoresSheet || []);
-      if (decks && decks.length) appData.Decks = decks;
-
-      isOfflineMode = false;
-
-      if (statusBadge) {
-        const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
-        const isFrozen = window.CONFIG?.dataSource === 'sheets' || 
-                         (statusPodio === 'congelado' || statusPodio === 'offline') ||
-                         (!appData.Ranking || appData.Ranking.length === 0);
-        if (isFrozen) {
-          statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#94a3b8;border-radius:50%"></span> Off Season`;
-          statusBadge.style.color = "#94a3b8";
-          statusBadge.style.borderColor = "rgba(148, 163, 184, 0.3)";
-          statusBadge.title = "Temporada atual está inativa ou aguardando torneios (modo Roster).";
-        } else {
-          statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#10b981;border-radius:50%"></span> Online`;
-          statusBadge.style.color = "#10b981";
-          statusBadge.style.borderColor = "rgba(16, 185, 129, 0.3)";
-          statusBadge.title = "Temporada ativa e recebendo atualizações dos TDFs.";
+    // 6. Calendário
+    let calendarioPromise = (async () => {
+      try {
+        const res = await fetch(`calendario.json?v=${timestamp}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length) {
+            return data.map(ev => ({
+              Data: ev.data || ev.Data || '',
+              Evento: ev.evento || ev.Evento || ev.titulo || ev.Titulo || '',
+              Local: ev.local || ev.Local || 'Livraria Atlântica +',
+              Horario: ev.horario || ev.Horario || '',
+              Status: ev.status || ev.Status || 'confirmado',
+              Descricao: ev.descricao || ev.Descricao || '',
+              LinkMaps: ev.linkMaps || ev.LinkMaps || '',
+              LinkInscricao: ev.linkInscricao || ev.LinkInscricao || '',
+              Foto: ev.foto || ev.Foto || ''
+            }));
+          }
         }
+      } catch (e) {}
+      if (spreadsheetId) return fetchOptionalSheetTab(spreadsheetId, "Calendario", publishedSheetGids.Calendario);
+      return [];
+    })();
+
+    // 7. Campeões
+    let campeoesPromise = (async () => {
+      try {
+        const res = await fetch(`campeoes.json?v=${timestamp}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length) return data;
+        }
+      } catch (e) {}
+      if (spreadsheetId) return fetchOptionalSheetTab(spreadsheetId, "Campeoes", publishedSheetGids.Campeoes);
+      return [];
+    })();
+
+    // 8. Regras
+    let regrasPromise = (async () => {
+      try {
+        const res = await fetch(`regras.json?v=${timestamp}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length) {
+            return data.map(r => ({
+              Titulo: r.titulo || r.Titulo || '',
+              Descricao: r.descricao || r.Descricao || ''
+            }));
+          }
+        }
+      } catch (e) {}
+      if (spreadsheetId) return fetchOptionalSheetTab(spreadsheetId, "Regras", publishedSheetGids.Regras);
+      return [];
+    })();
+
+    // 9. Galeria
+    let galeriaPromise = (async () => {
+      try {
+        const res = await fetch(`galeria.json?v=${timestamp}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length) {
+            return data.map(g => ({
+              Titulo: g.titulo || g.Titulo || '',
+              Descricao: g.descricao || g.Descricao || '',
+              Foto: g.urlImagem || g.url || g.Foto || g.foto || '',
+              Data: g.data || g.Data || ''
+            }));
+          }
+        }
+      } catch (e) {}
+      if (spreadsheetId) return fetchOptionalSheetTab(spreadsheetId, "Galeria", publishedSheetGids.Galeria);
+      return [];
+    })();
+
+    // 10. Scores Antigos
+    let scoresAntigosPromise = (async () => {
+      try {
+        const res = await fetch(`scores_antigos.json?v=${timestamp}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length) return data;
+        }
+      } catch (e) {}
+      if (spreadsheetId) {
+        const historicalScoresTab = window.CONFIG && window.CONFIG.historicalScoresTab ? window.CONFIG.historicalScoresTab : "ScoresAntigos";
+        return fetchOptionalSheetTab(spreadsheetId, historicalScoresTab, publishedSheetGids[historicalScoresTab]);
       }
-    } catch (error) {
-      console.warn("Erro ao buscar dados remotos. Usando dados locais de demonstração:", error);
-      appData.Ranking = normalizeRanking(MOCK_DATA.Ranking, []);
-      appData.ScoresAntigos = normalizeHistoricalScores(MOCK_DATA.ScoresAntigos);
-      isOfflineMode = true;
-      if (statusBadge) {
-        statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#ef4444;border-radius:50%"></span> Offline`;
-        statusBadge.style.color = "#ef4444";
-        statusBadge.style.borderColor = "rgba(239, 68, 68, 0.3)";
-        statusBadge.title = "Não foi possível conectar à fonte de dados.";
+      return [];
+    })();
+
+    const [ranking, loadedStages, jogadoresSheet, decks, metagame, calendario, campeoes, regras, galeria, scoresAntigos] = await Promise.all([
+      rankingPromise,
+      stagesPromise,
+      jogadoresPromise,
+      decksPromise,
+      metagamePromise,
+      calendarioPromise,
+      campeoesPromise,
+      regrasPromise,
+      galeriaPromise,
+      scoresAntigosPromise
+    ]);
+
+    stagesIndex = loadedStages || [];
+    populateStageSelector();
+
+    if (jogadoresSheet && jogadoresSheet.length) appData.Jogadores = jogadoresSheet;
+    if (ranking && ranking.length) appData.Ranking = normalizeRanking(ranking, []);
+    appData.ScoresAntigos = normalizeHistoricalScores(scoresAntigos || []);
+    if (calendario && calendario.length) appData.Calendario = calendario;
+    if (campeoes && campeoes.length) appData.Campeoes = campeoes;
+    if (regras && regras.length) appData.Regras = regras;
+    if (galeria && galeria.length) appData.Galeria = galeria;
+    appData.Metagame = (metagame && metagame.length) ? metagame : (jogadoresSheet || []);
+    if (decks && decks.length) appData.Decks = decks;
+
+    isOfflineMode = false;
+
+    if (statusBadge) {
+      const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
+      const isFrozen = (statusPodio === 'congelado' || statusPodio === 'offline') ||
+                       (!appData.Ranking || appData.Ranking.length === 0);
+      if (isFrozen) {
+        statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#94a3b8;border-radius:50%"></span> Off Season`;
+        statusBadge.style.color = "#94a3b8";
+        statusBadge.style.borderColor = "rgba(148, 163, 184, 0.3)";
+        statusBadge.title = "Temporada atual está inativa ou aguardando torneios (modo Roster).";
+      } else {
+        statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#10b981;border-radius:50%"></span> Online`;
+        statusBadge.style.color = "#10b981";
+        statusBadge.style.borderColor = "rgba(16, 185, 129, 0.3)";
+        statusBadge.title = "Temporada ativa e recebendo atualizações.";
       }
     }
-  } else {
+  } catch (error) {
+    console.warn("Erro ao buscar dados remotos. Usando dados locais de demonstração:", error);
     appData.Ranking = normalizeRanking(MOCK_DATA.Ranking, []);
     appData.ScoresAntigos = normalizeHistoricalScores(MOCK_DATA.ScoresAntigos);
     isOfflineMode = true;
@@ -974,7 +1028,7 @@ async function loadData() {
       statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#ef4444;border-radius:50%"></span> Offline`;
       statusBadge.style.color = "#ef4444";
       statusBadge.style.borderColor = "rgba(239, 68, 68, 0.3)";
-      statusBadge.title = "Nenhuma fonte de dados configurada.";
+      statusBadge.title = "Não foi possível conectar à fonte de dados.";
     }
   }
 

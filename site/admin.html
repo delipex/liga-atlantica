@@ -332,16 +332,31 @@
     <!-- Navegação por Abas do Painel -->
     <div class="admin-nav-tabs">
       <button type="button" class="admin-tab-btn active" id="nav-btn-upload" onclick="switchAdminTab('upload')">
-        📤 Publicar Etapa (.tdf)
+        📤 Publicar Etapa
+      </button>
+      <button type="button" class="admin-tab-btn" id="nav-btn-jogadores" onclick="switchAdminTab('jogadores')">
+        👤 Jogadores
       </button>
       <button type="button" class="admin-tab-btn" id="nav-btn-decks" onclick="switchAdminTab('decks')">
-        🎴 Catálogo de Decks
+        🎴 Decks
       </button>
       <button type="button" class="admin-tab-btn" id="nav-btn-metagame" onclick="switchAdminTab('metagame')">
-        📊 Metagame por Etapa
+        📊 Metagame
+      </button>
+      <button type="button" class="admin-tab-btn" id="nav-btn-calendario" onclick="switchAdminTab('calendario')">
+        📅 Calendário
+      </button>
+      <button type="button" class="admin-tab-btn" id="nav-btn-regras" onclick="switchAdminTab('regras')">
+        📜 Regras
+      </button>
+      <button type="button" class="admin-tab-btn" id="nav-btn-galeria" onclick="switchAdminTab('galeria')">
+        🖼️ Galeria
       </button>
       <button type="button" class="admin-tab-btn" id="nav-btn-seasons" onclick="switchAdminTab('seasons')">
-        🏆 Temporadas & Etapas
+        🏆 Temporadas
+      </button>
+      <button type="button" class="admin-tab-btn" id="nav-btn-config" onclick="switchAdminTab('config')">
+        ⚙️ Configurações
       </button>
     </div>
 
@@ -547,7 +562,55 @@
       </section>
     </div>
 
-    <!-- ABA 2: CATÁLOGO DE DECKS -->
+    <!-- ABA 2: BASE OFICIAL DE JOGADORES -->
+    <div id="pane-jogadores" class="tab-pane-content" style="display: none; max-width: 950px; margin: 0 auto;">
+      <section class="glass-card admin-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <h2 style="font-size: 1.2rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              👤 Base Oficial de Jogadores
+            </h2>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              Gerencie cadastros, IDs Play! Pokémon e categorias oficiais dos treinadores
+            </p>
+          </div>
+          <button type="button" class="btn" onclick="openNewPlayerModal()" style="background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); font-weight: 700; padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.4rem;">
+            + Novo Jogador
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap;">
+          <input type="text" id="player-catalog-search" class="search-input" placeholder="🔍 Buscar por nome ou POP ID..." oninput="filterPlayersCatalog()" style="flex: 2; min-width: 200px;">
+          <select id="player-category-filter" class="search-input" onchange="filterPlayersCatalog()" style="flex: 1; min-width: 140px;">
+            <option value="all">Todas as Categorias</option>
+            <option value="Master">Master</option>
+            <option value="Senior">Sênior</option>
+            <option value="Junior">Junior</option>
+          </select>
+          <div id="player-count-badge" style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); background: rgba(255, 203, 5, 0.08); border: 1px solid rgba(255, 203, 5, 0.2); padding: 0.45rem 0.85rem; border-radius: 6px; white-space: nowrap;">
+            0 Jogadores
+          </div>
+        </div>
+
+        <div class="table-responsive" style="max-height: 520px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius);">
+          <table class="ranking-table" style="font-size: 0.85rem;">
+            <thead>
+              <tr>
+                <th style="width: 130px; text-align: center;">POP ID</th>
+                <th style="text-align: left;">Treinador</th>
+                <th style="width: 120px; text-align: center;">Categoria</th>
+                <th style="width: 130px; text-align: center;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="players-catalog-tbody">
+              <!-- Renderizado dinamicamente -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- ABA 3: CATÁLOGO DE DECKS -->
     <div id="pane-decks" class="tab-pane-content" style="display: none; max-width: 950px; margin: 0 auto;">
       <section class="glass-card admin-card">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
@@ -627,7 +690,98 @@
       </section>
     </div>
 
-    <!-- ABA 4: TEMPORADAS E HISTÓRICO -->
+    <!-- ABA 5: CALENDÁRIO DE EVENTOS -->
+    <div id="pane-calendario" class="tab-pane-content" style="display: none; max-width: 950px; margin: 0 auto;">
+      <section class="glass-card admin-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <h2 style="font-size: 1.2rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              📅 Calendário de Eventos & Torneios
+            </h2>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              Adicione, edite e acompanhe os próximos torneios e sessões da liga
+            </p>
+          </div>
+          <button type="button" class="btn" onclick="openNewCalendarModal()" style="background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); font-weight: 700; padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.4rem;">
+            + Novo Evento
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.25rem; align-items: center; flex-wrap: wrap;">
+          <input type="text" id="calendar-search-input" class="search-input" placeholder="🔍 Buscar por evento, data ou local..." oninput="filterCalendarCatalog()" style="flex: 2; min-width: 200px;">
+          <select id="calendar-status-filter" class="search-input" onchange="filterCalendarCatalog()" style="flex: 1; min-width: 140px;">
+            <option value="all">Todos os Status</option>
+            <option value="confirmado">Confirmado</option>
+            <option value="pendente">Pendente</option>
+            <option value="concluido">Concluído</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+          <div id="calendar-count-badge" style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); background: rgba(255, 203, 5, 0.08); border: 1px solid rgba(255, 203, 5, 0.2); padding: 0.45rem 0.85rem; border-radius: 6px; white-space: nowrap;">
+            0 Eventos
+          </div>
+        </div>
+
+        <div id="calendar-events-container" style="display: flex; flex-direction: column; gap: 0.85rem;">
+          <!-- Renderizado dinamicamente -->
+        </div>
+      </section>
+    </div>
+
+    <!-- ABA 6: REGRAS & DIRETRIZES -->
+    <div id="pane-regras" class="tab-pane-content" style="display: none; max-width: 900px; margin: 0 auto;">
+      <section class="glass-card admin-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <h2 style="font-size: 1.2rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              📜 Regras & Diretrizes Oficiais
+            </h2>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              Gerencie o regulamento da liga, formato de pontuação e código de conduta
+            </p>
+          </div>
+          <button type="button" class="btn" onclick="openNewRuleModal()" style="background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); font-weight: 700; padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.4rem;">
+            + Nova Regra
+          </button>
+        </div>
+
+        <div id="rules-count-badge" style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); margin-bottom: 1rem;">
+          0 Tópicos de Regras
+        </div>
+
+        <div id="rules-list-container" style="display: flex; flex-direction: column; gap: 1rem;">
+          <!-- Renderizado dinamicamente -->
+        </div>
+      </section>
+    </div>
+
+    <!-- ABA 7: GALERIA DE FOTOS -->
+    <div id="pane-galeria" class="tab-pane-content" style="display: none; max-width: 950px; margin: 0 auto;">
+      <section class="glass-card admin-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <h2 style="font-size: 1.2rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              🖼️ Galeria de Fotos & Murais
+            </h2>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              Cadastre e gerencie fotos de pódios, torneios e momentos da comunidade
+            </p>
+          </div>
+          <button type="button" class="btn" onclick="openNewPhotoModal()" style="background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); font-weight: 700; padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.4rem;">
+            + Adicionar Foto
+          </button>
+        </div>
+
+        <div id="photos-count-badge" style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); margin-bottom: 1rem;">
+          0 Fotos Cadastradas
+        </div>
+
+        <div id="photos-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem;">
+          <!-- Renderizado dinamicamente -->
+        </div>
+      </section>
+    </div>
+
+    <!-- ABA 8: TEMPORADAS E HISTÓRICO -->
     <div id="pane-seasons" class="tab-pane-content" style="display: none; max-width: 800px; margin: 0 auto;">
       <!-- Gerenciador de Etapas -->
       <section class="glass-card admin-card" id="stages-manager-section">
@@ -681,6 +835,264 @@
       </section>
     </div>
 
+    <!-- ABA 9: CONFIGURAÇÕES GERAIS -->
+    <div id="pane-config" class="tab-pane-content" style="display: none; max-width: 750px; margin: 0 auto;">
+      <section class="glass-card admin-card">
+        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
+          <h2 style="font-size: 1.2rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            ⚙️ Configurações Gerais da Liga & Site
+          </h2>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">
+            Altere parâmetros globais de exibição, pódio e títulos sem tocar em código
+          </p>
+        </div>
+
+        <form id="config-form" onsubmit="handleSaveConfig(event)">
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="conf-league-name">Nome da Liga</label>
+            <input type="text" id="conf-league-name" class="search-input" value="Liga Atlântica" required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="conf-league-subtitle">Subtítulo da Liga</label>
+            <input type="text" id="conf-league-subtitle" class="search-input" value="Liga de Pokémon TCG - FSA">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="conf-temporada-atual">Número da Temporada Atual</label>
+            <input type="number" id="conf-temporada-atual" class="search-input" value="5" min="1" max="99" required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="conf-status-podio">Modo de Exibição do Pódio / Ranking</label>
+            <select id="conf-status-podio" class="search-input" style="width: 100%;">
+              <option value="auto">🟢 Automático (Mostra os líderes com mais pontos)</option>
+              <option value="congelado">🔒 Congelado (Off Season / Modo Roster)</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="conf-exibir-metagame">Exibição do Gráfico de Metagame</label>
+            <select id="conf-exibir-metagame" class="search-input" style="width: 100%;">
+              <option value="ambos">Exibir na Home e na Página de Metagame</option>
+              <option value="pagina">Exibir apenas na Página de Metagame</option>
+              <option value="home">Exibir apenas na Home</option>
+              <option value="desativado">Desativado (Ocultar gráfico)</option>
+            </select>
+          </div>
+
+          <button type="submit" id="btn-save-config-submit" class="btn btn-whatsapp" style="width: 100%; justify-content: center; padding: 0.75rem; font-size: 1rem; background: var(--accent-yellow); color: #000; font-weight: 700; border-color: var(--accent-yellow);">
+            💾 Salvar Configurações no Repositório
+          </button>
+        </form>
+      </section>
+    </div>
+
+  </div>
+
+  <!-- Modal: Adicionar / Editar Jogador -->
+  <div id="player-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1040; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
+    <div class="glass-card" style="width: 100%; max-width: 480px; padding: 2rem; position: relative;">
+      <button onclick="closePlayerEditModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      
+      <h3 id="player-modal-title" style="color: #fff; font-size: 1.25rem; margin-bottom: 1.25rem; text-align: center;">
+        👤 Editar Jogador
+      </h3>
+
+      <div class="alert-box alert-error" id="player-modal-error" style="display: none; margin-bottom: 1rem;"></div>
+
+      <form id="player-edit-form" onsubmit="handleSavePlayer(event)">
+        <input type="hidden" id="player-edit-original-name" value="">
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="player-edit-name">Nome Oficial do Treinador</label>
+          <input type="text" id="player-edit-name" class="search-input" placeholder="Ex: Felipe Damasceno" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="player-edit-id">ID Play! Pokémon (POP ID)</label>
+          <input type="text" id="player-edit-id" class="search-input" placeholder="Ex: 5685779">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label for="player-edit-cat">Categoria Oficial</label>
+          <select id="player-edit-cat" class="search-input" required style="width: 100%;">
+            <option value="Master">Master</option>
+            <option value="Senior">Sênior</option>
+            <option value="Junior">Junior</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn" onclick="closePlayerEditModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-save-player-submit" class="btn btn-whatsapp" style="background: var(--accent-yellow); border-color: var(--accent-yellow); color: #000; font-weight: 700;">
+            💾 Salvar Jogador
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Adicionar / Editar Evento no Calendário -->
+  <div id="calendar-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1040; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
+    <div class="glass-card" style="width: 100%; max-width: 520px; padding: 2rem; position: relative;">
+      <button onclick="closeCalendarEditModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      
+      <h3 id="calendar-modal-title" style="color: #fff; font-size: 1.25rem; margin-bottom: 1.25rem; text-align: center;">
+        📅 Editar Evento
+      </h3>
+
+      <div class="alert-box alert-error" id="calendar-modal-error" style="display: none; margin-bottom: 1rem;"></div>
+
+      <form id="calendar-edit-form" onsubmit="handleSaveCalendar(event)">
+        <input type="hidden" id="calendar-edit-index" value="-1">
+
+        <div class="form-row" style="margin-bottom: 1rem;">
+          <div class="form-group" style="flex: 1;">
+            <label for="calendar-edit-date">Data do Torneio</label>
+            <input type="text" id="calendar-edit-date" class="search-input" placeholder="Ex: 2026-09-20 ou 20-09-2026" required>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="calendar-edit-time">Horário</label>
+            <input type="text" id="calendar-edit-time" class="search-input" placeholder="Ex: 14:00" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="calendar-edit-title">Título do Evento</label>
+          <input type="text" id="calendar-edit-title" class="search-input" placeholder="Ex: Sessão de Liga Especial #4" required>
+        </div>
+
+        <div class="form-row" style="margin-bottom: 1rem;">
+          <div class="form-group" style="flex: 2;">
+            <label for="calendar-edit-location">Local</label>
+            <input type="text" id="calendar-edit-location" class="search-input" value="Livraria Atlântica +" required>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="calendar-edit-status">Status</label>
+            <select id="calendar-edit-status" class="search-input" style="width: 100%;">
+              <option value="confirmado">Confirmado</option>
+              <option value="pendente">Pendente</option>
+              <option value="concluido">Concluído</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="calendar-edit-desc">Descrição / Informações do Torneio</label>
+          <textarea id="calendar-edit-desc" class="search-input" style="height: 60px; resize: vertical;" placeholder="Informações de formato, premiação..."></textarea>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="calendar-edit-maps">Link do Google Maps</label>
+          <input type="url" id="calendar-edit-maps" class="search-input" value="https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="calendar-edit-signup">Link de Inscrição / Grupo WhatsApp (Opcional)</label>
+          <input type="url" id="calendar-edit-signup" class="search-input" placeholder="https://chat.whatsapp.com/...">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label for="calendar-edit-photo">URL da Imagem / Banner (Opcional)</label>
+          <input type="url" id="calendar-edit-photo" class="search-input" placeholder="https://...">
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn" onclick="closeCalendarEditModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-save-calendar-submit" class="btn btn-whatsapp" style="background: var(--accent-yellow); border-color: var(--accent-yellow); color: #000; font-weight: 700;">
+            💾 Salvar Evento
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Adicionar / Editar Regra -->
+  <div id="rule-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1040; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
+    <div class="glass-card" style="width: 100%; max-width: 520px; padding: 2rem; position: relative;">
+      <button onclick="closeRuleEditModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      
+      <h3 id="rule-modal-title" style="color: #fff; font-size: 1.25rem; margin-bottom: 1.25rem; text-align: center;">
+        📜 Editar Regra
+      </h3>
+
+      <div class="alert-box alert-error" id="rule-modal-error" style="display: none; margin-bottom: 1rem;"></div>
+
+      <form id="rule-edit-form" onsubmit="handleSaveRule(event)">
+        <input type="hidden" id="rule-edit-index" value="-1">
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="rule-edit-title">Título da Seção / Regra</label>
+          <input type="text" id="rule-edit-title" class="search-input" placeholder="Ex: Formato do Torneio" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label for="rule-edit-desc">Texto / Diretrizes Detalhadas</label>
+          <textarea id="rule-edit-desc" class="search-input" style="height: 140px; resize: vertical; line-height: 1.4;" placeholder="Digite o conteúdo da regra..." required></textarea>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn" onclick="closeRuleEditModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-save-rule-submit" class="btn btn-whatsapp" style="background: var(--accent-yellow); border-color: var(--accent-yellow); color: #000; font-weight: 700;">
+            💾 Salvar Regra
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Adicionar / Editar Foto na Galeria -->
+  <div id="photo-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1040; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
+    <div class="glass-card" style="width: 100%; max-width: 480px; padding: 2rem; position: relative;">
+      <button onclick="closePhotoEditModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      
+      <h3 id="photo-modal-title" style="color: #fff; font-size: 1.25rem; margin-bottom: 1.25rem; text-align: center;">
+        🖼️ Adicionar Foto
+      </h3>
+
+      <div class="alert-box alert-error" id="photo-modal-error" style="display: none; margin-bottom: 1rem;"></div>
+
+      <form id="photo-edit-form" onsubmit="handleSavePhoto(event)">
+        <input type="hidden" id="photo-edit-index" value="-1">
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="photo-edit-title">Título / Evento</label>
+          <input type="text" id="photo-edit-title" class="search-input" placeholder="Ex: Sessão de Liga Temporada #5" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="photo-edit-date">Data da Foto</label>
+          <input type="text" id="photo-edit-date" class="search-input" placeholder="Ex: 10/09/2026">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="photo-edit-url">URL da Imagem</label>
+          <input type="url" id="photo-edit-url" class="search-input" placeholder="https://..." required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label for="photo-edit-desc">Descrição / Legenda (Opcional)</label>
+          <input type="text" id="photo-edit-desc" class="search-input" placeholder="Ex: Top 4 Master da Etapa 18">
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn" onclick="closePhotoEditModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-save-photo-submit" class="btn btn-whatsapp" style="background: var(--accent-yellow); border-color: var(--accent-yellow); color: #000; font-weight: 700;">
+            💾 Salvar Foto
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Modal: Adicionar / Editar Deck no Catálogo -->
@@ -901,11 +1313,21 @@ function doGet(e) {
     let isFileValidated = false;
     let runtimeToken = null;
 
-    // Variáveis globais para cache das planilhas e arquivos JSON
-    let cachedJogadores = null;
+    // Variáveis globais para cache dos arquivos JSON
+    let cachedJogadores = [];
     let cachedMetagame = null;
     let cachedMetagameData = {}; // Estrutura: { "YYYY-MM-DD": { sessionCode: "...", decks: { "Jogador": "Deck" } } }
     let cachedDecks = [];
+    let cachedCalendario = [];
+    let cachedRegras = [];
+    let cachedGaleria = [];
+    let cachedConfig = {
+      leagueName: "Liga Atlântica",
+      leagueSubtitle: "Liga de Pokémon TCG - FSA",
+      statusPodio: "auto",
+      exibirMetagame: "ambos",
+      temporadaAtual: 5
+    };
     let isFetchingSheets = false;
     let currentAdminTab = 'upload';
     
@@ -947,7 +1369,7 @@ function doGet(e) {
     // --- Alternador de Abas do Painel ---
     function switchAdminTab(tabName) {
       currentAdminTab = tabName;
-      const tabs = ['upload', 'decks', 'metagame', 'seasons'];
+      const tabs = ['upload', 'jogadores', 'decks', 'metagame', 'calendario', 'regras', 'galeria', 'seasons', 'config'];
       tabs.forEach(t => {
         const pane = document.getElementById(`pane-${t}`);
         const btn = document.getElementById(`nav-btn-${t}`);
@@ -958,13 +1380,23 @@ function doGet(e) {
         }
       });
 
-      if (tabName === 'decks') {
+      if (tabName === 'jogadores') {
+        renderPlayersCatalog();
+      } else if (tabName === 'decks') {
         renderDeckCatalog();
       } else if (tabName === 'metagame') {
         renderAdminMetagameSelector();
         renderAdminStageMetagame();
+      } else if (tabName === 'calendario') {
+        renderCalendarCatalog();
+      } else if (tabName === 'regras') {
+        renderRulesCatalog();
+      } else if (tabName === 'galeria') {
+        renderGalleryCatalog();
       } else if (tabName === 'seasons') {
         loadAndRenderStages();
+      } else if (tabName === 'config') {
+        renderConfigPanel();
       }
     }
 
@@ -1070,9 +1502,9 @@ function doGet(e) {
       }
     }
 
-    // --- Carregamento de Dados (Decks, Metagame e Planilha) ---
+    // --- Carregamento de Dados (Decks, Metagame, Jogadores, Calendário, Regras, Galeria e Config) ---
     async function ensureSheetsLoaded() {
-      if (cachedJogadores && cachedDecks && cachedDecks.length > 0) return;
+      if (cachedJogadores.length > 0 && cachedDecks.length > 0) return;
       if (isFetchingSheets) {
         while (isFetchingSheets) {
           await new Promise(resolve => setTimeout(resolve, 100));
@@ -1082,25 +1514,34 @@ function doGet(e) {
       
       isFetchingSheets = true;
       try {
-        console.log("Carregando decks.json e metagame.json...");
+        console.log("Carregando arquivos JSON locais e estáticos...");
         
-        // 1. Carrega decks.json
+        // 1. Carrega jogadores.json
+        try {
+          const jogRes = await fetch(`jogadores.json?v=${new Date().getTime()}`);
+          if (jogRes.ok) {
+            cachedJogadores = await jogRes.json();
+          }
+        } catch (e) {
+          console.warn("Falha ao carregar jogadores.json:", e);
+        }
+
+        // 2. Carrega decks.json
         try {
           const decksRes = await fetch(`decks.json?v=${new Date().getTime()}`);
           if (decksRes.ok) {
             cachedDecks = await decksRes.json();
           }
         } catch (e) {
-          console.warn("Falha ao carregar decks.json local:", e);
+          console.warn("Falha ao carregar decks.json:", e);
         }
 
-        // 2. Carrega metagame.json
+        // 3. Carrega metagame.json
         try {
           const metaRes = await fetch(`metagame.json?v=${new Date().getTime()}`);
           if (metaRes.ok) {
             cachedMetagameData = await metaRes.json();
             
-            // Converte metagameData para rows compatíveis com cachedMetagame
             const playerRowsMap = new Map();
             Object.entries(cachedMetagameData || {}).forEach(([isoDate, sessionObj]) => {
               const sessionCode = sessionObj.sessionCode || isoDate;
@@ -1116,43 +1557,56 @@ function doGet(e) {
             cachedMetagame = Array.from(playerRowsMap.values());
           }
         } catch (e) {
-          console.warn("Falha ao carregar metagame.json local:", e);
+          console.warn("Falha ao carregar metagame.json:", e);
         }
 
-        // 3. Carrega Jogadores (do Sheets ou fallback)
-        const sheetUrl = window.CONFIG ? window.CONFIG.googleSheetCsvUrl : "";
-        const spreadsheetId = getSpreadsheetId(sheetUrl);
-        const publishedSheetGids = window.CONFIG && window.CONFIG.publishedSheetGids ? window.CONFIG.publishedSheetGids : {};
-        
-        if (spreadsheetId) {
-          try {
-            const [jogadores, metaSheet, decksSheet] = await Promise.all([
-              fetchOptionalSheetTab(spreadsheetId, "Jogadores", publishedSheetGids.Jogadores),
-              (!cachedMetagame || !cachedMetagame.length) ? fetchOptionalSheetTab(spreadsheetId, "Metagame", publishedSheetGids.Metagame) : Promise.resolve([]),
-              (!cachedDecks || !cachedDecks.length) ? fetchOptionalSheetTab(spreadsheetId, "Decks", publishedSheetGids.Decks) : Promise.resolve([])
-            ]);
-            if (jogadores && jogadores.length) cachedJogadores = jogadores;
-            if (metaSheet && metaSheet.length && (!cachedMetagame || !cachedMetagame.length)) cachedMetagame = metaSheet;
-            if (decksSheet && decksSheet.length && (!cachedDecks || !cachedDecks.length)) {
-              cachedDecks = decksSheet.map(d => ({
-                deck: d.Deck || d.deck || "",
-                tipoEnergia: d.TipoEnergia || d.tipoEnergia || "colorless",
-                imagem: d.Imagem || d.imagem || "",
-                limitless: d.Limitless || d.limitless || "",
-                icone: d.Icone || d.icone || ""
-              }));
-            }
-          } catch (sheetErr) {
-            console.warn("Planilha Sheets indisponível no momento:", sheetErr);
+        // 4. Carrega calendario.json
+        try {
+          const calRes = await fetch(`calendario.json?v=${new Date().getTime()}`);
+          if (calRes.ok) {
+            cachedCalendario = await calRes.json();
           }
+        } catch (e) {
+          console.warn("Falha ao carregar calendario.json:", e);
         }
 
+        // 5. Carrega regras.json
+        try {
+          const regRes = await fetch(`regras.json?v=${new Date().getTime()}`);
+          if (regRes.ok) {
+            cachedRegras = await regRes.json();
+          }
+        } catch (e) {
+          console.warn("Falha ao carregar regras.json:", e);
+        }
+
+        // 6. Carrega galeria.json
+        try {
+          const galRes = await fetch(`galeria.json?v=${new Date().getTime()}`);
+          if (galRes.ok) {
+            cachedGaleria = await galRes.json();
+          }
+        } catch (e) {
+          console.warn("Falha ao carregar galeria.json:", e);
+        }
+
+        // 7. Carrega config.json
+        try {
+          const confRes = await fetch(`config.json?v=${new Date().getTime()}`);
+          if (confRes.ok) {
+            cachedConfig = await confRes.json();
+          }
+        } catch (e) {
+          console.warn("Falha ao carregar config.json:", e);
+        }
+
+        // Fallback: se cachedJogadores ainda estiver vazio, tenta extrair de cachedMetagame
         if (!cachedJogadores || !cachedJogadores.length) {
           if (cachedMetagame && cachedMetagame.length) cachedJogadores = cachedMetagame;
         }
 
         renderDeckDatalist();
-        console.log(`Dados carregados: ${cachedDecks ? cachedDecks.length : 0} decks, ${Object.keys(cachedMetagameData).length} etapas de metagame.`);
+        console.log(`Dados carregados: ${cachedJogadores.length} jogadores, ${cachedDecks.length} decks, ${cachedCalendario.length} eventos, ${cachedRegras.length} regras, ${cachedGaleria.length} fotos.`);
       } catch (err) {
         console.error("Erro geral em ensureSheetsLoaded:", err);
       } finally {
@@ -1490,6 +1944,11 @@ function doGet(e) {
           renderDeckDatalist();
           renderDeckCatalog();
           renderAdminMetagameSelector();
+          renderPlayersCatalog();
+          renderCalendarCatalog();
+          renderRulesCatalog();
+          renderGalleryCatalog();
+          renderConfigPanel();
         });
       } else {
         errorBox.style.display = 'block';
@@ -3587,6 +4046,1082 @@ function doGet(e) {
 
       } catch (err) {
         showError("Erro ao excluir deck: " + err.message);
+      }
+    }
+
+    // ==========================================
+    // BASE OFICIAL DE JOGADORES (ABA 2)
+    // ==========================================
+    function renderPlayersCatalog() {
+      const tbody = document.getElementById('players-catalog-tbody');
+      const badge = document.getElementById('player-count-badge');
+      if (!tbody) return;
+
+      const searchInput = document.getElementById('player-catalog-search');
+      const catFilter = document.getElementById('player-category-filter');
+      const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      const catVal = catFilter ? catFilter.value : 'all';
+
+      const filtered = (cachedJogadores || []).filter(p => {
+        const name = p.jogador || p.Jogador || p.name || p.Name || '';
+        const id = p.id || p.ID || '';
+        const cat = p.categoria || p.Categoria || 'Master';
+
+        const nameMatch = !searchVal || name.toLowerCase().includes(searchVal) || String(id).includes(searchVal);
+        const catMatch = (catVal === 'all') || (cat.toLowerCase() === catVal.toLowerCase());
+        return nameMatch && catMatch;
+      });
+
+      if (badge) {
+        badge.innerText = `${(cachedJogadores || []).length} Jogadores`;
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-secondary);">Nenhum jogador encontrado com os filtros atuais.</td></tr>`;
+        return;
+      }
+
+      filtered.sort((a, b) => {
+        const nameA = a.jogador || a.Jogador || '';
+        const nameB = b.jogador || b.Jogador || '';
+        return nameA.localeCompare(nameB, 'pt-BR');
+      });
+
+      tbody.innerHTML = filtered.map(p => {
+        const name = p.jogador || p.Jogador || '';
+        const popId = p.id || p.ID || '-';
+        const cat = p.categoria || p.Categoria || 'Master';
+
+        let catBadge = `<span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Master</span>`;
+        if (cat.toLowerCase().includes('senior') || cat.toLowerCase().includes('sênior')) {
+          catBadge = `<span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Sênior</span>`;
+        } else if (cat.toLowerCase().includes('junior') || cat.toLowerCase().includes('júnior')) {
+          catBadge = `<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Junior</span>`;
+        }
+
+        return `
+          <tr>
+            <td style="text-align: center; font-family: monospace; font-weight: 600; color: var(--accent-yellow);">${escapeHTML(popId)}</td>
+            <td style="font-weight: 600; color: #fff;">${escapeHTML(name)}</td>
+            <td style="text-align: center;">${catBadge}</td>
+            <td style="text-align: center;">
+              <div style="display: flex; gap: 0.4rem; justify-content: center;">
+                <button type="button" class="btn" onclick="openEditPlayerModal('${escapeHTML(name)}')" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: rgba(255, 203, 5, 0.15); color: var(--accent-yellow); border-color: rgba(255, 203, 5, 0.3);">
+                  ✏️
+                </button>
+                <button type="button" class="btn btn-danger" onclick="handleDeletePlayer('${escapeHTML(name)}')" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterPlayersCatalog() {
+      renderPlayersCatalog();
+    }
+
+    function openNewPlayerModal() {
+      document.getElementById('player-modal-title').innerText = '👤 Cadastrar Novo Jogador';
+      document.getElementById('player-edit-original-name').value = '';
+      document.getElementById('player-edit-name').value = '';
+      document.getElementById('player-edit-id').value = '';
+      document.getElementById('player-edit-cat').value = 'Master';
+      document.getElementById('player-modal-error').style.display = 'none';
+      document.getElementById('player-edit-modal').style.display = 'flex';
+    }
+
+    function openEditPlayerModal(playerName) {
+      const p = (cachedJogadores || []).find(j => (j.jogador || j.Jogador || '').toLowerCase() === String(playerName).toLowerCase());
+      if (!p) {
+        showError(`Jogador "${playerName}" não encontrado.`);
+        return;
+      }
+
+      document.getElementById('player-modal-title').innerText = `👤 Editar: ${p.jogador || p.Jogador}`;
+      document.getElementById('player-edit-original-name').value = p.jogador || p.Jogador;
+      document.getElementById('player-edit-name').value = p.jogador || p.Jogador;
+      document.getElementById('player-edit-id').value = p.id || p.ID || '';
+      
+      const cat = p.categoria || p.Categoria || 'Master';
+      const catSelect = document.getElementById('player-edit-cat');
+      if (cat.toLowerCase().includes('senior') || cat.toLowerCase().includes('sênior')) catSelect.value = 'Senior';
+      else if (cat.toLowerCase().includes('junior') || cat.toLowerCase().includes('júnior')) catSelect.value = 'Junior';
+      else catSelect.value = 'Master';
+
+      document.getElementById('player-modal-error').style.display = 'none';
+      document.getElementById('player-edit-modal').style.display = 'flex';
+    }
+
+    function closePlayerEditModal() {
+      document.getElementById('player-edit-modal').style.display = 'none';
+      document.getElementById('player-modal-error').style.display = 'none';
+    }
+
+    async function handleSavePlayer(e) {
+      if (e) e.preventDefault();
+      const errBox = document.getElementById('player-modal-error');
+      const submitBtn = document.getElementById('btn-save-player-submit');
+      if (errBox) errBox.style.display = 'none';
+
+      if (!runtimeToken) {
+        if (errBox) {
+          errBox.innerText = "Sessão expirada. Faça login novamente no painel.";
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      const origName = document.getElementById('player-edit-original-name').value.trim();
+      const name = document.getElementById('player-edit-name').value.trim();
+      const popId = document.getElementById('player-edit-id').value.trim();
+      const cat = document.getElementById('player-edit-cat').value;
+
+      if (!name) {
+        if (errBox) {
+          errBox.innerText = "Por favor, informe o nome do jogador.";
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      if ((!origName || origName.toLowerCase() !== name.toLowerCase()) && 
+          cachedJogadores.some(j => (j.jogador || j.Jogador || '').toLowerCase() === name.toLowerCase())) {
+        if (errBox) {
+          errBox.innerText = `Já existe um jogador cadastrado com o nome "${name}".`;
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "⏳ Salvando...";
+
+      try {
+        const updatedList = [...cachedJogadores];
+        const newRecord = {
+          id: popId,
+          jogador: name,
+          categoria: cat,
+          posicaoFinal: ""
+        };
+
+        if (origName) {
+          const idx = updatedList.findIndex(j => (j.jogador || j.Jogador || '').toLowerCase() === origName.toLowerCase());
+          if (idx >= 0) {
+            newRecord.posicaoFinal = updatedList[idx].posicaoFinal || "";
+            updatedList[idx] = newRecord;
+          } else {
+            updatedList.push(newRecord);
+          }
+        } else {
+          updatedList.push(newRecord);
+        }
+
+        updatedList.sort((a, b) => (a.jogador || a.Jogador || '').localeCompare(b.jogador || b.Jogador || '', 'pt-BR'));
+
+        const config = GITHUB_CONFIG;
+        const jogUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/jogadores.json`;
+        let jogSha = await getLatestSha(jogUrl);
+
+        const commitPayload = {
+          message: origName ? `Atualizar cadastro do jogador "${name}"` : `Cadastrar novo jogador "${name}"`,
+          content: encodeBase64UTF8(JSON.stringify(updatedList, null, 4)),
+          branch: config.branch
+        };
+        if (jogSha) commitPayload.sha = jogSha;
+
+        const res = await fetch(jogUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao salvar jogadores.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedJogadores = updatedList;
+        renderPlayersCatalog();
+        closePlayerEditModal();
+        showSuccess(`👤 Jogador "${name}" salvo com sucesso!`);
+
+      } catch (err) {
+        console.error("Erro ao salvar jogador:", err);
+        if (errBox) {
+          errBox.innerText = "Erro: " + err.message;
+          errBox.style.display = 'block';
+        }
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "💾 Salvar Jogador";
+      }
+    }
+
+    async function handleDeletePlayer(playerName) {
+      if (!confirm(`Deseja realmente excluir o jogador "${playerName}" da base oficial?`)) return;
+
+      if (!runtimeToken) {
+        showError("Token expirado. Faça login novamente.");
+        return;
+      }
+
+      showSuccess(`⏳ Excluindo jogador "${playerName}"...`);
+
+      try {
+        const updatedList = cachedJogadores.filter(j => (j.jogador || j.Jogador || '').toLowerCase() !== String(playerName).toLowerCase());
+
+        const config = GITHUB_CONFIG;
+        const jogUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/jogadores.json`;
+        let jogSha = await getLatestSha(jogUrl);
+
+        const commitPayload = {
+          message: `Excluir jogador "${playerName}" da base oficial`,
+          content: encodeBase64UTF8(JSON.stringify(updatedList, null, 4)),
+          branch: config.branch
+        };
+        if (jogSha) commitPayload.sha = jogSha;
+
+        const res = await fetch(jogUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao atualizar jogadores.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedJogadores = updatedList;
+        renderPlayersCatalog();
+        showSuccess(`🗑️ Jogador "${playerName}" excluído com sucesso.`);
+
+      } catch (err) {
+        showError("Erro ao excluir jogador: " + err.message);
+      }
+    }
+
+    // ==========================================
+    // CALENDÁRIO DE EVENTOS (ABA 5)
+    // ==========================================
+    function renderCalendarCatalog() {
+      const container = document.getElementById('calendar-events-container');
+      const badge = document.getElementById('calendar-count-badge');
+      if (!container) return;
+
+      const searchInput = document.getElementById('calendar-search-input');
+      const statusFilter = document.getElementById('calendar-status-filter');
+      const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      const statusVal = statusFilter ? statusFilter.value : 'all';
+
+      const filtered = (cachedCalendario || []).map((ev, index) => ({ ...ev, _origIndex: index })).filter(ev => {
+        const title = ev.evento || ev.Evento || ev.titulo || ev.Titulo || '';
+        const date = ev.data || ev.Data || '';
+        const local = ev.local || ev.Local || '';
+        const status = (ev.status || ev.Status || 'confirmado').toLowerCase();
+
+        const matchSearch = !searchVal || title.toLowerCase().includes(searchVal) || date.toLowerCase().includes(searchVal) || local.toLowerCase().includes(searchVal);
+        const matchStatus = (statusVal === 'all') || (status === statusVal.toLowerCase());
+        return matchSearch && matchStatus;
+      });
+
+      if (badge) {
+        badge.innerText = `${(cachedCalendario || []).length} Eventos`;
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📅</div>
+            <div style="font-size: 1rem; color: #fff; font-weight: 600;">Nenhum evento encontrado</div>
+            <div style="font-size: 0.8rem; margin-top: 0.25rem;">Tente ajustar os filtros ou clique em "+ Novo Evento" para agendar.</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(ev => {
+        const title = ev.evento || ev.Evento || ev.titulo || ev.Titulo || 'Sem título';
+        const date = ev.data || ev.Data || '';
+        const time = ev.horario || ev.Horario || '';
+        const local = ev.local || ev.Local || 'Livraria Atlântica +';
+        const desc = ev.descricao || ev.Descricao || '';
+        const maps = ev.linkMaps || ev.LinkMaps || '';
+        const signup = ev.linkInscricao || ev.LinkInscricao || '';
+        const status = (ev.status || ev.Status || 'confirmado').toLowerCase();
+
+        let statusPill = `<span style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;">Confirmado</span>`;
+        if (status === 'pendente') {
+          statusPill = `<span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;">Pendente</span>`;
+        } else if (status === 'concluido' || status === 'concluído') {
+          statusPill = `<span style="background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;">Concluído</span>`;
+        } else if (status === 'cancelado') {
+          statusPill = `<span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;">Cancelado</span>`;
+        }
+
+        return `
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 250px;">
+              <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.3rem;">
+                <span style="font-weight: 700; color: #fff; font-size: 1rem;">${escapeHTML(title)}</span>
+                ${statusPill}
+              </div>
+              <div style="font-size: 0.82rem; color: var(--accent-yellow); display: flex; gap: 1rem; align-items: center; margin-bottom: 0.4rem; flex-wrap: wrap;">
+                <span>📅 <strong>${escapeHTML(date)}</strong></span>
+                <span>⏰ <strong>${escapeHTML(time)}</strong></span>
+                <span>📍 ${escapeHTML(local)}</span>
+              </div>
+              ${desc ? `<div style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.4;">${escapeHTML(desc)}</div>` : ''}
+              <div style="display: flex; gap: 0.75rem; margin-top: 0.4rem; font-size: 0.75rem;">
+                ${maps ? `<a href="${escapeHTML(maps)}" target="_blank" rel="noopener noreferrer" style="color: #60a5fa; text-decoration: underline;">🗺️ Ver no Maps</a>` : ''}
+                ${signup ? `<a href="${escapeHTML(signup)}" target="_blank" rel="noopener noreferrer" style="color: #34d399; text-decoration: underline;">📲 Link de Inscrição</a>` : ''}
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <button type="button" class="btn" onclick="openEditCalendarModal(${ev._origIndex})" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; background: rgba(255, 203, 5, 0.15); color: var(--accent-yellow); border-color: rgba(255, 203, 5, 0.3);">
+                ✏️ Editar
+              </button>
+              <button type="button" class="btn btn-danger" onclick="handleDeleteCalendar(${ev._origIndex})" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterCalendarCatalog() {
+      renderCalendarCatalog();
+    }
+
+    function openNewCalendarModal() {
+      document.getElementById('calendar-modal-title').innerText = '📅 Cadastrar Novo Evento';
+      document.getElementById('calendar-edit-index').value = '-1';
+      document.getElementById('calendar-edit-date').value = '';
+      document.getElementById('calendar-edit-time').value = '14:00';
+      document.getElementById('calendar-edit-title').value = '';
+      document.getElementById('calendar-edit-location').value = 'Livraria Atlântica +';
+      document.getElementById('calendar-edit-status').value = 'confirmado';
+      document.getElementById('calendar-edit-desc').value = '';
+      document.getElementById('calendar-edit-maps').value = 'https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6';
+      document.getElementById('calendar-edit-signup').value = '';
+      document.getElementById('calendar-edit-photo').value = '';
+      document.getElementById('calendar-modal-error').style.display = 'none';
+      document.getElementById('calendar-edit-modal').style.display = 'flex';
+    }
+
+    function openEditCalendarModal(index) {
+      const ev = cachedCalendario[index];
+      if (!ev) {
+        showError("Evento não encontrado.");
+        return;
+      }
+
+      document.getElementById('calendar-modal-title').innerText = `📅 Editar: ${ev.evento || ev.Evento || ev.titulo || 'Evento'}`;
+      document.getElementById('calendar-edit-index').value = String(index);
+      document.getElementById('calendar-edit-date').value = ev.data || ev.Data || '';
+      document.getElementById('calendar-edit-time').value = ev.horario || ev.Horario || '';
+      document.getElementById('calendar-edit-title').value = ev.evento || ev.Evento || ev.titulo || ev.Titulo || '';
+      document.getElementById('calendar-edit-location').value = ev.local || ev.Local || 'Livraria Atlântica +';
+      document.getElementById('calendar-edit-status').value = (ev.status || ev.Status || 'confirmado').toLowerCase();
+      document.getElementById('calendar-edit-desc').value = ev.descricao || ev.Descricao || '';
+      document.getElementById('calendar-edit-maps').value = ev.linkMaps || ev.LinkMaps || '';
+      document.getElementById('calendar-edit-signup').value = ev.linkInscricao || ev.LinkInscricao || '';
+      document.getElementById('calendar-edit-photo').value = ev.foto || ev.Foto || '';
+      document.getElementById('calendar-modal-error').style.display = 'none';
+      document.getElementById('calendar-edit-modal').style.display = 'flex';
+    }
+
+    function closeCalendarEditModal() {
+      document.getElementById('calendar-edit-modal').style.display = 'none';
+      document.getElementById('calendar-modal-error').style.display = 'none';
+    }
+
+    async function handleSaveCalendar(e) {
+      if (e) e.preventDefault();
+      const errBox = document.getElementById('calendar-modal-error');
+      const submitBtn = document.getElementById('btn-save-calendar-submit');
+      if (errBox) errBox.style.display = 'none';
+
+      if (!runtimeToken) {
+        if (errBox) {
+          errBox.innerText = "Sessão expirada. Faça login novamente no painel.";
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      const idx = parseInt(document.getElementById('calendar-edit-index').value, 10);
+      const date = document.getElementById('calendar-edit-date').value.trim();
+      const time = document.getElementById('calendar-edit-time').value.trim();
+      const title = document.getElementById('calendar-edit-title').value.trim();
+      const local = document.getElementById('calendar-edit-location').value.trim();
+      const status = document.getElementById('calendar-edit-status').value;
+      const desc = document.getElementById('calendar-edit-desc').value.trim();
+      const maps = document.getElementById('calendar-edit-maps').value.trim();
+      const signup = document.getElementById('calendar-edit-signup').value.trim();
+      const photo = document.getElementById('calendar-edit-photo').value.trim();
+
+      if (!date || !title) {
+        if (errBox) {
+          errBox.innerText = "Por favor, preencha a data e o título do evento.";
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "⏳ Salvando...";
+
+      try {
+        const updatedList = [...cachedCalendario];
+        const record = {
+          data: date,
+          evento: title,
+          local: local,
+          horario: time,
+          status: status,
+          descricao: desc,
+          linkMaps: maps,
+          linkInscricao: signup,
+          foto: photo
+        };
+
+        if (idx >= 0 && idx < updatedList.length) {
+          updatedList[idx] = record;
+        } else {
+          updatedList.push(record);
+        }
+
+        const config = GITHUB_CONFIG;
+        const calUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/calendario.json`;
+        let calSha = await getLatestSha(calUrl);
+
+        const commitPayload = {
+          message: idx >= 0 ? `Atualizar evento "${title}" no calendário` : `Cadastrar novo evento "${title}" no calendário`,
+          content: encodeBase64UTF8(JSON.stringify(updatedList, null, 4)),
+          branch: config.branch
+        };
+        if (calSha) commitPayload.sha = calSha;
+
+        const res = await fetch(calUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao salvar calendario.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedCalendario = updatedList;
+        renderCalendarCatalog();
+        closeCalendarEditModal();
+        showSuccess(`📅 Evento "${title}" salvo com sucesso no calendário!`);
+
+      } catch (err) {
+        console.error("Erro ao salvar evento:", err);
+        if (errBox) {
+          errBox.innerText = "Erro: " + err.message;
+          errBox.style.display = 'block';
+        }
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "💾 Salvar Evento";
+      }
+    }
+
+    async function handleDeleteCalendar(index) {
+      const ev = cachedCalendario[index];
+      const title = ev ? (ev.evento || ev.Evento || ev.titulo || 'Evento') : 'este evento';
+
+      if (!confirm(`Deseja realmente excluir o evento "${title}" do calendário?`)) return;
+
+      if (!runtimeToken) {
+        showError("Token expirado. Faça login novamente.");
+        return;
+      }
+
+      showSuccess(`⏳ Excluindo evento "${title}"...`);
+
+      try {
+        const updatedList = cachedCalendario.filter((_, i) => i !== index);
+
+        const config = GITHUB_CONFIG;
+        const calUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/calendario.json`;
+        let calSha = await getLatestSha(calUrl);
+
+        const commitPayload = {
+          message: `Excluir evento "${title}" do calendário`,
+          content: encodeBase64UTF8(JSON.stringify(updatedList, null, 4)),
+          branch: config.branch
+        };
+        if (calSha) commitPayload.sha = calSha;
+
+        const res = await fetch(calUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao atualizar calendario.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedCalendario = updatedList;
+        renderCalendarCatalog();
+        showSuccess(`🗑️ Evento "${title}" excluído do calendário com sucesso.`);
+
+      } catch (err) {
+        showError("Erro ao excluir evento: " + err.message);
+      }
+    }
+
+    // ==========================================
+    // REGRAS & DIRETRIZES (ABA 6)
+    // ==========================================
+    function renderRulesCatalog() {
+      const container = document.getElementById('rules-list-container');
+      const badge = document.getElementById('rules-count-badge');
+      if (!container) return;
+
+      if (badge) {
+        badge.innerText = `${(cachedRegras || []).length} Tópicos de Regras`;
+      }
+
+      if (!cachedRegras || cachedRegras.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📜</div>
+            <div style="font-size: 1rem; color: #fff; font-weight: 600;">Nenhuma regra cadastrada</div>
+            <div style="font-size: 0.8rem; margin-top: 0.25rem;">Clique em "+ Nova Regra" para cadastrar diretrizes oficiais.</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = cachedRegras.map((r, index) => {
+        const title = r.titulo || r.Titulo || 'Regra Sem Título';
+        const desc = r.descricao || r.Descricao || '';
+        const formattedDesc = escapeHTML(desc).replace(/\n/g, '<br>');
+
+        return `
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.75rem;">
+              <h3 style="color: var(--accent-yellow); font-size: 1.05rem; margin: 0; font-weight: 700;">
+                ${escapeHTML(title)}
+              </h3>
+              <div style="display: flex; gap: 0.4rem; flex-shrink: 0;">
+                <button type="button" class="btn" onclick="openEditRuleModal(${index})" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: rgba(255, 203, 5, 0.15); color: var(--accent-yellow); border-color: rgba(255, 203, 5, 0.3);">
+                  ✏️ Editar
+                </button>
+                <button type="button" class="btn btn-danger" onclick="handleDeleteRule(${index})" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">
+                  🗑️
+                </button>
+              </div>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-primary); line-height: 1.6;">
+              ${formattedDesc}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openNewRuleModal() {
+      document.getElementById('rule-modal-title').innerText = '📜 Cadastrar Nova Seção de Regra';
+      document.getElementById('rule-edit-index').value = '-1';
+      document.getElementById('rule-edit-title').value = '';
+      document.getElementById('rule-edit-desc').value = '';
+      document.getElementById('rule-modal-error').style.display = 'none';
+      document.getElementById('rule-edit-modal').style.display = 'flex';
+    }
+
+    function openEditRuleModal(index) {
+      const r = cachedRegras[index];
+      if (!r) {
+        showError("Regra não encontrada.");
+        return;
+      }
+
+      document.getElementById('rule-modal-title').innerText = `📜 Editar: ${r.titulo || r.Titulo || 'Regra'}`;
+      document.getElementById('rule-edit-index').value = String(index);
+      document.getElementById('rule-edit-title').value = r.titulo || r.Titulo || '';
+      document.getElementById('rule-edit-desc').value = r.descricao || r.Descricao || '';
+      document.getElementById('rule-modal-error').style.display = 'none';
+      document.getElementById('rule-edit-modal').style.display = 'flex';
+    }
+
+    function closeRuleEditModal() {
+      document.getElementById('rule-edit-modal').style.display = 'none';
+      document.getElementById('rule-modal-error').style.display = 'none';
+    }
+
+    async function handleSaveRule(e) {
+      if (e) e.preventDefault();
+      const errBox = document.getElementById('rule-modal-error');
+      const submitBtn = document.getElementById('btn-save-rule-submit');
+      if (errBox) errBox.style.display = 'none';
+
+      if (!runtimeToken) {
+        if (errBox) {
+          errBox.innerText = "Sessão expirada. Faça login novamente no painel.";
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      const idx = parseInt(document.getElementById('rule-edit-index').value, 10);
+      const title = document.getElementById('rule-edit-title').value.trim();
+      const desc = document.getElementById('rule-edit-desc').value.trim();
+
+      if (!title || !desc) {
+        if (errBox) {
+          errBox.innerText = "Por favor, preencha o título e a descrição da regra.";
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "⏳ Salvando...";
+
+      try {
+        const updatedList = [...cachedRegras];
+        const record = {
+          titulo: title,
+          descricao: desc
+        };
+
+        if (idx >= 0 && idx < updatedList.length) {
+          updatedList[idx] = record;
+        } else {
+          updatedList.push(record);
+        }
+
+        const config = GITHUB_CONFIG;
+        const regUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/regras.json`;
+        let regSha = await getLatestSha(regUrl);
+
+        const commitPayload = {
+          message: idx >= 0 ? `Atualizar regra "${title}"` : `Cadastrar nova regra "${title}"`,
+          content: encodeBase64UTF8(JSON.stringify(updatedList, null, 4)),
+          branch: config.branch
+        };
+        if (regSha) commitPayload.sha = regSha;
+
+        const res = await fetch(regUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao salvar regras.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedRegras = updatedList;
+        renderRulesCatalog();
+        closeRuleEditModal();
+        showSuccess(`📜 Regra "${title}" salva com sucesso!`);
+
+      } catch (err) {
+        console.error("Erro ao salvar regra:", err);
+        if (errBox) {
+          errBox.innerText = "Erro: " + err.message;
+          errBox.style.display = 'block';
+        }
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "💾 Salvar Regra";
+      }
+    }
+
+    async function handleDeleteRule(index) {
+      const r = cachedRegras[index];
+      const title = r ? (r.titulo || r.Titulo || 'esta regra') : 'esta regra';
+
+      if (!confirm(`Deseja realmente excluir o tópico de regra "${title}"?`)) return;
+
+      if (!runtimeToken) {
+        showError("Token expirado. Faça login novamente.");
+        return;
+      }
+
+      showSuccess(`⏳ Excluindo regra "${title}"...`);
+
+      try {
+        const updatedList = cachedRegras.filter((_, i) => i !== index);
+
+        const config = GITHUB_CONFIG;
+        const regUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/regras.json`;
+        let regSha = await getLatestSha(regUrl);
+
+        const commitPayload = {
+          message: `Excluir regra "${title}"`,
+          content: encodeBase64UTF8(JSON.stringify(updatedList, null, 4)),
+          branch: config.branch
+        };
+        if (regSha) commitPayload.sha = regSha;
+
+        const res = await fetch(regUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao atualizar regras.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedRegras = updatedList;
+        renderRulesCatalog();
+        showSuccess(`🗑️ Regra "${title}" excluída com sucesso.`);
+
+      } catch (err) {
+        showError("Erro ao excluir regra: " + err.message);
+      }
+    }
+
+    // ==========================================
+    // GALERIA DE FOTOS (ABA 7)
+    // ==========================================
+    function renderGalleryCatalog() {
+      const container = document.getElementById('photos-grid-container');
+      const badge = document.getElementById('photos-count-badge');
+      if (!container) return;
+
+      if (badge) {
+        badge.innerText = `${(cachedGaleria || []).length} Fotos Cadastradas`;
+      }
+
+      if (!cachedGaleria || cachedGaleria.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🖼️</div>
+            <div style="font-size: 1rem; color: #fff; font-weight: 600;">Nenhuma foto na galeria</div>
+            <div style="font-size: 0.8rem; margin-top: 0.25rem;">Clique em "+ Adicionar Foto" para registrar fotos de pódios e eventos.</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = cachedGaleria.map((ph, index) => {
+        const title = ph.titulo || ph.Titulo || 'Foto sem título';
+        const date = ph.data || ph.Data || '';
+        const desc = ph.descricao || ph.Descricao || '';
+        const url = ph.urlImagem || ph.url || ph.Foto || ph.foto || '';
+
+        // Suporte para Google Drive thumbnail se for link de visualização
+        let displayUrl = url;
+        const gDriveMatch = String(url).match(/\/d\/([a-zA-Z0-9_-]+)/);
+        if (gDriveMatch) {
+          displayUrl = `https://drive.google.com/thumbnail?id=${gDriveMatch[1]}&sz=w600`;
+        }
+
+        return `
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column;">
+            <div style="height: 170px; background: #000; position: relative; overflow: hidden;">
+              <img src="${escapeHTML(displayUrl)}" alt="${escapeHTML(title)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'">
+              ${date ? `<span style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.7); color: #fff; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px;">${escapeHTML(date)}</span>` : ''}
+            </div>
+            <div style="padding: 0.85rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="font-weight: 700; color: #fff; font-size: 0.92rem; margin-bottom: 0.25rem;">${escapeHTML(title)}</div>
+                ${desc ? `<div style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.3; margin-bottom: 0.5rem;">${escapeHTML(desc)}</div>` : ''}
+              </div>
+              <div style="display: flex; gap: 0.5rem; justify-content: flex-end; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 0.6rem; margin-top: 0.5rem;">
+                <button type="button" class="btn" onclick="openEditPhotoModal(${index})" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; background: rgba(255, 203, 5, 0.15); color: var(--accent-yellow); border-color: rgba(255, 203, 5, 0.3);">
+                  ✏️ Editar
+                </button>
+                <button type="button" class="btn btn-danger" onclick="handleDeletePhoto(${index})" style="padding: 0.25rem 0.65rem; font-size: 0.75rem;">
+                  🗑️
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openNewPhotoModal() {
+      document.getElementById('photo-modal-title').innerText = '🖼️ Adicionar Foto à Galeria';
+      document.getElementById('photo-edit-index').value = '-1';
+      document.getElementById('photo-edit-title').value = '';
+      document.getElementById('photo-edit-date').value = '';
+      document.getElementById('photo-edit-url').value = '';
+      document.getElementById('photo-edit-desc').value = '';
+      document.getElementById('photo-modal-error').style.display = 'none';
+      document.getElementById('photo-edit-modal').style.display = 'flex';
+    }
+
+    function openEditPhotoModal(index) {
+      const ph = cachedGaleria[index];
+      if (!ph) {
+        showError("Foto não encontrada.");
+        return;
+      }
+
+      document.getElementById('photo-modal-title').innerText = `🖼️ Editar: ${ph.titulo || ph.Titulo || 'Foto'}`;
+      document.getElementById('photo-edit-index').value = String(index);
+      document.getElementById('photo-edit-title').value = ph.titulo || ph.Titulo || '';
+      document.getElementById('photo-edit-date').value = ph.data || ph.Data || '';
+      document.getElementById('photo-edit-url').value = ph.urlImagem || ph.url || ph.Foto || ph.foto || '';
+      document.getElementById('photo-edit-desc').value = ph.descricao || ph.Descricao || '';
+      document.getElementById('photo-modal-error').style.display = 'none';
+      document.getElementById('photo-edit-modal').style.display = 'flex';
+    }
+
+    function closePhotoEditModal() {
+      document.getElementById('photo-edit-modal').style.display = 'none';
+      document.getElementById('photo-modal-error').style.display = 'none';
+    }
+
+    async function handleSavePhoto(e) {
+      if (e) e.preventDefault();
+      const errBox = document.getElementById('photo-modal-error');
+      const submitBtn = document.getElementById('btn-save-photo-submit');
+      if (errBox) errBox.style.display = 'none';
+
+      if (!runtimeToken) {
+        if (errBox) {
+          errBox.innerText = "Sessão expirada. Faça login novamente no painel.";
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      const idx = parseInt(document.getElementById('photo-edit-index').value, 10);
+      const title = document.getElementById('photo-edit-title').value.trim();
+      const date = document.getElementById('photo-edit-date').value.trim();
+      const url = document.getElementById('photo-edit-url').value.trim();
+      const desc = document.getElementById('photo-edit-desc').value.trim();
+
+      if (!title || !url) {
+        if (errBox) {
+          errBox.innerText = "Por favor, preencha o título e o link da imagem.";
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "⏳ Salvando...";
+
+      try {
+        const updatedList = [...cachedGaleria];
+        const record = {
+          titulo: title,
+          descricao: desc,
+          urlImagem: url,
+          data: date
+        };
+
+        if (idx >= 0 && idx < updatedList.length) {
+          updatedList[idx] = record;
+        } else {
+          updatedList.push(record);
+        }
+
+        const config = GITHUB_CONFIG;
+        const galUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/galeria.json`;
+        let galSha = await getLatestSha(galUrl);
+
+        const commitPayload = {
+          message: idx >= 0 ? `Atualizar foto "${title}" na galeria` : `Adicionar nova foto "${title}" na galeria`,
+          content: encodeBase64UTF8(JSON.stringify(updatedList, null, 4)),
+          branch: config.branch
+        };
+        if (galSha) commitPayload.sha = galSha;
+
+        const res = await fetch(galUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao salvar galeria.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedGaleria = updatedList;
+        renderGalleryCatalog();
+        closePhotoEditModal();
+        showSuccess(`🖼️ Foto "${title}" salva com sucesso na galeria!`);
+
+      } catch (err) {
+        console.error("Erro ao salvar foto:", err);
+        if (errBox) {
+          errBox.innerText = "Erro: " + err.message;
+          errBox.style.display = 'block';
+        }
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "💾 Salvar Foto";
+      }
+    }
+
+    async function handleDeletePhoto(index) {
+      const ph = cachedGaleria[index];
+      const title = ph ? (ph.titulo || ph.Titulo || 'esta foto') : 'esta foto';
+
+      if (!confirm(`Deseja realmente remover a foto "${title}" da galeria?`)) return;
+
+      if (!runtimeToken) {
+        showError("Token expirado. Faça login novamente.");
+        return;
+      }
+
+      showSuccess(`⏳ Removendo foto "${title}"...`);
+
+      try {
+        const updatedList = cachedGaleria.filter((_, i) => i !== index);
+
+        const config = GITHUB_CONFIG;
+        const galUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/galeria.json`;
+        let galSha = await getLatestSha(galUrl);
+
+        const commitPayload = {
+          message: `Remover foto "${title}" da galeria`,
+          content: encodeBase64UTF8(JSON.stringify(updatedList, null, 4)),
+          branch: config.branch
+        };
+        if (galSha) commitPayload.sha = galSha;
+
+        const res = await fetch(galUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao atualizar galeria.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedGaleria = updatedList;
+        renderGalleryCatalog();
+        showSuccess(`🗑️ Foto "${title}" removida com sucesso.`);
+
+      } catch (err) {
+        showError("Erro ao excluir foto: " + err.message);
+      }
+    }
+
+    // ==========================================
+    // CONFIGURAÇÕES GERAIS (ABA 9)
+    // ==========================================
+    function renderConfigPanel() {
+      if (!cachedConfig) return;
+      const leagueName = document.getElementById('conf-league-name');
+      const leagueSub = document.getElementById('conf-league-subtitle');
+      const tempAtual = document.getElementById('conf-temporada-atual');
+      const statusPodio = document.getElementById('conf-status-podio');
+      const exibirMeta = document.getElementById('conf-exibir-metagame');
+
+      if (leagueName) leagueName.value = cachedConfig.leagueName || 'Liga Atlântica';
+      if (leagueSub) leagueSub.value = cachedConfig.leagueSubtitle || 'Liga de Pokémon TCG - FSA';
+      if (tempAtual) tempAtual.value = cachedConfig.temporadaAtual || 5;
+      if (statusPodio) statusPodio.value = cachedConfig.statusPodio || 'auto';
+      if (exibirMeta) exibirMeta.value = cachedConfig.exibirMetagame || 'ambos';
+    }
+
+    async function handleSaveConfig(e) {
+      if (e) e.preventDefault();
+      const submitBtn = document.getElementById('btn-save-config-submit');
+
+      if (!runtimeToken) {
+        showError("Sessão expirada. Faça login novamente no painel.");
+        return;
+      }
+
+      const leagueName = document.getElementById('conf-league-name').value.trim();
+      const leagueSub = document.getElementById('conf-league-subtitle').value.trim();
+      const tempAtual = parseInt(document.getElementById('conf-temporada-atual').value, 10) || 5;
+      const statusPodio = document.getElementById('conf-status-podio').value;
+      const exibirMeta = document.getElementById('conf-exibir-metagame').value;
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "⏳ Salvando Configurações no GitHub...";
+
+      try {
+        const updatedConfig = {
+          leagueName: leagueName,
+          leagueSubtitle: leagueSub,
+          statusPodio: statusPodio,
+          exibirMetagame: exibirMeta,
+          temporadaAtual: tempAtual
+        };
+
+        const config = GITHUB_CONFIG;
+        const confUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/config.json`;
+        let confSha = await getLatestSha(confUrl);
+
+        const commitPayload = {
+          message: `Atualizar configurações gerais da Liga (Temporada ${tempAtual}, Pódio: ${statusPodio})`,
+          content: encodeBase64UTF8(JSON.stringify(updatedConfig, null, 4)),
+          branch: config.branch
+        };
+        if (confSha) commitPayload.sha = confSha;
+
+        const res = await fetch(confUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao salvar config.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedConfig = updatedConfig;
+        renderConfigPanel();
+        showSuccess(`⚙️ Configurações gerais da liga salvas com sucesso no repositório!`);
+
+      } catch (err) {
+        console.error("Erro ao salvar config:", err);
+        showError("Erro ao salvar configurações: " + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "💾 Salvar Configurações no Repositório";
       }
     }
 
