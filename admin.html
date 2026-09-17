@@ -2706,22 +2706,36 @@ function doGet(e) {
 
     function findMatchingPlayer(playersMap, p) {
       const pId = getPlayerId(p);
-      const pName = getFirstDefined(p, ['Jogador', 'Player', 'Name']);
-      if (!pName) return null;
-      const nameKey = String(pName).trim().toLowerCase();
+      const cleanId = (pId !== undefined && pId !== null) ? String(pId).trim() : '';
       
-      // 1. Tenta correspondência por ID primeiro (se houver ID no objeto)
-      if (pId !== undefined && pId !== '') {
+      // 1. FIRMEZA DE DADOS: Prioridade 1 absoluta é a correspondência por ID Play! Pokémon
+      if (cleanId) {
         for (const [key, player] of playersMap.entries()) {
           const playerDbId = getPlayerId(player);
-          if (playerDbId !== undefined && playerDbId !== '' && String(playerDbId).trim() === String(pId).trim()) {
+          if (playerDbId !== undefined && playerDbId !== null && String(playerDbId).trim() === cleanId) {
             return player;
           }
         }
       }
       
-      // 2. Tenta correspondência pelo nome normalizado como fallback
-      return playersMap.get(nameKey) || null;
+      // 2. Fallback: Se não encontrar por ID, tenta correspondência pelo nome normalizado
+      const pName = getFirstDefined(p, ['Jogador', 'Player', 'Name']);
+      if (!pName) return null;
+      const nameKey = String(pName).trim().toLowerCase();
+      const normName = normalizePlayerName(pName);
+      
+      if (playersMap.has(nameKey)) {
+        return playersMap.get(nameKey);
+      }
+      
+      for (const [key, player] of playersMap.entries()) {
+        const dbName = getFirstDefined(player, ['Jogador', 'Player', 'Name']);
+        if (dbName && normalizePlayerName(dbName) === normName) {
+          return player;
+        }
+      }
+      
+      return null;
     }
 
     async function processTDFText(text) {
@@ -2957,15 +2971,31 @@ function doGet(e) {
         const resolvedPodium = podium !== undefined ? podium : (toNumber(playerPos, 999) <= 4 ? 1 : 0);
         const resolvedMedia = media !== undefined ? media : playerPos;
 
-        // Aplica o nome oficial corrigido se houver mapeamento
-        let officialName = rawName;
+        // FIRMEZA DE DADOS: Prioridade 1 é o ID Play! Pokémon (Chave Primária)
+        const rawId = getPlayerId(p);
+        const cleanRawId = (rawId !== undefined && rawId !== null) ? String(rawId).trim() : '';
+        let dbMatchedPlayer = null;
+        if (cleanRawId && cachedJogadores && cachedJogadores.length > 0) {
+          dbMatchedPlayer = cachedJogadores.find(dbPlayer => {
+            const dbId = getPlayerId(dbPlayer);
+            return dbId !== undefined && dbId !== null && String(dbId).trim() === cleanRawId;
+          });
+        }
+        if (!dbMatchedPlayer && cachedJogadores && cachedJogadores.length > 0) {
+          dbMatchedPlayer = cachedJogadores.find(dbPlayer => {
+            return normalizePlayerName(dbPlayer.Jogador || dbPlayer.Name) === normalizePlayerName(rawName);
+          });
+        }
+
+        // Aplica o nome oficial corrigido (do cadastro de jogadores ou de resolução manual)
+        let officialName = dbMatchedPlayer ? (dbMatchedPlayer.Jogador || dbMatchedPlayer.Name) : rawName;
         const resolution = resolvedNamesMap[rawName];
         if (resolution && resolution !== 'new_player') {
           officialName = resolution;
         }
 
-        // Puxa o ID do jogador (do arquivo original ou do banco do Sheets)
-        const tId = getPlayerId(p) || (cachedJogadores && cachedJogadores.find(dbPlayer => normalizePlayerName(dbPlayer.Jogador || dbPlayer.Name) === normalizePlayerName(officialName))?.ID) || '';
+        // Puxa o ID oficial do jogador
+        const tId = cleanRawId || (dbMatchedPlayer ? (getPlayerId(dbMatchedPlayer) || '') : '') || '';
 
         // Busca deck registrado para esta etapa ou deck mais recente do jogador
         let playerDeck = '';

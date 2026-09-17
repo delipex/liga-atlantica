@@ -464,20 +464,38 @@ function normalizeRanking(rankingRows, partidasRows = [], isStage = false) {
   if (!Array.isArray(rankingRows)) return [];
 
   const normalized = rankingRows
-    .filter(player => player && (player.Jogador || player.Name))
+    .filter(player => player && (player.Jogador || player.Name || player.jogador || player.ID || player.id))
     .map(player => {
-      const playerName = player.Jogador || player.Name || "";
+      const playerId = String(player.ID || player.id || player.POPID || player['Player ID'] || player['Play! ID'] || player['OPID'] || player['userid'] || '').trim();
+      const playerName = player.Jogador || player.Name || player.jogador || "";
       const normPlayerName = normalizePlayerName(playerName);
 
-      const dbPlayer = (appData.Jogadores || []).find(j => {
-        return normalizePlayerName(j.Jogador || j.Name) === normPlayerName;
-      }) || {};
+      // FIRMEZA DE DADOS: Prioridade 1 é o ID Play! Pokémon (chave imutável do jogador)
+      let dbPlayer = null;
+      if (playerId && appData.Jogadores && appData.Jogadores.length > 0) {
+        dbPlayer = appData.Jogadores.find(j => {
+          const jId = String(j.ID || j.id || j.POPID || j['Player ID'] || j['Play! ID'] || '').trim();
+          return jId && jId === playerId;
+        });
+      }
+
+      // Prioridade 2: Match por Nome normalizado (apenas como fallback se não houver ID)
+      if (!dbPlayer && appData.Jogadores && appData.Jogadores.length > 0) {
+        dbPlayer = appData.Jogadores.find(j => {
+          return normalizePlayerName(j.Jogador || j.Name || j.jogador) === normPlayerName;
+        });
+      }
+
+      dbPlayer = dbPlayer || {};
+
+      const officialName = dbPlayer.Jogador || dbPlayer.jogador || playerName;
+      const officialId = playerId || dbPlayer.ID || dbPlayer.id || '';
 
       const pontosRaw = player.Pontos !== undefined && player.Pontos !== '' ? player.Pontos : player['Match Points'];
       const pontos = pontosRaw !== undefined && pontosRaw !== '' ? toNumber(pontosRaw) : 0;
       const podio = getPodiumCount(player);
       const mediaColocacao = getAveragePlacement(player);
-      const categoriaOverride = dbPlayer.Categoria || '';
+      const categoriaOverride = dbPlayer.Categoria || dbPlayer.categoria || '';
       const categoria = categoriaOverride ? normalizeCategory({ Categoria: categoriaOverride }) : normalizeCategory(player);
 
       const { v, e, d } = getVED(player);
@@ -485,7 +503,8 @@ function normalizeRanking(rankingRows, partidasRows = [], isStage = false) {
 
       return {
         ...player,
-        Jogador: dbPlayer.Jogador || playerName,
+        ID: officialId,
+        Jogador: officialName,
         OriginalPos: toNumber(posRaw, 0),
         Pos: toNumber(posRaw, 0),
         Categoria: categoria.label,
@@ -1224,7 +1243,7 @@ function renderDashboard() {
         }
         
         return `
-          <div class="podium-card rank-${cardRank}" onclick="openPlayerModal('${escapeHTML(player.Jogador)}')">
+          <div class="podium-card rank-${cardRank}" onclick="openPlayerModal('${escapeHTML(player.Jogador)}', '${escapeHTML(player.ID || '')}')">
             <div class="podium-badge">${cardRank}</div>
             <div class="podium-info">
               <div class="podium-player-name">${playerName}</div>
@@ -1306,8 +1325,8 @@ function renderDashboard() {
   }
 }
 
-function getDeckForStage(playerName, stageDateStr) {
-  if (!playerName || !stageDateStr || typeof stageDateStr !== 'string' || !appData.Jogadores) return null;
+function getDeckForStage(playerName, stageDateStr, playerId = '') {
+  if ((!playerName && !playerId) || !stageDateStr || typeof stageDateStr !== 'string' || !appData.Jogadores) return null;
   
   const parts = stageDateStr.split('-');
   if (parts.length !== 3) return null;
@@ -1316,10 +1335,25 @@ function getDeckForStage(playerName, stageDateStr) {
   const yy = parts[0].substring(2);
   const dateDDMMYY = `${dd}${mm}${yy}`;
   
+  const cleanId = String(playerId || '').trim();
   const normPlayerName = normalizePlayerName(playerName);
-  const dbPlayer = appData.Jogadores.find(j => {
-    return normalizePlayerName(j.Jogador || j.Name) === normPlayerName;
-  });
+
+  // FIRMEZA DE DADOS: Prioridade 1 é o ID Play! Pokémon (Chave Primária)
+  let dbPlayer = null;
+  if (cleanId && appData.Jogadores && appData.Jogadores.length > 0) {
+    dbPlayer = appData.Jogadores.find(j => {
+      const jId = String(j.ID || j.id || j.POPID || j['Player ID'] || j['Play! ID'] || '').trim();
+      return jId && jId === cleanId;
+    });
+  }
+
+  // Prioridade 2: Match por Nome normalizado (apenas como fallback se não houver ID)
+  if (!dbPlayer && normPlayerName && appData.Jogadores && appData.Jogadores.length > 0) {
+    dbPlayer = appData.Jogadores.find(j => {
+      return normalizePlayerName(j.Jogador || j.Name) === normPlayerName;
+    });
+  }
+
   if (!dbPlayer) return null;
   
   // Calcula o número da etapa cronológico para match inteligente (ex: S9T5)
@@ -1435,7 +1469,7 @@ function renderRankingTable(players, page = 1) {
 
     let deckIconHtml = '';
     if (!isGeneral && selector) {
-      const deckName = getDeckForStage(player.Jogador, selector.value);
+      const deckName = getDeckForStage(player.Jogador, selector.value, player.ID);
       if (deckName) {
         const energy = getDeckEnergy(deckName);
         const energyDot = getEnergyDotHTML(energy);
@@ -1463,7 +1497,7 @@ function renderRankingTable(players, page = 1) {
     }
 
     return `
-      <tr class="${rowClass}" onclick="openPlayerModal('${escapeHTML(player.Jogador)}')" style="cursor:pointer">
+      <tr class="${rowClass}" onclick="openPlayerModal('${escapeHTML(player.Jogador)}', '${escapeHTML(player.ID || '')}')" style="cursor:pointer">
         <td class="row-rank">${rankBadge}</td>
         <td>
           <div class="player-cell">
@@ -2004,17 +2038,35 @@ function closeLightbox() {
   document.body.style.overflow = '';
 }
 
-window.openPlayerModal = function(playerRef) {
+window.openPlayerModal = function(playerRef, playerIdRef = '') {
   const modal = document.getElementById('player-modal');
-  let player;
-  
-  if (typeof playerRef === 'number') {
+  let player = null;
+  const cleanId = String(playerIdRef || '').trim();
+
+  // 1. FIRMEZA DE DADOS: Prioridade 1 é o ID Play! Pokémon (Chave Primária)
+  if (cleanId && appData.Ranking && appData.Ranking.length > 0) {
+    player = appData.Ranking.find(p => {
+      const pId = String(p.ID || p.id || p.POPID || p['Player ID'] || p['Play! ID'] || '').trim();
+      return pId && pId === cleanId;
+    });
+  }
+
+  // 2. Se playerRef for número (posição no ranking)
+  if (!player && typeof playerRef === 'number') {
     const listPlayer = currentRankingList.find(p => p.Pos === playerRef);
     if (listPlayer) {
-      player = appData.Ranking.find(p => normalizePlayerName(p.Jogador) === normalizePlayerName(listPlayer.Jogador));
+      const listId = String(listPlayer.ID || listPlayer.id || '').trim();
+      if (listId && appData.Ranking) {
+        player = appData.Ranking.find(p => String(p.ID || p.id || '').trim() === listId);
+      }
+      if (!player) {
+        player = appData.Ranking.find(p => normalizePlayerName(p.Jogador) === normalizePlayerName(listPlayer.Jogador));
+      }
     }
-  } else {
-    player = appData.Ranking.find(p => normalizePlayerName(p.Jogador) === normalizePlayerName(playerRef));
+  } else if (!player && playerRef) {
+    // 3. Fallback: Match por Nome normalizado
+    const normRef = normalizePlayerName(playerRef);
+    player = appData.Ranking.find(p => normalizePlayerName(p.Jogador) === normRef);
   }
   
   if (!player || !modal) return;
@@ -2095,7 +2147,7 @@ window.openPlayerModal = function(playerRef) {
   // Decks Jogados na Temporada (Compact Chips)
   const playedDecksMap = {};
   (stagesIndex || []).forEach(stg => {
-    const dName = getDeckForStage(player.Jogador, stg.data);
+    const dName = getDeckForStage(player.Jogador, stg.data, player.ID);
     if (dName && dName.trim() !== '') {
       playedDecksMap[dName] = (playedDecksMap[dName] || 0) + 1;
     }
@@ -2791,7 +2843,7 @@ window.openAwardModal = function(awardKey) {
     const gymCandidates = [...appData.Ranking].map(r => {
       const playerName = r.Jogador || r.Player || r.Name;
       const totalPart = toNumber(r.Participacoes);
-      const cupChallengePart = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
+      const cupChallengePart = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data, r.ID) !== null).length;
       return {
         player: playerName,
         totalPart: totalPart,
@@ -2875,7 +2927,7 @@ window.openAwardModal = function(awardKey) {
       const uniqueDecksOriginal = [];
       cleanStages.forEach(stage => {
         if (!stage || !stage.data) return;
-        const deck = getDeckForStage(playerName, stage.data);
+        const deck = getDeckForStage(playerName, stage.data, r.ID);
         if (deck) {
           const trimmedDeck = deck.trim();
           const normDeck = trimmedDeck.toLowerCase();
@@ -2887,7 +2939,7 @@ window.openAwardModal = function(awardKey) {
       });
       
       if (uniqueDecksNormalized.size > 0) {
-        const partCount = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
+        const partCount = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data, r.ID) !== null).length;
         const mediaColocacao = toNumber(r.MediaColocacao);
         dittoCandidates.push({
           player: playerName,
@@ -3878,8 +3930,8 @@ function updateMetagameDisplay() {
         const partB = toNumber(b.Participacoes);
         if (partB !== partA) return partB - partA;
         
-        const cupChalA = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(a.Jogador || a.Player || a.Name, stage.data) !== null).length;
-        const cupChalB = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(b.Jogador || b.Player || b.Name, stage.data) !== null).length;
+        const cupChalA = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(a.Jogador || a.Player || a.Name, stage.data, a.ID) !== null).length;
+        const cupChalB = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(b.Jogador || b.Player || b.Name, stage.data, b.ID) !== null).length;
         if (cupChalB !== cupChalA) return cupChalB - cupChalA;
         
         return toNumber(b.Pontos) - toNumber(a.Pontos);
@@ -3896,7 +3948,7 @@ function updateMetagameDisplay() {
         const uniqueDecksOriginal = [];
         cleanStages.forEach(stage => {
           if (!stage || !stage.data) return;
-          const deck = getDeckForStage(playerName, stage.data);
+          const deck = getDeckForStage(playerName, stage.data, r.ID);
           if (deck) {
             const trimmedDeck = deck.trim();
             const normDeck = trimmedDeck.toLowerCase();
@@ -3908,7 +3960,7 @@ function updateMetagameDisplay() {
         });
         
         if (uniqueDecksNormalized.size > 0) {
-          const partCount = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
+          const partCount = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data, r.ID) !== null).length;
           const mediaColocacao = toNumber(r.MediaColocacao);
           dittoCandidates.push({
             player: playerName,
@@ -3934,7 +3986,7 @@ function updateMetagameDisplay() {
       const murchaCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) > 0).map(r => {
         const playerName = r.Jogador || r.Player || r.Name;
         const ratio = toNumber(r.Derrotas) / toNumber(r.Participacoes);
-        const assiduidade = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
+        const assiduidade = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data, r.ID) !== null).length;
         return {
           player: playerName || 'Desconhecido',
           ratio: ratio,
