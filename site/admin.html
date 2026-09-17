@@ -2557,7 +2557,9 @@ function doGet(e) {
             </td>
             <td style="text-align:center;">${p.Podio}</td>
             <td style="text-align:left;">
-              <input type="text" list="all-decks-datalist" class="search-input player-stage-deck-input" data-player="${escapeHTML(p.Jogador)}" value="${escapeHTML(p.Deck || '')}" placeholder="Selecione ou digite..." style="padding: 0.35rem 0.6rem; font-size: 0.82rem; width: 100%; min-width: 150px; background: rgba(0,0,0,0.5);">
+              <select class="search-input player-stage-deck-input" data-player="${escapeHTML(p.Jogador)}" onchange="handleStageDeckSelectChange(this)" style="padding: 0.35rem 0.6rem; font-size: 0.82rem; width: 100%; min-width: 170px;">
+                ${buildDeckSelectOptions(p.Deck)}
+              </select>
             </td>
           </tr>
         `;
@@ -3255,6 +3257,68 @@ function doGet(e) {
     // ==========================================
     // CATÁLOGO DE DECKS (ABA 2)
     // ==========================================
+    function buildDeckSelectOptions(currentValue) {
+      const normCurrent = String(currentValue || '').trim().toLowerCase();
+      const sortedDecks = [...(cachedDecks || [])].sort((a, b) => (a.deck || '').localeCompare(b.deck || '', 'pt-BR'));
+      
+      let optionsHtml = `<option value="" ${!normCurrent ? 'selected' : ''}>-- Selecione um Deck --</option>`;
+      
+      let found = false;
+      sortedDecks.forEach(d => {
+        const isSelected = (d.deck || '').toLowerCase() === normCurrent;
+        if (isSelected) found = true;
+        
+        const energy = (d.tipoEnergia || '').toLowerCase();
+        const parts = energy.split('+').map(s => s.trim());
+        let icon = '⚪';
+        if (parts.length > 1) {
+          icon = `${ENERGY_CONFIG[parts[0]]?.icon || '⚪'}${ENERGY_CONFIG[parts[1]]?.icon || ''}`;
+        } else {
+          icon = ENERGY_CONFIG[parts[0]]?.icon || '⚪';
+        }
+        
+        optionsHtml += `<option value="${escapeHTML(d.deck)}" ${isSelected ? 'selected' : ''}>${icon} ${escapeHTML(d.deck)}</option>`;
+      });
+      
+      if (normCurrent && !found) {
+        optionsHtml += `<option value="${escapeHTML(currentValue)}" selected>🏷️ ${escapeHTML(currentValue)}</option>`;
+      }
+      
+      optionsHtml += `<option value="__NEW_DECK__" style="color: var(--accent-yellow); font-weight: bold;">➕ Cadastrar Novo Deck...</option>`;
+      return optionsHtml;
+    }
+
+    function handleStageDeckSelectChange(selectEl) {
+      if (selectEl.value === '__NEW_DECK__') {
+        const player = selectEl.getAttribute('data-player') || 'este jogador';
+        const newName = prompt(`Digite o nome do novo deck para ${player}:`);
+        if (newName && newName.trim()) {
+          const cleanName = newName.trim();
+          if (!cachedDecks.some(d => (d.deck || '').toLowerCase() === cleanName.toLowerCase())) {
+            cachedDecks.push({
+              deck: cleanName,
+              tipoEnergia: 'colorless',
+              imagem: '',
+              limitless: '',
+              icone: ''
+            });
+            cachedDecks.sort((a, b) => (a.deck || '').localeCompare(b.deck || '', 'pt-BR'));
+            renderDeckDatalist();
+            renderDeckCatalog();
+          }
+          
+          const newOpt = document.createElement('option');
+          newOpt.value = cleanName;
+          newOpt.text = `⚪ ${cleanName}`;
+          newOpt.selected = true;
+          selectEl.insertBefore(newOpt, selectEl.lastElementChild);
+          selectEl.value = cleanName;
+        } else {
+          selectEl.value = '';
+        }
+      }
+    }
+
     function renderDeckDatalist() {
       const datalist = document.getElementById('all-decks-datalist');
       if (!datalist) return;
@@ -3686,7 +3750,9 @@ function doGet(e) {
             <td style="font-weight: 600; color: #fff;">${escapeHTML(name)}</td>
             <td style="text-align: center; color: var(--text-secondary); font-size: 0.8rem;">${escapeHTML(cat)}</td>
             <td>
-              <input type="text" list="all-decks-datalist" class="search-input stage-deck-row-input" data-player="${escapeHTML(name)}" value="${escapeHTML(currentDeck)}" placeholder="Digite ou selecione o deck..." style="padding: 0.35rem 0.6rem; font-size: 0.85rem; width: 100%; min-width: 180px; background: rgba(0,0,0,0.4);">
+              <select class="search-input stage-deck-row-input" data-player="${escapeHTML(name)}" onchange="handleStageDeckSelectChange(this)" style="padding: 0.35rem 0.6rem; font-size: 0.85rem; width: 100%; min-width: 180px;">
+                ${buildDeckSelectOptions(currentDeck)}
+              </select>
             </td>
           </tr>
         `;
