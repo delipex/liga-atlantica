@@ -819,8 +819,75 @@
         </div>
       </section>
 
+      <!-- Seção 2: Hall da Fama de Campeões -->
+      <section class="glass-card admin-card" style="margin-top: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <h2 style="font-size: 1.15rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              🏆 Hall da Fama de Campeões
+            </h2>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              Cadastre e edite os campeões históricos, decks, fotos e títulos da temporada
+            </p>
+          </div>
+          <button type="button" class="btn" onclick="openNewChampionModal()" style="background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); font-weight: 700; padding: 0.45rem 0.9rem; font-size: 0.82rem; display: flex; align-items: center; gap: 0.4rem;">
+            + Novo Campeão
+          </button>
+        </div>
+
+        <div id="champions-admin-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+          <!-- Renderizado via JS -->
+        </div>
+      </section>
+
+      <!-- Seção 3: Scores e Decks Antigos -->
+      <section class="glass-card admin-card" style="margin-top: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <h2 style="font-size: 1.15rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              📜 Scores e Decks de Temporadas Antigas
+            </h2>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              Consulte e edite as pontuações e decks utilizados nas temporadas passadas
+            </p>
+          </div>
+          <button type="button" class="btn" onclick="openNewHistoricalScoreModal()" style="background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); font-weight: 700; padding: 0.45rem 0.9rem; font-size: 0.82rem; display: flex; align-items: center; gap: 0.4rem;">
+            + Novo Score Histórico
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap;">
+          <select id="hist-score-season-filter" class="search-input" onchange="renderHistoricalScoresCatalog()" style="flex: 1; min-width: 180px;">
+            <option value="all">Todas as Temporadas</option>
+          </select>
+          <input type="text" id="hist-score-search" class="search-input" placeholder="🔍 Buscar por jogador ou deck..." oninput="renderHistoricalScoresCatalog()" style="flex: 2; min-width: 220px;">
+          <div id="hist-score-count-badge" style="font-size: 0.85rem; font-weight: 600; color: var(--accent-yellow); background: rgba(255, 203, 5, 0.08); border: 1px solid rgba(255, 203, 5, 0.2); padding: 0.45rem 0.85rem; border-radius: 6px; white-space: nowrap;">
+            0 Registros
+          </div>
+        </div>
+
+        <div class="table-responsive" style="max-height: 480px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius);">
+          <table class="ranking-table" style="font-size: 0.85rem;">
+            <thead>
+              <tr>
+                <th style="width: 50px; text-align: center;">Pos</th>
+                <th>Temporada</th>
+                <th>Jogador</th>
+                <th style="width: 90px; text-align: center;">Categoria</th>
+                <th style="text-align: center;">Pontos</th>
+                <th>Deck Utilizado</th>
+                <th style="width: 100px; text-align: center;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="hist-scores-admin-tbody">
+              <!-- Renderizado via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- Seção: Encerrar e Arquivar Temporada -->
-      <section class="glass-card admin-card" style="border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.03);">
+      <section class="glass-card admin-card" style="margin-top: 1.5rem; border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.03);">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
           <h2 style="font-size: 1.15rem; color: #ef4444; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
             🏆 Encerrar e Arquivar Temporada
@@ -1242,6 +1309,153 @@
   </div>
 
   
+  <!-- Modal: Adicionar / Editar Campeão do Hall da Fama -->
+  <div id="champion-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1040; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
+    <div class="glass-card" style="width: 100%; max-width: 600px; padding: 2rem; position: relative;">
+      <button onclick="closeChampionEditModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      
+      <h3 id="champion-modal-title" style="color: #fff; font-size: 1.25rem; margin-bottom: 1.25rem; text-align: center;">
+        🏆 Editar Campeão do Hall da Fama
+      </h3>
+
+      <div class="alert-box alert-error" id="champion-modal-error" style="display: none; margin-bottom: 1rem;"></div>
+
+      <form id="champion-edit-form" onsubmit="handleSaveChampion(event)">
+        <input type="hidden" id="champion-edit-index" value="-1">
+
+        <div class="form-row" style="margin-bottom: 1rem;">
+          <div class="form-group" style="flex: 1;">
+            <label for="champ-edit-season">Temporada</label>
+            <input type="text" id="champ-edit-season" class="search-input" placeholder="Ex: Temporada #4" required>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="champ-edit-date">Mês / Ano</label>
+            <input type="text" id="champ-edit-date" class="search-input" placeholder="Ex: Abril 2026">
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom: 1rem;">
+          <div class="form-group" style="flex: 1;">
+            <label for="champ-edit-name">🏆 Nome do Campeão</label>
+            <input type="text" id="champ-edit-name" class="search-input" placeholder="Ex: Washington Neto" required>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="champ-edit-vice">🥈 Vice-Campeão</label>
+            <input type="text" id="champ-edit-vice" class="search-input" placeholder="Ex: João Pedro Oliveira">
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom: 1rem;">
+          <div class="form-group" style="flex: 1;">
+            <label for="champ-edit-deck">🎴 Deck Campeão</label>
+            <input type="text" id="champ-edit-deck" class="search-input" placeholder="Ex: Lugia Archeops" list="all-decks-datalist" required>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="champ-edit-photo">📸 URL Foto do Campeão</label>
+            <input type="url" id="champ-edit-photo" class="search-input" placeholder="https://...">
+          </div>
+        </div>
+
+        <div style="font-size: 0.82rem; font-weight: 700; color: var(--accent-yellow); margin-top: 1rem; margin-bottom: 0.5rem; text-transform: uppercase;">
+          Títulos da Temporada
+        </div>
+
+        <div class="form-row" style="margin-bottom: 1rem;">
+          <div class="form-group" style="flex: 1;">
+            <label for="champ-edit-ouro">🥇 Pokébola de Ouro</label>
+            <input type="text" id="champ-edit-ouro" class="search-input" placeholder="Ex: Washington Neto">
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="champ-edit-ginasio">🥋 Líder de Ginásio</label>
+            <input type="text" id="champ-edit-ginasio" class="search-input" placeholder="Ex: Carlos Paes">
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom: 1.5rem;">
+          <div class="form-group" style="flex: 1;">
+            <label for="champ-edit-ditto">🧬 Ditto Player</label>
+            <input type="text" id="champ-edit-ditto" class="search-input" placeholder="Ex: Carlos Morais">
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="champ-edit-murcha">🥀 Pokébola Murcha</label>
+            <input type="text" id="champ-edit-murcha" class="search-input" placeholder="Ex: Wesllen Dias">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn" onclick="closeChampionEditModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-save-champion-submit" class="btn btn-whatsapp" style="background: var(--accent-yellow); border-color: var(--accent-yellow); color: #000; font-weight: 700;">
+            💾 Salvar Campeão
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Adicionar / Editar Score Antigo -->
+  <div id="hist-score-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1040; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
+    <div class="glass-card" style="width: 100%; max-width: 500px; padding: 2rem; position: relative;">
+      <button onclick="closeHistoricalScoreEditModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      
+      <h3 id="hist-score-modal-title" style="color: #fff; font-size: 1.25rem; margin-bottom: 1.25rem; text-align: center;">
+        📜 Editar Score Antigo
+      </h3>
+
+      <div class="alert-box alert-error" id="hist-score-modal-error" style="display: none; margin-bottom: 1rem;"></div>
+
+      <form id="hist-score-edit-form" onsubmit="handleSaveHistoricalScore(event)">
+        <input type="hidden" id="hist-score-edit-index" value="-1">
+
+        <div class="form-row" style="margin-bottom: 1rem;">
+          <div class="form-group" style="flex: 1;">
+            <label for="hist-edit-season">Temporada</label>
+            <input type="text" id="hist-edit-season" class="search-input" placeholder="Ex: Temporada #3" required>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="hist-edit-pos">Posição Final</label>
+            <input type="number" id="hist-edit-pos" class="search-input" min="1" max="999" placeholder="Ex: 1" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="hist-edit-player">Nome do Jogador</label>
+          <input type="text" id="hist-edit-player" class="search-input" placeholder="Ex: João Pedro Oliveira" required>
+        </div>
+
+        <div class="form-row" style="margin-bottom: 1rem;">
+          <div class="form-group" style="flex: 1;">
+            <label for="hist-edit-cat">Categoria</label>
+            <select id="hist-edit-cat" class="search-input" style="width: 100%;">
+              <option value="ME">Master (ME)</option>
+              <option value="SE">Senior (SE)</option>
+              <option value="JR">Junior (JR)</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="hist-edit-points">Pontos</label>
+            <input type="text" id="hist-edit-points" class="search-input" placeholder="Ex: 320">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label for="hist-edit-deck">Deck Utilizado</label>
+          <input type="text" id="hist-edit-deck" class="search-input" placeholder="Ex: Dragapult ex" list="all-decks-datalist">
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn" onclick="closeHistoricalScoreEditModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-save-hist-score-submit" class="btn btn-whatsapp" style="background: var(--accent-yellow); border-color: var(--accent-yellow); color: #000; font-weight: 700;">
+            💾 Salvar Registro
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div id="settings-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
     <div class="glass-card" style="width: 90%; max-width: 450px; padding: 2rem; position: relative;">
       <button onclick="closeSettingsModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
@@ -1389,6 +1603,8 @@ function doGet(e) {
     let cachedCalendario = [];
     let cachedRegras = [];
     let cachedGaleria = [];
+    let cachedCampeoes = [];
+    let cachedScoresAntigos = [];
     let cachedConfig = {
       leagueName: "Liga Atlântica",
       leagueSubtitle: "Liga de Pokémon TCG - FSA",
@@ -1670,13 +1886,33 @@ function doGet(e) {
           console.warn("Falha ao carregar config.json:", e);
         }
 
+        // 8. Carrega campeoes.json
+        try {
+          const campRes = await fetch(`campeoes.json?v=${new Date().getTime()}`);
+          if (campRes.ok) {
+            cachedCampeoes = await campRes.json();
+          }
+        } catch (e) {
+          console.warn("Falha ao carregar campeoes.json:", e);
+        }
+
+        // 9. Carrega scores_antigos.json
+        try {
+          const scRes = await fetch(`scores_antigos.json?v=${new Date().getTime()}`);
+          if (scRes.ok) {
+            cachedScoresAntigos = await scRes.json();
+          }
+        } catch (e) {
+          console.warn("Falha ao carregar scores_antigos.json:", e);
+        }
+
         // Fallback: se cachedJogadores ainda estiver vazio, tenta extrair de cachedMetagame
         if (!cachedJogadores || !cachedJogadores.length) {
           if (cachedMetagame && cachedMetagame.length) cachedJogadores = cachedMetagame;
         }
 
         renderDeckDatalist();
-        console.log(`Dados carregados: ${cachedJogadores.length} jogadores, ${cachedDecks.length} decks, ${cachedCalendario.length} eventos, ${cachedRegras.length} regras, ${cachedGaleria.length} fotos.`);
+        console.log(`Dados carregados: ${cachedJogadores.length} jogadores, ${cachedDecks.length} decks, ${cachedCalendario.length} eventos, ${cachedRegras.length} regras, ${cachedGaleria.length} fotos, ${cachedCampeoes.length} campeões, ${cachedScoresAntigos.length} scores antigos.`);
       } catch (err) {
         console.error("Erro geral em ensureSheetsLoaded:", err);
       } finally {
@@ -5681,6 +5917,15 @@ function doGet(e) {
         loading.style.display = 'none';
         wrapper.style.display = 'block';
       }
+
+      // Renderiza também o Hall da Fama e os Scores Antigos
+      try {
+        await ensureSheetsLoaded();
+        renderChampionsCatalog();
+        renderHistoricalScoresCatalog();
+      } catch (e) {
+        console.warn("Falha ao carregar catálogos de temporadas:", e);
+      }
     }
 
     // --- Lógica de Recálculo após exclusão ---
@@ -6558,6 +6803,608 @@ function doGet(e) {
       } finally {
         submitBtn.disabled = false;
         submitBtn.innerText = "⚠️ Confirmar e Encerrar Temporada";
+      }
+    }
+
+    // =========================================================================
+    // CRUD: HALL DA FAMA DE CAMPEÕES (campeoes.json)
+    // =========================================================================
+    function renderChampionsCatalog() {
+      const grid = document.getElementById('champions-admin-grid');
+      if (!grid) return;
+
+      if (!cachedCampeoes || cachedCampeoes.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-secondary);">Nenhum campeão cadastrado no Hall da Fama.</div>`;
+        return;
+      }
+
+      grid.innerHTML = cachedCampeoes.map((c, idx) => {
+        const season = escapeHTML(c.Temporada || `Temporada #${idx + 1}`);
+        const dateStr = escapeHTML(c.Data || '');
+        const champ = escapeHTML(c.Campeao || 'Não informado');
+        const vice = escapeHTML(c.Vice || 'Não informado');
+        const deck = escapeHTML(c.DeckCampeao || 'Não informado');
+        const photo = c.FotoCampeao ? escapeHTML(c.FotoCampeao) : '';
+        
+        // Títulos
+        const ouro = c.PokebolaOuro ? escapeHTML(c.PokebolaOuro) : '';
+        const ginasio = c.LiderGinasio ? escapeHTML(c.LiderGinasio) : '';
+        const ditto = c.DittoPlayer ? escapeHTML(c.DittoPlayer) : '';
+        const murcha = c.PokebolaMurcha ? escapeHTML(c.PokebolaMurcha) : '';
+
+        // Tenta achar cor/energia do deck no catálogo
+        let energyBadgeHtml = '';
+        if (c.DeckCampeao && cachedDecks && cachedDecks.length > 0) {
+          const matchedDeck = cachedDecks.find(d => (d.deck || '').toLowerCase() === (c.DeckCampeao || '').toLowerCase());
+          if (matchedDeck && matchedDeck.tipoEnergia) {
+            energyBadgeHtml = getEnergyBadge(matchedDeck.tipoEnergia);
+          }
+        }
+
+        return `
+          <div class="deck-card" style="border: 1px solid rgba(255, 203, 5, 0.2); background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-lg); padding: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+              <div>
+                <span style="font-size: 0.75rem; font-weight: 700; color: var(--accent-yellow); background: rgba(255, 203, 5, 0.1); border: 1px solid rgba(255, 203, 5, 0.25); padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">
+                  ${season}
+                </span>
+                ${dateStr ? `<span style="font-size: 0.75rem; color: var(--text-secondary); margin-left: 0.4rem;">${dateStr}</span>` : ''}
+              </div>
+              <div style="display: flex; gap: 0.35rem;">
+                <button type="button" class="btn" onclick="openEditChampionModal(${idx})" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: rgba(255, 203, 5, 0.15); color: var(--accent-yellow); border-color: rgba(255, 203, 5, 0.3);" title="Editar Campeão">
+                  ✏️ Editar
+                </button>
+                <button type="button" class="btn btn-danger" onclick="handleDeleteChampion(${idx})" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" title="Excluir do Hall da Fama">
+                  🗑️
+                </button>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.75rem;">
+              ${photo ? `
+                <img src="${photo}" alt="${champ}" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-yellow); background: rgba(0,0,0,0.3);" onerror="this.style.display='none'">
+              ` : `
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(255, 203, 5, 0.1); border: 2px solid var(--accent-yellow); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                  🏆
+                </div>
+              `}
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Campeão</div>
+                <div style="font-size: 1.05rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  ${champ}
+                </div>
+                <div style="font-size: 0.78rem; color: #cbd5e1; margin-top: 2px;">
+                  🥈 Vice: <strong>${vice}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.25); border-radius: 6px; padding: 0.5rem 0.75rem; margin-bottom: 0.75rem; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span style="font-size: 0.72rem; color: var(--text-secondary); display: block;">Deck Utilizado</span>
+                <span style="font-size: 0.85rem; font-weight: 600; color: #fff;">🎴 ${deck}</span>
+              </div>
+              ${energyBadgeHtml}
+            </div>
+
+            ${(ouro || ginasio || ditto || murcha) ? `
+              <div style="font-size: 0.75rem; color: var(--text-secondary); border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
+                ${ouro ? `<div>🥇 Ouro: <span style="color: #fcd34d;">${ouro}</span></div>` : ''}
+                ${ginasio ? `<div>🥋 Líder: <span style="color: #6ee7b7;">${ginasio}</span></div>` : ''}
+                ${ditto ? `<div>🧬 Ditto: <span style="color: #f472b6;">${ditto}</span></div>` : ''}
+                ${murcha ? `<div>🥀 Murcha: <span style="color: #f87171;">${murcha}</span></div>` : ''}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openNewChampionModal() {
+      const modal = document.getElementById('champion-edit-modal');
+      const errBox = document.getElementById('champion-modal-error');
+      const title = document.getElementById('champion-modal-title');
+      const idxInput = document.getElementById('champion-edit-index');
+      
+      if (errBox) errBox.style.display = 'none';
+      if (title) title.innerText = "🏆 Adicionar Campeão no Hall da Fama";
+      if (idxInput) idxInput.value = "-1";
+
+      const nextSeasonNum = (cachedCampeoes && cachedCampeoes.length > 0) ? (cachedCampeoes.length + 1) : 1;
+      document.getElementById('champ-edit-season').value = `Temporada #${nextSeasonNum}`;
+      document.getElementById('champ-edit-date').value = "";
+      document.getElementById('champ-edit-name').value = "";
+      document.getElementById('champ-edit-vice').value = "";
+      document.getElementById('champ-edit-deck').value = "";
+      document.getElementById('champ-edit-photo').value = "";
+      document.getElementById('champ-edit-ouro').value = "";
+      document.getElementById('champ-edit-ginasio').value = "";
+      document.getElementById('champ-edit-ditto').value = "";
+      document.getElementById('champ-edit-murcha').value = "";
+
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function openEditChampionModal(idx) {
+      if (!cachedCampeoes || !cachedCampeoes[idx]) return;
+      const c = cachedCampeoes[idx];
+      const modal = document.getElementById('champion-edit-modal');
+      const errBox = document.getElementById('champion-modal-error');
+      const title = document.getElementById('champion-modal-title');
+      const idxInput = document.getElementById('champion-edit-index');
+
+      if (errBox) errBox.style.display = 'none';
+      if (title) title.innerText = `🏆 Editar Campeão: ${c.Temporada || `Temporada #${idx + 1}`}`;
+      if (idxInput) idxInput.value = String(idx);
+
+      document.getElementById('champ-edit-season').value = c.Temporada || '';
+      document.getElementById('champ-edit-date').value = c.Data || '';
+      document.getElementById('champ-edit-name').value = c.Campeao || '';
+      document.getElementById('champ-edit-vice').value = c.Vice || '';
+      document.getElementById('champ-edit-deck').value = c.DeckCampeao || '';
+      document.getElementById('champ-edit-photo').value = c.FotoCampeao || '';
+      document.getElementById('champ-edit-ouro').value = c.PokebolaOuro || '';
+      document.getElementById('champ-edit-ginasio').value = c.LiderGinasio || '';
+      document.getElementById('champ-edit-ditto').value = c.DittoPlayer || '';
+      document.getElementById('champ-edit-murcha').value = c.PokebolaMurcha || '';
+
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeChampionEditModal() {
+      const modal = document.getElementById('champion-edit-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function handleSaveChampion(e) {
+      if (e) e.preventDefault();
+      const errBox = document.getElementById('champion-modal-error');
+      const submitBtn = document.getElementById('btn-save-champion-submit');
+      if (errBox) errBox.style.display = 'none';
+
+      if (!runtimeToken) {
+        if (errBox) {
+          errBox.innerText = "Sessão expirada. Faça login novamente no painel.";
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      const idx = parseInt(document.getElementById('champion-edit-index').value, 10);
+      const season = document.getElementById('champ-edit-season').value.trim();
+      const dateVal = document.getElementById('champ-edit-date').value.trim();
+      const name = document.getElementById('champ-edit-name').value.trim();
+      const vice = document.getElementById('champ-edit-vice').value.trim();
+      const deck = document.getElementById('champ-edit-deck').value.trim();
+      const photo = document.getElementById('champ-edit-photo').value.trim();
+      const ouro = document.getElementById('champ-edit-ouro').value.trim();
+      const ginasio = document.getElementById('champ-edit-ginasio').value.trim();
+      const ditto = document.getElementById('champ-edit-ditto').value.trim();
+      const murcha = document.getElementById('champ-edit-murcha').value.trim();
+
+      if (!season || !name || !deck) {
+        if (errBox) {
+          errBox.innerText = "Por favor, preencha os campos obrigatórios (Temporada, Campeão e Deck).";
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "⏳ Salvando...";
+
+      try {
+        const updatedList = [...cachedCampeoes];
+        const record = {
+          "Temporada": season,
+          "Campeao": name,
+          "Vice": vice,
+          "DeckCampeao": deck,
+          "Data": dateVal,
+          "FotoCampeao": photo,
+          "PokebolaOuro": ouro,
+          "LiderGinasio": ginasio,
+          "DittoPlayer": ditto,
+          "PokebolaMurcha": murcha
+        };
+
+        if (idx >= 0 && updatedList[idx]) {
+          if (updatedList[idx].URLDeck) record.URLDeck = updatedList[idx].URLDeck;
+          if (updatedList[idx].ImagemDeck) record.ImagemDeck = updatedList[idx].ImagemDeck;
+          if (updatedList[idx].ObservacaoDeck) record.ObservacaoDeck = updatedList[idx].ObservacaoDeck;
+          updatedList[idx] = record;
+        } else {
+          updatedList.unshift(record);
+        }
+
+        const config = GITHUB_CONFIG;
+        const campeoesUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/campeoes.json`;
+        let campeoesSha = await getLatestSha(campeoesUrl);
+
+        const commitPayload = {
+          message: (idx >= 0) ? `Atualizar ${season} no Hall da Fama (${name})` : `Adicionar ${season} no Hall da Fama (${name})`,
+          content: encodeBase64UTF8(JSON.stringify(updatedList, null, 2)),
+          branch: config.branch
+        };
+        if (campeoesSha) commitPayload.sha = campeoesSha;
+
+        const res = await fetch(campeoesUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao salvar campeoes.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedCampeoes = updatedList;
+        renderChampionsCatalog();
+        closeChampionEditModal();
+        showSuccess(`🏆 Campeão ${name} (${season}) salvo com sucesso no Hall da Fama!`);
+      } catch (err) {
+        console.error("Erro ao salvar campeão:", err);
+        if (errBox) {
+          errBox.innerText = "Erro ao salvar: " + err.message;
+          errBox.style.display = 'block';
+        }
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "💾 Salvar Campeão";
+      }
+    }
+
+    async function handleDeleteChampion(idx) {
+      if (!cachedCampeoes || !cachedCampeoes[idx]) return;
+      const c = cachedCampeoes[idx];
+      const season = c.Temporada || `Temporada #${idx + 1}`;
+      const name = c.Campeao || 'este campeão';
+
+      if (!confirm(`Tem certeza de que deseja excluir ${season} (${name}) do Hall da Fama?`)) {
+        return;
+      }
+
+      if (!runtimeToken) {
+        showError("Sessão expirada. Faça login no painel para sincronizar.");
+        return;
+      }
+
+      try {
+        const updatedList = cachedCampeoes.filter((_, i) => i !== idx);
+
+        const config = GITHUB_CONFIG;
+        const campeoesUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/campeoes.json`;
+        let campeoesSha = await getLatestSha(campeoesUrl);
+
+        const commitPayload = {
+          message: `Remover ${season} (${name}) do Hall da Fama`,
+          content: encodeBase64UTF8(JSON.stringify(updatedList, null, 2)),
+          branch: config.branch
+        };
+        if (campeoesSha) commitPayload.sha = campeoesSha;
+
+        const res = await fetch(campeoesUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao salvar campeoes.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedCampeoes = updatedList;
+        renderChampionsCatalog();
+        showSuccess(`🗑️ ${season} (${name}) removido com sucesso do Hall da Fama!`);
+      } catch (err) {
+        console.error("Erro ao excluir campeão:", err);
+        showError("Falha ao excluir campeão: " + err.message);
+      }
+    }
+
+    // =========================================================================
+    // CRUD: SCORES E DECKS DE TEMPORADAS ANTIGAS (scores_antigos.json)
+    // =========================================================================
+    function renderHistoricalScoresCatalog() {
+      const tbody = document.getElementById('hist-scores-admin-tbody');
+      const filterSelect = document.getElementById('hist-score-season-filter');
+      const searchInput = document.getElementById('hist-score-search');
+      const countBadge = document.getElementById('hist-score-count-badge');
+      if (!tbody) return;
+
+      if (!cachedScoresAntigos || cachedScoresAntigos.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Nenhum score antigo cadastrado.</td></tr>`;
+        if (countBadge) countBadge.innerText = "0 Registros";
+        return;
+      }
+
+      if (filterSelect) {
+        const currentVal = filterSelect.value || 'all';
+        const uniqueSeasons = Array.from(new Set(cachedScoresAntigos.map(s => s.temporada || s.Temporada || 'Sem Temporada'))).sort();
+        const optionsHtml = `<option value="all">Todas as Temporadas (${cachedScoresAntigos.length})</option>` +
+          uniqueSeasons.map(sea => `<option value="${escapeHTML(sea)}" ${currentVal === sea ? 'selected' : ''}>${escapeHTML(sea)}</option>`).join('');
+        
+        if (filterSelect.options.length !== uniqueSeasons.length + 1) {
+          filterSelect.innerHTML = optionsHtml;
+        }
+      }
+
+      const selectedSeason = filterSelect ? filterSelect.value : 'all';
+      const term = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+      const filtered = [];
+      cachedScoresAntigos.forEach((item, realIdx) => {
+        const season = item.temporada || item.Temporada || '';
+        const player = item.jogador || item.Jogador || item.Nome || '';
+        const deck = item.deck || item.Deck || '';
+
+        if (selectedSeason !== 'all' && season !== selectedSeason) return;
+
+        if (term) {
+          const matchPlayer = player.toLowerCase().includes(term);
+          const matchDeck = deck.toLowerCase().includes(term);
+          const matchSeason = season.toLowerCase().includes(term);
+          if (!matchPlayer && !matchDeck && !matchSeason) return;
+        }
+
+        filtered.push({ item, realIdx });
+      });
+
+      if (countBadge) {
+        countBadge.innerText = `${filtered.length} Registros`;
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Nenhum score encontrado para o filtro aplicado.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(({ item, realIdx }) => {
+        const pos = item.pos || item.Pos || item.Posicao || '-';
+        const season = escapeHTML(item.temporada || item.Temporada || '-');
+        const player = escapeHTML(item.jogador || item.Jogador || item.Nome || 'Não informado');
+        const cat = escapeHTML(item.categoria || item.Categoria || 'ME');
+        const pts = escapeHTML(String(item.pontos !== undefined ? item.pontos : (item.Pontos || '')));
+        const deck = escapeHTML(item.deck || item.Deck || '-');
+
+        let catBadge = `<span style="background: rgba(37,99,235,0.15); color: #60a5fa; border: 1px solid rgba(37,99,235,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">${cat}</span>`;
+        if (cat.toUpperCase() === 'SE' || cat.toUpperCase() === 'SENIOR') {
+          catBadge = `<span style="background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">${cat}</span>`;
+        } else if (cat.toUpperCase() === 'JR' || cat.toUpperCase() === 'JUNIOR') {
+          catBadge = `<span style="background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">${cat}</span>`;
+        }
+
+        let posBadge = `<span style="font-weight: 700; color: var(--text-secondary);">${pos}</span>`;
+        if (pos == 1) posBadge = `<span style="background: rgba(255,203,5,0.2); color: var(--accent-yellow); padding: 2px 7px; border-radius: 50%; font-weight: 800;">1</span>`;
+        else if (pos == 2) posBadge = `<span style="background: rgba(203,213,225,0.2); color: #cbd5e1; padding: 2px 7px; border-radius: 50%; font-weight: 800;">2</span>`;
+        else if (pos == 3) posBadge = `<span style="background: rgba(217,119,6,0.2); color: #f59e0b; padding: 2px 7px; border-radius: 50%; font-weight: 800;">3</span>`;
+
+        return `
+          <tr>
+            <td style="text-align: center; padding: 0.6rem 0.4rem;">${posBadge}</td>
+            <td style="font-size: 0.8rem; font-weight: 600; color: var(--accent-yellow); padding: 0.6rem 0.4rem;">${season}</td>
+            <td style="font-weight: 600; color: #fff; padding: 0.6rem 0.4rem;">${player}</td>
+            <td style="text-align: center; padding: 0.6rem 0.4rem;">${catBadge}</td>
+            <td style="text-align: center; font-weight: 700; color: #fff; padding: 0.6rem 0.4rem;">${pts || '-'}</td>
+            <td style="font-size: 0.8rem; color: #cbd5e1; padding: 0.6rem 0.4rem;">${deck !== '-' ? `🎴 ${deck}` : '<span style="color: var(--text-secondary);">-</span>'}</td>
+            <td style="text-align: center; padding: 0.6rem 0.4rem; white-space: nowrap;">
+              <button type="button" class="btn" onclick="openEditHistoricalScoreModal(${realIdx})" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: rgba(255, 203, 5, 0.15); color: var(--accent-yellow); border-color: rgba(255, 203, 5, 0.3);" title="Editar Score">
+                ✏️
+              </button>
+              <button type="button" class="btn btn-danger" onclick="handleDeleteHistoricalScore(${realIdx})" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" title="Excluir Score">
+                🗑️
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openNewHistoricalScoreModal() {
+      const modal = document.getElementById('hist-score-edit-modal');
+      const errBox = document.getElementById('hist-score-modal-error');
+      const title = document.getElementById('hist-score-modal-title');
+      const idxInput = document.getElementById('hist-score-edit-index');
+
+      if (errBox) errBox.style.display = 'none';
+      if (title) title.innerText = "📜 Adicionar Score Antigo";
+      if (idxInput) idxInput.value = "-1";
+
+      const currentFilterSeason = document.getElementById('hist-score-season-filter')?.value;
+      const defaultSeason = (currentFilterSeason && currentFilterSeason !== 'all') ? currentFilterSeason : "Temporada #4";
+
+      document.getElementById('hist-edit-season').value = defaultSeason;
+      document.getElementById('hist-edit-pos').value = "1";
+      document.getElementById('hist-edit-player').value = "";
+      document.getElementById('hist-edit-cat').value = "ME";
+      document.getElementById('hist-edit-points').value = "";
+      document.getElementById('hist-edit-deck').value = "";
+
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function openEditHistoricalScoreModal(idx) {
+      if (!cachedScoresAntigos || !cachedScoresAntigos[idx]) return;
+      const s = cachedScoresAntigos[idx];
+      const modal = document.getElementById('hist-score-edit-modal');
+      const errBox = document.getElementById('hist-score-modal-error');
+      const title = document.getElementById('hist-score-modal-title');
+      const idxInput = document.getElementById('hist-score-edit-index');
+
+      if (errBox) errBox.style.display = 'none';
+      if (title) title.innerText = `📜 Editar Score: ${s.jogador || s.Jogador || 'Jogador'}`;
+      if (idxInput) idxInput.value = String(idx);
+
+      document.getElementById('hist-edit-season').value = s.temporada || s.Temporada || '';
+      document.getElementById('hist-edit-pos').value = s.pos || s.Pos || s.Posicao || '1';
+      document.getElementById('hist-edit-player').value = s.jogador || s.Jogador || s.Nome || '';
+      
+      let catVal = s.categoria || s.Categoria || 'ME';
+      if (catVal.toUpperCase().startsWith('M')) catVal = 'ME';
+      else if (catVal.toUpperCase().startsWith('S')) catVal = 'SE';
+      else if (catVal.toUpperCase().startsWith('J')) catVal = 'JR';
+      document.getElementById('hist-edit-cat').value = catVal;
+
+      document.getElementById('hist-edit-points').value = String(s.pontos !== undefined ? s.pontos : (s.Pontos || ''));
+      document.getElementById('hist-edit-deck').value = s.deck || s.Deck || '';
+
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeHistoricalScoreEditModal() {
+      const modal = document.getElementById('hist-score-edit-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function handleSaveHistoricalScore(e) {
+      if (e) e.preventDefault();
+      const errBox = document.getElementById('hist-score-modal-error');
+      const submitBtn = document.getElementById('btn-save-hist-score-submit');
+      if (errBox) errBox.style.display = 'none';
+
+      if (!runtimeToken) {
+        if (errBox) {
+          errBox.innerText = "Sessão expirada. Faça login novamente no painel.";
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      const idx = parseInt(document.getElementById('hist-score-edit-index').value, 10);
+      const season = document.getElementById('hist-edit-season').value.trim();
+      const pos = parseInt(document.getElementById('hist-edit-pos').value, 10) || 1;
+      const player = document.getElementById('hist-edit-player').value.trim();
+      const cat = document.getElementById('hist-edit-cat').value;
+      const points = document.getElementById('hist-edit-points').value.trim();
+      const deck = document.getElementById('hist-edit-deck').value.trim();
+
+      if (!season || !player) {
+        if (errBox) {
+          errBox.innerText = "Por favor, preencha os campos obrigatórios (Temporada e Jogador).";
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "⏳ Salvando...";
+
+      try {
+        const updatedList = [...cachedScoresAntigos];
+        const record = {
+          "temporada": season,
+          "dataFechamento": (idx >= 0 && updatedList[idx]?.dataFechamento) ? updatedList[idx].dataFechamento : new Date().toLocaleDateString('pt-BR').replace(/\//g, '-'),
+          "pos": pos,
+          "jogador": player,
+          "categoria": cat,
+          "pontos": points,
+          "deck": deck
+        };
+
+        if (idx >= 0) {
+          updatedList[idx] = record;
+        } else {
+          updatedList.push(record);
+        }
+
+        const config = GITHUB_CONFIG;
+        const scoresUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/scores_antigos.json`;
+        let scoresSha = await getLatestSha(scoresUrl);
+
+        const commitPayload = {
+          message: (idx >= 0) ? `Atualizar score de ${player} na ${season}` : `Adicionar score de ${player} na ${season}`,
+          content: encodeBase64UTF8(JSON.stringify(updatedList, null, 4)),
+          branch: config.branch
+        };
+        if (scoresSha) commitPayload.sha = scoresSha;
+
+        const res = await fetch(scoresUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao salvar scores_antigos.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedScoresAntigos = updatedList;
+        renderHistoricalScoresCatalog();
+        closeHistoricalScoreEditModal();
+        showSuccess(`📜 Score de ${player} (${season}) salvo com sucesso!`);
+      } catch (err) {
+        console.error("Erro ao salvar score antigo:", err);
+        if (errBox) {
+          errBox.innerText = "Erro ao salvar: " + err.message;
+          errBox.style.display = 'block';
+        }
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "💾 Salvar Registro";
+      }
+    }
+
+    async function handleDeleteHistoricalScore(idx) {
+      if (!cachedScoresAntigos || !cachedScoresAntigos[idx]) return;
+      const s = cachedScoresAntigos[idx];
+      const player = s.jogador || s.Jogador || 'Jogador';
+      const season = s.temporada || s.Temporada || 'Temporada';
+
+      if (!confirm(`Tem certeza de que deseja excluir o score de ${player} da ${season}?`)) {
+        return;
+      }
+
+      if (!runtimeToken) {
+        showError("Sessão expirada. Faça login no painel para sincronizar.");
+        return;
+      }
+
+      try {
+        const updatedList = cachedScoresAntigos.filter((_, i) => i !== idx);
+
+        const config = GITHUB_CONFIG;
+        const scoresUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/scores_antigos.json`;
+        let scoresSha = await getLatestSha(scoresUrl);
+
+        const commitPayload = {
+          message: `Remover score de ${player} da ${season}`,
+          content: encodeBase64UTF8(JSON.stringify(updatedList, null, 4)),
+          branch: config.branch
+        };
+        if (scoresSha) commitPayload.sha = scoresSha;
+
+        const res = await fetch(scoresUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao salvar scores_antigos.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedScoresAntigos = updatedList;
+        renderHistoricalScoresCatalog();
+        showSuccess(`🗑️ Score de ${player} (${season}) removido com sucesso!`);
+      } catch (err) {
+        console.error("Erro ao excluir score antigo:", err);
+        showError("Falha ao excluir score: " + err.message);
       }
     }
 
