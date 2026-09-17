@@ -470,8 +470,100 @@
             </div>
           </div>
         </section>
+
+        <!-- Seção: Encerrar e Arquivar Temporada -->
+        <section class="glass-card admin-card" style="border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.03);">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+            <h2 style="font-size: 1.15rem; color: #ef4444; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              🏆 Encerrar e Arquivar Temporada
+            </h2>
+            <span style="font-size: 0.75rem; color: var(--text-secondary); background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 0.2rem 0.6rem; border-radius: 4px;">
+              Protegido por Senha 🔒
+            </span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
+            Ao finalizar a temporada, todos os dados atuais (.tdf consolidado e etapas) serão salvos permanentemente em um arquivo isolado no histórico (ex: <code>temporadas/temporada-5/</code>), o Campeão será registrado no Hall da Fama e o ranking ativo será zerado para a próxima temporada.
+          </p>
+          <button type="button" class="btn" onclick="openCloseSeasonModal()" style="width: 100%; justify-content: center; padding: 0.75rem; font-size: 0.95rem; font-weight: 700; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); display: flex; align-items: center; gap: 0.5rem;">
+            🔒 Encerrar Temporada Vigente...
+          </button>
+        </section>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Modal: Encerrar e Arquivar Temporada -->
+  <div id="close-season-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1050; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
+    <div class="glass-card" style="width: 100%; max-width: 520px; padding: 2rem; position: relative; border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);">
+      <button onclick="closeCloseSeasonModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🏆</div>
+        <h3 style="color: #fff; font-size: 1.3rem; margin-bottom: 0.25rem;">Encerrar e Arquivar Temporada</h3>
+        <p style="font-size: 0.8rem; color: var(--text-secondary);">Esta ação é irreversível e exige confirmação com sua senha de organizador.</p>
+      </div>
+
+      <div class="alert-box alert-error" id="close-season-error" style="display: none; margin-bottom: 1rem;"></div>
+      <div class="alert-box alert-success" id="close-season-success" style="display: none; margin-bottom: 1rem;"></div>
+
+      <form id="close-season-form" onsubmit="handleExecuteCloseSeason(event)">
+        <div class="form-row" style="margin-bottom: 1rem;">
+          <div class="form-group">
+            <label for="close-season-current">Temporada a Encerrar</label>
+            <input type="number" id="close-season-current" class="search-input" value="5" min="1" max="99" required style="font-weight: 700; color: var(--accent-yellow);">
+          </div>
+          <div class="form-group">
+            <label for="close-season-next">Nova Temporada</label>
+            <input type="number" id="close-season-next" class="search-input" value="6" min="1" max="99" required style="font-weight: 700;">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="close-season-champion">Nome do Campeão Oficial</label>
+          <input type="text" id="close-season-champion" class="search-input" placeholder="Ex: Washington Neto" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="close-season-vice">Nome do Vice-Campeão</label>
+          <input type="text" id="close-season-vice" class="search-input" placeholder="Ex: Igor Nunes" required>
+        </div>
+
+        <div class="form-row" style="margin-bottom: 1rem;">
+          <div class="form-group">
+            <label for="close-season-deck">Deck do Campeão</label>
+            <input type="text" id="close-season-deck" class="search-input" placeholder="Ex: Charizard ex" required>
+          </div>
+          <div class="form-group">
+            <label for="close-season-month">Mês/Ano de Conclusão</label>
+            <input type="text" id="close-season-month" class="search-input" placeholder="Ex: setembro/2026" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="close-season-img-deck">URL da Imagem da Carta Principal / Deck (Opcional)</label>
+          <input type="url" id="close-season-img-deck" class="search-input" placeholder="https://..." style="font-size: 0.8rem;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem; background: rgba(239, 68, 68, 0.08); padding: 1rem; border-radius: var(--radius); border: 1px solid rgba(239, 68, 68, 0.25);">
+          <label for="close-season-password" style="color: #ef4444; font-weight: 700; display: flex; align-items: center; gap: 0.4rem;">
+            🔒 Senha de Confirmação (Obrigatória)
+          </label>
+          <input type="password" id="close-season-password" class="search-input" placeholder="Digite a senha do painel para autorizar..." required style="margin-top: 0.5rem; border-color: rgba(239, 68, 68, 0.4);">
+          <span style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.4rem; display: block;">
+            Digite a sua senha de acesso do painel de organizador para validar e evitar cliques acidentais.
+          </span>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn" onclick="closeCloseSeasonModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-confirm-close-season" class="btn" style="background: #ef4444; border-color: #ef4444; color: #fff; font-weight: 700;">
+            ⚠️ Confirmar e Encerrar Temporada
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -3361,6 +3453,313 @@ function doGet(e) {
         btn.disabled = false;
         btn.innerHTML = originalText;
         btn.style.background = "";
+      }
+    }
+
+    // --- Funções de Encerramento e Arquivamento de Temporada (Snapshot Isolado + Senha) ---
+    async function openCloseSeasonModal() {
+      if (!runtimeToken) {
+        showError("Token do GitHub não configurado. Faça login novamente.");
+        return;
+      }
+      
+      const modal = document.getElementById('close-season-modal');
+      const errBox = document.getElementById('close-season-error');
+      const succBox = document.getElementById('close-season-success');
+      const pwInput = document.getElementById('close-season-password');
+      const champInput = document.getElementById('close-season-champion');
+      const viceInput = document.getElementById('close-season-vice');
+      const monthInput = document.getElementById('close-season-month');
+      const submitBtn = document.getElementById('btn-confirm-close-season');
+      
+      if (errBox) errBox.style.display = 'none';
+      if (succBox) succBox.style.display = 'none';
+      if (pwInput) pwInput.value = '';
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "⚠️ Confirmar e Encerrar Temporada";
+      }
+      
+      // Auto-preenche mês e ano atual em português
+      const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+      const now = new Date();
+      if (monthInput) {
+        monthInput.value = `${months[now.getMonth()]}/${now.getFullYear()}`;
+      }
+
+      // Tenta obter automaticamente os 2 primeiros do ranking atual
+      try {
+        const config = GITHUB_CONFIG;
+        const rankingUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}?ref=${config.branch}&t=${new Date().getTime()}`;
+        const res = await fetch(rankingUrl, {
+          headers: { 'Authorization': `token ${runtimeToken}` }
+        });
+        if (res.ok) {
+          const fileData = await res.json();
+          if (fileData.content) {
+            const rawText = decodeBase64UTF8(fileData.content);
+            const players = parseTDF(rawText);
+            if (players.length > 0 && champInput) {
+              champInput.value = players[0].Jogador || players[0].Player || players[0].Name || '';
+            }
+            if (players.length > 1 && viceInput) {
+              viceInput.value = players[1].Jogador || players[1].Player || players[1].Name || '';
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Não foi possível pré-preencher campeão/vice automaticamente:", e);
+      }
+
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeCloseSeasonModal() {
+      const modal = document.getElementById('close-season-modal');
+      if (modal) modal.style.display = 'none';
+      const pwInput = document.getElementById('close-season-password');
+      if (pwInput) pwInput.value = '';
+      const errBox = document.getElementById('close-season-error');
+      if (errBox) errBox.style.display = 'none';
+    }
+
+    async function handleExecuteCloseSeason(e) {
+      if (e) e.preventDefault();
+      
+      const errBox = document.getElementById('close-season-error');
+      const succBox = document.getElementById('close-season-success');
+      const submitBtn = document.getElementById('btn-confirm-close-season');
+      const pwInput = document.getElementById('close-season-password');
+      
+      errBox.style.display = 'none';
+      succBox.style.display = 'none';
+      
+      const enteredPassword = pwInput.value;
+      if (!enteredPassword) {
+        errBox.innerText = "Digite a sua senha de organizador para confirmar!";
+        errBox.style.display = 'block';
+        return;
+      }
+      
+      // Validação criptográfica da senha com SHA-256
+      const hash = await sha256(enteredPassword);
+      if (hash !== ADMIN_PW_HASH && hash !== GOLI_PW_HASH) {
+        errBox.innerText = "❌ Senha incorreta! O encerramento da temporada foi bloqueado para segurança dos dados.";
+        errBox.style.display = 'block';
+        pwInput.value = '';
+        return;
+      }
+      
+      const seasonCurrent = parseInt(document.getElementById('close-season-current').value, 10) || 5;
+      const seasonNext = parseInt(document.getElementById('close-season-next').value, 10) || (seasonCurrent + 1);
+      const champName = document.getElementById('close-season-champion').value.trim();
+      const viceName = document.getElementById('close-season-vice').value.trim();
+      const deckName = document.getElementById('close-season-deck').value.trim();
+      const monthYear = document.getElementById('close-season-month').value.trim();
+      const imgDeck = document.getElementById('close-season-img-deck').value.trim();
+      
+      if (!champName || !viceName || !deckName) {
+        errBox.innerText = "Preencha todos os campos obrigatórios (Campeão, Vice e Deck).";
+        errBox.style.display = 'block';
+        return;
+      }
+      
+      submitBtn.disabled = true;
+      submitBtn.innerText = "⏳ Arquivando e Salvando Temporada...";
+      
+      const config = GITHUB_CONFIG;
+      
+      try {
+        // 1. Carrega dados atuais do ranking.tdf, etapas.json e campeoes.json
+        const rankingUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
+        const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas.json`;
+        const campeoesUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/campeoes.json`;
+        
+        const [rankingRes, etapasRes, campeoesRes] = await Promise.all([
+          fetch(rankingUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
+            headers: { 'Authorization': `token ${runtimeToken}` }
+          }),
+          fetch(etapasUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
+            headers: { 'Authorization': `token ${runtimeToken}` }
+          }),
+          fetch(campeoesUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
+            headers: { 'Authorization': `token ${runtimeToken}` }
+          })
+        ]);
+        
+        if (!rankingRes.ok) throw new Error("Não foi possível carregar o ranking consolidado atual.");
+        
+        const rankingData = await rankingRes.json();
+        const currentRankingTdf = decodeBase64UTF8(rankingData.content);
+        
+        let currentEtapasList = [];
+        let currentEtapasSha = null;
+        if (etapasRes.ok) {
+          const etapasData = await etapasRes.json();
+          currentEtapasSha = etapasData.sha;
+          if (etapasData.content) {
+            currentEtapasList = JSON.parse(decodeBase64UTF8(etapasData.content));
+          }
+        }
+        
+        let currentCampeoesList = [];
+        let currentCampeoesSha = null;
+        if (campeoesRes.ok) {
+          const campeoesData = await campeoesRes.json();
+          currentCampeoesSha = campeoesData.sha;
+          if (campeoesData.content) {
+            currentCampeoesList = JSON.parse(decodeBase64UTF8(campeoesData.content));
+          }
+        }
+
+        // 2. Criação do Snapshot Isolado da Temporada em temporadas/temporada-{seasonCurrent}/
+        const archiveBasePath = `temporadas/temporada-${seasonCurrent}`;
+        
+        // 2.1 Arquiva ranking_final.tdf
+        const archiveRankingUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${archiveBasePath}/ranking_final.tdf`;
+        let archiveRankingSha = await getLatestSha(archiveRankingUrl);
+        const commitArchiveRankingPayload = {
+          message: `Arquivar ranking final da Temporada #${seasonCurrent}`,
+          content: encodeBase64UTF8(currentRankingTdf),
+          branch: config.branch
+        };
+        if (archiveRankingSha) commitArchiveRankingPayload.sha = archiveRankingSha;
+        
+        const putArchRankRes = await fetch(archiveRankingUrl, {
+          method: 'PUT',
+          headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(commitArchiveRankingPayload)
+        });
+        if (!putArchRankRes.ok) throw new Error("Falha ao criar snapshot do ranking final em " + archiveBasePath);
+
+        // 2.2 Arquiva etapas.json da temporada
+        const archiveEtapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${archiveBasePath}/etapas.json`;
+        let archiveEtapasSha = await getLatestSha(archiveEtapasUrl);
+        const commitArchiveEtapasPayload = {
+          message: `Arquivar histórico de etapas da Temporada #${seasonCurrent}`,
+          content: encodeBase64UTF8(JSON.stringify(currentEtapasList, null, 2)),
+          branch: config.branch
+        };
+        if (archiveEtapasSha) commitArchiveEtapasPayload.sha = archiveEtapasSha;
+        
+        const putArchEtRes = await fetch(archiveEtapasUrl, {
+          method: 'PUT',
+          headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(commitArchiveEtapasPayload)
+        });
+        if (!putArchEtRes.ok) throw new Error("Falha ao criar snapshot das etapas em " + archiveBasePath);
+
+        // 2.3 Cria resumo.json com metadados do fechamento
+        const archiveResumoUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${archiveBasePath}/resumo.json`;
+        let archiveResumoSha = await getLatestSha(archiveResumoUrl);
+        const seasonSummary = {
+          temporada: `Temporada #${seasonCurrent}`,
+          dataEncerramento: new Date().toISOString(),
+          campeao: champName,
+          vice: viceName,
+          deckCampeao: deckName,
+          periodo: monthYear,
+          totalEtapas: currentEtapasList.length,
+          totalJogadores: parseTDF(currentRankingTdf).length
+        };
+        const commitArchiveResumoPayload = {
+          message: `Salvar resumo oficial da Temporada #${seasonCurrent}`,
+          content: encodeBase64UTF8(JSON.stringify(seasonSummary, null, 2)),
+          branch: config.branch
+        };
+        if (archiveResumoSha) commitArchiveResumoPayload.sha = archiveResumoSha;
+        
+        const putArchResumoRes = await fetch(archiveResumoUrl, {
+          method: 'PUT',
+          headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(commitArchiveResumoPayload)
+        });
+        if (!putArchResumoRes.ok) throw new Error("Falha ao criar resumo da temporada em " + archiveBasePath);
+
+        // 3. Atualiza campeoes.json com o novo campeão
+        const newChampionRecord = {
+          "Temporada": `Temporada #${seasonCurrent}`,
+          "Campeao": champName,
+          "Vice": viceName,
+          "DeckCampeao": deckName,
+          "Data": monthYear,
+          "FotoCampeao": "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/571.png",
+          "URLDeck": "",
+          "ImagemDeck": imgDeck || "https://img.mypcards.com/cdn-cgi/image/f=auto,q=85/img/2/2238/pokemon_jtg_098_159/pokemon_jtg_098_159_pt.jpg",
+          "ObservacaoDeck": `Campeão da Temporada #${seasonCurrent} da Liga Atlântica.`
+        };
+        
+        // Remove duplicata prévia da mesma temporada se existir e insere no topo
+        const updatedCampeoesList = [
+          newChampionRecord,
+          ...currentCampeoesList.filter(c => c.Temporada !== `Temporada #${seasonCurrent}`)
+        ];
+        
+        currentCampeoesSha = await getLatestSha(campeoesUrl);
+        const commitCampeoesPayload = {
+          message: `Registrar campeão ${champName} da Temporada #${seasonCurrent} no Hall da Fama`,
+          content: encodeBase64UTF8(JSON.stringify(updatedCampeoesList, null, 2)),
+          branch: config.branch
+        };
+        if (currentCampeoesSha) commitCampeoesPayload.sha = currentCampeoesSha;
+        
+        const putCampRes = await fetch(campeoesUrl, {
+          method: 'PUT',
+          headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(commitCampeoesPayload)
+        });
+        if (!putCampRes.ok) throw new Error("Falha ao atualizar o histórico em campeoes.json");
+
+        // 4. Limpa etapas.json para a nova temporada
+        currentEtapasSha = await getLatestSha(etapasUrl);
+        const commitResetEtapasPayload = {
+          message: `Reiniciar índice etapas.json para a Temporada #${seasonNext}`,
+          content: encodeBase64UTF8(JSON.stringify([], null, 2)),
+          branch: config.branch
+        };
+        if (currentEtapasSha) commitResetEtapasPayload.sha = currentEtapasSha;
+        
+        const resetEtRes = await fetch(etapasUrl, {
+          method: 'PUT',
+          headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(commitResetEtapasPayload)
+        });
+        if (!resetEtRes.ok) throw new Error("Falha ao zerar etapas.json para a nova temporada");
+
+        // 5. Zera ranking.tdf para a nova temporada (mantendo cabeçalho estrutural)
+        const emptyRankingTdf = ['Pos', 'ID', 'Jogador', 'Categoria', 'Pontos', 'Vitorias', 'Empates', 'Derrotas', 'Podio', 'MediaColocacao', 'Participacoes', 'HistoricoColocacoes'].join('\t') + '\n';
+        let currentRankingSha = await getLatestSha(rankingUrl);
+        const commitResetRankingPayload = {
+          message: `Zerar ranking consolidado para o início da Temporada #${seasonNext}`,
+          content: encodeBase64UTF8(emptyRankingTdf),
+          branch: config.branch
+        };
+        if (currentRankingSha) commitResetRankingPayload.sha = currentRankingSha;
+        
+        const resetRkRes = await fetch(rankingUrl, {
+          method: 'PUT',
+          headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(commitResetRankingPayload)
+        });
+        if (!resetRkRes.ok) throw new Error("Falha ao zerar ranking.tdf para a nova temporada");
+
+        succBox.innerHTML = `🎉 <strong>Temporada #${seasonCurrent} encerrada com sucesso!</strong><br>• Snapshot isolado salvo em <code>${archiveBasePath}/</code><br>• Campeão <strong>${escapeHTML(champName)}</strong> registrado no Hall da Fama<br>• Ranking limpo e pronto para a <strong>Temporada #${seasonNext}</strong>!`;
+        succBox.style.display = 'block';
+
+        showSuccess(`🎉 Temporada #${seasonCurrent} encerrada e arquivada com sucesso! O ranking foi preparado para a Temporada #${seasonNext}.`);
+        
+        setTimeout(async () => {
+          closeCloseSeasonModal();
+          await loadAndRenderStages();
+        }, 3000);
+
+      } catch (err) {
+        console.error("Erro ao encerrar temporada:", err);
+        errBox.innerText = "Erro ao encerrar temporada: " + err.message;
+        errBox.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "⚠️ Confirmar e Encerrar Temporada";
       }
     }
 
