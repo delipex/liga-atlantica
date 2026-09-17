@@ -440,15 +440,64 @@ function normalizeCategory(row) {
 
 function getLatestDeckFromRow(row) {
   if (!row) return null;
-  const ignore = ['jogador', 'player', 'nome', 'posicaofinal', 'deck', 'pontos', 'categoria'];
+  const ignore = ['id', 'jogador', 'player', 'nome', 'posicaofinal', 'deck', 'pontos', 'categoria', 'pos', 'standing', 'vitorias', 'empates', 'derrotas', 'v', 'e', 'd', 'podio', 'mediacolocacao', 'participacoes', 'historico', 'historicocolocacoes', 'popid', 'playid'];
   const keys = Object.keys(row).filter(k => !ignore.includes(k.toLowerCase().trim()));
   for (let i = keys.length - 1; i >= 0; i--) {
     const val = row[keys[i]];
-    if (val && typeof val === 'string' && val.trim() !== '') {
+    if (val && typeof val === 'string' && val.trim() !== '' && isNaN(Number(val.trim()))) {
       return val.trim();
     }
   }
   return null;
+}
+
+function getLatestDeckForPlayer(playerName, playerId = '') {
+  const cleanId = String(playerId || '').trim();
+  let officialName = playerName;
+
+  if (cleanId && appData.Jogadores && appData.Jogadores.length > 0) {
+    const dbP = appData.Jogadores.find(j => {
+      const jId = String(j.ID || j.id || j.POPID || j['Player ID'] || j['Play! ID'] || '').trim();
+      return jId && jId === cleanId;
+    });
+    if (dbP && (dbP.Jogador || dbP.jogador || dbP.Name)) {
+      officialName = dbP.Jogador || dbP.jogador || dbP.Name;
+    }
+  }
+
+  // 1. Busca no Metagame pelas etapas mais recentes (ordem cronológica decrescente)
+  const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
+  const reverseStages = [...cleanStages].sort((a, b) => b.data.localeCompare(a.data));
+
+  for (const stg of reverseStages) {
+    const dName = getDeckForStage(officialName, stg.data, cleanId);
+    if (dName && dName.trim() !== '' && dName !== 'Sem deck registrado' && dName !== 'Não registrado' && isNaN(Number(dName))) {
+      return dName.trim();
+    }
+  }
+
+  // 2. Se RawMetagame estiver disponível, busca em ordem reversa de chaves de data
+  if (appData.RawMetagame && typeof appData.RawMetagame === 'object') {
+    const dates = Object.keys(appData.RawMetagame).sort().reverse();
+    const normOfficial = normalizePlayerName(officialName);
+    const normPlayer = normalizePlayerName(playerName);
+
+    for (const d of dates) {
+      const sess = appData.RawMetagame[d];
+      if (sess && sess.decks) {
+        if (sess.decks[officialName] && isNaN(Number(sess.decks[officialName]))) return sess.decks[officialName];
+        if (sess.decks[playerName] && isNaN(Number(sess.decks[playerName]))) return sess.decks[playerName];
+        for (const [pName, deckVal] of Object.entries(sess.decks)) {
+          const pNorm = normalizePlayerName(pName);
+          if ((pNorm === normOfficial || pNorm === normPlayer) && isNaN(Number(deckVal))) {
+            return deckVal;
+          }
+        }
+      }
+    }
+  }
+
+  return 'Sem deck registrado';
 }
 
 function normalizeRanking(rankingRows, partidasRows = [], isStage = false) {
@@ -501,6 +550,18 @@ function normalizeRanking(rankingRows, partidasRows = [], isStage = false) {
       const { v, e, d } = getVED(player);
       const posRaw = player.Pos || player.Posicao || player.Standing || 0;
 
+      // FIRMEZA DE DADOS: Determina o último deck jogado na temporada
+      let assignedDeck = 'Sem deck registrado';
+      if (player.Deck && player.Deck !== 'Não registrado' && player.Deck !== 'Sem deck registrado' && isNaN(Number(player.Deck))) {
+        assignedDeck = player.Deck;
+      } else {
+        assignedDeck = getLatestDeckForPlayer(officialName, officialId);
+        if (assignedDeck === 'Sem deck registrado') {
+          const rowDeck = getLatestDeckFromRow(dbPlayer);
+          if (rowDeck) assignedDeck = rowDeck;
+        }
+      }
+
       return {
         ...player,
         ID: officialId,
@@ -515,7 +576,7 @@ function normalizeRanking(rankingRows, partidasRows = [], isStage = false) {
         Vitorias: v,
         Empates: e,
         Derrotas: d,
-        Deck: player.Deck || dbPlayer.Deck || getLatestDeckFromRow(dbPlayer) || 'Não registrado',
+        Deck: assignedDeck,
         TipoEnergia: safeEnergyClass(player.TipoEnergia || dbPlayer.TipoEnergia),
         PosicaoFinal: dbPlayer.PosicaoFinal ? toNumber(dbPlayer.PosicaoFinal) : null
       };
@@ -1026,14 +1087,14 @@ async function loadData() {
     populateStageSelector();
 
     if (jogadoresSheet && jogadoresSheet.length) appData.Jogadores = jogadoresSheet;
+    appData.Metagame = (metagame && metagame.length) ? metagame : (jogadoresSheet || []);
+    if (decks && decks.length) appData.Decks = decks;
     if (ranking && ranking.length) appData.Ranking = normalizeRanking(ranking, []);
     appData.ScoresAntigos = normalizeHistoricalScores(scoresAntigos || []);
     if (calendario && calendario.length) appData.Calendario = calendario;
     if (campeoes && campeoes.length) appData.Campeoes = campeoes;
     if (regras && regras.length) appData.Regras = regras;
     if (galeria && galeria.length) appData.Galeria = galeria;
-    appData.Metagame = (metagame && metagame.length) ? metagame : (jogadoresSheet || []);
-    if (decks && decks.length) appData.Decks = decks;
 
     isOfflineMode = false;
 
@@ -1227,7 +1288,10 @@ function renderDashboard() {
       podiumContainer.innerHTML = top4.map(player => {
         const letter = player.Jogador ? escapeHTML(player.Jogador.charAt(0).toUpperCase()) : '?';
         const playerName = escapeHTML(player.Jogador);
-        const playerDeck = escapeHTML(player.Deck || 'Sem deck registrado');
+        const resolvedDeck = (player.Deck && player.Deck !== 'Não registrado' && player.Deck !== 'Sem deck registrado' && isNaN(Number(player.Deck)))
+          ? player.Deck
+          : (getLatestDeckForPlayer(player.Jogador, player.ID) || 'Sem deck registrado');
+        const playerDeck = escapeHTML(resolvedDeck);
 
         const cardRank = isFrozenLayout ? (player.PosicaoFinal || player.Pos) : player.Pos;
         
@@ -1263,7 +1327,7 @@ function renderDashboard() {
             <div class="podium-info">
               <div class="podium-player-name">${playerName}</div>
               <div class="podium-deck-info">
-                ${getEnergyDotHTML(getDeckEnergy(player.Deck))}
+                ${getEnergyDotHTML(getDeckEnergy(resolvedDeck))}
                 <span>${playerDeck}</span>
               </div>
             </div>
