@@ -18,3 +18,10 @@ The site agent manages the frontend code inside the `site/` folder:
 ## 3. General Behavioral Rules
 * Respeite estritamente as configurações de planilha (como o pódio `congelado` ou `auto`).
 * Mantenha backups de ranking e utilize scripts de validação de dados para prevenir commits de dados corrompidos.
+
+## 4. Performance & Data Flow Rules (Regras Críticas de Performance e TDFs)
+* **Arquivos TDF Intocáveis**: Os arquivos de etapas em `etapas/*.tdf` são documentos oficiais de origem (TOM). NUNCA altere sua estrutura ou lógica de pontuação própria da Liga.
+* **Firmeza por ID do Jogador**: O ID do jogador (POP ID / TOM ID) é a chave primária imutável. Nomes podem variar entre PCs, mas o ID nunca muda.
+* **Carregamento Sempre Paralelo (`Promise.allSettled`)**: O painel administrativo (`admin.html`) NUNCA deve fazer requisições HTTP sequenciais (`await` em fila) para arquivos JSON. O carregamento deve ser disparado em segundo plano no carregamento da página e em paralelo.
+* **Zero Loops de Espera Bloqueantes**: Nunca utilize laços `while(isFetching)` que possam travar o navegador ou a interface ao manipular arquivos TDF.
+

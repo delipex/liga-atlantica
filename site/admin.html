@@ -8154,6 +8154,9 @@ function doGet(e) {
     // Inicializa os campos e sugestões do evento no carregamento da página
     handleEventTypeChange();
 
+    // Pré-carregamento assíncrono em segundo plano (garante 0ms de espera ao arrastar TDF)
+    ensureSheetsLoaded();
+
     // Carrega a URL do Apps Script salva
     const savedScriptUrl = localStorage.getItem('googleAppsScriptUrl');
     if (savedScriptUrl) {

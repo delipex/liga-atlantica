@@ -1,4 +1,4 @@
-﻿# 📖 Liga Atlântica TCG — Manual Completo de Arquitetura, Regras, Schemas e Conhecimento Mestre
+# 📖 Liga Atlântica TCG — Manual Completo de Arquitetura, Regras, Schemas e Conhecimento Mestre
 
 > **Documento Oficial de Continuidade Técnica e Transferência de Conhecimento para IA**  
 > Este documento consolida 100% do conhecimento, decisões de engenharia, regras de negócio, algoritmos matemáticos, estruturas de dados JSON/TDF e histórico de evolução do ecossistema da **Liga Atlântica TCG**.  
@@ -333,8 +333,12 @@ O leitor processa diretamente a estrutura XML de standings oficiais do TOM:
 ```
 * **Soberania do `place` Oficial:** A colocação do TOM define a posição oficial da etapa, sem recálculos arbitrários que alterem campeões e vices.
 
-### 9.2. Auto-detecção de Datas (`parseTDFDate`)
-Resolve automaticamente o conflito entre o formato americano (`MM/DD/AAAA`) gerado pelo software e o formato brasileiro (`DD/MM/AAAA`).
+### 9.2. Auto-detecção de Datas e Metadados (`parseTDFDate` / `validateTDFMetadata`)
+Resolve automaticamente o conflito entre o formato americano (`MM/DD/AAAA`) gerado pelo software e o formato brasileiro (`DD/MM/AAAA`), sincronizando data, número e tipo de etapa sem falsos avisos.
+
+### 9.3. Carregamento Paralelo e Cache Instantâneo (`Promise.allSettled`)
+* **Pré-carregamento no Boot:** Ao carregar a página do admin, o sistema dispara a busca dos 9 JSONs (`jogadores`, `decks`, `metagame`, `calendario`, `regras`, `galeria`, `config`, `campeoes`, `scores_antigos`) em segundo plano em paralelo.
+* **0ms de Espera ao Arrastar Arquivos:** Quando o organizador solta ou seleciona um `.tdf`, todos os dados de suporte já estão em memória (`isDataLoaded = true`), resultando em resposta visual instantânea (< 50ms) e sem loops de espera (`while`).
 
 ---
 
