@@ -1637,6 +1637,8 @@ function doGet(e) {
       exibirMetagame: "ambos",
       temporadaAtual: 5
     };
+    let isDataLoaded = false;
+    let dataLoadingPromise = null;
     let isFetchingSheets = false;
     let currentAdminTab = 'upload';
     
@@ -1813,46 +1815,44 @@ function doGet(e) {
       }
     }
 
-    // --- Carregamento de Dados (Decks, Metagame, Jogadores, Calendário, Regras, Galeria e Config) ---
-    async function ensureSheetsLoaded() {
-      if (cachedJogadores.length > 0 && cachedDecks.length > 0) return;
-      if (isFetchingSheets) {
-        while (isFetchingSheets) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-        return;
+    // --- Carregamento Paralelo Otimizado de Dados Locais e JSONs ---
+    async function ensureSheetsLoaded(force = false) {
+      if (isDataLoaded && !force) return;
+      if (dataLoadingPromise) {
+        return await dataLoadingPromise;
       }
       
-      isFetchingSheets = true;
-      try {
-        console.log("Carregando arquivos JSON locais e estáticos...");
-        
-        // 1. Carrega jogadores.json
+      dataLoadingPromise = (async () => {
+        isFetchingSheets = true;
         try {
-          const jogRes = await fetch(`jogadores.json?v=${new Date().getTime()}`);
-          if (jogRes.ok) {
-            cachedJogadores = await jogRes.json();
-          }
-        } catch (e) {
-          console.warn("Falha ao carregar jogadores.json:", e);
-        }
+          const timestamp = new Date().getTime();
+          const endpoints = [
+            { name: 'jogadores', url: `jogadores.json?v=${timestamp}` },
+            { name: 'decks', url: `decks.json?v=${timestamp}` },
+            { name: 'metagame', url: `metagame.json?v=${timestamp}` },
+            { name: 'calendario', url: `calendario.json?v=${timestamp}` },
+            { name: 'regras', url: `regras.json?v=${timestamp}` },
+            { name: 'galeria', url: `galeria.json?v=${timestamp}` },
+            { name: 'config', url: `config.json?v=${timestamp}` },
+            { name: 'campeoes', url: `campeoes.json?v=${timestamp}` },
+            { name: 'scores_antigos', url: `scores_antigos.json?v=${timestamp}` }
+          ];
 
-        // 2. Carrega decks.json
-        try {
-          const decksRes = await fetch(`decks.json?v=${new Date().getTime()}`);
-          if (decksRes.ok) {
-            cachedDecks = await decksRes.json();
-          }
-        } catch (e) {
-          console.warn("Falha ao carregar decks.json:", e);
-        }
+          const responses = await Promise.allSettled(
+            endpoints.map(ep => fetch(ep.url).then(r => r.ok ? r.json() : Promise.reject(`Status ${r.status}`)))
+          );
 
-        // 3. Carrega metagame.json
-        try {
-          const metaRes = await fetch(`metagame.json?v=${new Date().getTime()}`);
-          if (metaRes.ok) {
-            cachedMetagameData = await metaRes.json();
-            
+          // 1. Jogadores
+          if (responses[0].status === 'fulfilled' && Array.isArray(responses[0].value)) {
+            cachedJogadores = responses[0].value;
+          }
+          // 2. Decks
+          if (responses[1].status === 'fulfilled' && Array.isArray(responses[1].value)) {
+            cachedDecks = responses[1].value;
+          }
+          // 3. Metagame
+          if (responses[2].status === 'fulfilled' && responses[2].value) {
+            cachedMetagameData = responses[2].value;
             const playerRowsMap = new Map();
             Object.entries(cachedMetagameData || {}).forEach(([isoDate, sessionObj]) => {
               const sessionCode = sessionObj.sessionCode || isoDate;
@@ -1867,82 +1867,47 @@ function doGet(e) {
             });
             cachedMetagame = Array.from(playerRowsMap.values());
           }
-        } catch (e) {
-          console.warn("Falha ao carregar metagame.json:", e);
-        }
-
-        // 4. Carrega calendario.json
-        try {
-          const calRes = await fetch(`calendario.json?v=${new Date().getTime()}`);
-          if (calRes.ok) {
-            cachedCalendario = await calRes.json();
+          // 4. Calendario
+          if (responses[3].status === 'fulfilled' && Array.isArray(responses[3].value)) {
+            cachedCalendario = responses[3].value;
           }
-        } catch (e) {
-          console.warn("Falha ao carregar calendario.json:", e);
-        }
-
-        // 5. Carrega regras.json
-        try {
-          const regRes = await fetch(`regras.json?v=${new Date().getTime()}`);
-          if (regRes.ok) {
-            cachedRegras = await regRes.json();
+          // 5. Regras
+          if (responses[4].status === 'fulfilled' && Array.isArray(responses[4].value)) {
+            cachedRegras = responses[4].value;
           }
-        } catch (e) {
-          console.warn("Falha ao carregar regras.json:", e);
-        }
-
-        // 6. Carrega galeria.json
-        try {
-          const galRes = await fetch(`galeria.json?v=${new Date().getTime()}`);
-          if (galRes.ok) {
-            cachedGaleria = await galRes.json();
+          // 6. Galeria
+          if (responses[5].status === 'fulfilled' && Array.isArray(responses[5].value)) {
+            cachedGaleria = responses[5].value;
           }
-        } catch (e) {
-          console.warn("Falha ao carregar galeria.json:", e);
-        }
-
-        // 7. Carrega config.json
-        try {
-          const confRes = await fetch(`config.json?v=${new Date().getTime()}`);
-          if (confRes.ok) {
-            cachedConfig = await confRes.json();
+          // 7. Config
+          if (responses[6].status === 'fulfilled' && responses[6].value) {
+            cachedConfig = responses[6].value;
           }
-        } catch (e) {
-          console.warn("Falha ao carregar config.json:", e);
-        }
-
-        // 8. Carrega campeoes.json
-        try {
-          const campRes = await fetch(`campeoes.json?v=${new Date().getTime()}`);
-          if (campRes.ok) {
-            cachedCampeoes = await campRes.json();
+          // 8. Campeoes
+          if (responses[7].status === 'fulfilled' && Array.isArray(responses[7].value)) {
+            cachedCampeoes = responses[7].value;
           }
-        } catch (e) {
-          console.warn("Falha ao carregar campeoes.json:", e);
-        }
-
-        // 9. Carrega scores_antigos.json
-        try {
-          const scRes = await fetch(`scores_antigos.json?v=${new Date().getTime()}`);
-          if (scRes.ok) {
-            cachedScoresAntigos = await scRes.json();
+          // 9. Scores Antigos
+          if (responses[8].status === 'fulfilled' && Array.isArray(responses[8].value)) {
+            cachedScoresAntigos = responses[8].value;
           }
-        } catch (e) {
-          console.warn("Falha ao carregar scores_antigos.json:", e);
-        }
 
-        // Fallback: se cachedJogadores ainda estiver vazio, tenta extrair de cachedMetagame
-        if (!cachedJogadores || !cachedJogadores.length) {
-          if (cachedMetagame && cachedMetagame.length) cachedJogadores = cachedMetagame;
-        }
+          if (!cachedJogadores || !cachedJogadores.length) {
+            if (cachedMetagame && cachedMetagame.length) cachedJogadores = cachedMetagame;
+          }
 
-        renderDeckDatalist();
-        console.log(`Dados carregados: ${cachedJogadores.length} jogadores, ${cachedDecks.length} decks, ${cachedCalendario.length} eventos, ${cachedRegras.length} regras, ${cachedGaleria.length} fotos, ${cachedCampeoes.length} campeões, ${cachedScoresAntigos.length} scores antigos.`);
-      } catch (err) {
-        console.error("Erro geral em ensureSheetsLoaded:", err);
-      } finally {
-        isFetchingSheets = false;
-      }
+          renderDeckDatalist();
+          isDataLoaded = true;
+          console.log(`Dados carregados instantaneamente: ${cachedJogadores.length} jogadores, ${cachedDecks.length} decks, ${cachedCalendario.length} eventos, ${cachedRegras.length} regras, ${cachedGaleria.length} fotos, ${cachedCampeoes.length} campeões, ${cachedScoresAntigos.length} scores antigos.`);
+        } catch (err) {
+          console.error("Erro no carregamento paralelo:", err);
+        } finally {
+          isFetchingSheets = false;
+          dataLoadingPromise = null;
+        }
+      })();
+
+      return await dataLoadingPromise;
     }
 
     // --- Lógica de Similaridade de Strings (Levenshtein) ---
@@ -2514,16 +2479,8 @@ function doGet(e) {
       let hasWarning = false;
       let warningMsg = '';
 
-      if (dateInfo) {
-        if (!dateInput.value) {
-          dateInput.value = dateInfo.iso;
-        } else {
-          const matches = dateInfo.possibleISOs.includes(dateInput.value);
-          if (!matches) {
-            hasWarning = true;
-            warningMsg += `• Data no formulário (${formatDateISOToPT(dateInput.value)}) difere da data do arquivo (${dateInfo.pt || meta.date}).<br>`;
-          }
-        }
+      if (dateInfo && dateInfo.iso) {
+        dateInput.value = dateInfo.iso;
       }
 
       let fileNumber = null;
@@ -2543,56 +2500,32 @@ function doGet(e) {
       }
 
       if (fileNumber !== null) {
-        if (!numberInput.value || numberInput.value === '1') {
-          numberInput.value = fileNumber;
-        } else if (parseInt(numberInput.value, 10) !== fileNumber) {
-          hasWarning = true;
-          warningMsg += `• Número no formulário (${numberInput.value}) difere do número no arquivo (#${fileNumber}).<br>`;
-        }
+        numberInput.value = fileNumber;
       }
 
       if (fileType) {
-        const currentType = document.getElementById('event-type').value;
-        if (currentType !== fileType) {
-          if (currentType === 'Liga' && (fileType === 'Cup' || fileType === 'Challenge')) {
-            if (window.selectEventType) window.selectEventType(fileType);
-          } else {
-            hasWarning = true;
-            warningMsg += `• Tipo de evento selecionado (${currentType}) difere do tipo no arquivo (${fileType}).<br>`;
-          }
+        if (window.selectEventType) {
+          window.selectEventType(fileType);
+        } else {
+          const typeSelect = document.getElementById('event-type');
+          if (typeSelect) typeSelect.value = fileType;
+          if (typeof handleEventTypeChange === 'function') handleEventTypeChange();
         }
       }
 
       fileInfoDiv.style.display = 'block';
       const displayDate = dateInfo ? dateInfo.pt : meta.date;
-      if (hasWarning) {
-        fileInfoDiv.style.background = 'rgba(245, 158, 11, 0.08)';
-        fileInfoDiv.style.borderColor = 'rgba(245, 158, 11, 0.25)';
-        fileInfoDiv.style.color = '#fbbf24';
-        fileInfoDiv.innerHTML = `
-          <div style="font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-            ⚠️ Divergência de Configuração Encontrada!
-          </div>
-          <div style="font-size: 0.8rem; line-height: 1.4; margin-bottom: 8px;">
-            ${warningMsg}
-          </div>
-          <div style="font-size: 0.75rem; color: var(--text-secondary); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px;">
-            📄 <strong>Info do Arquivo:</strong> ${escapeHTML(meta.name)} (${displayDate})
-          </div>
-        `;
-      } else {
-        fileInfoDiv.style.background = 'rgba(16, 185, 129, 0.08)';
-        fileInfoDiv.style.borderColor = 'rgba(16, 185, 129, 0.25)';
-        fileInfoDiv.style.color = '#34d399';
-        fileInfoDiv.innerHTML = `
-          <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-            ✨ Arquivo validado com sucesso!
-          </div>
-          <div style="font-size: 0.8rem; line-height: 1.4;">
-            📅 Data: <strong>${displayDate}</strong> &nbsp;|&nbsp; 🏆 Torneio: <strong>${escapeHTML(meta.name)}</strong>
-          </div>
-        `;
-      }
+      fileInfoDiv.style.background = 'rgba(16, 185, 129, 0.08)';
+      fileInfoDiv.style.borderColor = 'rgba(16, 185, 129, 0.25)';
+      fileInfoDiv.style.color = '#34d399';
+      fileInfoDiv.innerHTML = `
+        <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+          ✨ Arquivo TDF carregado e detectado com sucesso!
+        </div>
+        <div style="font-size: 0.8rem; line-height: 1.4;">
+          📅 Data: <strong>${displayDate}</strong> &nbsp;|&nbsp; 🏆 Torneio: <strong>${escapeHTML(meta.name)}</strong>
+        </div>
+      `;
 
       if (typeof handleEventTypeChange === 'function') {
         handleEventTypeChange();
@@ -3108,10 +3041,10 @@ function doGet(e) {
       // Exibe indicador de carregamento na área de pré-visualização
       const previewSection = document.getElementById('preview-section');
       const tbody = document.getElementById('preview-tbody');
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem;">⏳ Carregando dados da planilha do Google Sheets...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem;">⏳ Processando jogadores e classificações do torneio...</td></tr>`;
       previewSection.style.display = 'block';
 
-      // Garante carregamento das planilhas
+      // Garante carregamento dos dados locais
       await ensureSheetsLoaded();
 
       // Verifica se o banco de dados de jogadores está disponível
@@ -3182,14 +3115,15 @@ function doGet(e) {
         
         renderNameResolutionUI();
       } else {
-        // Fallback: Planilha indisponível
-        console.warn("Sem banco de dados de jogadores (Google Sheets inacessível). Prosseguindo sem validação de nomes.");
-        showError("Aviso: Não foi possível conectar ao Google Sheets para validar nomes e decks. O envio prosseguirá com os dados originais do arquivo.");
+        console.warn("Sem banco de dados local pré-carregado. Prosseguindo com dados do arquivo.");
         document.getElementById('name-resolution-section').style.display = 'none';
         document.getElementById('new-players-section').style.display = 'none';
       }
 
       renderEnrichedPreview();
+      if (unresolvedPlayers.length === 0) {
+        runValidation();
+      }
     }
 
     function renderNameResolutionUI() {
