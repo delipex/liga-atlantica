@@ -2525,9 +2525,9 @@ function doGet(e) {
 
       const previewSection = document.getElementById('preview-section');
       const tbody = document.getElementById('preview-tbody');
+      if (previewSection) previewSection.style.display = 'block';
       if (files.length > 1) {
         tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 1rem;">⏳ Unindo ${files.length} categorias/arquivos da mesma etapa...</td></tr>`;
-        previewSection.style.display = 'block';
       }
 
       const filePromises = Array.from(files).map(file => {
@@ -3114,14 +3114,6 @@ function doGet(e) {
         
         const previewSec = document.getElementById('preview-section');
         if (previewSec) previewSec.style.display = 'block';
-
-        if (unresolvedPlayers.length === 0) {
-          try {
-            runValidation();
-          } catch (valErr) {
-            console.warn("Aviso na auto-validação:", valErr);
-          }
-        }
       } catch (err) {
         console.error("Erro em processTDFText:", err);
         showError("Erro ao processar dados da etapa: " + err.message);
