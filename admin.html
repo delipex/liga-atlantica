@@ -2526,11 +2526,9 @@ function doGet(e) {
       const previewSection = document.getElementById('preview-section');
       const tbody = document.getElementById('preview-tbody');
       if (files.length > 1) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 1.5rem;">⏳ Unindo ${files.length} categorias/arquivos da mesma etapa...</td></tr>`;
-      } else {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 1.5rem;">⏳ Lendo arquivo da etapa...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 1rem;">⏳ Unindo ${files.length} categorias/arquivos da mesma etapa...</td></tr>`;
+        previewSection.style.display = 'block';
       }
-      previewSection.style.display = 'block';
 
       const filePromises = Array.from(files).map(file => {
         return new Promise((resolve, reject) => {
@@ -2590,9 +2588,9 @@ function doGet(e) {
         const consolidatedText = parsePlayersToTDFString(allPlayers);
         document.getElementById('raw-input').value = consolidatedText;
         await processTDFText(consolidatedText);
-        showSuccess(`Consolidado com sucesso: ${fileContents.length} arquivos combinados em uma única etapa!`);
       } catch (err) {
-        showError("Erro ao ler ou consolidar arquivos: " + err.message);
+        console.error("Erro em handleMultipleFiles:", err);
+        showError("Erro ao ler arquivos: " + err.message);
       }
     }
 
@@ -3002,119 +3000,131 @@ function doGet(e) {
         return;
       }
       
-      const players = parseTDF(text);
-      if (players.length === 0) {
-        showError("Formato inválido. O arquivo precisa conter o cabeçalho e pelo menos 1 linha de dados.");
-        document.getElementById('preview-section').style.display = 'none';
-        document.getElementById('name-resolution-section').style.display = 'none';
-        document.getElementById('new-players-section').style.display = 'none';
-        return;
-      }
-      
-      const firstPlayer = players[0];
-      const nameFields = ['Jogador', 'Player', 'Name', 'Nome', 'Treinador', 'Player Name', 'Nome do Jogador'];
-      const pointsFields = ['Pontos', 'Points', 'Pts', 'Pontuacao', 'Pontuação', 'Ptos', 'Score', 'Pontos Totais'];
-      
-      const hasName = getFirstDefined(firstPlayer, nameFields) !== undefined;
-      const hasPoints = getFirstDefined(firstPlayer, pointsFields) !== undefined;
-      
-      if (!hasName || !hasPoints) {
-        showError(`O arquivo TDF está sem as colunas obrigatórias de Jogador/Nome e Pontos. Certifique-se de que a primeira linha contém os nomes corretos separados por tabulações ou ponto e vírgula.`);
-        document.getElementById('preview-section').style.display = 'none';
-        document.getElementById('name-resolution-section').style.display = 'none';
-        document.getElementById('new-players-section').style.display = 'none';
-        return;
-      }
-
-      currentRawPlayers = players;
-      unresolvedPlayers = [];
-      hideAlerts();
-
-      // Exibe indicador de carregamento na área de pré-visualização
-      const previewSection = document.getElementById('preview-section');
-      const tbody = document.getElementById('preview-tbody');
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem;">⏳ Processando jogadores e classificações do torneio...</td></tr>`;
-      previewSection.style.display = 'block';
-
-      // Garante carregamento dos dados locais
-      await ensureSheetsLoaded();
-
-      // Verifica se o banco de dados de jogadores está disponível
-      if (cachedJogadores && cachedJogadores.length > 0) {
-        const dbNamesNormalized = cachedJogadores.map(j => normalizePlayerName(j.Jogador || j.Name));
+      try {
+        const players = parseTDF(text);
+        if (players.length === 0) {
+          showError("Formato inválido. O arquivo precisa conter o cabeçalho e pelo menos 1 linha de dados.");
+          document.getElementById('preview-section').style.display = 'none';
+          document.getElementById('name-resolution-section').style.display = 'none';
+          document.getElementById('new-players-section').style.display = 'none';
+          return;
+        }
         
-        // Encontra jogadores do arquivo que não estão no banco (e não puderam ser resolvidos por ID)
-        const detectedUnresolved = [];
-        players.forEach(p => {
-          const rawName = getFirstDefined(p, nameFields) || '';
-          if (rawName) {
-            const normName = normalizePlayerName(rawName);
-            
-            // Tenta correspondência por ID primeiro
-            const tId = getPlayerId(p);
-            let resolvedById = null;
-            
-            if (tId !== undefined && tId !== '') {
-              resolvedById = cachedJogadores.find(dbPlayer => {
-                const dbId = getPlayerId(dbPlayer);
-                return dbId !== undefined && dbId !== '' && String(dbId).trim() === String(tId).trim();
-              });
-            }
-            
-            if (resolvedById) {
-              // Se encontrou por ID, já mapeia no resolvedNamesMap!
-              resolvedNamesMap[rawName] = resolvedById.Jogador || resolvedById.Name;
-            } else {
-              // Se não encontrou por ID, verifica pelo nome normalizado
-              if (!dbNamesNormalized.includes(normName)) {
-                if (!detectedUnresolved.includes(rawName)) {
-                  detectedUnresolved.push(rawName);
+        const firstPlayer = players[0];
+        const nameFields = ['Jogador', 'Player', 'Name', 'Nome', 'Treinador', 'Player Name', 'Nome do Jogador'];
+        const pointsFields = ['Pontos', 'Points', 'Pts', 'Pontuacao', 'Pontuação', 'Ptos', 'Score', 'Pontos Totais'];
+        
+        const hasName = getFirstDefined(firstPlayer, nameFields) !== undefined;
+        const hasPoints = getFirstDefined(firstPlayer, pointsFields) !== undefined;
+        
+        if (!hasName || !hasPoints) {
+          showError(`O arquivo TDF está sem as colunas obrigatórias de Jogador/Nome e Pontos. Certifique-se de que a primeira linha contém os nomes corretos separados por tabulações ou ponto e vírgula.`);
+          document.getElementById('preview-section').style.display = 'none';
+          document.getElementById('name-resolution-section').style.display = 'none';
+          document.getElementById('new-players-section').style.display = 'none';
+          return;
+        }
+
+        currentRawPlayers = players;
+        unresolvedPlayers = [];
+        hideAlerts();
+
+        try {
+          await ensureSheetsLoaded();
+        } catch (loadErr) {
+          console.warn("Aviso ao carregar dados locais de apoio:", loadErr);
+        }
+
+        // Verifica se o banco de dados de jogadores está disponível
+        if (cachedJogadores && cachedJogadores.length > 0) {
+          const dbNamesNormalized = cachedJogadores.map(j => normalizePlayerName(j.Jogador || j.Name));
+          
+          // Encontra jogadores do arquivo que não estão no banco (e não puderam ser resolvidos por ID)
+          const detectedUnresolved = [];
+          players.forEach(p => {
+            const rawName = getFirstDefined(p, nameFields) || '';
+            if (rawName) {
+              const normName = normalizePlayerName(rawName);
+              
+              // Tenta correspondência por ID primeiro
+              const tId = getPlayerId(p);
+              let resolvedById = null;
+              
+              if (tId !== undefined && tId !== '') {
+                resolvedById = cachedJogadores.find(dbPlayer => {
+                  const dbId = getPlayerId(dbPlayer);
+                  return dbId !== undefined && dbId !== '' && String(dbId).trim() === String(tId).trim();
+                });
+              }
+              
+              if (resolvedById) {
+                // Se encontrou por ID, já mapeia no resolvedNamesMap!
+                resolvedNamesMap[rawName] = resolvedById.Jogador || resolvedById.Name;
+              } else {
+                // Se não encontrou por ID, verifica pelo nome normalizado
+                if (!dbNamesNormalized.includes(normName)) {
+                  if (!detectedUnresolved.includes(rawName)) {
+                    detectedUnresolved.push(rawName);
+                  }
                 }
               }
             }
-          }
-        });
-        
-        unresolvedPlayers = detectedUnresolved;
-        
-        // Limpa e atualiza resolvedNamesMap preservando as resoluções da sessão atual
-        const oldMap = { ...resolvedNamesMap };
-        resolvedNamesMap = {};
-        
-        // Primeiro, mapeia as resoluções por ID de novo para garantir
-        players.forEach(p => {
-          const rawName = getFirstDefined(p, nameFields) || '';
-          if (rawName) {
-            const tId = getPlayerId(p);
-            if (tId !== undefined && tId !== '') {
-              const resolvedById = cachedJogadores.find(dbPlayer => {
-                const dbId = getPlayerId(dbPlayer);
-                return dbId !== undefined && dbId !== '' && String(dbId).trim() === String(tId).trim();
-              });
-              if (resolvedById) {
-                resolvedNamesMap[rawName] = resolvedById.Jogador || resolvedById.Name;
+          });
+          
+          unresolvedPlayers = detectedUnresolved;
+          
+          // Limpa e atualiza resolvedNamesMap preservando as resoluções da sessão atual
+          const oldMap = { ...resolvedNamesMap };
+          resolvedNamesMap = {};
+          
+          // Primeiro, mapeia as resoluções por ID de novo para garantir
+          players.forEach(p => {
+            const rawName = getFirstDefined(p, nameFields) || '';
+            if (rawName) {
+              const tId = getPlayerId(p);
+              if (tId !== undefined && tId !== '') {
+                const resolvedById = cachedJogadores.find(dbPlayer => {
+                  const dbId = getPlayerId(dbPlayer);
+                  return dbId !== undefined && dbId !== '' && String(dbId).trim() === String(tId).trim();
+                });
+                if (resolvedById) {
+                  resolvedNamesMap[rawName] = resolvedById.Jogador || resolvedById.Name;
+                }
               }
             }
-          }
-        });
-        
-        // Em seguida, recupera as seleções manuais salvas
-        unresolvedPlayers.forEach(name => {
-          if (oldMap[name]) {
-            resolvedNamesMap[name] = oldMap[name];
-          }
-        });
-        
-        renderNameResolutionUI();
-      } else {
-        console.warn("Sem banco de dados local pré-carregado. Prosseguindo com dados do arquivo.");
-        document.getElementById('name-resolution-section').style.display = 'none';
-        document.getElementById('new-players-section').style.display = 'none';
-      }
+          });
+          
+          // Em seguida, recupera as seleções manuais salvas
+          unresolvedPlayers.forEach(name => {
+            if (oldMap[name]) {
+              resolvedNamesMap[name] = oldMap[name];
+            }
+          });
+          
+          renderNameResolutionUI();
+        } else {
+          console.warn("Sem banco de dados local pré-carregado. Prosseguindo com dados do arquivo.");
+          const resSec = document.getElementById('name-resolution-section');
+          if (resSec) resSec.style.display = 'none';
+          const npSec = document.getElementById('new-players-section');
+          if (npSec) npSec.style.display = 'none';
+        }
 
-      renderEnrichedPreview();
-      if (unresolvedPlayers.length === 0) {
-        runValidation();
+        renderEnrichedPreview();
+        
+        const previewSec = document.getElementById('preview-section');
+        if (previewSec) previewSec.style.display = 'block';
+
+        if (unresolvedPlayers.length === 0) {
+          try {
+            runValidation();
+          } catch (valErr) {
+            console.warn("Aviso na auto-validação:", valErr);
+          }
+        }
+      } catch (err) {
+        console.error("Erro em processTDFText:", err);
+        showError("Erro ao processar dados da etapa: " + err.message);
       }
     }
 
