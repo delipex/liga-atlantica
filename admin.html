@@ -363,6 +363,10 @@
       </button>
     </div>
 
+    <!-- Alertas Globais do Painel -->
+    <div class="alert-box alert-success" id="general-success" style="display: none; margin-bottom: 1.5rem;"></div>
+    <div class="alert-box alert-error" id="general-error" style="display: none; margin-bottom: 1.5rem;"></div>
+
     <!-- Datalist global com todos os decks para autocompletar instantâneo -->
     <datalist id="all-decks-datalist">
       <!-- Preenchido dinamicamente via JS -->
@@ -1832,7 +1836,21 @@ function doGet(e) {
 
           // 1. Jogadores
           if (responses[0].status === 'fulfilled' && Array.isArray(responses[0].value)) {
-            cachedJogadores = responses[0].value;
+            cachedJogadores = responses[0].value.map(j => {
+              const name = j.Jogador || j.jogador || j.Name || j.name || '';
+              const id = String(j.ID ?? j.id ?? j.popid ?? j.POPID ?? '').trim();
+              const cat = j.Categoria || j.categoria || j.category || 'Master';
+              return {
+                ...j,
+                Jogador: name,
+                jogador: name,
+                ID: id,
+                id: id,
+                Categoria: cat,
+                categoria: cat,
+                posicaoFinal: j.posicaoFinal ?? j.PosicaoFinal ?? ''
+              };
+            });
           }
           // 2. Decks
           if (responses[1].status === 'fulfilled' && Array.isArray(responses[1].value)) {
@@ -1848,7 +1866,7 @@ function doGet(e) {
               Object.entries(decksMap).forEach(([playerName, deckName]) => {
                 const key = String(playerName).trim().toLowerCase();
                 if (!playerRowsMap.has(key)) {
-                  playerRowsMap.set(key, { Jogador: playerName });
+                  playerRowsMap.set(key, { Jogador: playerName, jogador: playerName });
                 }
                 playerRowsMap.get(key)[sessionCode] = deckName;
               });
@@ -1881,7 +1899,20 @@ function doGet(e) {
           }
 
           if (!cachedJogadores || !cachedJogadores.length) {
-            if (cachedMetagame && cachedMetagame.length) cachedJogadores = cachedMetagame;
+            if (cachedMetagame && cachedMetagame.length) {
+              cachedJogadores = cachedMetagame.map(j => {
+                const name = j.Jogador || j.jogador || j.Name || j.name || '';
+                return {
+                  ...j,
+                  Jogador: name,
+                  jogador: name,
+                  ID: String(j.ID ?? j.id ?? '').trim(),
+                  id: String(j.ID ?? j.id ?? '').trim(),
+                  Categoria: j.Categoria || j.categoria || 'Master',
+                  categoria: j.Categoria || j.categoria || 'Master'
+                };
+              });
+            }
           }
 
           renderDeckDatalist();
@@ -1956,7 +1987,7 @@ function doGet(e) {
       const candidates = [];
       
       for (const dbPlayer of dbPlayers) {
-        const dbName = dbPlayer.Jogador || dbPlayer.Name || '';
+        const dbName = dbPlayer.Jogador || dbPlayer.jogador || dbPlayer.Name || dbPlayer.name || '';
         if (!dbName) continue;
         const normDb = normalizePlayerName(dbName);
         
@@ -2110,8 +2141,22 @@ function doGet(e) {
       }
       const validateBtn = document.getElementById('btn-validate');
       const publishBtn = document.getElementById('btn-publish');
-      if (validateBtn) validateBtn.style.display = 'block';
-      if (publishBtn) publishBtn.style.display = 'none';
+      if (validateBtn) {
+        validateBtn.style.display = 'block';
+        validateBtn.disabled = false;
+        validateBtn.innerText = "🔍 Validar Dados do Arquivo";
+        validateBtn.style.background = "#2563eb";
+        validateBtn.style.borderColor = "#2563eb";
+        validateBtn.style.color = "#fff";
+      }
+      if (publishBtn) {
+        publishBtn.style.display = 'block';
+        publishBtn.disabled = false;
+        publishBtn.innerText = "🚀 Publicar Ranking e Salvar Metagame no Site";
+        publishBtn.style.background = "var(--accent-yellow)";
+        publishBtn.style.borderColor = "var(--accent-yellow)";
+        publishBtn.style.color = "#000";
+      }
     }
 
     function runValidation() {
@@ -2120,26 +2165,26 @@ function doGet(e) {
       const eventDate = document.getElementById('event-date').value;
       if (!eventDate) {
         showError("Erro de Validação: Selecione a data do evento!");
-        return;
+        const dateInput = document.getElementById('event-date');
+        if (dateInput) dateInput.focus();
+        return false;
       }
 
-      if (!activeContent) {
+      if (!activeContent || !currentRawPlayers || currentRawPlayers.length === 0) {
         showError("Erro de Validação: Nenhum arquivo carregado ou dados vazios!");
-        return;
+        return false;
       }
 
-      // Verifica nomes não resolvidos
-      const unresolvedCount = unresolvedPlayers.filter(name => !resolvedNamesMap[name]).length;
-      if (unresolvedCount > 0) {
-        showError(`Erro de Validação: Existem ${unresolvedCount} nomes não cadastrados/não resolvidos na planilha. Por favor, associe cada um abaixo antes de validar.`);
-        const resSection = document.getElementById('name-resolution-section');
-        if (resSection) resSection.scrollIntoView({ behavior: 'smooth' });
-        return;
-      }
+      // Garante que nomes não resolvidos tenham pelo menos 'new_player' como fallback
+      unresolvedPlayers.forEach(name => {
+        if (!resolvedNamesMap[name]) {
+          resolvedNamesMap[name] = 'new_player';
+        }
+      });
 
       // Verifica se existem nomes duplicados na tabela
       const namesList = currentRawPlayers.map(p => {
-        const rawName = getFirstDefined(p, ['Jogador', 'Player', 'Name', 'Nome']) || '';
+        const rawName = getFirstDefined(p, ['Jogador', 'jogador', 'Player', 'Name', 'Nome']) || '';
         const resolution = resolvedNamesMap[rawName];
         return (resolution && resolution !== 'new_player') ? resolution : rawName;
       }).filter(n => n !== '');
@@ -2147,7 +2192,7 @@ function doGet(e) {
       const duplicates = namesList.filter((item, index) => namesList.indexOf(item) !== index);
       if (duplicates.length > 0) {
         showError(`Erro de Validação: O arquivo contém jogadores duplicados após resolução de nomes: ${Array.from(new Set(duplicates)).join(', ')}.`);
-        return;
+        return false;
       }
 
       // Validação passou com sucesso!
@@ -2165,17 +2210,25 @@ function doGet(e) {
       // Altera a exibição dos botões
       const validateBtn = document.getElementById('btn-validate');
       const publishBtn = document.getElementById('btn-publish');
-      if (validateBtn) validateBtn.style.display = 'none';
+      if (validateBtn) {
+        validateBtn.style.display = 'block';
+        validateBtn.disabled = false;
+        validateBtn.innerText = "✓ Dados Validados com Sucesso";
+        validateBtn.style.background = "rgba(16, 185, 129, 0.2)";
+        validateBtn.style.borderColor = "rgba(16, 185, 129, 0.4)";
+        validateBtn.style.color = "#10b981";
+      }
       if (publishBtn) {
         publishBtn.style.display = 'block';
         publishBtn.disabled = false;
-        publishBtn.innerText = "🚀 Publicar Ranking no Site";
+        publishBtn.innerText = "🚀 Publicar Ranking e Salvar Metagame no Site";
         publishBtn.style.background = "var(--accent-yellow)";
         publishBtn.style.borderColor = "var(--accent-yellow)";
         publishBtn.style.color = "#000";
       }
 
       showSuccess("✓ Sucesso! O arquivo foi verificado e validado com sucesso. Pronto para publicação.");
+      return true;
     }
 
     function handleDateChange() {
@@ -2568,20 +2621,31 @@ function doGet(e) {
           return;
         }
 
-        // Ordenação estrita respeitando a colocação oficial (Pos / MediaColocacao) do TOM
+        // Ordenação estrita oficial: Pontos DESC > Vitorias DESC > OMW DESC > Colocação Oficial ASC
         allPlayers.sort((a, b) => {
-          const posA = Number(a.Pos || a.MediaColocacao) || 999;
-          const posB = Number(b.Pos || b.MediaColocacao) || 999;
-          if (posA !== posB) return posA - posB;
           const ptsA = Number(a.Pontos) || 0;
           const ptsB = Number(b.Pontos) || 0;
           if (ptsB !== ptsA) return ptsB - ptsA;
-          return Number(b.Vitorias || 0) - Number(a.Vitorias || 0);
+
+          const vA = Number(a.Vitorias) || 0;
+          const vB = Number(b.Vitorias) || 0;
+          if (vB !== vA) return vB - vA;
+
+          const omwA = Number(a.omw) || 0;
+          const omwB = Number(b.omw) || 0;
+          if (Math.abs(omwB - omwA) > 0.0001) return omwB - omwA;
+
+          const posA = Number(a.Pos || a.MediaColocacao) || 999;
+          const posB = Number(b.Pos || b.MediaColocacao) || 999;
+          if (posA !== posB) return posA - posB;
+
+          return (a.Jogador || '').localeCompare(b.Jogador || '', 'pt-BR');
         });
 
         // Reatribuição do Rank unificado e pódio
         allPlayers.forEach((p, idx) => {
           p.Pos = idx + 1;
+          p.MediaColocacao = idx + 1;
           p.Podio = (p.Pos <= 4 && !p.isDnf) ? 1 : 0;
         });
 
@@ -2635,9 +2699,18 @@ function doGet(e) {
     }
 
     function getFirstDefined(row, fieldNames) {
+      if (!row) return undefined;
       for (const fieldName of fieldNames) {
-        if (row && row[fieldName] !== undefined && row[fieldName] !== '') {
+        if (row[fieldName] !== undefined && row[fieldName] !== '') {
           return row[fieldName];
+        }
+      }
+      const rowKeys = Object.keys(row);
+      for (const fieldName of fieldNames) {
+        const lower = fieldName.toLowerCase();
+        const matchedKey = rowKeys.find(k => k.toLowerCase() === lower);
+        if (matchedKey && row[matchedKey] !== undefined && row[matchedKey] !== '') {
+          return row[matchedKey];
         }
       }
       return undefined;
@@ -2687,13 +2760,13 @@ function doGet(e) {
     function parseTDF(tdfText) {
       if (!tdfText || !tdfText.trim()) return [];
       
-      const trimmedText = tdfText.trim();
+      const cleanText = (tdfText || '').replace(/^\ufeff/, '').trim();
       
       // Detect XML format
-      if (trimmedText.startsWith('<?xml') || trimmedText.includes('<tournament')) {
+      if (cleanText.startsWith('<?xml') || cleanText.includes('<tournament')) {
         try {
           const parser = new DOMParser();
-          const xmlDoc = parser.parseFromString(trimmedText, "text/xml");
+          const xmlDoc = parser.parseFromString(cleanText, "text/xml");
           
           // Get all players details under <players>
           const playersMap = new Map(); // userid -> { name, birthdate }
@@ -2705,9 +2778,13 @@ function doGet(e) {
               const userid = node.getAttribute("userid");
               const firstname = node.getElementsByTagName("firstname")[0]?.textContent || "";
               const lastname = node.getElementsByTagName("lastname")[0]?.textContent || "";
+              let fullName = `${firstname} ${lastname}`.trim();
+              if (!fullName) {
+                fullName = node.getElementsByTagName("name")[0]?.textContent?.trim() || node.getAttribute("name") || `Jogador ${userid}`;
+              }
               const birthdate = node.getElementsByTagName("birthdate")[0]?.textContent || "";
               playersMap.set(userid, {
-                name: `${firstname} ${lastname}`.trim(),
+                name: fullName,
                 birthdate: birthdate
               });
             }
@@ -2719,9 +2796,9 @@ function doGet(e) {
           for (let i = 0; i < podNodes.length; i++) {
             const cat = podNodes[i].getAttribute("category");
             if (cat) {
-              if (cat === "10") podCategory = "MASTER";
-              else if (cat === "11") podCategory = "SENIOR";
-              else if (cat === "12") podCategory = "JUNIOR";
+              if (cat === "10" || cat === "2") podCategory = "MASTER";
+              else if (cat === "11" || cat === "1") podCategory = "SENIOR";
+              else if (cat === "12" || cat === "0") podCategory = "JUNIOR";
               break;
             }
           }
@@ -2893,20 +2970,31 @@ function doGet(e) {
             });
           }
           
-          // Ordenação estrita respeitando a colocação oficial (Pos / MediaColocacao) do TOM
+          // Ordenação estrita oficial: Pontos DESC > Vitorias DESC > OMW DESC > Colocação Oficial ASC
           playersResult.sort((a, b) => {
-            const posA = Number(a.Pos || a.MediaColocacao) || 999;
-            const posB = Number(b.Pos || b.MediaColocacao) || 999;
-            if (posA !== posB) return posA - posB;
             const ptsA = Number(a.Pontos) || 0;
             const ptsB = Number(b.Pontos) || 0;
             if (ptsB !== ptsA) return ptsB - ptsA;
-            return Number(b.Vitorias || 0) - Number(a.Vitorias || 0);
+
+            const vA = Number(a.Vitorias) || 0;
+            const vB = Number(b.Vitorias) || 0;
+            if (vB !== vA) return vB - vA;
+
+            const omwA = Number(a.omw) || 0;
+            const omwB = Number(b.omw) || 0;
+            if (Math.abs(omwB - omwA) > 0.0001) return omwB - omwA;
+
+            const posA = Number(a.Pos || a.MediaColocacao) || 999;
+            const posB = Number(b.Pos || b.MediaColocacao) || 999;
+            if (posA !== posB) return posA - posB;
+
+            return (a.Jogador || '').localeCompare(b.Jogador || '', 'pt-BR');
           });
 
-          // Garante numeração contínua e cálculo correto do Pódio Geral da etapa
+          // Garante numeração contínua sequencial da etapa (Pos 1..N) e cálculo correto do Pódio
           playersResult.forEach((p, idx) => {
-            p.Pos = p.Pos > 0 ? p.Pos : (idx + 1);
+            p.Pos = idx + 1;
+            p.MediaColocacao = idx + 1;
             p.Podio = (p.Pos <= 4 && !p.isDnf) ? 1 : 0;
           });
           
@@ -2918,7 +3006,7 @@ function doGet(e) {
       }
       
       // Otherwise, process as plain text TSV/CSV
-      const lines = trimmedText.split(/\r?\n/).filter(line => line.trim() !== '');
+      const lines = cleanText.split(/\r?\n/).filter(line => line.trim() !== '');
       if (lines.length < 2) return [];
 
       let delimiter = '\t';
@@ -3037,7 +3125,7 @@ function doGet(e) {
 
         // Verifica se o banco de dados de jogadores está disponível
         if (cachedJogadores && cachedJogadores.length > 0) {
-          const dbNamesNormalized = cachedJogadores.map(j => normalizePlayerName(j.Jogador || j.Name));
+          const dbNamesNormalized = cachedJogadores.map(j => normalizePlayerName(j.Jogador || j.jogador || j.Name || j.name));
           
           // Encontra jogadores do arquivo que não estão no banco (e não puderam ser resolvidos por ID)
           const detectedUnresolved = [];
@@ -3059,7 +3147,8 @@ function doGet(e) {
               
               if (resolvedById) {
                 // Se encontrou por ID, já mapeia no resolvedNamesMap!
-                resolvedNamesMap[rawName] = resolvedById.Jogador || resolvedById.Name;
+                const matchedName = resolvedById.Jogador || resolvedById.jogador || resolvedById.Name || resolvedById.name || rawName;
+                resolvedNamesMap[rawName] = matchedName;
               } else {
                 // Se não encontrou por ID, verifica pelo nome normalizado
                 if (!dbNamesNormalized.includes(normName)) {
@@ -3088,7 +3177,8 @@ function doGet(e) {
                   return dbId !== undefined && dbId !== '' && String(dbId).trim() === String(tId).trim();
                 });
                 if (resolvedById) {
-                  resolvedNamesMap[rawName] = resolvedById.Jogador || resolvedById.Name;
+                  const matchedName = resolvedById.Jogador || resolvedById.jogador || resolvedById.Name || resolvedById.name || rawName;
+                  resolvedNamesMap[rawName] = matchedName;
                 }
               }
             }
@@ -3137,16 +3227,17 @@ function doGet(e) {
         const reasonableCandidates = matches.filter(c => c.similarity >= 0.4);
         
         const allDbPlayersSorted = [...(cachedJogadores || [])].sort((a, b) => {
-          const nA = a.Jogador || a.Name || '';
-          const nB = b.Jogador || b.Name || '';
+          const nA = a.Jogador || a.jogador || a.Name || a.name || '';
+          const nB = b.Jogador || b.jogador || b.Name || b.name || '';
           return nA.localeCompare(nB, 'pt-BR');
         });
 
         // Considera uma correspondência confiável se a similaridade for >= 70%
         const bestConfMatch = reasonableCandidates.find(c => c.similarity >= 0.70);
+        const bestName = bestConfMatch ? (bestConfMatch.player.Jogador || bestConfMatch.player.jogador || bestConfMatch.player.Name || bestConfMatch.player.name || '') : '';
         
         const currentSelected = resolvedNamesMap[rawName];
-        const defaultValue = currentSelected || (bestConfMatch ? (bestConfMatch.player.Jogador || bestConfMatch.player.Name) : 'new_player');
+        const defaultValue = currentSelected || (bestName ? bestName : 'new_player');
         
         if (!resolvedNamesMap[rawName]) {
           resolvedNamesMap[rawName] = defaultValue;
@@ -3157,7 +3248,7 @@ function doGet(e) {
         if (reasonableCandidates.length > 0) {
           selectOptions += `<optgroup label="Sugestões de correspondência">`;
           reasonableCandidates.forEach(c => {
-            const pName = c.player.Jogador || c.player.Name || '';
+            const pName = c.player.Jogador || c.player.jogador || c.player.Name || c.player.name || '';
             const pct = Math.round(c.similarity * 100);
             selectOptions += `<option value="${escapeHTML(pName)}" ${defaultValue === pName ? 'selected' : ''}>🔗 É o mesmo que: ${escapeHTML(pName)} (${pct}% match)</option>`;
           });
@@ -3166,15 +3257,15 @@ function doGet(e) {
         
         selectOptions += `<optgroup label="Todos os Jogadores Cadastrados">`;
         allDbPlayersSorted.forEach(p => {
-          const pName = p.Jogador || p.Name || '';
-          if (!reasonableCandidates.some(c => (c.player.Jogador || c.player.Name) === pName)) {
+          const pName = p.Jogador || p.jogador || p.Name || p.name || '';
+          if (!reasonableCandidates.some(c => (c.player.Jogador || c.player.jogador || c.player.Name || c.player.name) === pName)) {
             selectOptions += `<option value="${escapeHTML(pName)}" ${defaultValue === pName ? 'selected' : ''}>👤 ${escapeHTML(pName)}</option>`;
           }
         });
         selectOptions += `</optgroup>`;
 
-        const rawPlayer = currentRawPlayers.find(pl => (getFirstDefined(pl, ['Jogador', 'Player', 'Name', 'Nome']) || '') === rawName);
-        const catVal = rawPlayer ? (getFirstDefined(rawPlayer, ['Categoria', 'Category', 'Cat']) || 'MASTER') : 'MASTER';
+        const rawPlayer = currentRawPlayers.find(pl => (getFirstDefined(pl, ['Jogador', 'jogador', 'Player', 'Name', 'Nome']) || '') === rawName);
+        const catVal = rawPlayer ? (getFirstDefined(rawPlayer, ['Categoria', 'categoria', 'Category', 'Cat']) || 'MASTER') : 'MASTER';
         const idVal = rawPlayer ? (getPlayerId(rawPlayer) || '-') : '-';
         
         let catLabel = "Mestre";
@@ -3207,10 +3298,10 @@ function doGet(e) {
     }
 
     function renderEnrichedPreview() {
-      const nameFields = ['Jogador', 'Player', 'Name', 'Nome', 'Treinador', 'Player Name', 'Nome do Jogador'];
-      const pointsFields = ['Pontos', 'Points', 'Pts', 'Pontuacao', 'Pontuação', 'Ptos', 'Score', 'Pontos Totais'];
+      const nameFields = ['Jogador', 'jogador', 'Player', 'player', 'Name', 'name', 'Nome', 'nome', 'Treinador', 'Player Name', 'Nome do Jogador'];
+      const pointsFields = ['Pontos', 'pontos', 'Points', 'points', 'Pts', 'pts', 'Pontuacao', 'Pontuação', 'Ptos', 'Score', 'Pontos Totais'];
       const posFields = ['Pos', 'Position', 'Placement', 'Rank', 'Colocação', 'Colocacao', 'Classificação', 'Classificacao', 'Posição', 'Posicao', 'Placing'];
-      const catFields = ['Categoria', 'Category', 'Cat', 'Divisão', 'Divisao', 'Division'];
+      const catFields = ['Categoria', 'categoria', 'Category', 'Cat', 'Divisão', 'Divisao', 'Division'];
       const podiumFields = ['Podio', 'Pódio', 'Podios', 'Pódios', 'Podium'];
       const mediaFields = ['MediaColocacao', 'MédiaColocação', 'Media Colocacao', 'Média Colocação', 'Media', 'Média', 'Média de Colocação', 'Media de Colocacao'];
 
@@ -3242,16 +3333,19 @@ function doGet(e) {
         }
         if (!dbMatchedPlayer && cachedJogadores && cachedJogadores.length > 0) {
           dbMatchedPlayer = cachedJogadores.find(dbPlayer => {
-            return normalizePlayerName(dbPlayer.Jogador || dbPlayer.Name) === normalizePlayerName(rawName);
+            const dbName = dbPlayer.Jogador || dbPlayer.jogador || dbPlayer.Name || dbPlayer.name || '';
+            return normalizePlayerName(dbName) === normalizePlayerName(rawName);
           });
         }
 
         // Aplica o nome oficial corrigido (do cadastro de jogadores ou de resolução manual)
-        let officialName = dbMatchedPlayer ? (dbMatchedPlayer.Jogador || dbMatchedPlayer.Name) : rawName;
+        const dbOfficialName = dbMatchedPlayer ? (dbMatchedPlayer.Jogador || dbMatchedPlayer.jogador || dbMatchedPlayer.Name || dbMatchedPlayer.name || '') : '';
+        let officialName = dbOfficialName || rawName;
         const resolution = resolvedNamesMap[rawName];
         if (resolution && resolution !== 'new_player') {
           officialName = resolution;
         }
+        if (!officialName) officialName = rawName;
 
         // Puxa o ID oficial do jogador
         const tId = cleanRawId || (dbMatchedPlayer ? (getPlayerId(dbMatchedPlayer) || '') : '') || '';
@@ -3713,7 +3807,16 @@ function doGet(e) {
       
       if (!eventDate) {
         showError("Selecione a data do evento!");
+        const dateInput = document.getElementById('event-date');
+        if (dateInput) dateInput.focus();
         return;
+      }
+
+      if (!isFileValidated) {
+        const isValid = runValidation();
+        if (!isValid || !isFileValidated) {
+          return;
+        }
       }
       
       const btn = document.getElementById('btn-publish');
@@ -5676,22 +5779,34 @@ function doGet(e) {
     }
 
     function showSuccess(msg) {
-      const box = document.getElementById('general-success');
-      box.innerText = msg;
-      box.style.display = 'block';
-      document.getElementById('general-error').style.display = 'none';
+      const successBox = document.getElementById('general-success');
+      const errorBox = document.getElementById('general-error');
+      if (successBox) {
+        successBox.innerText = msg;
+        successBox.style.display = 'block';
+      }
+      if (errorBox) {
+        errorBox.style.display = 'none';
+      }
     }
     
     function showError(msg) {
-      const box = document.getElementById('general-error');
-      box.innerText = msg;
-      box.style.display = 'block';
-      document.getElementById('general-success').style.display = 'none';
+      const successBox = document.getElementById('general-success');
+      const errorBox = document.getElementById('general-error');
+      if (errorBox) {
+        errorBox.innerText = msg;
+        errorBox.style.display = 'block';
+      }
+      if (successBox) {
+        successBox.style.display = 'none';
+      }
     }
     
     function hideAlerts() {
-      document.getElementById('general-success').style.display = 'none';
-      document.getElementById('general-error').style.display = 'none';
+      const successBox = document.getElementById('general-success');
+      const errorBox = document.getElementById('general-error');
+      if (successBox) successBox.style.display = 'none';
+      if (errorBox) errorBox.style.display = 'none';
     }
     
     function escapeHTML(value) {
