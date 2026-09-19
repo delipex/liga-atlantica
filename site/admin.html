@@ -3358,47 +3358,31 @@ function doGet(e) {
       // 5. Gerencia os botões de validação e publicação
       const validateBtn = document.getElementById('btn-validate');
       const publishBtn = document.getElementById('btn-publish');
-      const unresolvedCount = unresolvedPlayers.filter(name => !resolvedNamesMap[name]).length;
       
-      if (isFileValidated && unresolvedCount === 0) {
-        if (validateBtn) validateBtn.style.display = 'none';
-        if (publishBtn) {
-          publishBtn.style.display = 'block';
-          publishBtn.disabled = false;
-          publishBtn.innerText = "🚀 Publicar Ranking no Site";
-          publishBtn.style.background = "var(--accent-yellow)";
-          publishBtn.style.borderColor = "var(--accent-yellow)";
-          publishBtn.style.color = "#000";
-        }
-      } else {
-        // Se mudou algo ou tem pendências, exige validação novamente
-        isFileValidated = false;
-        if (validateBtn) {
-          validateBtn.style.display = 'block';
-          if (unresolvedCount > 0) {
-            validateBtn.disabled = true;
-            validateBtn.innerText = `⏳ Resolva os nomes pendentes (${unresolvedCount})`;
-            validateBtn.style.background = "#4b5563";
-            validateBtn.style.borderColor = "#4b5563";
-            validateBtn.style.color = "#9ca3af";
-          } else {
-            validateBtn.disabled = false;
-            validateBtn.innerText = "🔍 Validar Dados do Arquivo";
-            validateBtn.style.background = "#2563eb";
-            validateBtn.style.borderColor = "#2563eb";
-            validateBtn.style.color = "#fff";
-          }
-        }
-        if (publishBtn) publishBtn.style.display = 'none';
-        
-        // Mantém o badge como não validado
-        const checkBadge = document.getElementById('check-badge');
-        if (checkBadge) {
-          checkBadge.innerText = "Não Validado ❌";
-          checkBadge.style.background = "rgba(239, 68, 68, 0.15)";
-          checkBadge.style.color = "#ef4444";
-          checkBadge.style.borderColor = "rgba(239, 68, 68, 0.3)";
-        }
+      if (validateBtn) {
+        validateBtn.style.display = 'block';
+        validateBtn.disabled = false;
+        validateBtn.innerText = "🔍 Validar Dados do Arquivo";
+        validateBtn.style.background = "#2563eb";
+        validateBtn.style.borderColor = "#2563eb";
+        validateBtn.style.color = "#fff";
+      }
+      
+      if (publishBtn) {
+        publishBtn.style.display = 'block';
+        publishBtn.disabled = false;
+        publishBtn.innerText = "🚀 Publicar Ranking e Salvar Metagame no Site";
+        publishBtn.style.background = "var(--accent-yellow)";
+        publishBtn.style.borderColor = "var(--accent-yellow)";
+        publishBtn.style.color = "#000";
+      }
+
+      const checkBadge = document.getElementById('check-badge');
+      if (checkBadge) {
+        checkBadge.innerText = "Estrutura Válida ✓";
+        checkBadge.style.background = "rgba(16, 185, 129, 0.15)";
+        checkBadge.style.color = "#10b981";
+        checkBadge.style.borderColor = "rgba(16, 185, 129, 0.3)";
       }
     }
 
@@ -3716,14 +3700,9 @@ function doGet(e) {
         return;
       }
 
-      if (!isFileValidated) {
-        showError("O arquivo precisa ser validado clicando em 'Validar Dados do Arquivo' antes de publicar!");
-        return;
-      }
-      
       const newText = activeContent;
       if (!newText) {
-        showError("Nenhum arquivo processado para publicar!");
+        showError("Nenhum arquivo processado para publicar! Arraste ou selecione um arquivo TDF primeiro.");
         return;
       }
       
