@@ -3,125 +3,194 @@
         "id": "5685779",
         "jogador": "Adriel Nunes",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Adriel Nunes",
+        "ID": "5685779",
+        "Categoria": "Master"
     },
     {
         "id": "6024599",
         "jogador": "Aldair Reis",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Aldair Reis",
+        "ID": "6024599",
+        "Categoria": "Master"
     },
     {
         "id": "",
         "jogador": "Alex Correa",
         "categoria": "Senior",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Alex Correa",
+        "ID": "",
+        "Categoria": "Senior"
     },
     {
         "id": "5738547",
         "jogador": "ANDERSON SANTOS",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "ANDERSON SANTOS",
+        "ID": "5738547",
+        "Categoria": "Master"
     },
     {
         "id": "5744139",
         "jogador": "ANTONIO CRISPIM",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "ANTONIO CRISPIM",
+        "ID": "5744139",
+        "Categoria": "Master"
     },
     {
         "id": "",
         "jogador": "Antonio Neto",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Antonio Neto",
+        "ID": "",
+        "Categoria": "Master"
     },
     {
         "id": "",
         "jogador": "Arun Coronel",
         "categoria": "Junior",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Arun Coronel",
+        "ID": "",
+        "Categoria": "Junior"
     },
     {
         "id": "6143660",
         "jogador": "Bernardo Rebouças",
         "categoria": "Senior",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Bernardo Rebouças",
+        "ID": "6143660",
+        "Categoria": "Senior"
     },
     {
         "id": "5117276",
         "jogador": "Bruno Bittencourt",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Bruno Bittencourt",
+        "ID": "5117276",
+        "Categoria": "Master"
     },
     {
         "id": "5689281",
         "jogador": "Caio Da Silva",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Caio Da Silva",
+        "ID": "5689281",
+        "Categoria": "Master"
     },
     {
         "id": "5745041",
         "jogador": "Caio Rios",
         "categoria": "Senior",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Caio Rios",
+        "ID": "5745041",
+        "Categoria": "Senior"
     },
     {
         "id": "5597125",
         "jogador": "Carlos Junior",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Carlos Junior",
+        "ID": "5597125",
+        "Categoria": "Master"
     },
     {
         "id": "5818960",
         "jogador": "Carlos Morais",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Carlos Morais",
+        "ID": "5818960",
+        "Categoria": "Master"
     },
     {
         "id": "4245511",
         "jogador": "Carlos Nunes",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Carlos Nunes",
+        "ID": "4245511",
+        "Categoria": "Master"
     },
     {
         "id": "5583587",
         "jogador": "Carlos Paes",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Carlos Paes",
+        "ID": "5583587",
+        "Categoria": "Master"
     },
     {
         "id": "6152334",
         "jogador": "Cristian S",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Cristian S",
+        "ID": "6152334",
+        "Categoria": "Master"
     },
     {
         "id": "5871616",
         "jogador": "Davi Soledade",
         "categoria": "Senior",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Davi Soledade",
+        "ID": "5871616",
+        "Categoria": "Senior"
     },
     {
         "id": "5750305",
         "jogador": "DAVI TELES",
         "categoria": "Junior",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "DAVI TELES",
+        "ID": "5750305",
+        "Categoria": "Junior"
     },
     {
         "id": "5612865",
         "jogador": "Diego Teles",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Diego Teles",
+        "ID": "5612865",
+        "Categoria": "Master"
     },
     {
         "id": "6130201",
         "jogador": "Eduardo Melo",
         "categoria": "Senior",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Eduardo Melo",
+        "ID": "6130201",
+        "Categoria": "Senior"
     },
     {
         "id": "5116595",
         "jogador": "Enzo Dos Anjos",
+        "categoria": "Master",
+        "posicaoFinal": "",
+        "Jogador": "Enzo Dos Anjos",
+        "ID": "5116595",
+        "Categoria": "Master"
+    },
+    {
+        "id": "6203191",
+        "jogador": "FELIPE CERQUEIRA",
         "categoria": "Master",
         "posicaoFinal": ""
     },
@@ -129,360 +198,540 @@
         "id": "5145513",
         "jogador": "Felipe Damasceno",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Felipe Damasceno",
+        "ID": "5145513",
+        "Categoria": "Master"
     },
     {
         "id": "5603425",
         "jogador": "Felipe Queiroz",
         "categoria": "Senior",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Felipe Queiroz",
+        "ID": "5603425",
+        "Categoria": "Senior"
     },
     {
         "id": "",
         "jogador": "Felipe Sousa",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Felipe Sousa",
+        "ID": "",
+        "Categoria": "Master"
     },
     {
         "id": "5374807",
         "jogador": "Fernando Ribeiro",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Fernando Ribeiro",
+        "ID": "5374807",
+        "Categoria": "Master"
     },
     {
         "id": "6056635",
         "jogador": "Filipe Miranda",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Filipe Miranda",
+        "ID": "6056635",
+        "Categoria": "Master"
     },
     {
         "id": "5374792",
         "jogador": "Gabriel Seixas",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Gabriel Seixas",
+        "ID": "5374792",
+        "Categoria": "Master"
     },
     {
         "id": "6050119",
         "jogador": "GABRIELA BRITO",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "GABRIELA BRITO",
+        "ID": "6050119",
+        "Categoria": "Master"
     },
     {
         "id": "5674790",
         "jogador": "Guilherme Borges",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Guilherme Borges",
+        "ID": "5674790",
+        "Categoria": "Master"
     },
     {
         "id": "5608142",
         "jogador": "Guilherme Oliveira",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Guilherme Oliveira",
+        "ID": "5608142",
+        "Categoria": "Master"
     },
     {
         "id": "5744126",
         "jogador": "GUSTAVO COELHO",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "GUSTAVO COELHO",
+        "ID": "5744126",
+        "Categoria": "Master"
     },
     {
         "id": "5626281",
         "jogador": "Gustavo Maia",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Gustavo Maia",
+        "ID": "5626281",
+        "Categoria": "Master"
     },
     {
         "id": "5493244",
         "jogador": "Gustavo Ramos",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Gustavo Ramos",
+        "ID": "5493244",
+        "Categoria": "Master"
     },
     {
         "id": "6153905",
         "jogador": "IGOR ARAUJO",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "IGOR ARAUJO",
+        "ID": "6153905",
+        "Categoria": "Master"
     },
     {
         "id": "6063895",
         "jogador": "Igor Costa",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Igor Costa",
+        "ID": "6063895",
+        "Categoria": "Master"
     },
     {
         "id": "2336276",
         "jogador": "Igor Melo",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Igor Melo",
+        "ID": "2336276",
+        "Categoria": "Master"
     },
     {
         "id": "4804029",
         "jogador": "Igor Nunes",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Igor Nunes",
+        "ID": "4804029",
+        "Categoria": "Master"
     },
     {
         "id": "5721603",
         "jogador": "Israel Silva",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Israel Silva",
+        "ID": "5721603",
+        "Categoria": "Master"
     },
     {
         "id": "5747202",
         "jogador": "Ivana Tavares",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Ivana Tavares",
+        "ID": "5747202",
+        "Categoria": "Master"
     },
     {
         "id": "5770809",
         "jogador": "João Glória",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "João Glória",
+        "ID": "5770809",
+        "Categoria": "Master"
     },
     {
         "id": "",
         "jogador": "João Pedro Magalhães",
         "categoria": "Junior",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "João Pedro Magalhães",
+        "ID": "",
+        "Categoria": "Junior"
     },
     {
         "id": "4719300",
         "jogador": "João Pedro Oliveira",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "João Pedro Oliveira",
+        "ID": "4719300",
+        "Categoria": "Master"
     },
     {
         "id": "6038121",
         "jogador": "João Prazeres",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "João Prazeres",
+        "ID": "6038121",
+        "Categoria": "Master"
     },
     {
         "id": "5180223",
         "jogador": "João Santos",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "João Santos",
+        "ID": "5180223",
+        "Categoria": "Master"
     },
     {
         "id": "5273684",
         "jogador": "João Vitor Pereira",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "João Vitor Pereira",
+        "ID": "5273684",
+        "Categoria": "Master"
     },
     {
         "id": "5726655",
         "jogador": "Juarez Junior",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Juarez Junior",
+        "ID": "5726655",
+        "Categoria": "Master"
     },
     {
         "id": "6098770",
         "jogador": "Kaike Falcão de Oliveira",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Kaike Falcão de Oliveira",
+        "ID": "6098770",
+        "Categoria": "Master"
     },
     {
         "id": "5232117",
         "jogador": "KAUA HOLANDA",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "KAUA HOLANDA",
+        "ID": "5232117",
+        "Categoria": "Master"
     },
     {
         "id": "5653368",
         "jogador": "Lara Tavares",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Lara Tavares",
+        "ID": "5653368",
+        "Categoria": "Master"
     },
     {
         "id": "6184404",
         "jogador": "LAURA BARROS",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "LAURA BARROS",
+        "ID": "6184404",
+        "Categoria": "Master"
     },
     {
         "id": "",
         "jogador": "Leilson Filho",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Leilson Filho",
+        "ID": "",
+        "Categoria": "Master"
     },
     {
         "id": "",
         "jogador": "Lucas Costa",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Lucas Costa",
+        "ID": "",
+        "Categoria": "Master"
     },
     {
         "id": "5374803",
         "jogador": "Lucas Linard",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Lucas Linard",
+        "ID": "5374803",
+        "Categoria": "Master"
     },
     {
         "id": "5082310",
         "jogador": "Lucas Vaz",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Lucas Vaz",
+        "ID": "5082310",
+        "Categoria": "Master"
     },
     {
         "id": "",
         "jogador": "Lucas Vila Nova",
         "categoria": "Junior",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Lucas Vila Nova",
+        "ID": "",
+        "Categoria": "Junior"
     },
     {
         "id": "",
         "jogador": "Luis H. Silva",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Luis H. Silva",
+        "ID": "",
+        "Categoria": "Master"
     },
     {
         "id": "6098811",
         "jogador": "Maria Luisa Sousa",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Maria Luisa Sousa",
+        "ID": "6098811",
+        "Categoria": "Master"
     },
     {
         "id": "",
         "jogador": "Massao F",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Massao F",
+        "ID": "",
+        "Categoria": "Master"
     },
     {
         "id": "5609667",
         "jogador": "Matheus Mascarenhas",
         "categoria": "Senior",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Matheus Mascarenhas",
+        "ID": "5609667",
+        "Categoria": "Senior"
     },
     {
         "id": "4957486",
         "jogador": "Miguel Neto",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Miguel Neto",
+        "ID": "4957486",
+        "Categoria": "Master"
     },
     {
         "id": "6197804",
         "jogador": "MIGUEL OLIVEIRA",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "MIGUEL OLIVEIRA",
+        "ID": "6197804",
+        "Categoria": "Master"
     },
     {
         "id": "5272026",
         "jogador": "Moisés Farias",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Moisés Farias",
+        "ID": "5272026",
+        "Categoria": "Master"
     },
     {
         "id": "5374802",
         "jogador": "Noide Neto",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Noide Neto",
+        "ID": "5374802",
+        "Categoria": "Master"
     },
     {
         "id": "",
         "jogador": "Paulo Amorim",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Paulo Amorim",
+        "ID": "",
+        "Categoria": "Master"
     },
     {
         "id": "5374793",
         "jogador": "Pedro Cardoso",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Pedro Cardoso",
+        "ID": "5374793",
+        "Categoria": "Master"
     },
     {
         "id": "5587010",
         "jogador": "Pedro Coelho",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Pedro Coelho",
+        "ID": "5587010",
+        "Categoria": "Master"
     },
     {
         "id": "6143738",
         "jogador": "Pedro Viana",
         "categoria": "Senior",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Pedro Viana",
+        "ID": "6143738",
+        "Categoria": "Senior"
     },
     {
         "id": "5682313",
         "jogador": "Phelipe Santos",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Phelipe Santos",
+        "ID": "5682313",
+        "Categoria": "Master"
     },
     {
         "id": "6166755",
         "jogador": "RAFAEL M",
         "categoria": "Junior",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "RAFAEL M",
+        "ID": "6166755",
+        "Categoria": "Junior"
     },
     {
         "id": "5374790",
         "jogador": "Ravi Souza",
         "categoria": "Junior",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Ravi Souza",
+        "ID": "5374790",
+        "Categoria": "Junior"
     },
     {
         "id": "5272034",
         "jogador": "Roberto Maia",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Roberto Maia",
+        "ID": "5272034",
+        "Categoria": "Master"
     },
     {
         "id": "5577330",
         "jogador": "Samuel Nunes",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Samuel Nunes",
+        "ID": "5577330",
+        "Categoria": "Master"
     },
     {
         "id": "4957485",
         "jogador": "Thales Lima",
         "categoria": "Senior",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Thales Lima",
+        "ID": "4957485",
+        "Categoria": "Senior"
     },
     {
         "id": "6146402",
         "jogador": "Theo Siqueira",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Theo Siqueira",
+        "ID": "6146402",
+        "Categoria": "Master"
     },
     {
         "id": "6099996",
         "jogador": "Uesdras Santos",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Uesdras Santos",
+        "ID": "6099996",
+        "Categoria": "Master"
     },
     {
         "id": "5090112",
         "jogador": "Wallyson Oliveira",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Wallyson Oliveira",
+        "ID": "5090112",
+        "Categoria": "Master"
     },
     {
         "id": "5374806",
         "jogador": "Washington Neto",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Washington Neto",
+        "ID": "5374806",
+        "Categoria": "Master"
     },
     {
         "id": "5744207",
         "jogador": "Washington Pagotto",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Washington Pagotto",
+        "ID": "5744207",
+        "Categoria": "Master"
     },
     {
         "id": "5131143",
         "jogador": "Wesllen Dias",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Wesllen Dias",
+        "ID": "5131143",
+        "Categoria": "Master"
     },
     {
         "id": "5637535",
         "jogador": "YAGO NUNES",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "YAGO NUNES",
+        "ID": "5637535",
+        "Categoria": "Master"
     },
     {
         "id": "5685789",
         "jogador": "Yuri Aoki",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "Yuri Aoki",
+        "ID": "5685789",
+        "Categoria": "Master"
     }
 ]
