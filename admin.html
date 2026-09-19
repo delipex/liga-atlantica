@@ -2537,7 +2537,11 @@ function doGet(e) {
 
       const previewSection = document.getElementById('preview-section');
       const tbody = document.getElementById('preview-tbody');
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem;">⏳ Processando e consolidando ${files.length} arquivos...</td></tr>`;
+      if (files.length > 1) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 1.5rem;">⏳ Unindo ${files.length} categorias/arquivos da mesma etapa...</td></tr>`;
+      } else {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 1.5rem;">⏳ Lendo arquivo da etapa...</td></tr>`;
+      }
       previewSection.style.display = 'block';
 
       const filePromises = Array.from(files).map(file => {
