@@ -464,18 +464,6 @@
         <!-- Container de informações extraídas do arquivo -->
         <div id="tdf-file-info" style="margin-bottom: 1.25rem; font-size: 0.85rem; border-radius: 6px; display: none; padding: 12px 14px; background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.2); color: #fff;"></div>
 
-        <div style="margin-bottom: 1.25rem; display: flex; align-items: flex-start; gap: 0.5rem; background: rgba(255, 203, 5, 0.05); padding: 0.75rem 1rem; border-radius: var(--radius); border: 1px dashed rgba(255, 203, 5, 0.2);">
-          <input type="checkbox" id="accumulate-checkbox" checked style="width: 18px; height: 18px; margin-top: 2px; cursor: pointer;">
-          <div style="flex: 1;">
-            <label for="accumulate-checkbox" style="font-size: 0.85rem; font-weight: 600; color: #fff; cursor: pointer; user-select: none; display: block; margin-bottom: 0.2rem;">
-              Acumular pontos com o ranking atual do site (Soma automática de etapas)
-            </label>
-            <span class="small-text-hint" style="font-size:0.75rem; color:var(--text-secondary); display: block;">
-              💡 Se ativado (recomendado), o sistema calcula os pontos acumulados da temporada inteira somando as vitórias/empates/derrotas das etapas anteriores.
-            </span>
-          </div>
-        </div>
-
         <div class="form-group" style="margin-bottom: 0;">
           <label for="raw-input">Ou cole o texto do arquivo abaixo:</label>
           <textarea id="raw-input" class="raw-textarea" placeholder="Pos&#9;Jogador&#9;Categoria&#9;Pontos&#9;Podio&#9;MediaColocacao&#9;Deck&#9;TipoEnergia..." oninput="handleRawInput()"></textarea>
@@ -2561,7 +2549,7 @@ function doGet(e) {
 
         if (fileContents.length === 1) {
           document.getElementById('raw-input').value = fileContents[0].text;
-          processTDFText(fileContents[0].text);
+          await processTDFText(fileContents[0].text);
           return;
         }
 
@@ -2601,7 +2589,7 @@ function doGet(e) {
 
         const consolidatedText = parsePlayersToTDFString(allPlayers);
         document.getElementById('raw-input').value = consolidatedText;
-        processTDFText(consolidatedText);
+        await processTDFText(consolidatedText);
         showSuccess(`Consolidado com sucesso: ${fileContents.length} arquivos combinados em uma única etapa!`);
       } catch (err) {
         showError("Erro ao ler ou consolidar arquivos: " + err.message);
@@ -3753,7 +3741,7 @@ function doGet(e) {
       hideAlerts();
       
       const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
-      const shouldAccumulate = document.getElementById('accumulate-checkbox').checked;
+      const shouldAccumulate = true;
       
       try {
         let sha = null;
