@@ -98,5 +98,10 @@
     "data": "2026-09-17",
     "tipo": "Liga",
     "multiplicador": 1
+  },
+  {
+    "data": "2026-09-19",
+    "tipo": "Challenge",
+    "multiplicador": 1.5
   }
 ]
