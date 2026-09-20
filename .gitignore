@@ -11,3 +11,22 @@ client_secret*.json
 node_modules/
 .DS_Store
 Thumbs.db
+
+# Pastas de documentação interna, regras de IA e scripts locais (privados no computador)
+.agents/
+docs/
+design-system/
+LOCALHOST/
+planilha/
+
+# Documentos Markdown (privados no computador)
+*.md
+site/*.md
+
+# Scripts utilitários de desenvolvimento local
+iniciar_servidor.bat
+server.js
+extract_gids.js
+extract_gids.ps1
+rebuild_ranking.js
+verify_data_integrity.js
