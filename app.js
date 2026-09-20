@@ -1243,23 +1243,26 @@ function renderAll() {
 function getNextEventFromCalendar() {
   const events = appData.Calendario || [];
   const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
   const future = events.filter(e => {
-    if (!e || !e.Data) return false;
-    const status = String(e.Status || '').toLowerCase().trim();
+    const rawDate = e?.Data || e?.data;
+    if (!rawDate) return false;
+    const status = String(e.Status || e.status || '').toLowerCase().trim();
     if (status === 'concluido' || status === 'cancelado') return false;
-    const d = parseDateSafe(e.Data);
-    return !isNaN(d) && d >= now;
-  }).sort((a,b) => parseDateSafe(a.Data) - parseDateSafe(b.Data));
+    const d = parseDateSafe(rawDate);
+    return !isNaN(d) && d >= startOfToday;
+  }).sort((a,b) => parseDateSafe(a.Data || a.data) - parseDateSafe(b.Data || b.data));
   if (!future.length) return null;
-  const e=future[0];
+  const e = future[0];
+  const rawDate = e.Data || e.data;
   return {
-    title: e.Evento || 'Próximo Evento',
-    date: normalizeDateISO(e.Data),
-    time: e.Horario || '00:00',
-    location: e.Local || '',
-    locationUrl: e.LinkMaps || '',
-    description: e.Descricao || '',
-    signupLink: e.LinkInscricao || '',
+    title: e.Evento || e.evento || 'Próximo Evento',
+    date: normalizeDateISO(rawDate),
+    time: e.Horario || e.horario || '14:00',
+    location: e.Local || e.local || 'Livraria Atlântica +',
+    locationUrl: e.LinkMaps || e.linkMaps || '',
+    description: e.Descricao || e.descricao || '',
+    signupLink: e.LinkInscricao || e.linkInscricao || '',
     active: true
   };
 }
@@ -1352,7 +1355,15 @@ function renderDashboard() {
   if (eventContainer) {
     let eventConf = null;
     const jsonEvent = appData.Configuracoes?.ProximoEvento;
-    if (jsonEvent && typeof jsonEvent === 'object') {
+    const isAutoMode = !jsonEvent || jsonEvent.modo === 'auto' || jsonEvent.mode === 'auto';
+
+    // No modo automático, busca diretamente da agenda
+    if (isAutoMode && (!jsonEvent || jsonEvent.ativo !== false)) {
+      eventConf = getNextEventFromCalendar();
+    }
+
+    // Se não encontrou no calendário ou se o modo for manual
+    if (!eventConf && jsonEvent && typeof jsonEvent === 'object') {
       const isEventActive = jsonEvent.ativo !== undefined ? jsonEvent.ativo : (jsonEvent.active !== undefined ? jsonEvent.active : true);
       if (isEventActive && (jsonEvent.data || jsonEvent.date)) {
         eventConf = {
