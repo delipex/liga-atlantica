@@ -599,27 +599,27 @@
         <div class="form-group" style="margin-bottom: 1.25rem; width: 100%;">
           <label style="margin-bottom: 0.5rem; display: block;">Tipo de Evento</label>
           <div class="event-type-grid">
-            <div class="event-type-card active" data-value="Liga" onclick="selectEventType('Liga')">
+            <div class="event-type-card active" data-value="Liga" onclick="selectEventType('Liga', true)">
               <div class="event-type-icon">⚔️</div>
               <div class="event-type-label">Sessão de Liga</div>
               <div class="event-type-sub">1.0x (Fixo)</div>
             </div>
-            <div class="event-type-card" data-value="Challenge" onclick="selectEventType('Challenge')">
+            <div class="event-type-card" data-value="Challenge" onclick="selectEventType('Challenge', true)">
               <div class="event-type-icon">🏅</div>
               <div class="event-type-label">Challenge</div>
               <div class="event-type-sub">1.5x (Fixo)</div>
             </div>
-            <div class="event-type-card" data-value="Cup" onclick="selectEventType('Cup')">
+            <div class="event-type-card" data-value="Cup" onclick="selectEventType('Cup', true)">
               <div class="event-type-icon">🏆</div>
               <div class="event-type-label">League Cup</div>
               <div class="event-type-sub">1.5x (Fixo)</div>
             </div>
-            <div class="event-type-card" data-value="Especial" onclick="selectEventType('Especial')">
+            <div class="event-type-card" data-value="Especial" onclick="selectEventType('Especial', true)">
               <div class="event-type-icon">✨</div>
               <div class="event-type-label">Sessão Especial</div>
               <div class="event-type-sub">1.0x (Ajustável)</div>
             </div>
-            <div class="event-type-card" data-value="Personalizado" onclick="selectEventType('Personalizado')">
+            <div class="event-type-card" data-value="Personalizado" onclick="selectEventType('Personalizado', true)">
               <div class="event-type-icon">⚙️</div>
               <div class="event-type-label">Personalizado</div>
               <div class="event-type-sub">Livre</div>
@@ -1922,6 +1922,7 @@
     let cachedGaleria = [];
     let cachedCampeoes = [];
     let cachedScoresAntigos = [];
+    let cachedEtapas = [];
     let cachedConfig = {
       leagueName: "Liga Atlântica",
       leagueSubtitle: "Liga de Pokémon TCG - FSA",
@@ -2107,6 +2108,80 @@
       }
     }
 
+    function getNextStageNumberForType(type) {
+      const targetType = String(type || 'Liga').toLowerCase();
+
+      if (targetType === 'liga') {
+        let maxNum = 0;
+        if (cachedMetagameData) {
+          Object.values(cachedMetagameData).forEach(stg => {
+            const sc = String(stg.sessionCode || '');
+            const m = sc.match(/^S(\d+)/i);
+            if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
+          });
+        }
+        if (maxNum > 0) return maxNum + 1;
+        if (Array.isArray(cachedEtapas) && cachedEtapas.length > 0) {
+          const count = cachedEtapas.filter(s => String(s.tipo || '').toLowerCase() === 'liga').length;
+          return count + 1;
+        }
+        return 21;
+      }
+
+      if (targetType === 'challenge') {
+        let maxNum = 0;
+        if (cachedMetagameData) {
+          Object.values(cachedMetagameData).forEach(stg => {
+            const sc = String(stg.sessionCode || '');
+            const m = sc.match(/^CH(\d+)/i);
+            if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
+          });
+        }
+        if (maxNum > 0) return maxNum + 1;
+        if (Array.isArray(cachedEtapas) && cachedEtapas.length > 0) {
+          const count = cachedEtapas.filter(s => String(s.tipo || '').toLowerCase().includes('challenge')).length;
+          return count + 1;
+        }
+        return 1;
+      }
+
+      if (targetType === 'cup') {
+        let maxNum = 0;
+        if (cachedMetagameData) {
+          Object.values(cachedMetagameData).forEach(stg => {
+            const sc = String(stg.sessionCode || '');
+            const m = sc.match(/^CUP(\d+)/i);
+            if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
+          });
+        }
+        if (maxNum > 0) return maxNum + 1;
+        if (Array.isArray(cachedEtapas) && cachedEtapas.length > 0) {
+          const count = cachedEtapas.filter(s => String(s.tipo || '').toLowerCase().includes('cup')).length;
+          return count + 1;
+        }
+        return 1;
+      }
+
+      if (targetType === 'especial') {
+        let maxNum = 0;
+        if (cachedMetagameData) {
+          Object.values(cachedMetagameData).forEach(stg => {
+            const sc = String(stg.sessionCode || '');
+            const m = sc.match(/^ESP(\d+)/i);
+            if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
+          });
+        }
+        if (maxNum > 0) return maxNum + 1;
+        if (Array.isArray(cachedEtapas) && cachedEtapas.length > 0) {
+          const count = cachedEtapas.filter(s => String(s.tipo || '').toLowerCase().includes('especial')).length;
+          return count + 1;
+        }
+        return 1;
+      }
+
+      return 1;
+    }
+
     // --- Carregamento Paralelo Otimizado de Dados Locais e JSONs ---
     async function ensureSheetsLoaded(force = false) {
       if (isDataLoaded && !force) return;
@@ -2127,7 +2202,8 @@
             { name: 'galeria', url: `galeria.json?v=${timestamp}` },
             { name: 'config', url: `config.json?v=${timestamp}` },
             { name: 'campeoes', url: `campeoes.json?v=${timestamp}` },
-            { name: 'scores_antigos', url: `scores_antigos.json?v=${timestamp}` }
+            { name: 'scores_antigos', url: `scores_antigos.json?v=${timestamp}` },
+            { name: 'etapas', url: `etapas.json?v=${timestamp}` }
           ];
 
           const responses = await Promise.allSettled(
@@ -2197,6 +2273,10 @@
           if (responses[8].status === 'fulfilled' && Array.isArray(responses[8].value)) {
             cachedScoresAntigos = responses[8].value;
           }
+          // 10. Etapas
+          if (responses[9].status === 'fulfilled' && Array.isArray(responses[9].value)) {
+            cachedEtapas = responses[9].value;
+          }
 
           if (!cachedJogadores || !cachedJogadores.length) {
             if (cachedMetagame && cachedMetagame.length) {
@@ -2217,7 +2297,15 @@
 
           renderDeckDatalist();
           isDataLoaded = true;
-          console.log(`Dados carregados instantaneamente: ${cachedJogadores.length} jogadores, ${cachedDecks.length} decks, ${cachedCalendario.length} eventos, ${cachedRegras.length} regras, ${cachedGaleria.length} fotos, ${cachedCampeoes.length} campeões, ${cachedScoresAntigos.length} scores antigos.`);
+
+          const eventNumInput = document.getElementById('event-number');
+          const eventTypeVal = document.getElementById('event-type')?.value || 'Liga';
+          if (eventNumInput && (eventNumInput.value === '1' || !eventNumInput.value)) {
+            eventNumInput.value = getNextStageNumberForType(eventTypeVal);
+            if (typeof handleEventTypeChange === 'function') handleEventTypeChange();
+          }
+
+          console.log(`Dados carregados instantaneamente: ${cachedJogadores.length} jogadores, ${cachedDecks.length} decks, ${cachedCalendario.length} eventos, ${cachedRegras.length} regras, ${cachedGaleria.length} fotos, ${cachedCampeoes.length} campeões, ${cachedScoresAntigos.length} scores antigos, ${cachedEtapas.length} etapas.`);
         } catch (err) {
           console.error("Erro no carregamento paralelo:", err);
         } finally {
@@ -2601,7 +2689,7 @@
       document.getElementById('login-error').style.display = 'none';
     }
 
-    window.selectEventType = function(val) {
+    window.selectEventType = function(val, isExplicitUserClick = false) {
       document.getElementById('event-type').value = val;
       document.querySelectorAll('.event-type-card').forEach(card => {
         if (card.getAttribute('data-value') === val) {
@@ -2610,6 +2698,10 @@
           card.classList.remove('active');
         }
       });
+      const numberInput = document.getElementById('event-number');
+      if (numberInput && isExplicitUserClick) {
+        numberInput.value = getNextStageNumberForType(val);
+      }
       handleEventTypeChange();
     };
 
@@ -2675,6 +2767,7 @@
             let prefix = 'S';
             if (eventType === 'Challenge') prefix = 'CH';
             else if (eventType === 'Cup') prefix = 'CUP';
+            else if (eventType === 'Especial') prefix = 'ESP';
             else if (eventType === 'Personalizado') {
               const customTitle = document.getElementById('event-custom-title').value.trim() || 'CUSTOM';
               prefix = customTitle.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 5);
@@ -4276,6 +4369,7 @@
           let prefix = 'S';
           if (eventType === 'Challenge') prefix = 'CH';
           else if (eventType === 'Cup') prefix = 'CUP';
+          else if (eventType === 'Especial') prefix = 'ESP';
           else if (eventType === 'Personalizado') {
             const customTitle = document.getElementById('event-custom-title')?.value.trim() || 'CUSTOM';
             prefix = customTitle.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 5);
