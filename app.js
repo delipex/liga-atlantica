@@ -690,10 +690,81 @@ function populateHistoricalSeasonSelector() {
   }
 }
 
+function getStageDisplayName(stage, allStagesList = []) {
+  if (!stage || !stage.data) return '';
+  const dateStr = stage.data;
+  const parts = dateStr.split('-');
+  const formattedDate = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr;
+  
+  // 1. Prioridade: busca sessionCode oficial salvo em RawMetagame (metagame.json)
+  const rawMeta = (appData && appData.RawMetagame) ? appData.RawMetagame : {};
+  if (rawMeta[dateStr] && rawMeta[dateStr].sessionCode) {
+    const code = String(rawMeta[dateStr].sessionCode).trim();
+    const cupMatch = code.match(/^CUP(\d+)T(?:\d+)?/i);
+    if (cupMatch) return `Cup ${cupMatch[1]} - ${formattedDate}`;
+    const chMatch = code.match(/^CH(\d+)T(?:\d+)?/i);
+    if (chMatch) return `Challenge ${chMatch[1]} - ${formattedDate}`;
+    const espMatch = code.match(/^ESP(\d+)T(?:\d+)?/i);
+    if (espMatch) return `Sessão Especial ${espMatch[1]} - ${formattedDate}`;
+    const sMatch = code.match(/^S(\d+)T(?:\d+)?/i);
+    if (sMatch) return `Sessão ${sMatch[1]} - ${formattedDate}`;
+  }
+
+  // 2. Fallback ordinal inteligente baseado na categoria isolada em etapas.json
+  const chronological = (allStagesList && allStagesList.length > 0 ? allStagesList : (stagesIndex || []))
+    .filter(s => s && typeof s.data === 'string')
+    .sort((a, b) => a.data.localeCompare(b.data));
+
+  const type = stage.tipo || 'Liga';
+  const typeStages = chronological.filter(s => (s.tipo || 'Liga') === type);
+  const indexInType = typeStages.findIndex(s => s.data === dateStr);
+  const num = indexInType >= 0 ? (indexInType + 1) : '';
+
+  if (type === 'Challenge') return num ? `Challenge ${num} - ${formattedDate}` : `Challenge - ${formattedDate}`;
+  if (type === 'Cup') return num ? `Cup ${num} - ${formattedDate}` : `Cup - ${formattedDate}`;
+  if (type === 'Especial') return num ? `Sessão Especial ${num} - ${formattedDate}` : `Sessão Especial - ${formattedDate}`;
+  if (type === 'Liga') return num ? `Sessão ${num} - ${formattedDate}` : `Sessão de Liga - ${formattedDate}`;
+
+  return (num && !type.includes(' ')) ? `${type} ${num} - ${formattedDate}` : `${type} - ${formattedDate}`;
+}
+
+function getStageShortCode(stage, allStagesList = []) {
+  if (!stage || !stage.data) return '';
+  const dateStr = stage.data;
+  
+  const rawMeta = (appData && appData.RawMetagame) ? appData.RawMetagame : {};
+  if (rawMeta[dateStr] && rawMeta[dateStr].sessionCode) {
+    const code = String(rawMeta[dateStr].sessionCode).trim();
+    const cupMatch = code.match(/^CUP(\d+)T/i);
+    if (cupMatch) return `CUP${cupMatch[1]}`;
+    const chMatch = code.match(/^CH(\d+)T/i);
+    if (chMatch) return `CH${chMatch[1]}`;
+    const espMatch = code.match(/^ESP(\d+)T/i);
+    if (espMatch) return `ESP${espMatch[1]}`;
+    const sMatch = code.match(/^S(\d+)T/i);
+    if (sMatch) return `S${sMatch[1]}`;
+  }
+
+  const chronological = (allStagesList && allStagesList.length > 0 ? allStagesList : (stagesIndex || []))
+    .filter(s => s && typeof s.data === 'string')
+    .sort((a, b) => a.data.localeCompare(b.data));
+
+  const type = stage.tipo || 'Liga';
+  const typeStages = chronological.filter(s => (s.tipo || 'Liga') === type);
+  const indexInType = typeStages.findIndex(s => s.data === dateStr);
+  const num = indexInType >= 0 ? (indexInType + 1) : '';
+
+  if (type === 'Challenge') return `CH${num}`;
+  if (type === 'Cup') return `CUP${num}`;
+  if (type === 'Especial') return `ESP${num}`;
+  return `S${num}`;
+}
+
 function populateStageSelector() {
   const selector = document.getElementById('ranking-date-selector');
   if (!selector) return;
 
+  const prevVal = selector.value;
   selector.innerHTML = '<option value="general">Ranking Geral</option>';
 
   const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
@@ -701,15 +772,15 @@ function populateStageSelector() {
   const sortedStages = [...cleanStages].sort((a, b) => b.data.localeCompare(a.data));
 
   sortedStages.forEach(stage => {
-    const stageNumber = chronologicalStages.findIndex(s => s.data === stage.data) + 1;
-    const parts = stage.data.split('-');
-    const formattedDate = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : stage.data;
-    const typeLabel = stage.tipo ? ` (${stage.tipo})` : '';
     const option = document.createElement('option');
     option.value = stage.data;
-    option.textContent = stage.label || `Etapa ${stageNumber} - ${formattedDate}${typeLabel}`;
+    option.textContent = stage.label || getStageDisplayName(stage, chronologicalStages);
     selector.appendChild(option);
   });
+
+  if (prevVal && [...selector.options].some(o => o.value === prevVal)) {
+    selector.value = prevVal;
+  }
 }
 
 function renderHistoricalScores(page = 1) {
@@ -1599,6 +1670,11 @@ function renderRankingTable(players, page = 1) {
     const pontosHtml = isFrozen ? '' : `
       <td style="text-align:center;vertical-align:middle;">
         <span class="score-cell">${toNumber(player.Pontos)} PTS</span>
+        ${player.BasePontos !== undefined && player.BasePontos !== player.Pontos ? `
+          <div style="font-size:0.72rem; color:var(--accent-yellow); font-weight:600; margin-top:2px;" title="Pontos oficiais (${player.BasePontos}) com peso ${player.Multiplicador}x">
+            ${player.BasePontos} &times; ${player.Multiplicador}x
+          </div>
+        ` : ''}
       </td>
     `;
     
@@ -2478,19 +2554,23 @@ window.openPlayerModal = function(playerRef, playerIdRef = '') {
       timelineContainer.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;padding:0.25rem 0;">Sem histórico nesta temporada.</div>';
     } else {
       const historyArr = String(historyStr).split(';');
+      const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
+      const chronologicalStages = [...cleanStages].sort((a, b) => a.data.localeCompare(b.data));
+
       const stepsHtml = historyArr.map((pos, index) => {
-        const stageLabel = `E${index + 1}`;
+        const stageInfo = chronologicalStages[index] || stagesIndex[index];
+        const stageLabel = stageInfo ? getStageShortCode(stageInfo, chronologicalStages) : `E${index + 1}`;
         let dateLabel = '-';
-        const stageInfo = stagesIndex[index];
         if (stageInfo && stageInfo.data) {
           const parts = stageInfo.data.split('-');
           dateLabel = parts.length === 3 ? `${parts[2]}/${parts[1]}` : stageInfo.data;
         }
+        const stageTitle = stageInfo ? getStageDisplayName(stageInfo, chronologicalStages) : `Etapa ${index + 1}`;
         const isPodiumClass = pos !== '-' && toNumber(pos) <= 4 ? 'podium' : '';
         const posText = pos !== '-' ? `${pos}º` : '-';
         return `
-          <div class="timeline-step ${isPodiumClass}">
-            <span class="step-num">${stageLabel}</span>
+          <div class="timeline-step ${isPodiumClass}" title="${escapeHTML(stageTitle)}: ${posText}">
+            <span class="step-num">${escapeHTML(stageLabel)}</span>
             <span class="step-pos">${posText}</span>
             <span class="step-date">${dateLabel}</span>
           </div>
@@ -3659,6 +3739,19 @@ function initEvents() {
         const text = await res.text();
         const stagePlayers = parseTDF(text);
         
+        const stageInfo = stagesIndex.find(s => s.data === selectedValue);
+        const stageMult = Number(stageInfo?.multiplicador) || 1.0;
+
+        // Se a etapa tiver multiplicador especial (ex: 1.5x Challenge ou Cup), aplica aos pontos individuais
+        if (stageMult !== 1.0) {
+          stagePlayers.forEach(sp => {
+            const rawPts = Number(getFirstDefined(sp, ['Pontos', 'Points', 'Pts'])) || 0;
+            sp.BasePontos = rawPts;
+            sp.Pontos = rawPts * stageMult;
+            sp.Multiplicador = stageMult;
+          });
+        }
+        
         const normalized = normalizeRanking(stagePlayers, [], true);
         currentRankingList = normalized;
         renderRankingTable(normalized, 1);
@@ -3666,14 +3759,17 @@ function initEvents() {
         if (searchInput) searchInput.value = '';
         if (catSelector) catSelector.value = 'all';
 
-        const stageInfo = stagesIndex.find(s => s.data === selectedValue);
         if (stageInfo && infoBadge) {
           const parts = selectedValue.split('-');
           const formattedDate = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : selectedValue;
-          
+          const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
+          const chronologicalStages = [...cleanStages].sort((a, b) => a.data.localeCompare(b.data));
+          const stageTitle = getStageDisplayName(stageInfo, chronologicalStages);
+          const eventLabel = stageTitle ? stageTitle.split(' - ')[0] : (stageInfo.tipo || 'Liga');
+
           document.getElementById('stage-info-date').innerText = formattedDate;
-          document.getElementById('stage-info-type').innerText = stageInfo.tipo || 'Liga';
-          document.getElementById('stage-info-multiplier').innerText = `${stageInfo.multiplicador || 1.0}x`;
+          document.getElementById('stage-info-type').innerText = eventLabel;
+          document.getElementById('stage-info-multiplier').innerText = `${stageMult.toFixed(1)}x`;
           infoBadge.classList.add('active');
         }
       } catch (err) {

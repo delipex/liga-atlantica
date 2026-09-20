@@ -3779,14 +3779,20 @@
       });
 
       // 2. Renderiza a tabela de pré-visualização
+      const multInput = document.getElementById('event-multiplier');
+      const currentMult = multInput ? (parseFloat(multInput.value) || 1.0) : 1.0;
       const tbody = document.getElementById('preview-tbody');
       tbody.innerHTML = mappedPlayers.map(p => {
+        const finalPts = currentMult !== 1.0 ? (p.Pontos * currentMult) : p.Pontos;
         return `
           <tr>
             <td class="row-rank">${p.Pos}</td>
             <td style="font-weight: 600; color: #fff;">${escapeHTML(p.Jogador)}</td>
             <td style="text-align:center;">${escapeHTML(p.Categoria)}</td>
-            <td style="text-align:center;" class="score-cell">${p.Pontos} PTS</td>
+            <td style="text-align:center;" class="score-cell">
+              <span style="font-weight: 700; color: #fff;">${finalPts} PTS</span>
+              ${currentMult !== 1.0 ? `<div style="font-size:0.72rem; color:var(--accent-yellow); font-weight:600; margin-top:2px;">${p.Pontos} &times; ${currentMult}x</div>` : ''}
+            </td>
             <td style="text-align:center;">
               <span style="color: #10b981; font-weight:700;">${p.Vitorias}V</span> - 
               <span style="color: #f59e0b; font-weight:700;">${p.Empates}E</span> - 
@@ -8462,7 +8468,7 @@
                 <span style="font-size: 1.1rem;">🏆</span>
                 <div>
                   <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">
-                    Etapa ${stg.stageNumber} — ${dateFormatted} (${escapeHTML(stg.type)})
+                    ${escapeHTML(getDisplayEventType(stg.type, stg.date, chronologicalStages) || `Etapa ${stg.stageNumber} — ${dateFormatted}`)}
                   </div>
                   <div style="font-size: 0.75rem; color: var(--text-secondary);">
                     ${stg.players.length} jogadores &bull; Multiplicador: ${stg.multiplier}x &bull; Arquivo: <code>etapas/${stg.date}.tdf</code>
