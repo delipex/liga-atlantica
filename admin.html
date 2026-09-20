@@ -324,11 +324,16 @@
     /* Estilos Embelezados do Seletor de Tipo de Evento */
     .event-type-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 0.75rem;
       margin-top: 0.5rem;
     }
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
+      .event-type-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    @media (max-width: 480px) {
       .event-type-grid {
         grid-template-columns: repeat(2, 1fr);
       }
@@ -608,6 +613,11 @@
               <div class="event-type-icon">🏆</div>
               <div class="event-type-label">League Cup</div>
               <div class="event-type-sub">1.5x (Fixo)</div>
+            </div>
+            <div class="event-type-card" data-value="Especial" onclick="selectEventType('Especial')">
+              <div class="event-type-icon">✨</div>
+              <div class="event-type-label">Sessão Especial</div>
+              <div class="event-type-sub">1.0x (Ajustável)</div>
             </div>
             <div class="event-type-card" data-value="Personalizado" onclick="selectEventType('Personalizado')">
               <div class="event-type-icon">⚙️</div>
@@ -2619,6 +2629,16 @@
         multInput.disabled = false;
         multInput.style.opacity = '1.0';
         multInput.style.cursor = 'text';
+      } else if (eventType === 'Especial') {
+        if (customTitleGroup) customTitleGroup.style.display = 'block';
+        const customTitleInput = document.getElementById('event-custom-title');
+        if (customTitleInput && !customTitleInput.value) {
+          customTitleInput.placeholder = "Ex: Sessão Especial #30, Formato Retro... (Opcional)";
+        }
+        multInput.disabled = false;
+        multInput.style.opacity = '1.0';
+        multInput.style.cursor = 'text';
+        if (!multInput.value || multInput.value === '1.5') multInput.value = '1.0';
       } else {
         if (customTitleGroup) customTitleGroup.style.display = 'none';
         multInput.disabled = true;
@@ -2766,40 +2786,54 @@
       if (!fileContents || fileContents.length === 0) return;
 
       const firstFile = fileContents[0];
-      const meta = extractTDFMetadata(firstFile.text);
+      const fileName = (firstFile.name || '').trim();
+      const meta = extractTDFMetadata(firstFile.text) || { name: null, date: null };
 
-      if (!meta) {
-        return;
+      // Se não veio do XML, tenta extrair o nome a partir do nome do arquivo
+      let tournamentName = meta.name;
+      let tournamentDate = meta.date;
+      if (!tournamentName && fileName) {
+        tournamentName = fileName.replace(/\.[^/.]+$/, "");
       }
 
-      const dateInfo = parseTDFDate(meta.date);
-      const dateInput = document.getElementById('event-date');
-      const numberInput = document.getElementById('event-number');
-
-      let hasWarning = false;
-      let warningMsg = '';
-
-      if (dateInfo && dateInfo.iso) {
-        dateInput.value = dateInfo.iso;
-      }
-
-      let fileNumber = null;
-      let fileType = '';
-      if (meta.name) {
-        const numMatch = meta.name.match(/#(\d+)/) || meta.name.match(/etapa\s*(\d+)/i);
-        if (numMatch) fileNumber = parseInt(numMatch[1], 10);
-
-        const nameLower = meta.name.toLowerCase();
-        if (nameLower.includes('cup') || nameLower.includes('copa')) {
-          fileType = 'Cup';
-        } else if (nameLower.includes('challenge') || nameLower.includes('desafio')) {
-          fileType = 'Challenge';
-        } else if (nameLower.includes('liga') || nameLower.includes('sessão') || nameLower.includes('sessao')) {
-          fileType = 'Liga';
+      // Detecção de data: tenta extrair do XML ou do nome do arquivo (ex: 2026-09-20 ou 20-09-2026)
+      let dateInfo = parseTDFDate(tournamentDate);
+      if (!dateInfo && fileName) {
+        const isoMatch = fileName.match(/(\d{4})[-_](\d{2})[-_](\d{2})/);
+        const ptMatch = fileName.match(/(\d{2})[-_](\d{2})[-_](\d{4})/);
+        if (isoMatch) {
+          dateInfo = { iso: `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`, pt: `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}` };
+        } else if (ptMatch) {
+          dateInfo = { iso: `${ptMatch[3]}-${ptMatch[2]}-${ptMatch[1]}`, pt: `${ptMatch[1]}/${ptMatch[2]}/${ptMatch[3]}` };
         }
       }
 
-      if (fileNumber !== null) {
+      const dateInput = document.getElementById('event-date');
+      const numberInput = document.getElementById('event-number');
+
+      if (dateInfo && dateInfo.iso && dateInput) {
+        dateInput.value = dateInfo.iso;
+      }
+
+      // Detecção do tipo de evento e número (verifica tanto no XML quanto no nome do arquivo)
+      let fileNumber = null;
+      let fileType = '';
+      const searchTarget = `${tournamentName || ''} ${fileName}`.toLowerCase();
+
+      const numMatch = searchTarget.match(/#(\d+)/) || searchTarget.match(/etapa\s*(\d+)/i) || searchTarget.match(/sess[aã]o\s*(\d+)/i);
+      if (numMatch) fileNumber = parseInt(numMatch[1], 10);
+
+      if (searchTarget.includes('cup') || searchTarget.includes('copa')) {
+        fileType = 'Cup';
+      } else if (searchTarget.includes('challenge') || searchTarget.includes('desafio')) {
+        fileType = 'Challenge';
+      } else if (searchTarget.includes('especial') || searchTarget.includes('special')) {
+        fileType = 'Especial';
+      } else if (searchTarget.includes('liga') || searchTarget.includes('sessão') || searchTarget.includes('sessao')) {
+        fileType = 'Liga';
+      }
+
+      if (fileNumber !== null && numberInput) {
         numberInput.value = fileNumber;
       }
 
@@ -2813,17 +2847,26 @@
         }
       }
 
+      // Feedback visual para o organizador
+      const displayType = fileType || 'Torneio';
+      const multVal = fileType === 'Cup' || fileType === 'Challenge' ? '1.5x (Fixo)' : (fileType === 'Especial' ? '1.0x (Ajustável)' : '1.0x');
+      const displayDate = dateInfo ? dateInfo.pt : (tournamentDate || (dateInput ? dateInput.value : ''));
+
       fileInfoDiv.style.display = 'block';
-      const displayDate = dateInfo ? dateInfo.pt : meta.date;
       fileInfoDiv.style.background = 'rgba(16, 185, 129, 0.08)';
       fileInfoDiv.style.borderColor = 'rgba(16, 185, 129, 0.25)';
       fileInfoDiv.style.color = '#34d399';
       fileInfoDiv.innerHTML = `
-        <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-          ✨ Arquivo TDF carregado e detectado com sucesso!
+        <div style="font-weight: 700; margin-bottom: 5px; display: flex; align-items: center; gap: 6px;">
+          ✨ Arquivo TDF carregado e identificado com sucesso!
         </div>
-        <div style="font-size: 0.8rem; line-height: 1.4;">
-          📅 Data: <strong>${displayDate}</strong> &nbsp;|&nbsp; 🏆 Torneio: <strong>${escapeHTML(meta.name)}</strong>
+        <div style="font-size: 0.82rem; line-height: 1.5; color: #e2e8f0;">
+          📌 <strong>Tipo:</strong> <span style="color: var(--accent-yellow); font-weight: 700;">${displayType} (${multVal})</span>
+          ${displayDate ? ` &nbsp;|&nbsp; 📅 <strong>Data:</strong> <strong>${displayDate}</strong>` : ''}
+          ${tournamentName ? ` &nbsp;|&nbsp; 🏷️ <em>${escapeHTML(tournamentName)}</em>` : ''}
+        </div>
+        <div style="font-size: 0.74rem; color: var(--text-secondary); margin-top: 4px;">
+          💡 O multiplicador e tipo foram configurados automaticamente. Você pode alternar nos cards acima a qualquer momento.
         </div>
       `;
 
@@ -4062,7 +4105,13 @@
       const eventDate = document.getElementById('event-date').value;
       const eventType = document.getElementById('event-type').value;
       const eventMult = parseFloat(document.getElementById('event-multiplier').value) || 1.0;
-      const savedEventType = eventType === 'Personalizado' ? (document.getElementById('event-custom-title').value.trim() || 'Personalizado') : eventType;
+      let savedEventType = eventType;
+      if (eventType === 'Personalizado') {
+        savedEventType = (document.getElementById('event-custom-title')?.value || '').trim() || 'Personalizado';
+      } else if (eventType === 'Especial') {
+        const customTitle = (document.getElementById('event-custom-title')?.value || '').trim();
+        savedEventType = customTitle ? `Especial (${customTitle})` : 'Sessão Especial';
+      }
       
       if (!eventDate) {
         showError("Selecione a data do evento!");
@@ -6452,11 +6501,13 @@
         if (type === 'Liga') return stageNum ? `Sessão de Liga ${stageNum} - Temporada 5 (${formattedDate})` : `Sessão de Liga (${formattedDate})`;
         if (type === 'Challenge') return stageNum ? `League Challenge ${stageNum} - Temporada 5 (${formattedDate})` : `League Challenge (${formattedDate})`;
         if (type === 'Cup') return stageNum ? `League Cup ${stageNum} - Temporada 5 (${formattedDate})` : `League Cup (${formattedDate})`;
+        if (type && type.includes('Especial')) return stageNum ? `Sessão Especial ${stageNum} - Temporada 5 (${formattedDate})` : `${type} (${formattedDate})`;
       }
 
       if (type === 'Liga') return `Sessão de Liga (${formattedDate})`;
       if (type === 'Challenge') return `League Challenge (${formattedDate})`;
       if (type === 'Cup') return `League Cup (${formattedDate})`;
+      if (type && type.includes('Especial')) return `${type} (${formattedDate})`;
       return `${type} (${formattedDate})`;
     }
 
