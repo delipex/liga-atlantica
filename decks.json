@@ -266,6 +266,13 @@
         "icone": "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/150.png"
     },
     {
+        "deck": "Ogerpon + Meganium",
+        "tipoEnergia": "grass",
+        "imagem": "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/TWM/TWM_025_R_PT_MD.png",
+        "limitless": "https://limitlesstcg.com/decks/list/28573",
+        "icone": "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/1017.png"
+    },
+    {
         "deck": "Okidogi",
         "tipoEnergia": "fighting+darkness",
         "imagem": "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PRE/PRE_057_R_PT.png",
@@ -306,6 +313,13 @@
         "imagem": "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PBL/PBL_045_R_PT.png",
         "limitless": "https://limitlesstcg.com/cards/PBL/45/decklists/jp",
         "icone": "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/409.png"
+    },
+    {
+        "deck": "Slowbro",
+        "tipoEnergia": "colorless",
+        "imagem": "",
+        "limitless": "",
+        "icone": ""
     },
     {
         "deck": "Slowking",
