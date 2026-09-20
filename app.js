@@ -846,8 +846,15 @@ async function loadData() {
         StatusPodio: (configObj.statusPodio || 'auto').toLowerCase(),
         ExibirMetagame: configObj.exibirMetagame || 'ambos',
         TemporadaAtual: configObj.temporadaAtual || 5,
+        StatusTemporada: (configObj.statusTemporada || 'ativa').toLowerCase(),
         NomeLiga: configObj.leagueName || 'Liga Atlântica',
-        SubtituloLiga: configObj.leagueSubtitle || 'Liga de Pokémon TCG - FSA'
+        SubtituloLiga: configObj.leagueSubtitle || 'Liga de Pokémon TCG - FSA',
+        AvisoTopo: configObj.avisoTopo || '',
+        LinkWhatsApp: configObj.linkWhatsApp || '',
+        LinkInstagram: configObj.linkInstagram || '',
+        ProximoEvento: configObj.proximoEvento || configObj.nextEvent || null,
+        MinEtapasPokebolaOuro: configObj.minEtapasPokebolaOuro || 2,
+        TamanhoPodio: configObj.tamanhoPodio || 4
       };
     } else if (spreadsheetId) {
       let configuracoes = [];
@@ -1099,8 +1106,9 @@ async function loadData() {
     isOfflineMode = false;
 
     if (statusBadge) {
+      const statusTemporada = appData.Configuracoes?.StatusTemporada || 'ativa';
       const statusPodio = window.CONFIG?.StatusPodio || appData.Configuracoes?.StatusPodio || 'auto';
-      const isFrozen = (statusPodio === 'congelado' || statusPodio === 'offline') ||
+      const isFrozen = (statusTemporada === 'off-season' || statusTemporada === 'recesso' || statusTemporada === 'pausa' || statusPodio === 'congelado' || statusPodio === 'offline') ||
                        (!appData.Ranking || appData.Ranking.length === 0);
       if (isFrozen) {
         statusBadge.innerHTML = `<span style="width:6px;height:6px;background:#94a3b8;border-radius:50%"></span> Off Season`;
@@ -1263,9 +1271,12 @@ function renderDashboard() {
   if (podiumContainer) {
     let top4 = [];
     const statusPodio = (appData.Configuracoes && appData.Configuracoes.StatusPodio) ? appData.Configuracoes.StatusPodio : 'auto';
+    const statusTemporada = (appData.Configuracoes?.StatusTemporada || 'ativa').toLowerCase();
+    const podiumLimit = Number(appData.Configuracoes?.TamanhoPodio) || 4;
     
-    // O modo congelado/ativo depende exclusivamente do status da planilha ou se não houver dados.
+    // O modo congelado/ativo depende do status da temporada, status do pódio ou se não houver dados.
     const isFrozenLayout = window.CONFIG?.dataSource === 'sheets' || 
+                           (statusTemporada === 'off-season' || statusTemporada === 'recesso' || statusTemporada === 'pausa') ||
                            (statusPodio === 'congelado' || statusPodio === 'offline') ||
                            (!appData.Ranking || appData.Ranking.length === 0);
     
@@ -1273,13 +1284,13 @@ function renderDashboard() {
       top4 = [...appData.Ranking]
         .filter(p => p.PosicaoFinal && p.PosicaoFinal > 0)
         .sort((a, b) => a.PosicaoFinal - b.PosicaoFinal)
-        .slice(0, 4);
+        .slice(0, podiumLimit);
         
       if (top4.length === 0) {
-        top4 = appData.Ranking.slice(0, 4);
+        top4 = appData.Ranking.slice(0, podiumLimit);
       }
     } else {
-      top4 = appData.Ranking.slice(0, 4);
+      top4 = appData.Ranking.slice(0, podiumLimit);
     }
 
     if (top4.length === 0) {
@@ -1339,7 +1350,26 @@ function renderDashboard() {
   }
 
   if (eventContainer) {
-    const eventConf = getNextEventFromCalendar() || (window.CONFIG && window.CONFIG.nextEvent ? window.CONFIG.nextEvent : null);
+    let eventConf = null;
+    const jsonEvent = appData.Configuracoes?.ProximoEvento;
+    if (jsonEvent && typeof jsonEvent === 'object') {
+      const isEventActive = jsonEvent.ativo !== undefined ? jsonEvent.ativo : (jsonEvent.active !== undefined ? jsonEvent.active : true);
+      if (isEventActive && (jsonEvent.data || jsonEvent.date)) {
+        eventConf = {
+          title: jsonEvent.titulo || jsonEvent.title || 'Próximo Torneio',
+          date: jsonEvent.data || jsonEvent.date,
+          time: jsonEvent.hora || jsonEvent.time || '14:00',
+          location: jsonEvent.local || jsonEvent.location || 'Livraria Atlântica +',
+          locationUrl: jsonEvent.mapsUrl || jsonEvent.locationUrl || jsonEvent.linkMaps || '',
+          description: jsonEvent.descricao || jsonEvent.description || 'Formato Standard. Traga seu melhor deck!',
+          active: true
+        };
+      }
+    }
+    
+    if (!eventConf && (!jsonEvent || jsonEvent.ativo !== false)) {
+      eventConf = getNextEventFromCalendar() || (window.CONFIG && window.CONFIG.nextEvent ? window.CONFIG.nextEvent : null);
+    }
     
     if (eventConf && eventConf.active) {
 
@@ -2540,7 +2570,10 @@ window.runSimulation = function() {
    CÁLCULO DA POKÉBOLA DE OURO - RANKING MULTIDIMENSIONAL DE PERFORMANCE
    ========================================================================== */
 function calculatePokebolaDeOuroCandidates(rankingData) {
-  const eligible = (rankingData || []).filter(r => r && toNumber(r.Participacoes) >= 2).map(r => {
+  const minEtapas = appData.Configuracoes?.MinEtapasPokebolaOuro !== undefined 
+    ? toNumber(appData.Configuracoes.MinEtapasPokebolaOuro) 
+    : 2;
+  const eligible = (rankingData || []).filter(r => r && toNumber(r.Participacoes) >= minEtapas).map(r => {
     const wins = toNumber(r.Vitorias);
     const losses = toNumber(r.Derrotas);
     const draws = toNumber(r.Empates);

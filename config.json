@@ -1,8 +1,23 @@
 {
     "leagueName": "Liga Atlântica",
     "leagueSubtitle": "Liga de Pokémon TCG - FSA",
+    "temporadaAtual": 5,
+    "statusTemporada": "ativa",
     "statusPodio": "auto",
     "exibirMetagame": "ambos",
-    "temporadaAtual": 5,
+    "avisoTopo": "",
+    "linkWhatsApp": "https://chat.whatsapp.com/EpUEb62hq1bKs6iDtQ3ena",
+    "linkInstagram": "",
+    "proximoEvento": {
+        "ativo": true,
+        "titulo": "Sessão de Liga Padrão",
+        "data": "2026-09-26",
+        "hora": "14:00",
+        "local": "Livraria Atlântica +",
+        "mapsUrl": "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6",
+        "descricao": "Formato Standard. Traga seu melhor deck e venha disputar pontos para o ranking oficial!"
+    },
+    "minEtapasPokebolaOuro": 2,
+    "tamanhoPodio": 4,
     "historicalScoresTab": "ScoresAntigos"
 }

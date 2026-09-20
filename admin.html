@@ -322,7 +322,7 @@
         <button class="btn" onclick="handleLogout()" style="padding: 0.4rem 1rem; font-size: 0.8rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.25);">
           Sair do Painel
         </button>
-        <button class="btn" onclick="document.getElementById('settings-modal').style.display='flex'" style="padding: 0.4rem; font-size: 1.2rem; background: transparent; border: none; cursor: pointer; color: var(--text-secondary);" title="Configurações">
+        <button class="btn" onclick="switchAdminTab('config')" style="padding: 0.4rem; font-size: 1.2rem; background: transparent; border: none; cursor: pointer; color: var(--text-secondary);" title="Configurações da Liga">
           ⚙️
         </button>
       </div>
@@ -898,52 +898,163 @@
     </div>
 
     <!-- ABA 9: CONFIGURAÇÕES GERAIS -->
-    <div id="pane-config" class="tab-pane-content" style="display: none; max-width: 750px; margin: 0 auto;">
+    <div id="pane-config" class="tab-pane-content" style="display: none; max-width: 800px; margin: 0 auto;">
       <section class="glass-card admin-card">
-        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
-          <h2 style="font-size: 1.2rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-            ⚙️ Configurações Gerais da Liga & Site
+        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.5rem;">
+          <h2 style="font-size: 1.25rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            ⚙️ Central de Configurações da Liga
           </h2>
-          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">
-            Altere parâmetros globais de exibição, pódio e títulos sem tocar em código
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">
+            Gerencie parâmetros da temporada, comunicado no topo, contagem regressiva e links das redes em tempo real
           </p>
         </div>
 
         <form id="config-form" onsubmit="handleSaveConfig(event)">
-          <div class="form-group" style="margin-bottom: 1rem;">
-            <label for="conf-league-name">Nome da Liga</label>
-            <input type="text" id="conf-league-name" class="search-input" value="Liga Atlântica" required>
+          <!-- BLOCO 1: Identidade e Temporada -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 0.95rem; color: var(--accent-yellow); margin-top: 0; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem;">
+              🏛️ Identidade da Liga & Temporada
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div class="form-group">
+                <label for="conf-league-name">Nome da Liga</label>
+                <input type="text" id="conf-league-name" class="search-input" value="Liga Atlântica" required>
+              </div>
+              <div class="form-group">
+                <label for="conf-league-subtitle">Subtítulo da Liga</label>
+                <input type="text" id="conf-league-subtitle" class="search-input" value="Liga de Pokémon TCG - FSA">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="conf-temporada-atual">Número da Temporada Ativa</label>
+                <input type="number" id="conf-temporada-atual" class="search-input" value="5" min="1" max="99" required>
+              </div>
+              <div class="form-group">
+                <label for="conf-status-temporada">Status da Temporada</label>
+                <select id="conf-status-temporada" class="search-input" style="width: 100%;">
+                  <option value="ativa">🟢 Temporada Ativa (Em andamento)</option>
+                  <option value="off-season">⏸️ Off-Season / Recesso (Aguardando nova temporada)</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 1rem;">
-            <label for="conf-league-subtitle">Subtítulo da Liga</label>
-            <input type="text" id="conf-league-subtitle" class="search-input" value="Liga de Pokémon TCG - FSA">
+          <!-- BLOCO 2: Comunicado / Banner de Alerta no Topo -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 0.95rem; color: #3b82f6; margin-top: 0; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+              📢 Comunicado / Banner no Topo do Site
+            </h3>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+              Exibe uma faixa de destaque no topo de todas as páginas. Deixe em branco para ocultar. Links (https://...) viram botões automáticos.
+            </p>
+            <div class="form-group">
+              <input type="text" id="conf-aviso-topo" class="search-input" placeholder="Ex: 🚨 Inscrições abertas para a Grande Final! Fale no WhatsApp: https://chat.whatsapp.com/...">
+            </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 1rem;">
-            <label for="conf-temporada-atual">Número da Temporada Atual</label>
-            <input type="number" id="conf-temporada-atual" class="search-input" value="5" min="1" max="99" required>
+          <!-- BLOCO 3: Próximo Torneio & Contagem Regressiva -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <h3 style="font-size: 0.95rem; color: #10b981; margin: 0; display: flex; align-items: center; gap: 0.4rem;">
+                ⏳ Próximo Torneio (Card da Home)
+              </h3>
+              <label style="font-size: 0.8rem; color: #fff; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="conf-evento-ativo" checked style="accent-color: #10b981; width: 16px; height: 16px;">
+                Exibir card e contagem regressiva
+              </label>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <div class="form-group">
+                <label for="conf-evento-titulo">Título do Torneio</label>
+                <input type="text" id="conf-evento-titulo" class="search-input" placeholder="Ex: Sessão de Liga Padrão #21">
+              </div>
+              <div class="form-group">
+                <label for="conf-evento-data">Data</label>
+                <input type="date" id="conf-evento-data" class="search-input">
+              </div>
+              <div class="form-group">
+                <label for="conf-evento-hora">Horário</label>
+                <input type="time" id="conf-evento-hora" class="search-input" value="14:00">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <div class="form-group">
+                <label for="conf-evento-local">Local do Evento</label>
+                <input type="text" id="conf-evento-local" class="search-input" placeholder="Ex: Livraria Atlântica +">
+              </div>
+              <div class="form-group">
+                <label for="conf-evento-maps">Link do Google Maps do Local</label>
+                <input type="url" id="conf-evento-maps" class="search-input" placeholder="https://maps.app.goo.gl/...">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="conf-evento-desc">Descrição Curta / Observações</label>
+              <input type="text" id="conf-evento-desc" class="search-input" placeholder="Ex: Formato Standard. Traga seu melhor deck!">
+            </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 1rem;">
-            <label for="conf-status-podio">Modo de Exibição do Pódio / Ranking</label>
-            <select id="conf-status-podio" class="search-input" style="width: 100%;">
-              <option value="auto">🟢 Automático (Mostra os líderes com mais pontos)</option>
-              <option value="congelado">🔒 Congelado (Off Season / Modo Roster)</option>
-            </select>
+          <!-- BLOCO 4: Redes Sociais & Contato -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 0.95rem; color: #a855f7; margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;">
+              📱 Redes Sociais da Liga
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="conf-link-whatsapp">Link do Grupo do WhatsApp</label>
+                <input type="url" id="conf-link-whatsapp" class="search-input" placeholder="https://chat.whatsapp.com/...">
+              </div>
+              <div class="form-group">
+                <label for="conf-link-instagram">Link do Instagram da Liga</label>
+                <input type="url" id="conf-link-instagram" class="search-input" placeholder="https://instagram.com/...">
+              </div>
+            </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 1.5rem;">
-            <label for="conf-exibir-metagame">Exibição do Gráfico de Metagame</label>
-            <select id="conf-exibir-metagame" class="search-input" style="width: 100%;">
-              <option value="ambos">Exibir na Home e na Página de Metagame</option>
-              <option value="pagina">Exibir apenas na Página de Metagame</option>
-              <option value="home">Exibir apenas na Home</option>
-              <option value="desativado">Desativado (Ocultar gráfico)</option>
-            </select>
+          <!-- BLOCO 5: Regras de Exibição e Premiação -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
+            <h3 style="font-size: 0.95rem; color: #f59e0b; margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;">
+              🏆 Regras de Competição & Exibição
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+              <div class="form-group">
+                <label for="conf-status-podio">Modo de Exibição do Pódio</label>
+                <select id="conf-status-podio" class="search-input" style="width: 100%;">
+                  <option value="auto">🟢 Automático (Mostra os líderes com mais pontos)</option>
+                  <option value="congelado">🔒 Congelado (Modo estático)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="conf-exibir-metagame">Exibição do Gráfico de Metagame</label>
+                <select id="conf-exibir-metagame" class="search-input" style="width: 100%;">
+                  <option value="ambos">Exibir na Home e na Página de Metagame</option>
+                  <option value="pagina">Exibir apenas na Página de Metagame</option>
+                  <option value="home">Exibir apenas na Home</option>
+                  <option value="desativado">Desativado (Ocultar gráfico)</option>
+                </select>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="conf-min-etapas-ouro">Mínimo de Etapas para Pokébola de Ouro</label>
+                <input type="number" id="conf-min-etapas-ouro" class="search-input" min="1" max="20" value="2">
+              </div>
+              <div class="form-group">
+                <label for="conf-tamanho-podio">Tamanho do Pódio na Home</label>
+                <select id="conf-tamanho-podio" class="search-input" style="width: 100%;">
+                  <option value="4">Top 4 (Ouro, Prata, Bronze e 4º Lugar)</option>
+                  <option value="3">Top 3 (Ouro, Prata e Bronze)</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          <button type="submit" id="btn-save-config-submit" class="btn btn-whatsapp" style="width: 100%; justify-content: center; padding: 0.75rem; font-size: 1rem; background: var(--accent-yellow); color: #000; font-weight: 700; border-color: var(--accent-yellow);">
+          <button type="submit" id="btn-save-config-submit" class="btn btn-whatsapp" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem; background: var(--accent-yellow); color: #000; font-weight: 700; border-color: var(--accent-yellow);">
             💾 Salvar Configurações no Repositório
           </button>
         </form>
@@ -1448,63 +1559,7 @@
     </div>
   </div>
 
-  <div id="settings-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
-    <div class="glass-card" style="width: 90%; max-width: 450px; padding: 2rem; position: relative;">
-      <button onclick="closeSettingsModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
-      <h3 style="color: #fff; margin-bottom: 1rem; text-align: center;">Acesso e Configurações</h3>
-      <div class="alert-box alert-error" id="settings-error" style="display: none; margin-bottom: 1rem;">Senha incorreta!</div>
-      
-      <div id="settings-pw-group" style="margin-bottom: 1.5rem;">
-        <div class="form-group">
-          <label for="settings-password">Senha de Segurança (Spreadsheet Edit Link)</label>
-          <input type="password" id="settings-password" class="search-input" placeholder="Digite a senha secreta...">
-        </div>
-        <button id="settings-login-btn" onclick="handleSettingsLogin()" class="btn btn-whatsapp" style="width: 100%; justify-content: center; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); margin-top: 1rem;">
-          Desbloquear Link da Planilha
-        </button>
-      </div>
-      
-      <!-- Unlocked Button (initially hidden) -->
-      <a id="modal-sheets-link-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp" style="display: none; background: #0f766e; border-color: #0f766e; color: #fff; margin-top: 1rem; margin-bottom: 1.5rem; justify-content: center; width: 100%; text-decoration: none; font-weight: 700; gap: 0.5rem; align-items: center;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-        Ir para o Google Sheets
-      </a>
 
-      <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
-        <h4 style="color: #fff; margin-bottom: 0.5rem; font-size: 0.95rem; display: flex; align-items: center; gap: 0.35rem;">
-          ⚡ Cadastro Automático de Jogadores
-        </h4>
-        <p style="font-size: 0.72rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.4;">
-          Para cadastrar novos jogadores na planilha com apenas um clique a partir do validador, insira a URL do Web App do Google Apps Script configurado na sua planilha:
-        </p>
-        <div class="form-group">
-          <label for="apps-script-url">URL do Apps Script (Web App)</label>
-          <input type="url" id="apps-script-url" class="search-input" placeholder="https://script.google.com/macros/s/.../exec" style="font-size: 0.8rem;" oninput="saveAppsScriptUrl()">
-        </div>
-        <details style="font-size: 0.72rem; color: var(--accent-yellow); cursor: pointer; margin-top: 0.5rem;">
-          <summary>Ver código do Google Apps Script para colar na planilha</summary>
-          <pre style="background: rgba(0,0,0,0.4); padding: 0.65rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; color: #fff; font-family: monospace; font-size: 0.65rem; margin-top: 0.5rem; user-select: all; line-height: 1.4;">
-function doGet(e) {
-  var id = e.parameter.id || "";
-  var name = e.parameter.name || "";
-  var cat = e.parameter.category || "";
-  
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Jogadores");
-  if (!sheet) {
-    return ContentService.createTextOutput("ERROR: Aba 'Jogadores' não encontrada.").setMimeType(ContentService.MimeType.TEXT);
-  }
-  
-  // Adiciona a linha no final
-  sheet.appendRow([id, name, cat]);
-  
-  // Retorna sucesso com cabeçalhos de CORS habilitados
-  return ContentService.createTextOutput("SUCCESS")
-    .setMimeType(ContentService.MimeType.TEXT);
-}</pre>
-        </details>
-      </div>
-    </div>
-  </div>
 
   <!-- ABA 10: AUDITORIA DE DADOS & INTEGRIDADE DE ETAPAS -->
   <div id="pane-auditoria" class="tab-pane-content" style="display: none; max-width: 1050px; margin: 0 auto;">
@@ -2293,43 +2348,12 @@ function doGet(e) {
       }
     }
     
-    async function handleSettingsLogin() {
-      const password = document.getElementById('settings-password').value;
-      const errorBox = document.getElementById('settings-error');
-      
-      const hash = await sha256(password);
-      if (hash === GOLI_PW_HASH) {
-        errorBox.style.display = 'none';
-        const url = decodeToken(ENC_SHEET_URL, password);
-        
-        // Hide password input fields and display the direct Sheets link button
-        document.getElementById('settings-pw-group').style.display = 'none';
-        const linkBtn = document.getElementById('modal-sheets-link-btn');
-        linkBtn.href = url;
-        linkBtn.style.display = 'flex';
-      } else {
-        errorBox.style.display = 'block';
-        document.getElementById('settings-password').value = '';
-      }
-    }
-    
-    function closeSettingsModal() {
-      document.getElementById('settings-modal').style.display = 'none';
-      document.getElementById('settings-pw-group').style.display = 'block';
-      const linkBtn = document.getElementById('modal-sheets-link-btn');
-      linkBtn.style.display = 'none';
-      linkBtn.href = '#';
-      document.getElementById('settings-password').value = '';
-      document.getElementById('settings-error').style.display = 'none';
-    }
-    
     function handleLogout() {
       runtimeToken = null;
       document.getElementById('login-screen').style.display = 'block';
       document.getElementById('main-panel').style.display = 'none';
       document.getElementById('admin-password').value = '';
       document.getElementById('login-error').style.display = 'none';
-      closeSettingsModal();
     }
 
     window.selectEventType = function(val) {
@@ -3286,7 +3310,7 @@ function doGet(e) {
               <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3); margin-right: 0.25rem;" onclick="copySingleRow('${escapeHTML(idVal)}', '${escapeHTML(rawName)}', '${escapeHTML(catVal)}', this)">
                 📋 Copiar
               </button>
-              <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: #2563eb; color: #fff; border-color: #2563eb;" onclick="registerPlayerDirectly('${escapeHTML(idVal)}', '${escapeHTML(rawName)}', '${escapeHTML(catVal)}', this)">
+              <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: #2563eb; color: #fff; border-color: #2563eb;" onclick="openNewPlayerModal('${escapeHTML(idVal)}', '${escapeHTML(rawName)}', '${escapeHTML(catVal)}')">
                 ⚡ Cadastrar
               </button>
             </td>
@@ -4494,12 +4518,18 @@ function doGet(e) {
       renderPlayersCatalog();
     }
 
-    function openNewPlayerModal() {
-      document.getElementById('player-modal-title').innerText = '👤 Cadastrar Novo Jogador';
+    function openNewPlayerModal(initialId = '', initialName = '', initialCat = 'Master') {
+      document.getElementById('player-modal-title').innerText = initialName ? `👤 Cadastrar: ${initialName}` : '👤 Cadastrar Novo Jogador';
       document.getElementById('player-edit-original-name').value = '';
-      document.getElementById('player-edit-name').value = '';
-      document.getElementById('player-edit-id').value = '';
-      document.getElementById('player-edit-cat').value = 'Master';
+      document.getElementById('player-edit-name').value = initialName || '';
+      document.getElementById('player-edit-id').value = initialId || '';
+      
+      let catVal = 'Master';
+      const catLow = String(initialCat || '').toLowerCase();
+      if (catLow.includes('senior') || catLow.includes('sênior')) catVal = 'Senior';
+      else if (catLow.includes('junior') || catLow.includes('júnior')) catVal = 'Junior';
+      document.getElementById('player-edit-cat').value = catVal;
+
       document.getElementById('player-modal-error').style.display = 'none';
       document.getElementById('player-edit-modal').style.display = 'flex';
     }
@@ -4622,6 +4652,17 @@ function doGet(e) {
         renderPlayersCatalog();
         closePlayerEditModal();
         showSuccess(`👤 Jogador "${name}" salvo com sucesso!`);
+
+        // Se estiver no fluxo de validação de TDF com jogadores não resolvidos, resolve automaticamente
+        if (typeof unresolvedPlayers !== 'undefined' && Array.isArray(unresolvedPlayers)) {
+          const matchUnresolved = unresolvedPlayers.find(p => p.toLowerCase() === (origName || name).toLowerCase());
+          if (matchUnresolved) {
+            resolvedNamesMap[matchUnresolved] = name;
+            unresolvedPlayers = unresolvedPlayers.filter(p => p.toLowerCase() !== matchUnresolved.toLowerCase());
+            if (typeof renderNameResolutionUI === 'function') renderNameResolutionUI();
+            if (typeof renderEnrichedPreview === 'function') renderEnrichedPreview();
+          }
+        }
 
       } catch (err) {
         console.error("Erro ao salvar jogador:", err);
@@ -5421,14 +5462,47 @@ function doGet(e) {
       const leagueName = document.getElementById('conf-league-name');
       const leagueSub = document.getElementById('conf-league-subtitle');
       const tempAtual = document.getElementById('conf-temporada-atual');
+      const statusTemp = document.getElementById('conf-status-temporada');
+      const avisoTopo = document.getElementById('conf-aviso-topo');
+
+      const evtAtivo = document.getElementById('conf-evento-ativo');
+      const evtTitulo = document.getElementById('conf-evento-titulo');
+      const evtData = document.getElementById('conf-evento-data');
+      const evtHora = document.getElementById('conf-evento-hora');
+      const evtLocal = document.getElementById('conf-evento-local');
+      const evtMaps = document.getElementById('conf-evento-maps');
+      const evtDesc = document.getElementById('conf-evento-desc');
+
+      const linkWhats = document.getElementById('conf-link-whatsapp');
+      const linkInsta = document.getElementById('conf-link-instagram');
+
       const statusPodio = document.getElementById('conf-status-podio');
       const exibirMeta = document.getElementById('conf-exibir-metagame');
+      const minOuro = document.getElementById('conf-min-etapas-ouro');
+      const tamanhoPodio = document.getElementById('conf-tamanho-podio');
 
       if (leagueName) leagueName.value = cachedConfig.leagueName || 'Liga Atlântica';
       if (leagueSub) leagueSub.value = cachedConfig.leagueSubtitle || 'Liga de Pokémon TCG - FSA';
       if (tempAtual) tempAtual.value = cachedConfig.temporadaAtual || 5;
+      if (statusTemp) statusTemp.value = cachedConfig.statusTemporada || 'ativa';
+      if (avisoTopo) avisoTopo.value = cachedConfig.avisoTopo || '';
+
+      const evt = cachedConfig.proximoEvento || {};
+      if (evtAtivo) evtAtivo.checked = evt.ativo !== false;
+      if (evtTitulo) evtTitulo.value = evt.titulo || '';
+      if (evtData) evtData.value = evt.data || '';
+      if (evtHora) evtHora.value = evt.hora || '14:00';
+      if (evtLocal) evtLocal.value = evt.local || '';
+      if (evtMaps) evtMaps.value = evt.mapsUrl || '';
+      if (evtDesc) evtDesc.value = evt.descricao || '';
+
+      if (linkWhats) linkWhats.value = cachedConfig.linkWhatsApp || '';
+      if (linkInsta) linkInsta.value = cachedConfig.linkInstagram || '';
+
       if (statusPodio) statusPodio.value = cachedConfig.statusPodio || 'auto';
       if (exibirMeta) exibirMeta.value = cachedConfig.exibirMetagame || 'ambos';
+      if (minOuro) minOuro.value = cachedConfig.minEtapasPokebolaOuro !== undefined ? cachedConfig.minEtapasPokebolaOuro : 2;
+      if (tamanhoPodio) tamanhoPodio.value = String(cachedConfig.tamanhoPodio || 4);
     }
 
     async function handleSaveConfig(e) {
@@ -5440,22 +5514,49 @@ function doGet(e) {
         return;
       }
 
-      const leagueName = document.getElementById('conf-league-name').value.trim();
-      const leagueSub = document.getElementById('conf-league-subtitle').value.trim();
-      const tempAtual = parseInt(document.getElementById('conf-temporada-atual').value, 10) || 5;
-      const statusPodio = document.getElementById('conf-status-podio').value;
-      const exibirMeta = document.getElementById('conf-exibir-metagame').value;
+      const leagueName = (document.getElementById('conf-league-name')?.value || '').trim();
+      const leagueSub = (document.getElementById('conf-league-subtitle')?.value || '').trim();
+      const tempAtual = parseInt(document.getElementById('conf-temporada-atual')?.value, 10) || 5;
+      const statusTemporada = document.getElementById('conf-status-temporada')?.value || 'ativa';
+      const avisoTopo = (document.getElementById('conf-aviso-topo')?.value || '').trim();
+
+      const proximoEvento = {
+        ativo: document.getElementById('conf-evento-ativo')?.checked ?? true,
+        titulo: (document.getElementById('conf-evento-titulo')?.value || '').trim(),
+        data: (document.getElementById('conf-evento-data')?.value || '').trim(),
+        hora: (document.getElementById('conf-evento-hora')?.value || '').trim(),
+        local: (document.getElementById('conf-evento-local')?.value || '').trim(),
+        mapsUrl: (document.getElementById('conf-evento-maps')?.value || '').trim(),
+        descricao: (document.getElementById('conf-evento-desc')?.value || '').trim()
+      };
+
+      const linkWhatsApp = (document.getElementById('conf-link-whatsapp')?.value || '').trim();
+      const linkInstagram = (document.getElementById('conf-link-instagram')?.value || '').trim();
+
+      const statusPodio = document.getElementById('conf-status-podio')?.value || 'auto';
+      const exibirMeta = document.getElementById('conf-exibir-metagame')?.value || 'ambos';
+      const minOuro = parseInt(document.getElementById('conf-min-etapas-ouro')?.value, 10) || 2;
+      const tamanhoPodio = parseInt(document.getElementById('conf-tamanho-podio')?.value, 10) || 4;
 
       submitBtn.disabled = true;
       submitBtn.innerText = "⏳ Salvando Configurações no GitHub...";
 
       try {
         const updatedConfig = {
+          ...cachedConfig,
           leagueName: leagueName,
           leagueSubtitle: leagueSub,
+          temporadaAtual: tempAtual,
+          statusTemporada: statusTemporada,
           statusPodio: statusPodio,
           exibirMetagame: exibirMeta,
-          temporadaAtual: tempAtual
+          avisoTopo: avisoTopo,
+          linkWhatsApp: linkWhatsApp,
+          linkInstagram: linkInstagram,
+          proximoEvento: proximoEvento,
+          minEtapasPokebolaOuro: minOuro,
+          tamanhoPodio: tamanhoPodio,
+          historicalScoresTab: cachedConfig?.historicalScoresTab || "ScoresAntigos"
         };
 
         const config = GITHUB_CONFIG;
@@ -5463,7 +5564,7 @@ function doGet(e) {
         let confSha = await getLatestSha(confUrl);
 
         const commitPayload = {
-          message: `Atualizar configurações gerais da Liga (Temporada ${tempAtual}, Pódio: ${statusPodio})`,
+          message: `Atualizar configurações da Liga (Temporada ${tempAtual}, Status: ${statusTemporada})`,
           content: encodeBase64UTF8(JSON.stringify(updatedConfig, null, 4)),
           branch: config.branch
         };
@@ -6417,39 +6518,22 @@ function doGet(e) {
       }
     }
 
-    function saveAppsScriptUrl() {
-      const url = document.getElementById('apps-script-url').value.trim();
-      localStorage.setItem('googleAppsScriptUrl', url);
-    }
+
 
     async function copySingleRow(id, name, category, btn) {
-      const firstDbPlayer = (cachedJogadores && cachedJogadores.length > 0) ? cachedJogadores[0] : null;
-      const dbHeaders = firstDbPlayer ? Object.keys(firstDbPlayer) : ['ID', 'Jogador', 'Categoria', 'PosicaoFinal'];
-
-      let catLabel = "Mestre";
-      if (category.toUpperCase().includes('SENIOR')) catLabel = "Sênior";
-      else if (category.toUpperCase().includes('JUNIOR')) catLabel = "Junior";
-
-      const rowText = dbHeaders.map(header => {
-        const hNorm = header.toLowerCase().trim();
-        if (hNorm === 'jogador' || hNorm === 'player' || hNorm === 'nome') return name;
-        if (hNorm === 'categoria' || hNorm === 'category' || hNorm === 'cat') return catLabel;
-        if (hNorm === 'id' || hNorm === 'popid' || hNorm === 'playid' || hNorm === 'userid') return id;
-        return '';
-      }).join('\t');
-
+      const text = `${id}\t${name}\t${category}`;
       let copied = false;
       try {
         if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(rowText);
+          await navigator.clipboard.writeText(text);
           copied = true;
         }
       } catch (err) {
         console.warn("Falha no clipboard:", err);
       }
 
-      const originalText = btn.innerHTML;
       if (copied) {
+        const originalText = btn.innerHTML;
         btn.innerHTML = "✓ Copiado!";
         btn.style.background = "rgba(16, 185, 129, 0.3)";
         setTimeout(() => {
@@ -6457,46 +6541,7 @@ function doGet(e) {
           btn.style.background = "";
         }, 1500);
       } else {
-        alert(`Não foi possível copiar automaticamente. Use a cópia do bloco geral abaixo ou adicione manualmente:\n${rowText}`);
-      }
-    }
-
-    async function registerPlayerDirectly(id, name, category, btn) {
-      const url = localStorage.getItem('googleAppsScriptUrl') || document.getElementById('apps-script-url').value.trim();
-      if (!url) {
-        showError("Configure a URL do Apps Script nas Configurações (ícone de engrenagem) antes de usar o cadastro direto.");
-        document.getElementById('settings-modal').style.display = 'flex';
-        return;
-      }
-
-      btn.disabled = true;
-      const originalText = btn.innerHTML;
-      btn.innerHTML = "⏳ Cadastrando...";
-      btn.style.background = "#4b5563";
-
-      try {
-        const targetUrl = `${url}?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&category=${encodeURIComponent(category)}`;
-        await fetch(targetUrl, { mode: 'no-cors' });
-        
-        btn.innerHTML = "✓ Cadastrado!";
-        btn.style.background = "#10b981";
-        btn.style.borderColor = "#10b981";
-        btn.style.color = "#fff";
-        
-        resolvedNamesMap[name] = name;
-        unresolvedPlayers = unresolvedPlayers.filter(pName => pName !== name);
-        
-        setTimeout(() => {
-          renderNameResolutionUI();
-          renderEnrichedPreview();
-        }, 1200);
-
-      } catch (err) {
-        console.error("Erro ao cadastrar jogador:", err);
-        showError("Falha ao registrar jogador na planilha. Verifique a URL do Apps Script.");
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-        btn.style.background = "";
+        prompt("Copie os dados do jogador:", text);
       }
     }
 
