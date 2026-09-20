@@ -284,15 +284,19 @@ function getEnergyDotHTML(value) {
   const allowed = ['grass', 'fire', 'water', 'lightning', 'psychic', 'fighting', 'darkness', 'metal', 'dragon', 'colorless'];
   const rawValue = String(value || 'colorless').toLowerCase().trim();
   
+  if (rawValue === 'multi' || rawValue === 'rainbow') {
+    return `<span class="energy-dot multi" title="Multi-energia"></span>`;
+  }
+
   const parts = rawValue.split('+').map(p => p.trim());
   
   if (parts.length > 1) {
-    const c1 = allowed.includes(parts[0]) ? parts[0] : 'colorless';
-    const c2 = allowed.includes(parts[1]) ? parts[1] : 'colorless';
+    const c1 = allowed.includes(parts[0]) ? parts[0] : (parts[0] === 'electric' ? 'lightning' : 'colorless');
+    const c2 = allowed.includes(parts[1]) ? parts[1] : (parts[1] === 'electric' ? 'lightning' : 'colorless');
     return `<span class="energy-dot" style="background: linear-gradient(135deg, var(--energy-${c1}) 50%, var(--energy-${c2}) 50%); box-shadow: -2px 0 6px var(--energy-${c1}), 2px 0 6px var(--energy-${c2}); border-color: rgba(255,255,255,0.4);"></span>`;
   }
   
-  const normalized = allowed.includes(rawValue) ? rawValue : 'colorless';
+  const normalized = allowed.includes(rawValue) ? rawValue : (rawValue === 'electric' ? 'lightning' : 'colorless');
   return `<span class="energy-dot ${normalized}"></span>`;
 }
 
@@ -1353,37 +1357,13 @@ function renderDashboard() {
   }
 
   if (eventContainer) {
-    let eventConf = null;
     const jsonEvent = appData.Configuracoes?.ProximoEvento;
-    const isAutoMode = !jsonEvent || jsonEvent.modo === 'auto' || jsonEvent.mode === 'auto';
+    const isEventActive = !jsonEvent || jsonEvent.ativo !== false;
 
-    // No modo automático, busca diretamente da agenda
-    if (isAutoMode && (!jsonEvent || jsonEvent.ativo !== false)) {
-      eventConf = getNextEventFromCalendar();
-    }
-
-    // Se não encontrou no calendário ou se o modo for manual
-    if (!eventConf && jsonEvent && typeof jsonEvent === 'object') {
-      const isEventActive = jsonEvent.ativo !== undefined ? jsonEvent.ativo : (jsonEvent.active !== undefined ? jsonEvent.active : true);
-      if (isEventActive && (jsonEvent.data || jsonEvent.date)) {
-        eventConf = {
-          title: jsonEvent.titulo || jsonEvent.title || 'Próximo Torneio',
-          date: jsonEvent.data || jsonEvent.date,
-          time: jsonEvent.hora || jsonEvent.time || '14:00',
-          location: jsonEvent.local || jsonEvent.location || 'Livraria Atlântica +',
-          locationUrl: jsonEvent.mapsUrl || jsonEvent.locationUrl || jsonEvent.linkMaps || '',
-          description: jsonEvent.descricao || jsonEvent.description || 'Formato Standard. Traga seu melhor deck!',
-          active: true
-        };
-      }
-    }
-    
-    if (!eventConf && (!jsonEvent || jsonEvent.ativo !== false)) {
-      eventConf = getNextEventFromCalendar() || (window.CONFIG && window.CONFIG.nextEvent ? window.CONFIG.nextEvent : null);
-    }
+    // Busca sempre dinamicamente o próximo torneio futuro oficial do calendário
+    const eventConf = isEventActive ? getNextEventFromCalendar() : null;
     
     if (eventConf && eventConf.active) {
-
       const dateIso = normalizeDateISO(eventConf.date);
       const dateParts = dateIso.split('-');
       const formattedDate = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : eventConf.date;
@@ -1400,7 +1380,7 @@ function renderDashboard() {
         
         <div class="event-details">
           <h3 class="event-title">${escapeHTML(eventConf.title)}</h3>
-          <p class="event-description">${escapeHTML(eventConf.description)}</p>
+          <p class="event-description">${escapeHTML(eventConf.description || 'Formato Standard. Traga seu melhor deck!')}</p>
         </div>
         
         <!-- Timer Regressivo -->
@@ -1433,14 +1413,33 @@ function renderDashboard() {
       `;
 
       startCountdown();
-    } else {
+    } else if (isEventActive) {
+      const whatsappUrl = appData.Configuracoes?.LinkWhatsApp || '';
       eventContainer.innerHTML = `
-        <div style="padding:3rem 1.5rem;text-align:center;color:var(--text-secondary)">
-          <svg style="width:48px;height:48px;fill:var(--text-muted);margin-bottom:1rem;" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
-          <p>Nenhum torneio agendado no momento.</p>
-          <p style="font-size:0.8rem;margin-top:0.5rem;">Fique de olho no grupo para as próximas datas!</p>
+        <div class="event-header">
+          <div class="event-badge-alert" style="background: rgba(255, 203, 5, 0.12); color: var(--accent-yellow); border-color: rgba(255, 203, 5, 0.25);">
+            <span></span> Agenda da Liga
+          </div>
+        </div>
+        <div style="padding: 2.25rem 1.5rem; text-align: center; color: var(--text-secondary);">
+          <div style="font-size: 2.2rem; margin-bottom: 0.6rem;">⚡</div>
+          <h3 style="font-size: 1.05rem; color: #fff; margin-bottom: 0.4rem; font-weight: 700;">Nenhum torneio agendado no momento</h3>
+          <p style="font-size: 0.82rem; max-width: 380px; margin: 0 auto 1.25rem auto; line-height: 1.45;">
+            Estamos preparando as próximas rodadas oficiais da temporada! Acompanhe o grupo para ser avisado assim que abrirem as inscrições.
+          </p>
+          ${whatsappUrl ? `
+            <a href="${escapeHTML(whatsappUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.1rem; font-size: 0.82rem;">
+              💬 Acompanhar no WhatsApp
+            </a>
+          ` : ''}
         </div>
       `;
+    } else {
+      eventContainer.innerHTML = '';
+      const parentCard = eventContainer.closest('.glass-card') || eventContainer.parentElement;
+      if (parentCard && parentCard.classList.contains('dashboard-event-card')) {
+        parentCard.style.display = 'none';
+      }
     }
   }
 }

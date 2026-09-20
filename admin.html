@@ -69,6 +69,74 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* Seletor Visual de Energias Pokémon (Modal de Decks) */
+    .energy-selector-container {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.85rem;
+    }
+    .energy-preview-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0.85rem;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+    }
+    .energy-preview-dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      flex-shrink: 0;
+      transition: all 0.25s ease;
+    }
+    .energy-preview-label {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .energy-buttons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+      gap: 0.45rem;
+    }
+    .energy-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.6rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.76rem;
+      font-weight: 600;
+      transition: all 0.18s ease;
+      user-select: none;
+    }
+    .energy-btn:hover {
+      background: rgba(255, 255, 255, 0.09);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .energy-btn.selected {
+      background: rgba(255, 203, 5, 0.12);
+      border-color: var(--accent-yellow);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(255, 203, 5, 0.2);
+    }
+    .energy-btn .dot-icon {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
     
     .login-box {
       max-width: 400px;
@@ -963,80 +1031,26 @@
             </div>
           </div>
 
-          <!-- BLOCO 3: Próximo Torneio & Contagem Regressiva -->
+          <!-- BLOCO 3: Card de Próximo Torneio na Home -->
           <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-              <h3 style="font-size: 0.95rem; color: #10b981; margin: 0; display: flex; align-items: center; gap: 0.4rem;">
-                ⏳ Próximo Torneio (Card da Home)
-              </h3>
-              <label style="font-size: 0.8rem; color: #fff; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <h3 style="font-size: 0.95rem; color: #10b981; margin: 0; display: flex; align-items: center; gap: 0.4rem;">
+                  ⏳ Card de Próximo Torneio (Home)
+                </h3>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0.3rem 0 0 0;">
+                  Sincronizado de forma 100% autônoma com a agenda oficial de torneios
+                </p>
+              </div>
+              <label style="font-size: 0.82rem; color: #fff; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); padding: 0.4rem 0.75rem; border-radius: 6px;">
                 <input type="checkbox" id="conf-evento-ativo" checked style="accent-color: #10b981; width: 16px; height: 16px;">
                 Exibir card e contagem regressiva
               </label>
             </div>
-
-            <!-- Seleção de Modo: Automático vs Manual -->
-            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1rem;">
-              <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem;">Modo de Sincronização:</div>
-              <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
-                <label style="font-size: 0.85rem; color: #fff; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
-                  <input type="radio" name="conf-evento-modo" id="conf-evento-modo-auto" value="auto" onchange="toggleEventConfigMode()" checked style="accent-color: #10b981;">
-                  🟢 <strong>Automático</strong> (Sincronizado com a Agenda de Torneios)
-                </label>
-                <label style="font-size: 0.85rem; color: #fff; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
-                  <input type="radio" name="conf-evento-modo" id="conf-evento-modo-manual" value="manual" onchange="toggleEventConfigMode()" style="accent-color: #f59e0b;">
-                  ✏️ <strong>Manual</strong> (Fixar evento personalizado)
-                </label>
-              </div>
-              <p id="conf-evento-modo-hint" style="font-size: 0.75rem; color: #34d399; margin: 0.5rem 0 0 0;">
-                ✨ No modo automático, o card da Home avança sozinho para o próximo torneio da agenda conforme as datas passam, sem precisar atualizar a configuração toda semana!
+            <div style="background: rgba(16, 185, 129, 0.04); border-left: 3px solid #10b981; padding: 0.75rem 1rem; border-radius: 0 6px 6px 0; margin-top: 0.85rem;">
+              <p style="font-size: 0.78rem; color: #e2e8f0; margin: 0; line-height: 1.45;">
+                ✨ <strong>Como funciona:</strong> O card da página inicial busca automaticamente o próximo torneio cadastrado na <strong>Aba Calendário</strong> com data a partir de hoje. Conforme os sábados passam, ele avança sozinho! Caso não haja torneios agendados, o site exibe um aviso amigável convidando os jogadores para o grupo de WhatsApp.
               </p>
-            </div>
-
-            <!-- Seletor Rápido a partir da Agenda -->
-            <div style="background: rgba(16, 185, 129, 0.05); border: 1px dashed rgba(16, 185, 129, 0.25); border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-              <div style="flex: 1; min-width: 240px;">
-                <label for="conf-evento-agenda-select" style="font-size: 0.75rem; color: #10b981; font-weight: 600; display: block; margin-bottom: 0.3rem;">
-                  📅 Importar dados de um evento da Agenda:
-                </label>
-                <select id="conf-evento-agenda-select" class="search-input" onchange="handleSelectEventFromAgenda(this.value)" style="width: 100%; font-size: 0.82rem; padding: 0.4rem 0.6rem;">
-                  <option value="">-- Selecione um torneio da agenda para preencher os campos --</option>
-                </select>
-              </div>
-              <button type="button" class="btn" onclick="syncWithNextCalendarEvent()" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.8rem; padding: 0.45rem 0.85rem; white-space: nowrap; align-self: flex-end;">
-                🔄 Puxar Próximo da Agenda
-              </button>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
-              <div class="form-group">
-                <label for="conf-evento-titulo">Título do Torneio</label>
-                <input type="text" id="conf-evento-titulo" class="search-input" placeholder="Ex: Sessão de Liga Padrão #21">
-              </div>
-              <div class="form-group">
-                <label for="conf-evento-data">Data</label>
-                <input type="date" id="conf-evento-data" class="search-input">
-              </div>
-              <div class="form-group">
-                <label for="conf-evento-hora">Horário</label>
-                <input type="time" id="conf-evento-hora" class="search-input" value="14:00">
-              </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
-              <div class="form-group">
-                <label for="conf-evento-local">Local do Evento</label>
-                <input type="text" id="conf-evento-local" class="search-input" placeholder="Ex: Livraria Atlântica +">
-              </div>
-              <div class="form-group">
-                <label for="conf-evento-maps">Link do Google Maps do Local</label>
-                <input type="url" id="conf-evento-maps" class="search-input" placeholder="https://maps.app.goo.gl/...">
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="conf-evento-desc">Descrição Curta / Observações</label>
-              <input type="text" id="conf-evento-desc" class="search-input" placeholder="Ex: Formato Standard. Traga seu melhor deck!">
             </div>
           </div>
 
@@ -1328,26 +1342,75 @@
           <input type="text" id="deck-edit-name" class="search-input" placeholder="Ex: Charizard ex, Gardevoir ex..." required>
         </div>
 
-        <div class="form-group" style="margin-bottom: 1rem;">
-          <label for="deck-edit-energy">Tipo de Energia Pokémon</label>
-          <select id="deck-edit-energy" class="search-input" required style="width: 100%;">
-            <option value="grass">🟢 Planta (Grass)</option>
-            <option value="fire">🔴 Fogo (Fire)</option>
-            <option value="water">🔵 Água (Water)</option>
-            <option value="lightning">🟡 Elétrico (Lightning)</option>
-            <option value="psychic">🟣 Psíquico (Psychic)</option>
-            <option value="fighting">🟤 Lutador (Fighting)</option>
-            <option value="darkness">⚫ Sombrio (Darkness)</option>
-            <option value="metal">🔘 Metal (Metal)</option>
-            <option value="dragon">🟣 Dragão (Dragon)</option>
-            <option value="colorless">⚪ Incolor (Colorless)</option>
-            <option value="fire+darkness">🔴⚫ Fogo / Sombrio</option>
-            <option value="fire+psychic">🔴🟣 Fogo / Psíquico</option>
-            <option value="fire+fighting">🔴🟤 Fogo / Lutador</option>
-            <option value="psychic+grass">🟣🟢 Psíquico / Planta</option>
-            <option value="water+lightning">🔵🟡 Água / Elétrico</option>
-            <option value="metal+darkness">🔘⚫ Metal / Sombrio</option>
-          </select>
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <span>Tipo de Energia Pokémon</span>
+            <span style="font-size: 0.72rem; color: var(--text-secondary); font-weight: normal;">Clique em até 2 energias (ou Multi)</span>
+          </label>
+          
+          <input type="hidden" id="deck-edit-energy" value="colorless">
+
+          <div class="energy-selector-container">
+            <!-- Preview em tempo real com estilo CSS nativo do site -->
+            <div class="energy-preview-row">
+              <div id="deck-energy-preview-dot" class="energy-preview-dot" style="background-color: var(--energy-colorless); box-shadow: 0 0 6px var(--energy-colorless);"></div>
+              <div>
+                <div id="deck-energy-preview-label" class="energy-preview-label">Incolor</div>
+                <div id="deck-energy-preview-code" style="font-size: 0.72rem; color: var(--text-secondary); font-family: monospace;">colorless</div>
+              </div>
+              <button type="button" onclick="resetDeckEnergy()" style="margin-left: auto; background: none; border: none; color: #94a3b8; font-size: 0.75rem; cursor: pointer; text-decoration: underline;">
+                Limpar
+              </button>
+            </div>
+
+            <!-- Grade de Energias -->
+            <div class="energy-buttons-grid">
+              <button type="button" class="energy-btn" data-energy="grass" onclick="handleToggleDeckEnergy('grass')">
+                <span class="dot-icon" style="background: var(--energy-grass); box-shadow: 0 0 5px var(--energy-grass);"></span>
+                Planta
+              </button>
+              <button type="button" class="energy-btn" data-energy="fire" onclick="handleToggleDeckEnergy('fire')">
+                <span class="dot-icon" style="background: var(--energy-fire); box-shadow: 0 0 5px var(--energy-fire);"></span>
+                Fogo
+              </button>
+              <button type="button" class="energy-btn" data-energy="water" onclick="handleToggleDeckEnergy('water')">
+                <span class="dot-icon" style="background: var(--energy-water); box-shadow: 0 0 5px var(--energy-water);"></span>
+                Água
+              </button>
+              <button type="button" class="energy-btn" data-energy="lightning" onclick="handleToggleDeckEnergy('lightning')">
+                <span class="dot-icon" style="background: var(--energy-lightning); box-shadow: 0 0 5px var(--energy-lightning);"></span>
+                Elétrico
+              </button>
+              <button type="button" class="energy-btn" data-energy="psychic" onclick="handleToggleDeckEnergy('psychic')">
+                <span class="dot-icon" style="background: var(--energy-psychic); box-shadow: 0 0 5px var(--energy-psychic);"></span>
+                Psíquico
+              </button>
+              <button type="button" class="energy-btn" data-energy="fighting" onclick="handleToggleDeckEnergy('fighting')">
+                <span class="dot-icon" style="background: var(--energy-fighting); box-shadow: 0 0 5px var(--energy-fighting);"></span>
+                Lutador
+              </button>
+              <button type="button" class="energy-btn" data-energy="darkness" onclick="handleToggleDeckEnergy('darkness')">
+                <span class="dot-icon" style="background: var(--energy-darkness); box-shadow: 0 0 5px var(--energy-darkness);"></span>
+                Sombrio
+              </button>
+              <button type="button" class="energy-btn" data-energy="metal" onclick="handleToggleDeckEnergy('metal')">
+                <span class="dot-icon" style="background: var(--energy-metal); box-shadow: 0 0 5px var(--energy-metal);"></span>
+                Metal
+              </button>
+              <button type="button" class="energy-btn" data-energy="dragon" onclick="handleToggleDeckEnergy('dragon')">
+                <span class="dot-icon" style="background: var(--energy-dragon); box-shadow: 0 0 5px var(--energy-dragon);"></span>
+                Dragão
+              </button>
+              <button type="button" class="energy-btn" data-energy="colorless" onclick="handleToggleDeckEnergy('colorless')">
+                <span class="dot-icon" style="background: var(--energy-colorless); box-shadow: 0 0 5px var(--energy-colorless);"></span>
+                Incolor
+              </button>
+              <button type="button" class="energy-btn" data-energy="multi" onclick="handleToggleDeckEnergy('multi')">
+                <span class="dot-icon" style="background: conic-gradient(from 0deg, var(--energy-fire), var(--energy-lightning), var(--energy-grass), var(--energy-water), var(--energy-psychic), var(--energy-dragon), var(--energy-fire)); box-shadow: 0 0 5px rgba(255,255,255,0.4);"></span>
+                Multi
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="form-group" style="margin-bottom: 1rem;">
@@ -4295,11 +4358,126 @@
       renderDeckCatalog();
     }
 
+    let currentDeckSelectedEnergies = [];
+
+    const ENERGY_LABELS = {
+      grass: 'Planta',
+      fire: 'Fogo',
+      water: 'Água',
+      lightning: 'Elétrico',
+      electric: 'Elétrico',
+      psychic: 'Psíquico',
+      fighting: 'Lutador',
+      darkness: 'Sombrio',
+      metal: 'Metal',
+      dragon: 'Dragão',
+      colorless: 'Incolor',
+      multi: 'Multi (3+ Energias)'
+    };
+
+    function setDeckEnergyValue(energyVal) {
+      const raw = String(energyVal || 'colorless').toLowerCase().trim();
+      if (!raw || raw === 'colorless') {
+        currentDeckSelectedEnergies = ['colorless'];
+      } else if (raw === 'multi' || raw === 'rainbow') {
+        currentDeckSelectedEnergies = ['multi'];
+      } else if (raw.includes('+')) {
+        currentDeckSelectedEnergies = raw.split('+').map(p => p.trim() === 'electric' ? 'lightning' : p.trim()).slice(0, 2);
+      } else {
+        const norm = raw === 'electric' ? 'lightning' : raw;
+        currentDeckSelectedEnergies = [norm];
+      }
+      updateEnergySelectorUI();
+    }
+
+    function handleToggleDeckEnergy(energyKey) {
+      if (energyKey === 'multi') {
+        currentDeckSelectedEnergies = ['multi'];
+        updateEnergySelectorUI();
+        return;
+      }
+
+      if (energyKey === 'colorless') {
+        currentDeckSelectedEnergies = ['colorless'];
+        updateEnergySelectorUI();
+        return;
+      }
+
+      // Se multi ou colorless estavam ativos, limpa
+      currentDeckSelectedEnergies = currentDeckSelectedEnergies.filter(k => k !== 'multi' && k !== 'colorless');
+
+      const index = currentDeckSelectedEnergies.indexOf(energyKey);
+      if (index >= 0) {
+        currentDeckSelectedEnergies.splice(index, 1);
+        if (currentDeckSelectedEnergies.length === 0) {
+          currentDeckSelectedEnergies = ['colorless'];
+        }
+      } else {
+        if (currentDeckSelectedEnergies.length < 2) {
+          currentDeckSelectedEnergies.push(energyKey);
+        } else {
+          // Se já tem 2 selecionadas e clicou na 3ª, vira Multi automaticamente!
+          currentDeckSelectedEnergies = ['multi'];
+        }
+      }
+      updateEnergySelectorUI();
+    }
+
+    function resetDeckEnergy() {
+      currentDeckSelectedEnergies = ['colorless'];
+      updateEnergySelectorUI();
+    }
+
+    function updateEnergySelectorUI() {
+      const input = document.getElementById('deck-edit-energy');
+      const previewDot = document.getElementById('deck-energy-preview-dot');
+      const previewLabel = document.getElementById('deck-energy-preview-label');
+      const previewCode = document.getElementById('deck-energy-preview-code');
+      const buttons = document.querySelectorAll('.energy-btn');
+
+      let computedValue = 'colorless';
+      let labelText = 'Incolor';
+      let dotStyle = 'background-color: var(--energy-colorless); box-shadow: 0 0 6px var(--energy-colorless); border-color: rgba(255,255,255,0.4);';
+
+      if (currentDeckSelectedEnergies.length === 1 && currentDeckSelectedEnergies[0] === 'multi') {
+        computedValue = 'multi';
+        labelText = 'Multi (3+ Energias)';
+        dotStyle = 'background: conic-gradient(from 0deg, var(--energy-fire), var(--energy-lightning), var(--energy-grass), var(--energy-water), var(--energy-psychic), var(--energy-dragon), var(--energy-fire)); box-shadow: 0 0 8px rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.6);';
+      } else if (currentDeckSelectedEnergies.length === 2) {
+        const c1 = currentDeckSelectedEnergies[0];
+        const c2 = currentDeckSelectedEnergies[1];
+        computedValue = `${c1}+${c2}`;
+        const l1 = ENERGY_LABELS[c1] || c1;
+        const l2 = ENERGY_LABELS[c2] || c2;
+        labelText = `${l1} / ${l2}`;
+        dotStyle = `background: linear-gradient(135deg, var(--energy-${c1}) 50%, var(--energy-${c2}) 50%); box-shadow: -2px 0 6px var(--energy-${c1}), 2px 0 6px var(--energy-${c2}); border-color: rgba(255,255,255,0.5);`;
+      } else if (currentDeckSelectedEnergies.length === 1) {
+        const c = currentDeckSelectedEnergies[0];
+        computedValue = c;
+        labelText = ENERGY_LABELS[c] || c;
+        dotStyle = `background-color: var(--energy-${c}); box-shadow: 0 0 6px var(--energy-${c}); border-color: rgba(255,255,255,0.4);`;
+      }
+
+      if (input) input.value = computedValue;
+      if (previewDot) previewDot.style.cssText = dotStyle;
+      if (previewLabel) previewLabel.innerText = labelText;
+      if (previewCode) previewCode.innerText = computedValue;
+
+      buttons.forEach(btn => {
+        const k = btn.getAttribute('data-energy');
+        if (currentDeckSelectedEnergies.includes(k)) {
+          btn.classList.add('selected');
+        } else {
+          btn.classList.remove('selected');
+        }
+      });
+    }
+
     function openNewDeckModal() {
       document.getElementById('deck-modal-title').innerText = '🎴 Cadastrar Novo Deck';
       document.getElementById('deck-edit-original-name').value = '';
       document.getElementById('deck-edit-name').value = '';
-      document.getElementById('deck-edit-energy').value = 'colorless';
+      setDeckEnergyValue('colorless');
       document.getElementById('deck-edit-image').value = '';
       document.getElementById('deck-edit-icon').value = '';
       document.getElementById('deck-edit-limitless').value = '';
@@ -4317,7 +4495,7 @@
       document.getElementById('deck-modal-title').innerText = `🎴 Editar Deck: ${deckObj.deck}`;
       document.getElementById('deck-edit-original-name').value = deckObj.deck;
       document.getElementById('deck-edit-name').value = deckObj.deck;
-      document.getElementById('deck-edit-energy').value = deckObj.tipoEnergia || 'colorless';
+      setDeckEnergyValue(deckObj.tipoEnergia || 'colorless');
       document.getElementById('deck-edit-image').value = deckObj.imagem || '';
       document.getElementById('deck-edit-icon').value = deckObj.icone || '';
       document.getElementById('deck-edit-limitless').value = deckObj.limitless || '';
@@ -4823,10 +5001,6 @@
         }
       }
 
-      if (typeof populateAgendaDropdown === 'function') {
-        populateAgendaDropdown();
-      }
-
       if (filtered.length === 0) {
         container.innerHTML = `
           <div style="text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
@@ -4882,9 +5056,6 @@
             </div>
 
             <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-              <button type="button" class="btn" onclick="setCalendarEventAsHomeHighlight(${ev._origIndex})" title="Definir este torneio como o Próximo Torneio na Home" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">
-                ⭐ Destaque Home
-              </button>
               <button type="button" class="btn" onclick="openEditCalendarModal(${ev._origIndex})" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; background: rgba(255, 203, 5, 0.15); color: var(--accent-yellow); border-color: rgba(255, 203, 5, 0.3);">
                 ✏️ Editar
               </button>
@@ -5150,104 +5321,11 @@
 
         cachedCalendario = remainingEvents;
         renderCalendarCatalog();
-        populateAgendaDropdown();
         showSuccess(`🧹 Sucesso! ${pastEvents.length} evento(s) passados foram removidos do calendário.`);
 
       } catch (err) {
         console.error("Erro ao limpar eventos passados:", err);
         showError("Erro ao limpar eventos passados: " + err.message);
-      }
-    }
-
-    async function setCalendarEventAsHomeHighlight(index) {
-      const ev = cachedCalendario[index];
-      if (!ev) {
-        showError("Evento não encontrado.");
-        return;
-      }
-
-      const title = ev.evento || ev.Evento || ev.titulo || 'Torneio';
-      const rawDate = ev.data || ev.Data || '';
-      const isoDate = normalizeDateISO(rawDate);
-      const time = ev.horario || ev.Horario || '14:00';
-      const local = ev.local || ev.Local || 'Livraria Atlântica +';
-      const maps = ev.linkMaps || ev.LinkMaps || '';
-      const desc = ev.descricao || ev.Descricao || '';
-
-      if (!confirm(`Deseja definir o torneio "${title}" (${rawDate}) como o destaque da Home agora?`)) {
-        return;
-      }
-
-      const evtTitulo = document.getElementById('conf-evento-titulo');
-      const evtData = document.getElementById('conf-evento-data');
-      const evtHora = document.getElementById('conf-evento-hora');
-      const evtLocal = document.getElementById('conf-evento-local');
-      const evtMaps = document.getElementById('conf-evento-maps');
-      const evtDesc = document.getElementById('conf-evento-desc');
-      const evtAtivo = document.getElementById('conf-evento-ativo');
-
-      if (evtTitulo) evtTitulo.value = title;
-      if (evtData) evtData.value = isoDate;
-      if (evtHora) evtHora.value = time;
-      if (evtLocal) evtLocal.value = local;
-      if (evtMaps) evtMaps.value = maps;
-      if (evtDesc) evtDesc.value = desc;
-      if (evtAtivo) evtAtivo.checked = true;
-
-      if (runtimeToken) {
-        try {
-          showSuccess(`⏳ Atualizando destaque da Home no config.json...`);
-          const updatedConfig = {
-            ...cachedConfig,
-            proximoEvento: {
-              ...(cachedConfig?.proximoEvento || {}),
-              ativo: true,
-              modo: "auto",
-              titulo: title,
-              data: isoDate,
-              hora: time,
-              local: local,
-              mapsUrl: maps,
-              descricao: desc
-            }
-          };
-
-          const config = GITHUB_CONFIG;
-          const confUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/config.json`;
-          let confSha = await getLatestSha(confUrl);
-
-          const commitPayload = {
-            message: `Definir "${title}" como próximo torneio em destaque`,
-            content: encodeBase64UTF8(JSON.stringify(updatedConfig, null, 4)),
-            branch: config.branch
-          };
-          if (confSha) commitPayload.sha = confSha;
-
-          const res = await fetch(confUrl, {
-            method: 'PUT',
-            headers: {
-              'Authorization': `token ${runtimeToken}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(commitPayload)
-          });
-
-          if (!res.ok) {
-            const errData = await res.json();
-            throw new Error("Falha ao salvar config.json: " + (errData.message || res.statusText));
-          }
-
-          cachedConfig = updatedConfig;
-          renderConfigPanel();
-          showSuccess(`⭐ Torneio "${title}" definido com sucesso como destaque da Home!`);
-
-        } catch (err) {
-          console.error("Erro ao salvar destaque da Home:", err);
-          showError("Erro ao salvar destaque da Home no GitHub: " + err.message);
-        }
-      } else {
-        if (typeof switchTab === 'function') switchTab('config');
-        showSuccess(`⭐ Dados do torneio "${title}" carregados na aba de Configurações.`);
       }
     }
 
@@ -5700,122 +5778,6 @@
     // ==========================================
     // CONFIGURAÇÕES GERAIS (ABA 9)
     // ==========================================
-    function toggleEventConfigMode() {
-      const isAuto = document.getElementById('conf-evento-modo-auto')?.checked;
-      const hint = document.getElementById('conf-evento-modo-hint');
-      if (hint) {
-        if (isAuto) {
-          hint.innerText = "✨ No modo automático, o card da Home avança sozinho para o próximo torneio da agenda conforme as datas passam, sem precisar atualizar a configuração toda semana!";
-          hint.style.color = "#34d399";
-        } else {
-          hint.innerText = "📌 No modo manual, os dados abaixo ficam fixados no card da Home até que você os altere manualmente.";
-          hint.style.color = "#fbbf24";
-        }
-      }
-    }
-
-    function populateAgendaDropdown() {
-      const select = document.getElementById('conf-evento-agenda-select');
-      if (!select) return;
-
-      const now = new Date();
-      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-
-      const events = (cachedCalendario || []).map((e, idx) => ({ ...e, _origIndex: idx }))
-        .filter(e => {
-          const d = parseDateSafe(e.data || e.Data);
-          const st = String(e.status || e.Status || '').toLowerCase();
-          return st !== 'cancelado' && (isNaN(d) || d >= startOfToday);
-        })
-        .sort((a, b) => parseDateSafe(a.data || a.Data) - parseDateSafe(b.data || b.Data));
-
-      select.innerHTML = '<option value="">-- Selecione um torneio da agenda para preencher os campos --</option>' +
-        events.map(e => {
-          const title = e.evento || e.Evento || e.titulo || 'Torneio';
-          const dt = e.data || e.Data || '';
-          return `<option value="${e._origIndex}">[${dt}] ${escapeHTML(title)}</option>`;
-        }).join('');
-    }
-
-    function handleSelectEventFromAgenda(val) {
-      if (!val && val !== 0 && val !== '0') return;
-      const index = parseInt(val, 10);
-      if (isNaN(index)) return;
-      const ev = cachedCalendario[index];
-      if (!ev) return;
-
-      const title = ev.evento || ev.Evento || ev.titulo || '';
-      const rawDate = ev.data || ev.Data || '';
-      const isoDate = normalizeDateISO(rawDate);
-      const time = ev.horario || ev.Horario || '14:00';
-      const local = ev.local || ev.Local || 'Livraria Atlântica +';
-      const maps = ev.linkMaps || ev.LinkMaps || '';
-      const desc = ev.descricao || ev.Descricao || '';
-
-      const evtTitulo = document.getElementById('conf-evento-titulo');
-      const evtData = document.getElementById('conf-evento-data');
-      const evtHora = document.getElementById('conf-evento-hora');
-      const evtLocal = document.getElementById('conf-evento-local');
-      const evtMaps = document.getElementById('conf-evento-maps');
-      const evtDesc = document.getElementById('conf-evento-desc');
-
-      if (evtTitulo) evtTitulo.value = title;
-      if (evtData) evtData.value = isoDate;
-      if (evtHora) evtHora.value = time;
-      if (evtLocal) evtLocal.value = local;
-      if (evtMaps) evtMaps.value = maps;
-      if (evtDesc) evtDesc.value = desc;
-
-      showSuccess(`📋 Dados de "${title}" copiados para os campos do torneio.`);
-    }
-
-    function syncWithNextCalendarEvent() {
-      const now = new Date();
-      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-
-      const future = (cachedCalendario || []).filter(e => {
-        const raw = e?.data || e?.Data;
-        if (!raw) return false;
-        const st = String(e?.status || e?.Status || '').toLowerCase();
-        if (st === 'cancelado' || st === 'concluido') return false;
-        const d = parseDateSafe(raw);
-        return !isNaN(d) && d >= startOfToday;
-      }).sort((a, b) => parseDateSafe(a.data || a.Data) - parseDateSafe(b.data || b.Data));
-
-      if (!future.length) {
-        showError("Nenhum evento futuro encontrado na agenda para sincronizar.");
-        return;
-      }
-
-      const next = future[0];
-      const title = next.evento || next.Evento || next.titulo || '';
-      const rawDate = next.data || next.Data || '';
-      const isoDate = normalizeDateISO(rawDate);
-      const time = next.horario || next.Horario || '14:00';
-      const local = next.local || next.Local || 'Livraria Atlântica +';
-      const maps = next.linkMaps || next.linkMaps || '';
-      const desc = next.descricao || next.Descricao || '';
-
-      const evtTitulo = document.getElementById('conf-evento-titulo');
-      const evtData = document.getElementById('conf-evento-data');
-      const evtHora = document.getElementById('conf-evento-hora');
-      const evtLocal = document.getElementById('conf-evento-local');
-      const evtMaps = document.getElementById('conf-evento-maps');
-      const evtDesc = document.getElementById('conf-evento-desc');
-      const autoRadio = document.getElementById('conf-evento-modo-auto');
-
-      if (evtTitulo) evtTitulo.value = title;
-      if (evtData) evtData.value = isoDate;
-      if (evtHora) evtHora.value = time;
-      if (evtLocal) evtLocal.value = local;
-      if (evtMaps) evtMaps.value = maps;
-      if (evtDesc) evtDesc.value = desc;
-      if (autoRadio) autoRadio.checked = true;
-      toggleEventConfigMode();
-
-      showSuccess(`🔄 Próximo torneio sincronizado: "${title}" (${rawDate})`);
-    }
-
     function renderConfigPanel() {
       if (!cachedConfig) return;
       const leagueName = document.getElementById('conf-league-name');
@@ -5823,14 +5785,7 @@
       const tempAtual = document.getElementById('conf-temporada-atual');
       const statusTemp = document.getElementById('conf-status-temporada');
       const avisoTopo = document.getElementById('conf-aviso-topo');
-
       const evtAtivo = document.getElementById('conf-evento-ativo');
-      const evtTitulo = document.getElementById('conf-evento-titulo');
-      const evtData = document.getElementById('conf-evento-data');
-      const evtHora = document.getElementById('conf-evento-hora');
-      const evtLocal = document.getElementById('conf-evento-local');
-      const evtMaps = document.getElementById('conf-evento-maps');
-      const evtDesc = document.getElementById('conf-evento-desc');
 
       const linkWhats = document.getElementById('conf-link-whatsapp');
       const linkInsta = document.getElementById('conf-link-instagram');
@@ -5848,25 +5803,6 @@
 
       const evt = cachedConfig.proximoEvento || {};
       if (evtAtivo) evtAtivo.checked = evt.ativo !== false;
-      if (evtTitulo) evtTitulo.value = evt.titulo || '';
-      if (evtData) evtData.value = evt.data || '';
-      if (evtHora) evtHora.value = evt.hora || '14:00';
-      if (evtLocal) evtLocal.value = evt.local || '';
-      if (evtMaps) evtMaps.value = evt.mapsUrl || '';
-      if (evtDesc) evtDesc.value = evt.descricao || '';
-
-      const modo = (evt.modo || 'auto').toLowerCase();
-      const radioAuto = document.getElementById('conf-evento-modo-auto');
-      const radioManual = document.getElementById('conf-evento-modo-manual');
-      if (radioAuto && radioManual) {
-        if (modo === 'manual') {
-          radioManual.checked = true;
-        } else {
-          radioAuto.checked = true;
-        }
-        toggleEventConfigMode();
-      }
-      populateAgendaDropdown();
 
       if (linkWhats) linkWhats.value = cachedConfig.linkWhatsApp || '';
       if (linkInsta) linkInsta.value = cachedConfig.linkInstagram || '';
@@ -5892,16 +5828,8 @@
       const statusTemporada = document.getElementById('conf-status-temporada')?.value || 'ativa';
       const avisoTopo = (document.getElementById('conf-aviso-topo')?.value || '').trim();
 
-      const isAuto = document.getElementById('conf-evento-modo-auto')?.checked ?? true;
       const proximoEvento = {
-        ativo: document.getElementById('conf-evento-ativo')?.checked ?? true,
-        modo: isAuto ? "auto" : "manual",
-        titulo: (document.getElementById('conf-evento-titulo')?.value || '').trim(),
-        data: (document.getElementById('conf-evento-data')?.value || '').trim(),
-        hora: (document.getElementById('conf-evento-hora')?.value || '').trim(),
-        local: (document.getElementById('conf-evento-local')?.value || '').trim(),
-        mapsUrl: (document.getElementById('conf-evento-maps')?.value || '').trim(),
-        descricao: (document.getElementById('conf-evento-desc')?.value || '').trim()
+        ativo: document.getElementById('conf-evento-ativo')?.checked ?? true
       };
 
       const linkWhatsApp = (document.getElementById('conf-link-whatsapp')?.value || '').trim();

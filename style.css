@@ -1015,6 +1015,11 @@ tbody tr.top-8 .row-rank,
 .energy-dot.metal { background-color: var(--energy-metal); box-shadow: 0 0 6px var(--energy-metal); }
 .energy-dot.dragon { background-color: var(--energy-dragon); box-shadow: 0 0 6px var(--energy-dragon); }
 .energy-dot.colorless { background-color: var(--energy-colorless); box-shadow: 0 0 6px var(--energy-colorless); }
+.energy-dot.multi {
+  background: conic-gradient(from 0deg, var(--energy-fire), var(--energy-lightning), var(--energy-grass), var(--energy-water), var(--energy-psychic), var(--energy-dragon), var(--energy-fire));
+  box-shadow: 0 0 7px rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
 
 .streak-indicator {
   display: flex;

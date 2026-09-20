@@ -9,14 +9,7 @@
     "linkWhatsApp": "https://chat.whatsapp.com/EpUEb62hq1bKs6iDtQ3ena",
     "linkInstagram": "",
     "proximoEvento": {
-        "modo": "auto",
-        "ativo": true,
-        "titulo": "Sessão #21 de Liga (Torneio TBT) [5ª Temporada]",
-        "data": "2026-09-24",
-        "hora": "18:30",
-        "local": "Livraria Atlântica +",
-        "mapsUrl": "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6",
-        "descricao": "Formato Standard. Traga seu melhor deck e venha disputar pontos para a 5ª Temporada!"
+        "ativo": true
     },
     "minEtapasPokebolaOuro": 2,
     "tamanhoPodio": 4,
