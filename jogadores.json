@@ -135,6 +135,12 @@
         "Categoria": "Master"
     },
     {
+        "id": "6205814",
+        "jogador": "CAROLINA CAMPOS",
+        "categoria": "Master",
+        "posicaoFinal": ""
+    },
+    {
         "id": "6152334",
         "jogador": "Cristian S",
         "categoria": "Master",
@@ -192,7 +198,10 @@
         "id": "6203191",
         "jogador": "FELIPE CERQUEIRA",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "FELIPE CERQUEIRA",
+        "ID": "6203191",
+        "Categoria": "Master"
     },
     {
         "id": "5145513",
