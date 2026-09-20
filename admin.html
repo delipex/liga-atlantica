@@ -31,14 +31,16 @@
     }
 
     .admin-container {
-      max-width: 800px;
-      margin: 2rem auto;
+      max-width: 1060px;
+      margin: 1.5rem auto;
       padding: 0 1rem;
+      width: 100%;
+      box-sizing: border-box;
     }
     
     .admin-header {
       text-align: center;
-      margin-bottom: 2.5rem;
+      margin-bottom: 2rem;
     }
     
     .admin-card {
@@ -67,6 +69,93 @@
     @media (max-width: 600px) {
       .form-row {
         grid-template-columns: 1fr;
+      }
+    }
+
+    /* Modal Base no Painel Administrativo */
+    .admin-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 1040;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      overflow-y: auto;
+      padding: 1.5rem 1rem;
+      box-sizing: border-box;
+    }
+    .admin-modal-card {
+      width: 100%;
+      position: relative;
+      box-sizing: border-box;
+      animation: fadeIn 0.25s ease;
+    }
+    .admin-modal-close {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      line-height: 1;
+      z-index: 10;
+    }
+    .admin-modal-close:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: var(--accent-yellow);
+      border-color: var(--accent-yellow);
+    }
+    .admin-modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    @media (max-width: 600px) {
+      .admin-modal-card {
+        padding: 1.25rem 1rem !important;
+      }
+      .admin-modal-actions {
+        flex-direction: column-reverse;
+      }
+      .admin-modal-actions .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    /* Tabelas e scroll responsivo no painel */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+    .ranking-table {
+      min-width: 520px;
+    }
+    @media (max-width: 480px) {
+      .ranking-table {
+        min-width: 460px;
+      }
+      .ranking-table th, .ranking-table td {
+        padding: 0.6rem 0.45rem;
+        font-size: 0.8rem;
       }
     }
 
@@ -117,6 +206,7 @@
       cursor: pointer;
       font-size: 0.76rem;
       font-weight: 600;
+      min-height: 38px;
       transition: all 0.18s ease;
       user-select: none;
     }
@@ -351,6 +441,51 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
       flex-shrink: 0;
     }
+
+    /* Responsividade Mobile do Painel */
+    @media (max-width: 768px) {
+      .admin-container {
+        margin: 1rem auto;
+        padding: 0 0.75rem;
+      }
+      .admin-header {
+        margin-bottom: 1.5rem;
+      }
+      .admin-header .section-title {
+        font-size: 1.5rem;
+      }
+      .admin-header .section-subtitle {
+        font-size: 0.82rem;
+      }
+      .admin-nav-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        justify-content: flex-start;
+        padding: 0.25rem 0.25rem 0.6rem 0.25rem;
+        margin-bottom: 1.25rem;
+        gap: 0.45rem;
+        scrollbar-width: none;
+      }
+      .admin-nav-tabs::-webkit-scrollbar {
+        display: none;
+      }
+      .admin-tab-btn {
+        flex-shrink: 0;
+        white-space: nowrap;
+        padding: 0.55rem 0.85rem;
+        font-size: 0.8rem;
+        min-height: 42px;
+      }
+    }
+
+    @media (max-width: 500px) {
+      #photos-grid-container,
+      #champions-admin-grid,
+      .deck-catalog-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body class="bg-dark">
@@ -504,15 +639,15 @@
         </div>
 
         <!-- Structured Event Fields (Season & Number) -->
-        <div id="structured-fields" class="form-row" style="margin-bottom: 1.25rem; display: flex; gap: 1rem;">
-          <div class="form-group" style="flex: 1;">
+        <div id="structured-fields" class="form-row" style="margin-bottom: 1.25rem;">
+          <div class="form-group">
             <label for="event-season">Temporada</label>
             <input type="number" id="event-season" class="search-input" min="1" value="5" style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
             <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
               O número da temporada atual. Usado para classificar o histórico no metagame.
             </span>
           </div>
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="event-number">Número da Sessão/Etapa</label>
             <input type="number" id="event-number" class="search-input" min="1" value="1" style="width: 100%; box-sizing: border-box;" oninput="handleEventTypeChange()">
             <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
@@ -992,7 +1127,7 @@
               🏛️ Identidade da Liga & Temporada
             </h3>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div class="form-row" style="margin-bottom: 1rem;">
               <div class="form-group">
                 <label for="conf-league-name">Nome da Liga</label>
                 <input type="text" id="conf-league-name" class="search-input" value="Liga Atlântica" required>
@@ -1003,7 +1138,7 @@
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-row">
               <div class="form-group">
                 <label for="conf-temporada-atual">Número da Temporada Ativa</label>
                 <input type="number" id="conf-temporada-atual" class="search-input" value="5" min="1" max="99" required>
@@ -1059,7 +1194,7 @@
             <h3 style="font-size: 0.95rem; color: #a855f7; margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;">
               📱 Redes Sociais da Liga
             </h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-row">
               <div class="form-group">
                 <label for="conf-link-whatsapp">Link do Grupo do WhatsApp</label>
                 <input type="url" id="conf-link-whatsapp" class="search-input" placeholder="https://chat.whatsapp.com/...">
@@ -1076,7 +1211,7 @@
             <h3 style="font-size: 0.95rem; color: #f59e0b; margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;">
               🏆 Regras de Competição & Exibição
             </h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+            <div class="form-row" style="margin-bottom: 0.75rem;">
               <div class="form-group">
                 <label for="conf-status-podio">Modo de Exibição do Pódio</label>
                 <select id="conf-status-podio" class="search-input" style="width: 100%;">
@@ -1094,7 +1229,7 @@
                 </select>
               </div>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-row">
               <div class="form-group">
                 <label for="conf-min-etapas-ouro">Mínimo de Etapas para Pokébola de Ouro</label>
                 <input type="number" id="conf-min-etapas-ouro" class="search-input" min="1" max="20" value="2">
@@ -1116,12 +1251,102 @@
       </section>
     </div>
 
+    <!-- ABA 10: AUDITORIA DE DADOS & INTEGRIDADE DE ETAPAS -->
+    <div id="pane-auditoria" class="tab-pane-content" style="display: none; max-width: 1050px; margin: 0 auto;">
+      <section class="glass-card admin-card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1.25rem;">
+          <div>
+            <h2 style="font-size: 1.25rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              🔍 Auditoria de Dados & Integridade de Etapas
+            </h2>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;">
+              Auditoria profunda de cada etapa, cartel de vitórias (V-E-D), cálculo de pontuação, conferência de IDs e consistência do Metagame.
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button type="button" class="btn" style="background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.4); color: #93c5fd; font-weight: 600; font-size: 0.82rem;" onclick="runFullAudit()">
+              🔄 Executar Auditoria Completa
+            </button>
+            <button type="button" class="btn btn-whatsapp" style="font-size: 0.82rem; background: #0f766e; border-color: #0f766e; color: #fff;" onclick="recalculateRankingFromAllStages()">
+              ⚡ Recalcular & Sincronizar Ranking Geral
+            </button>
+          </div>
+        </div>
+
+        <!-- Cards de Resumo da Auditoria -->
+        <div id="audit-metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="glass-card" style="padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);">
+            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Etapas Auditadas</div>
+            <div id="audit-stat-stages" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 4px 0;">--</div>
+            <div id="audit-stat-stages-sub" style="font-size: 0.72rem; color: var(--text-secondary);">Aguardando execução...</div>
+          </div>
+          <div class="glass-card" style="padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);">
+            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Conformidade Pontos / V-E-D</div>
+            <div id="audit-stat-ved" style="font-size: 1.6rem; font-weight: 700; color: #10b981; margin: 4px 0;">--</div>
+            <div id="audit-stat-ved-sub" style="font-size: 0.72rem; color: var(--text-secondary);">Fórmula: (V*3 + E*1) * Mult</div>
+          </div>
+          <div class="glass-card" style="padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);">
+            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Identificação por POP ID</div>
+            <div id="audit-stat-ids" style="font-size: 1.6rem; font-weight: 700; color: var(--accent-yellow); margin: 4px 0;">--</div>
+            <div id="audit-stat-ids-sub" style="font-size: 0.72rem; color: var(--text-secondary);">Integridade de chaves primárias</div>
+          </div>
+          <div class="glass-card" style="padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);">
+            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Cobertura do Metagame</div>
+            <div id="audit-stat-decks" style="font-size: 1.6rem; font-weight: 700; color: #818cf8; margin: 4px 0;">--</div>
+            <div id="audit-stat-decks-sub" style="font-size: 0.72rem; color: var(--text-secondary);">Decks registrados por etapa</div>
+          </div>
+        </div>
+
+        <!-- Painel de Soluções Rápidas & Ações em Massa -->
+        <div class="glass-card" style="margin-bottom: 1.5rem; padding: 1.25rem; border: 1px solid rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.03); border-radius: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;">
+            <div>
+              <div style="font-weight: 700; color: #10b981; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem;">
+                🛠️ Centro de Soluções & Correções Rápidas
+              </div>
+              <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;">
+                Resolva alertas e inconsistências encontradas com 1 clique diretamente no repositório:
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+            <button type="button" class="btn" onclick="recalculateRankingFromAllStages()" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3); font-weight: 600; font-size: 0.82rem; display: flex; align-items: center; gap: 0.35rem;">
+              ⚡ 1. Recalcular & Sincronizar Ranking Geral
+            </button>
+            <button type="button" class="btn" onclick="autoAssignAllMissingDecks()" style="background: rgba(129, 140, 248, 0.15); color: #818cf8; border-color: rgba(129, 140, 248, 0.3); font-weight: 600; font-size: 0.82rem; display: flex; align-items: center; gap: 0.35rem;">
+              ✨ 2. Auto-Preencher Decks Ausentes no Metagame
+            </button>
+            <button type="button" class="btn" onclick="switchAdminTab('jogadores')" style="background: rgba(255, 203, 5, 0.12); color: var(--accent-yellow); border-color: rgba(255, 203, 5, 0.3); font-weight: 600; font-size: 0.82rem; display: flex; align-items: center; gap: 0.35rem;">
+              👤 3. Base Oficial de Jogadores (Cadastrar POP IDs)
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtros do Auditor -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 0.5rem; flex-wrap: wrap;">
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">Filtrar:</span>
+            <button type="button" class="btn active" id="audit-filter-all" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="filterAuditView('all')">Todas as Etapas</button>
+            <button type="button" class="btn" id="audit-filter-warn" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="filterAuditView('warn')">Com Alertas/Divergências</button>
+          </div>
+          <div id="audit-status-badge" style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);"></div>
+        </div>
+
+        <!-- Lista de Etapas Auditadas -->
+        <div id="audit-stages-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <div style="text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
+            Clique em <strong>"Executar Auditoria Completa"</strong> para inspecionar todas as etapas e gerar o diagnóstico.
+          </div>
+        </div>
+      </section>
+    </div>
+
   </div>
 
   <!-- Modal: Adicionar / Editar Jogador -->
-  <div id="player-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1040; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
-    <div class="glass-card" style="width: 100%; max-width: 480px; padding: 2rem; position: relative;">
-      <button onclick="closePlayerEditModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+  <div id="player-edit-modal" class="admin-modal-overlay" style="display: none;">
+    <div class="glass-card admin-modal-card" style="max-width: 480px; padding: 2rem;">
+      <button class="admin-modal-close" onclick="closePlayerEditModal()">&times;</button>
       
       <h3 id="player-modal-title" style="color: #fff; font-size: 1.25rem; margin-bottom: 1.25rem; text-align: center;">
         👤 Editar Jogador
@@ -1151,7 +1376,7 @@
           </select>
         </div>
 
-        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <div class="admin-modal-actions">
           <button type="button" class="btn" onclick="closePlayerEditModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
             Cancelar
           </button>
@@ -1164,9 +1389,9 @@
   </div>
 
   <!-- Modal: Adicionar / Editar Evento no Calendário -->
-  <div id="calendar-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1040; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
-    <div class="glass-card" style="width: 100%; max-width: 520px; padding: 2rem; position: relative;">
-      <button onclick="closeCalendarEditModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+  <div id="calendar-edit-modal" class="admin-modal-overlay" style="display: none;">
+    <div class="glass-card admin-modal-card" style="max-width: 520px; padding: 2rem;">
+      <button class="admin-modal-close" onclick="closeCalendarEditModal()">&times;</button>
       
       <h3 id="calendar-modal-title" style="color: #fff; font-size: 1.25rem; margin-bottom: 1.25rem; text-align: center;">
         📅 Editar Evento
@@ -1178,11 +1403,11 @@
         <input type="hidden" id="calendar-edit-index" value="-1">
 
         <div class="form-row" style="margin-bottom: 1rem;">
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="calendar-edit-date">Data do Torneio</label>
             <input type="text" id="calendar-edit-date" class="search-input" placeholder="Ex: 2026-09-20 ou 20-09-2026" required>
           </div>
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="calendar-edit-time">Horário</label>
             <input type="text" id="calendar-edit-time" class="search-input" placeholder="Ex: 14:00" required>
           </div>
@@ -1194,11 +1419,11 @@
         </div>
 
         <div class="form-row" style="margin-bottom: 1rem;">
-          <div class="form-group" style="flex: 2;">
+          <div class="form-group" style="grid-column: span 1;">
             <label for="calendar-edit-location">Local</label>
             <input type="text" id="calendar-edit-location" class="search-input" value="Livraria Atlântica +" required>
           </div>
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="calendar-edit-status">Status</label>
             <select id="calendar-edit-status" class="search-input" style="width: 100%;">
               <option value="confirmado">Confirmado</option>
@@ -1229,7 +1454,7 @@
           <input type="url" id="calendar-edit-photo" class="search-input" placeholder="https://...">
         </div>
 
-        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <div class="admin-modal-actions">
           <button type="button" class="btn" onclick="closeCalendarEditModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
             Cancelar
           </button>
@@ -1242,9 +1467,9 @@
   </div>
 
   <!-- Modal: Adicionar / Editar Regra -->
-  <div id="rule-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1040; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
-    <div class="glass-card" style="width: 100%; max-width: 520px; padding: 2rem; position: relative;">
-      <button onclick="closeRuleEditModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+  <div id="rule-edit-modal" class="admin-modal-overlay" style="display: none;">
+    <div class="glass-card admin-modal-card" style="max-width: 520px; padding: 2rem;">
+      <button class="admin-modal-close" onclick="closeRuleEditModal()">&times;</button>
       
       <h3 id="rule-modal-title" style="color: #fff; font-size: 1.25rem; margin-bottom: 1.25rem; text-align: center;">
         📜 Editar Regra
@@ -1265,7 +1490,7 @@
           <textarea id="rule-edit-desc" class="search-input" style="height: 140px; resize: vertical; line-height: 1.4;" placeholder="Digite o conteúdo da regra..." required></textarea>
         </div>
 
-        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <div class="admin-modal-actions">
           <button type="button" class="btn" onclick="closeRuleEditModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
             Cancelar
           </button>
@@ -1278,9 +1503,9 @@
   </div>
 
   <!-- Modal: Adicionar / Editar Foto na Galeria -->
-  <div id="photo-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1040; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
-    <div class="glass-card" style="width: 100%; max-width: 480px; padding: 2rem; position: relative;">
-      <button onclick="closePhotoEditModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+  <div id="photo-edit-modal" class="admin-modal-overlay" style="display: none;">
+    <div class="glass-card admin-modal-card" style="max-width: 480px; padding: 2rem;">
+      <button class="admin-modal-close" onclick="closePhotoEditModal()">&times;</button>
       
       <h3 id="photo-modal-title" style="color: #fff; font-size: 1.25rem; margin-bottom: 1.25rem; text-align: center;">
         🖼️ Adicionar Foto
@@ -1311,7 +1536,7 @@
           <input type="text" id="photo-edit-desc" class="search-input" placeholder="Ex: Top 4 Master da Etapa 18">
         </div>
 
-        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <div class="admin-modal-actions">
           <button type="button" class="btn" onclick="closePhotoEditModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
             Cancelar
           </button>
@@ -1324,9 +1549,9 @@
   </div>
 
   <!-- Modal: Adicionar / Editar Deck no Catálogo -->
-  <div id="deck-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1040; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
-    <div class="glass-card" style="width: 100%; max-width: 480px; padding: 2rem; position: relative;">
-      <button onclick="closeDeckEditModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+  <div id="deck-edit-modal" class="admin-modal-overlay" style="display: none;">
+    <div class="glass-card admin-modal-card" style="max-width: 480px; padding: 2rem;">
+      <button class="admin-modal-close" onclick="closeDeckEditModal()">&times;</button>
       
       <h3 id="deck-modal-title" style="color: #fff; font-size: 1.25rem; margin-bottom: 1.25rem; text-align: center;">
         🎴 Editar Deck
@@ -1428,7 +1653,7 @@
           <input type="url" id="deck-edit-limitless" class="search-input" placeholder="https://limitlesstcg.com/decks/..." style="font-size: 0.8rem;">
         </div>
 
-        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <div class="admin-modal-actions">
           <button type="button" class="btn" onclick="closeDeckEditModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
             Cancelar
           </button>
@@ -1439,12 +1664,11 @@
       </form>
     </div>
   </div>
-  </div>
 
   <!-- Modal: Encerrar e Arquivar Temporada -->
-  <div id="close-season-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1050; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
-    <div class="glass-card" style="width: 100%; max-width: 520px; padding: 2rem; position: relative; border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);">
-      <button onclick="closeCloseSeasonModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+  <div id="close-season-modal" class="admin-modal-overlay" style="display: none; z-index: 1050;">
+    <div class="glass-card admin-modal-card" style="max-width: 520px; padding: 2rem; border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);">
+      <button class="admin-modal-close" onclick="closeCloseSeasonModal()">&times;</button>
       
       <div style="text-align: center; margin-bottom: 1.5rem;">
         <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🏆</div>
@@ -1503,7 +1727,7 @@
           </span>
         </div>
 
-        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <div class="admin-modal-actions">
           <button type="button" class="btn" onclick="closeCloseSeasonModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
             Cancelar
           </button>
@@ -1515,11 +1739,10 @@
     </div>
   </div>
 
-  
   <!-- Modal: Adicionar / Editar Campeão do Hall da Fama -->
-  <div id="champion-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1040; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
-    <div class="glass-card" style="width: 100%; max-width: 600px; padding: 2rem; position: relative;">
-      <button onclick="closeChampionEditModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+  <div id="champion-edit-modal" class="admin-modal-overlay" style="display: none;">
+    <div class="glass-card admin-modal-card" style="max-width: 600px; padding: 2rem;">
+      <button class="admin-modal-close" onclick="closeChampionEditModal()">&times;</button>
       
       <h3 id="champion-modal-title" style="color: #fff; font-size: 1.25rem; margin-bottom: 1.25rem; text-align: center;">
         🏆 Editar Campeão do Hall da Fama
@@ -1531,33 +1754,33 @@
         <input type="hidden" id="champion-edit-index" value="-1">
 
         <div class="form-row" style="margin-bottom: 1rem;">
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="champ-edit-season">Temporada</label>
             <input type="text" id="champ-edit-season" class="search-input" placeholder="Ex: Temporada #4" required>
           </div>
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="champ-edit-date">Mês / Ano</label>
             <input type="text" id="champ-edit-date" class="search-input" placeholder="Ex: Abril 2026">
           </div>
         </div>
 
         <div class="form-row" style="margin-bottom: 1rem;">
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="champ-edit-name">🏆 Nome do Campeão</label>
             <input type="text" id="champ-edit-name" class="search-input" placeholder="Ex: Washington Neto" required>
           </div>
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="champ-edit-vice">🥈 Vice-Campeão</label>
             <input type="text" id="champ-edit-vice" class="search-input" placeholder="Ex: João Pedro Oliveira">
           </div>
         </div>
 
         <div class="form-row" style="margin-bottom: 1rem;">
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="champ-edit-deck">🎴 Deck Campeão</label>
             <input type="text" id="champ-edit-deck" class="search-input" placeholder="Ex: Lugia Archeops" list="all-decks-datalist" required>
           </div>
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="champ-edit-photo">📸 URL Foto do Campeão</label>
             <input type="url" id="champ-edit-photo" class="search-input" placeholder="https://...">
           </div>
@@ -1568,28 +1791,28 @@
         </div>
 
         <div class="form-row" style="margin-bottom: 1rem;">
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="champ-edit-ouro">🥇 Pokébola de Ouro</label>
             <input type="text" id="champ-edit-ouro" class="search-input" placeholder="Ex: Washington Neto">
           </div>
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="champ-edit-ginasio">🥋 Líder de Ginásio</label>
             <input type="text" id="champ-edit-ginasio" class="search-input" placeholder="Ex: Carlos Paes">
           </div>
         </div>
 
         <div class="form-row" style="margin-bottom: 1.5rem;">
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="champ-edit-ditto">🧬 Ditto Player</label>
             <input type="text" id="champ-edit-ditto" class="search-input" placeholder="Ex: Carlos Morais">
           </div>
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="champ-edit-murcha">🥀 Pokébola Murcha</label>
             <input type="text" id="champ-edit-murcha" class="search-input" placeholder="Ex: Wesllen Dias">
           </div>
         </div>
 
-        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <div class="admin-modal-actions">
           <button type="button" class="btn" onclick="closeChampionEditModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
             Cancelar
           </button>
@@ -1602,9 +1825,9 @@
   </div>
 
   <!-- Modal: Adicionar / Editar Score Antigo -->
-  <div id="hist-score-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1040; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 1.5rem 1rem;">
-    <div class="glass-card" style="width: 100%; max-width: 500px; padding: 2rem; position: relative;">
-      <button onclick="closeHistoricalScoreEditModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+  <div id="hist-score-edit-modal" class="admin-modal-overlay" style="display: none;">
+    <div class="glass-card admin-modal-card" style="max-width: 500px; padding: 2rem;">
+      <button class="admin-modal-close" onclick="closeHistoricalScoreEditModal()">&times;</button>
       
       <h3 id="hist-score-modal-title" style="color: #fff; font-size: 1.25rem; margin-bottom: 1.25rem; text-align: center;">
         📜 Editar Score Antigo
@@ -1616,11 +1839,11 @@
         <input type="hidden" id="hist-score-edit-index" value="-1">
 
         <div class="form-row" style="margin-bottom: 1rem;">
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="hist-edit-season">Temporada</label>
             <input type="text" id="hist-edit-season" class="search-input" placeholder="Ex: Temporada #3" required>
           </div>
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="hist-edit-pos">Posição Final</label>
             <input type="number" id="hist-edit-pos" class="search-input" min="1" max="999" placeholder="Ex: 1" required>
           </div>
@@ -1632,7 +1855,7 @@
         </div>
 
         <div class="form-row" style="margin-bottom: 1rem;">
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="hist-edit-cat">Categoria</label>
             <select id="hist-edit-cat" class="search-input" style="width: 100%;">
               <option value="ME">Master (ME)</option>
@@ -1640,7 +1863,7 @@
               <option value="JR">Junior (JR)</option>
             </select>
           </div>
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group">
             <label for="hist-edit-points">Pontos</label>
             <input type="text" id="hist-edit-points" class="search-input" placeholder="Ex: 320">
           </div>
@@ -1651,7 +1874,7 @@
           <input type="text" id="hist-edit-deck" class="search-input" placeholder="Ex: Dragapult ex" list="all-decks-datalist">
         </div>
 
-        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <div class="admin-modal-actions">
           <button type="button" class="btn" onclick="closeHistoricalScoreEditModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
             Cancelar
           </button>
@@ -1661,98 +1884,6 @@
         </div>
       </form>
     </div>
-  </div>
-
-
-
-  <!-- ABA 10: AUDITORIA DE DADOS & INTEGRIDADE DE ETAPAS -->
-  <div id="pane-auditoria" class="tab-pane-content" style="display: none; max-width: 1050px; margin: 0 auto;">
-    <section class="glass-card admin-card" style="margin-bottom: 1.5rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1.25rem;">
-        <div>
-          <h2 style="font-size: 1.25rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-            🔍 Auditoria de Dados & Integridade de Etapas
-          </h2>
-          <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;">
-            Auditoria profunda de cada etapa, cartel de vitórias (V-E-D), cálculo de pontuação, conferência de IDs e consistência do Metagame.
-          </p>
-        </div>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <button type="button" class="btn" style="background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.4); color: #93c5fd; font-weight: 600; font-size: 0.82rem;" onclick="runFullAudit()">
-            🔄 Executar Auditoria Completa
-          </button>
-          <button type="button" class="btn btn-whatsapp" style="font-size: 0.82rem; background: #0f766e; border-color: #0f766e; color: #fff;" onclick="recalculateRankingFromAllStages()">
-            ⚡ Recalcular & Sincronizar Ranking Geral
-          </button>
-        </div>
-      </div>
-
-      <!-- Cards de Resumo da Auditoria -->
-      <div id="audit-metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-        <div class="glass-card" style="padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);">
-          <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Etapas Auditadas</div>
-          <div id="audit-stat-stages" style="font-size: 1.6rem; font-weight: 700; color: #fff; margin: 4px 0;">--</div>
-          <div id="audit-stat-stages-sub" style="font-size: 0.72rem; color: var(--text-secondary);">Aguardando execução...</div>
-        </div>
-        <div class="glass-card" style="padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);">
-          <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Conformidade Pontos / V-E-D</div>
-          <div id="audit-stat-ved" style="font-size: 1.6rem; font-weight: 700; color: #10b981; margin: 4px 0;">--</div>
-          <div id="audit-stat-ved-sub" style="font-size: 0.72rem; color: var(--text-secondary);">Fórmula: (V*3 + E*1) * Mult</div>
-        </div>
-        <div class="glass-card" style="padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);">
-          <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Identificação por POP ID</div>
-          <div id="audit-stat-ids" style="font-size: 1.6rem; font-weight: 700; color: var(--accent-yellow); margin: 4px 0;">--</div>
-          <div id="audit-stat-ids-sub" style="font-size: 0.72rem; color: var(--text-secondary);">Integridade de chaves primárias</div>
-        </div>
-        <div class="glass-card" style="padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);">
-          <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Cobertura do Metagame</div>
-          <div id="audit-stat-decks" style="font-size: 1.6rem; font-weight: 700; color: #818cf8; margin: 4px 0;">--</div>
-          <div id="audit-stat-decks-sub" style="font-size: 0.72rem; color: var(--text-secondary);">Decks registrados por etapa</div>
-        </div>
-      </div>
-
-      <!-- Painel de Soluções Rápidas & Ações em Massa -->
-      <div class="glass-card" style="margin-bottom: 1.5rem; padding: 1.25rem; border: 1px solid rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.03); border-radius: 8px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;">
-          <div>
-            <div style="font-weight: 700; color: #10b981; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem;">
-              🛠️ Centro de Soluções & Correções Rápidas
-            </div>
-            <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;">
-              Resolva alertas e inconsistências encontradas com 1 clique diretamente no repositório:
-            </div>
-          </div>
-        </div>
-        <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
-          <button type="button" class="btn" onclick="recalculateRankingFromAllStages()" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3); font-weight: 600; font-size: 0.82rem; display: flex; align-items: center; gap: 0.35rem;">
-            ⚡ 1. Recalcular & Sincronizar Ranking Geral
-          </button>
-          <button type="button" class="btn" onclick="autoAssignAllMissingDecks()" style="background: rgba(129, 140, 248, 0.15); color: #818cf8; border-color: rgba(129, 140, 248, 0.3); font-weight: 600; font-size: 0.82rem; display: flex; align-items: center; gap: 0.35rem;">
-            ✨ 2. Auto-Preencher Decks Ausentes no Metagame
-          </button>
-          <button type="button" class="btn" onclick="switchAdminTab('jogadores')" style="background: rgba(255, 203, 5, 0.12); color: var(--accent-yellow); border-color: rgba(255, 203, 5, 0.3); font-weight: 600; font-size: 0.82rem; display: flex; align-items: center; gap: 0.35rem;">
-            👤 3. Base Oficial de Jogadores (Cadastrar POP IDs)
-          </button>
-        </div>
-      </div>
-
-      <!-- Filtros do Auditor -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 0.5rem; flex-wrap: wrap;">
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
-          <span style="font-size: 0.8rem; color: var(--text-secondary);">Filtrar:</span>
-          <button type="button" class="btn active" id="audit-filter-all" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="filterAuditView('all')">Todas as Etapas</button>
-          <button type="button" class="btn" id="audit-filter-warn" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="filterAuditView('warn')">Com Alertas/Divergências</button>
-        </div>
-        <div id="audit-status-badge" style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);"></div>
-      </div>
-
-      <!-- Lista de Etapas Auditadas -->
-      <div id="audit-stages-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
-        <div style="text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
-          Clique em <strong>"Executar Auditoria Completa"</strong> para inspecionar todas as etapas e gerar o diagnóstico.
-        </div>
-      </div>
-    </section>
   </div>
 
   <script>
@@ -8221,8 +8352,8 @@
                   ⚠️ ${escapeHTML(stg.fetchError)}
                 </div>
               ` : `
-                <div style="overflow-x: auto;">
-                  <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left;">
+                <div class="table-responsive">
+                  <table class="ranking-table" style="font-size: 0.82rem;">
                     <thead>
                       <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.72rem; text-transform: uppercase;">
                         <th style="padding: 6px 8px;">Pos</th>
@@ -8620,6 +8751,23 @@
       const urlInput = document.getElementById('apps-script-url');
       if (urlInput) urlInput.value = savedScriptUrl;
     }
+
+    // Fechamento de modais ao clicar no backdrop escuro ou pressionar Escape (ESC)
+    document.addEventListener('click', (e) => {
+      if (e.target.classList && e.target.classList.contains('admin-modal-overlay')) {
+        e.target.style.display = 'none';
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.admin-modal-overlay').forEach(m => {
+          if (m.style.display === 'flex' || m.style.display === 'block') {
+            m.style.display = 'none';
+          }
+        });
+      }
+    });
   </script>
 </body>
 </html>

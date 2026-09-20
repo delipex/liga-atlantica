@@ -662,7 +662,9 @@ strong, b {
 .event-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin-bottom: 1.5rem;
 }
 
@@ -876,6 +878,7 @@ select option, select optgroup, .search-input option {
 .table-responsive {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .ranking-table {
@@ -1637,15 +1640,15 @@ tbody tr.top-8 .row-rank,
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   color: var(--text-secondary);
   transition: all 0.2s ease;
   z-index: 10;
@@ -1698,10 +1701,17 @@ tbody tr.top-8 .row-rank,
 
 .modal-stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.5rem;
   text-align: center;
   margin-bottom: 0.25rem;
+}
+
+@media (max-width: 440px) {
+  .modal-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
 }
 
 .modal-stat-box {
@@ -1874,8 +1884,11 @@ tbody tr.top-8 .row-rank,
     -webkit-backdrop-filter: blur(16px);
     flex-direction: column;
     align-items: center;
-    padding-top: 3rem;
-    gap: 2rem;
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+    gap: 1.5rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     z-index: 99;
     border-top: 1px solid var(--border-color);
@@ -2274,9 +2287,22 @@ tbody tr.top-8 .row-rank,
     gap: 0.75rem;
     margin-bottom: 1.5rem;
   }
-  .btn {
+  .welcome-buttons .btn {
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 400px) {
+  .header-logo-svg {
+    height: 26px !important;
+  }
+  .pokeball-icon {
+    width: 26px !important;
+    height: 26px !important;
+  }
+  .header .container {
+    padding: 0 0.75rem;
   }
 }
 
@@ -3452,6 +3478,26 @@ tbody tr.top-8 .row-rank,
   border-color: var(--accent-yellow);
   box-shadow: 0 4px 15px rgba(255, 203, 5, 0.3);
   font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .calendar-month-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start;
+    padding: 0.25rem 0.5rem 0.75rem 0.5rem;
+    scrollbar-width: none;
+  }
+  .calendar-month-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .month-tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 0.45rem 1rem;
+    font-size: 0.82rem;
+  }
 }
 
 /* ==========================================================================

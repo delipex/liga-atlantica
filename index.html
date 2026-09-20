@@ -337,28 +337,26 @@ Siga-nos no Instagram
 
     
     <section id="metagame" class="section">
-      <div class="container">
-        <div class="section-header">
-          <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:1rem;">
-            <div>
-              <h2 class="section-title">Metagame</h2>
-              <p class="section-subtitle" style="color:var(--text-secondary);">Estatísticas dos decks mais utilizados</p>
-            </div>
-            
-            <div class="historical-controls">
-              <div class="historical-control-field">
-                <label for="metagame-season-selector">Etapa</label>
-                <select id="metagame-season-selector" class="search-input historical-select">
-                  <option value="">Carregando...</option>
-                </select>
-              </div>
+      <div class="section-header">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:1rem;">
+          <div>
+            <h1 class="section-title">Metagame dos <span class="gradient-text">Decks</span></h1>
+            <p class="section-subtitle" style="color:var(--text-secondary);">Estatísticas dos decks mais utilizados</p>
+          </div>
+          
+          <div class="historical-controls">
+            <div class="historical-control-field">
+              <label for="metagame-season-selector">Etapa</label>
+              <select id="metagame-season-selector" class="search-input historical-select">
+                <option value="">Carregando...</option>
+              </select>
             </div>
           </div>
         </div>
+      </div>
+      
+      <div id="metagame-page-content" style="margin-top:2rem;">
         
-        <div id="metagame-page-content" style="margin-top:2rem;">
-          
-        </div>
       </div>
     </section>
 
@@ -378,7 +376,7 @@ Siga-nos no Instagram
         <div id="modal-player-titles" class="trainer-titles-grid"></div>
       </div>
       <div class="modal-body">
-        <div class="modal-stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="modal-stats-grid">
           <div class="modal-stat-box">
             <div class="modal-stat-value" id="modal-stat-points" style="color:var(--accent-yellow);">0</div>
             <div class="modal-stat-label">Pontos</div>
