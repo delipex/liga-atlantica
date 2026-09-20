@@ -1714,6 +1714,124 @@ function renderLocationLink(locationName, mapUrl) {
   return `<a class="location-map-link" href="${escapeHTML(safeUrl)}" target="_blank" rel="noopener noreferrer" title="Abrir local no Google Maps">${safeName}<span class="location-map-link-icon">↗</span></a>`;
 }
 
+function detectCalendarEventType(title) {
+  const t = String(title || '').toLowerCase();
+  if (t.includes('final')) {
+    return { label: '🏆 Final de Temporada', class: 'tag-final' };
+  }
+  if (t.includes('cup')) {
+    return { label: '🏆 League Cup', class: 'tag-cup' };
+  }
+  if (t.includes('challenge')) {
+    return { label: '⚡ League Challenge', class: 'tag-challenge' };
+  }
+  if (t.includes('pré-release') || t.includes('pre-release') || t.includes('prerelease')) {
+    return { label: '🎁 Pré-Release', class: 'tag-prerelease' };
+  }
+  if (t.includes('especial') || t.includes('tbt') || t.includes('comemorativo')) {
+    return { label: '✨ Especial', class: 'tag-special' };
+  }
+  if (t.includes('freeplay') || t.includes('troca')) {
+    return { label: '🤝 Freeplay & Trocas', class: 'tag-freeplay' };
+  }
+  return { label: '⚔️ Sessão de Liga', class: 'tag-league' };
+}
+
+function formatCalendarDateBadge(dateStr) {
+  const d = parseDateSafe(dateStr);
+  if (isNaN(d)) return { weekday: '---', day: '--', month: '---' };
+  const weekDays = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+  const monthShorts = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+  return {
+    weekday: weekDays[d.getDay()],
+    day: String(d.getDate()).padStart(2, '0'),
+    month: monthShorts[d.getMonth()]
+  };
+}
+
+function renderCalendarCard(evt, isNext = false, isPast = false) {
+  const rawDate = evt.Data || evt.data;
+  const iso = normalizeDateISO(rawDate);
+  const parts = iso.split('-');
+  const dateFormatted = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : rawDate;
+  
+  const dateBadge = formatCalendarDateBadge(rawDate);
+  const eventTitle = escapeHTML(evt.Evento || evt.evento || 'Sessão de Liga');
+  const eventDesc = (evt.Descricao || evt.descricao || '').trim();
+  const eventLocal = evt.Local || evt.local || 'Livraria Atlântica +';
+  const eventMapUrl = evt.LinkMaps || evt.linkMaps || evt.URLMaps || evt.GoogleMaps || '';
+  const eventLink = evt.LinkInscricao || evt.linkInscricao || '';
+  const eventPhoto = evt.Foto || evt.foto || '';
+  const eventHour = evt.Horario || evt.horario || '14:00';
+  
+  const statusKey = isPast 
+    ? 'concluido' 
+    : (['confirmado', 'concluido', 'pendente'].includes(String(evt.Status || evt.status || '').toLowerCase()) 
+        ? String(evt.Status || evt.status).toLowerCase() 
+        : 'pendente');
+  const statusLabel = isPast ? 'Concluído' : getStatusLabel(statusKey);
+  const eventType = detectCalendarEventType(evt.Evento || evt.evento);
+
+  let photoHtml = '';
+  if (eventPhoto) {
+    const safeUrl = safeExternalUrl(normalizeImageUrl(eventPhoto));
+    if (safeUrl) {
+      photoHtml = `
+        <div class="calendar-card-thumb" onclick="window.openGenericLightbox('${safeUrl.replace(/'/g, "\\'")}', '${eventTitle.replace(/'/g, "\\'")}')" title="Clique para ampliar">
+          <img src="${escapeHTML(safeUrl)}" alt="${eventTitle}" loading="lazy">
+        </div>
+      `;
+    }
+  }
+
+  let actionHtml = '';
+  if (!isPast) {
+    if (eventLink) {
+      actionHtml = renderEventLinkButton(eventLink);
+    } else if (appData.Configuracoes?.LinkWhatsApp) {
+      actionHtml = `
+        <a href="${escapeHTML(appData.Configuracoes.LinkWhatsApp)}" target="_blank" rel="noopener noreferrer" class="btn-evento btn-evento-whatsapp" style="font-size:0.8rem; padding: 0.5rem 0.9rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          <span>Grupo da Liga</span>
+        </a>
+      `;
+    }
+  }
+
+  return `
+    <div class="calendar-card ${isNext ? 'calendar-card-highlight' : ''} ${isPast ? 'calendar-card-past' : ''}">
+      <div class="calendar-card-date">
+        <span class="cal-weekday">${escapeHTML(dateBadge.weekday)}</span>
+        <span class="cal-day">${escapeHTML(dateBadge.day)}</span>
+        <span class="cal-month">${escapeHTML(dateBadge.month)}</span>
+      </div>
+
+      ${photoHtml}
+
+      <div class="calendar-card-content">
+        <div class="calendar-card-badges">
+          ${isNext ? '<span class="calendar-badge-next">🔥 Próximo Torneio</span>' : ''}
+          <span class="calendar-tag ${eventType.class}">${eventType.label}</span>
+          <span class="calendar-status ${statusKey}">${escapeHTML(statusLabel)}</span>
+          <span class="calendar-time">🕒 ${escapeHTML(eventHour)}</span>
+        </div>
+
+        <h3 class="calendar-card-title">${eventTitle}</h3>
+
+        ${eventDesc ? `<p class="calendar-card-desc">${escapeHTML(eventDesc)}</p>` : ''}
+
+        <div class="calendar-card-meta">
+          <span class="calendar-meta-item">
+            📍 <strong>Local:</strong> ${renderLocationLink(eventLocal, eventMapUrl)}
+          </span>
+        </div>
+      </div>
+
+      ${actionHtml ? `<div class="calendar-card-action">${actionHtml}</div>` : ''}
+    </div>
+  `;
+}
+
 function renderCalendar() {
   const timeline = document.getElementById('calendar-timeline');
   const tabsContainer = document.getElementById('calendar-month-tabs');
@@ -1721,14 +1839,57 @@ function renderCalendar() {
 
   const events = appData.Calendario || [];
 
-  // 1. Filtra eventos válidos e ordena cronologicamente
+  // 1. Filtra eventos com data válida e ordena cronologicamente
   const validEvents = events
-    .filter(e => e && e.Data && !isNaN(parseDateSafe(e.Data)))
-    .sort((a, b) => parseDateSafe(a.Data) - parseDateSafe(b.Data));
+    .filter(e => {
+      const dt = e?.Data || e?.data;
+      return dt && !isNaN(parseDateSafe(dt));
+    })
+    .sort((a, b) => parseDateSafe(a.Data || a.data) - parseDateSafe(b.Data || b.data));
 
   if (validEvents.length === 0) {
     if (tabsContainer) tabsContainer.innerHTML = '';
-    timeline.innerHTML = `<div style="padding:3rem;text-align:center;color:var(--text-secondary);">Nenhum torneio cadastrado no calendário.</div>`;
+    timeline.innerHTML = `<div class="calendar-empty-card">
+      <div style="font-size:2.5rem; margin-bottom:0.75rem;">📅</div>
+      <h3 style="color:#fff; margin-bottom:0.5rem;">Nenhum torneio cadastrado no calendário</h3>
+      <p style="color:var(--text-secondary); max-width:480px; margin:0 auto;">Aguarde o anúncio dos próximos eventos oficiais da Liga Atlântica!</p>
+    </div>`;
+    return;
+  }
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+
+  // 2. Separação de eventos futuros (ou hoje) vs passados
+  const upcomingEvents = validEvents.filter(e => parseDateSafe(e.Data || e.data) >= startOfToday);
+  const pastEvents = validEvents.filter(e => parseDateSafe(e.Data || e.data) < startOfToday);
+
+  // Se não houver eventos futuros agendados
+  if (upcomingEvents.length === 0) {
+    if (tabsContainer) tabsContainer.innerHTML = '';
+    let emptyHtml = `
+      <div class="calendar-empty-card">
+        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">✨</div>
+        <h3 style="color: #fff; margin-bottom: 0.5rem;">Temporada Concluída / Sem Próximos Torneios</h3>
+        <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 1.5rem auto;">
+          Todos os torneios agendados anteriormente já foram realizados. Fique atento às nossas redes sociais para o calendário da próxima temporada!
+        </p>
+    `;
+    if (pastEvents.length > 0) {
+      emptyHtml += `
+        <details class="past-events-accordion">
+          <summary class="past-events-summary">
+            <span>📜 Ver histórico de torneios anteriores (${pastEvents.length} já realizados)</span>
+            <span class="past-events-arrow">▼</span>
+          </summary>
+          <div class="past-events-list">
+            ${pastEvents.map(evt => renderCalendarCard(evt, false, true)).join('')}
+          </div>
+        </details>
+      `;
+    }
+    emptyHtml += `</div>`;
+    timeline.innerHTML = emptyHtml;
     return;
   }
 
@@ -1738,12 +1899,12 @@ function renderCalendar() {
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
   ];
 
-  // 2. Agrupa eventos por chave "YYYY-MM"
-  const groups = {}; // key "YYYY-MM" -> { monthKey: "2026-08", label: "Agosto 2026", events: [] }
-  validEvents.forEach(evt => {
-    const d = parseDateSafe(evt.Data);
-    const monthVal = String(d.getMonth() + 1).padStart(2, '0'); // "01"-"12"
-    const yearVal = d.getFullYear(); // e.g. 2026
+  // 3. Agrupa APENAS os eventos futuros por chave "YYYY-MM"
+  const groups = {};
+  upcomingEvents.forEach(evt => {
+    const d = parseDateSafe(evt.Data || evt.data);
+    const monthVal = String(d.getMonth() + 1).padStart(2, '0');
+    const yearVal = d.getFullYear();
     const key = `${yearVal}-${monthVal}`;
     const label = `${monthNames[d.getMonth()]} de ${yearVal}`;
     
@@ -1757,76 +1918,58 @@ function renderCalendar() {
     groups[key].events.push(evt);
   });
 
-  // Chaves de meses ordenadas cronologicamente
   const sortedMonthKeys = Object.keys(groups).sort();
 
-  // 3. Determina o mês a ser exibido inicialmente se currentCalendarMonth for nulo
-  if (!currentCalendarMonth || !groups[currentCalendarMonth]) {
-    // Tenta encontrar o mês atual ("YYYY-MM")
-    const now = new Date();
-    const nowMonthVal = String(now.getMonth() + 1).padStart(2, '0');
-    const nowKey = `${now.getFullYear()}-${nowMonthVal}`;
-    
-    if (groups[nowKey]) {
-      currentCalendarMonth = nowKey;
-    } else {
-      // Se o mês atual não tiver eventos, pega o primeiro mês disponível que tem eventos
-      currentCalendarMonth = sortedMonthKeys[0];
-    }
+  // 4. Seleção inicial da aba
+  if (!currentCalendarMonth || (currentCalendarMonth !== 'all' && !groups[currentCalendarMonth])) {
+    currentCalendarMonth = 'all';
   }
 
-  // 4. Renderiza as abas de meses
+  // 5. Renderiza as abas (Apenas meses futuros + "Todos os Próximos")
   if (tabsContainer) {
-    tabsContainer.innerHTML = sortedMonthKeys.map(key => {
+    let tabsHtml = `
+      <button class="month-tab-btn ${currentCalendarMonth === 'all' ? 'active' : ''}" onclick="selectCalendarMonth('all')">
+        Todos os Próximos (${upcomingEvents.length})
+      </button>
+    `;
+    sortedMonthKeys.forEach(key => {
       const activeClass = key === currentCalendarMonth ? 'active' : '';
-      return `
+      const count = groups[key].events.length;
+      tabsHtml += `
         <button class="month-tab-btn ${activeClass}" onclick="selectCalendarMonth('${key}')">
-          ${escapeHTML(groups[key].label)}
+          ${escapeHTML(groups[key].label)} (${count})
         </button>
       `;
-    }).join('');
+    });
+    tabsContainer.innerHTML = tabsHtml;
   }
 
-  // 5. Renderiza os eventos do mês selecionado
-  const selectedGroup = groups[currentCalendarMonth];
-  if (!selectedGroup || selectedGroup.events.length === 0) {
-    timeline.innerHTML = `<div style="padding:3rem;text-align:center;color:var(--text-secondary);">Nenhum torneio cadastrado para este mês.</div>`;
-    return;
-  }
+  // 6. Eventos a serem exibidos no filtro atual
+  const displayedEvents = currentCalendarMonth === 'all'
+    ? upcomingEvents
+    : (groups[currentCalendarMonth]?.events || []);
 
-  timeline.innerHTML = selectedGroup.events.map(evt => {
-    const iso = normalizeDateISO(evt.Data);
-    const parts = iso.split('-');
-    const dateFormatted = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : evt.Data;
-    
-    const statusKey = ['confirmado', 'concluido', 'pendente'].includes(String(evt.Status || '').toLowerCase()) ? String(evt.Status).toLowerCase() : 'pendente';
-    const statusLabel = getStatusLabel(statusKey);
-    const eventTitle = escapeHTML(evt.Evento);
-    const eventDescription = escapeHTML(evt.Descricao || 'Sem descrição cadastrada para este encontro.');
-    const eventLocal = evt.Local || 'Livraria Atlântica +';
-    const eventMapUrl = evt.LinkMaps || evt.URLMaps || evt.LinkLocal || evt.GoogleMaps || evt.Mapa || '';
-    
-    return `
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="timeline-card">
-          ${renderTimelineThumb(evt.Foto, evt.Evento)}
-          <div class="timeline-body">
-            <div class="timeline-date">
-              <span>${escapeHTML(dateFormatted)} às ${escapeHTML(evt.Horario || '10:00')}</span>
-              <span class="timeline-status ${statusKey}">${escapeHTML(statusLabel)}</span>
-            </div>
-            <h3 class="timeline-title">${eventTitle}</h3>
-            <p class="timeline-description">${eventDescription}</p>
-            <div class="timeline-meta">
-              <span>📍 <strong>Local:</strong> ${renderLocationLink(eventLocal, eventMapUrl)}</span>
-            </div>
-          </div>
-          ${renderEventLinkButton(evt.LinkInscricao)}
-        </div>
-      </div>
-    `;
+  let html = displayedEvents.map((evt, idx) => {
+    const isNext = (currentCalendarMonth === 'all' && idx === 0) || (upcomingEvents[0] === evt);
+    return renderCalendarCard(evt, isNext, false);
   }).join('');
+
+  // 7. Arquivo Histórico de Eventos Passados (recolhido por padrão no rodapé da visão geral)
+  if (pastEvents.length > 0 && currentCalendarMonth === 'all') {
+    html += `
+      <details class="past-events-accordion">
+        <summary class="past-events-summary">
+          <span>📜 Arquivo Histórico: Torneios Anteriores desta Temporada (${pastEvents.length} já realizados)</span>
+          <span class="past-events-arrow">▼</span>
+        </summary>
+        <div class="past-events-list">
+          ${pastEvents.map(evt => renderCalendarCard(evt, false, true)).join('')}
+        </div>
+      </details>
+    `;
+  }
+
+  timeline.innerHTML = html;
 }
 
 // Função global para trocar o mês do calendário
