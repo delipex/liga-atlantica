@@ -316,10 +316,10 @@
     },
     {
         "deck": "Slowbro",
-        "tipoEnergia": "colorless",
-        "imagem": "",
-        "limitless": "",
-        "icone": ""
+        "tipoEnergia": "psychic",
+        "imagem": "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PBL/PBL_030_R_PT_LG.png",
+        "limitless": "https://limitlesstcg.com/cards/PBL/30",
+        "icone": "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/080.png"
     },
     {
         "deck": "Slowking",
