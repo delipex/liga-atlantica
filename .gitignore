@@ -19,6 +19,7 @@ design-system/
 LOCALHOST/
 planilha/
 scripts/
+recursos/
 
 # Documentos Markdown (privados no computador)
 *.md
