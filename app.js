@@ -1322,6 +1322,18 @@ function renderAll() {
     }
   }
 
+  // 4. Controle dinâmico do botão de Inscrição & Decklist no site
+  const premierConf = appData.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || {};
+  const isPremierOpen = premierConf.abertas !== false;
+  const navDeckBtn = document.getElementById('nav-decklist-link');
+  if (navDeckBtn) {
+    navDeckBtn.style.display = isPremierOpen ? 'inline-flex' : 'none';
+  }
+  const welcomeDeckBtn = document.getElementById('btn-decklist-welcome');
+  if (welcomeDeckBtn) {
+    welcomeDeckBtn.style.display = isPremierOpen ? 'inline-flex' : 'none';
+  }
+
   currentRankingList = appData.Ranking;
   renderDashboard();
   renderRankingTable(appData.Ranking);
@@ -5579,8 +5591,13 @@ window.openDecklistModal = function(defaultStageDate = '') {
   const premierConfig = appData?.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || {};
   const isAbertas = premierConfig.abertas !== false;
 
-  // 1. Atualizar o Banner Hero do Evento
+  // 1. Atualizar o Banner Hero do Evento com Tema de Cores / Energia
+  const heroEl = document.getElementById('decklist-premier-hero');
   const titleEl = document.getElementById('decklist-banner-title');
+  const subtitleEl = document.getElementById('decklist-banner-subtitle');
+  const bannerContainer = document.getElementById('decklist-banner-img-container');
+  const bannerImg = document.getElementById('decklist-banner-img');
+  const localEl = document.getElementById('decklist-banner-local');
   const typeBadgeEl = document.getElementById('decklist-banner-type-badge');
   const scheduleEl = document.getElementById('decklist-banner-schedule');
   const statusEl = document.getElementById('decklist-banner-status');
@@ -5588,15 +5605,63 @@ window.openDecklistModal = function(defaultStageDate = '') {
   const spotsEl = document.getElementById('decklist-banner-spots');
   const pixKeyEl = document.getElementById('decklist-banner-pix-key');
   const pixNameEl = document.getElementById('decklist-banner-pix-name');
+  const rulesBox = document.getElementById('decklist-custom-rules-box');
+  const rulesText = document.getElementById('decklist-custom-rules-text');
+  const reqNote = document.getElementById('decklist-requirement-note');
   const closedAlert = document.getElementById('decklist-closed-alert');
   const submitBtn = document.getElementById('decklist-submit-wa-btn');
 
+  // Aplicar tema de energia Pokémon
+  const energyThemes = {
+    lightning: { border: 'rgba(255, 203, 5, 0.4)', bg: 'linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%)', badgeBg: 'rgba(255,203,5,0.2)', badgeColor: 'var(--accent-yellow)' },
+    fire: { border: 'rgba(239, 68, 68, 0.4)', bg: 'linear-gradient(135deg, rgba(69, 10, 10, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%)', badgeBg: 'rgba(239, 68, 68, 0.25)', badgeColor: '#f87171' },
+    water: { border: 'rgba(59, 130, 246, 0.4)', bg: 'linear-gradient(135deg, rgba(30, 58, 138, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%)', badgeBg: 'rgba(59, 130, 246, 0.25)', badgeColor: '#60a5fa' },
+    psychic: { border: 'rgba(168, 85, 247, 0.4)', bg: 'linear-gradient(135deg, rgba(88, 28, 135, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%)', badgeBg: 'rgba(168, 85, 247, 0.25)', badgeColor: '#c084fc' },
+    grass: { border: 'rgba(16, 185, 129, 0.4)', bg: 'linear-gradient(135deg, rgba(6, 78, 59, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%)', badgeBg: 'rgba(16, 185, 129, 0.25)', badgeColor: '#34d399' },
+    darkness: { border: 'rgba(100, 116, 139, 0.4)', bg: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.98) 100%)', badgeBg: 'rgba(100, 116, 139, 0.25)', badgeColor: '#cbd5e1' },
+    dragon: { border: 'rgba(217, 119, 6, 0.45)', bg: 'linear-gradient(135deg, rgba(120, 53, 15, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%)', badgeBg: 'rgba(245, 158, 11, 0.25)', badgeColor: '#fbbf24' },
+    metal: { border: 'rgba(148, 163, 184, 0.4)', bg: 'linear-gradient(135deg, rgba(51, 65, 85, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%)', badgeBg: 'rgba(148, 163, 184, 0.25)', badgeColor: '#e2e8f0' }
+  };
+  const currentTheme = energyThemes[premierConfig.temaCor] || energyThemes.lightning;
+
+  if (heroEl) {
+    heroEl.style.border = `1px solid ${currentTheme.border}`;
+    heroEl.style.background = currentTheme.bg;
+  }
+
+  if (bannerContainer && bannerImg) {
+    if (premierConfig.bannerUrl) {
+      bannerImg.src = premierConfig.bannerUrl;
+      bannerContainer.style.display = 'block';
+    } else {
+      bannerContainer.style.display = 'none';
+    }
+  }
+
   if (titleEl) titleEl.innerText = premierConfig.eventoNome || 'League Challenge — Liga Atlântica';
-  if (typeBadgeEl) typeBadgeEl.innerText = `🏆 TORNEIO PREMIER • ${premierConfig.eventoTipo || 'CHALLENGE'}`;
+  if (subtitleEl) {
+    if (premierConfig.subtitulo) {
+      subtitleEl.innerText = premierConfig.subtitulo;
+      subtitleEl.style.display = 'block';
+      subtitleEl.style.color = currentTheme.badgeColor;
+    } else {
+      subtitleEl.style.display = 'none';
+    }
+  }
+
+  if (typeBadgeEl) {
+    typeBadgeEl.innerText = `🏆 TORNEIO PREMIER • ${premierConfig.eventoTipo || 'CHALLENGE'}`;
+    typeBadgeEl.style.background = currentTheme.badgeBg;
+    typeBadgeEl.style.color = currentTheme.badgeColor;
+  }
   
   const formattedDate = premierConfig.eventoData ? formatDateBR(premierConfig.eventoData) : '';
   const scheduleParts = [formattedDate, premierConfig.horario].filter(Boolean);
   if (scheduleEl) scheduleEl.innerText = scheduleParts.length ? `📅 ${scheduleParts.join(' • ')}` : '📅 Data e horário a definir';
+
+  if (localEl) {
+    localEl.innerText = `📍 ${premierConfig.local || 'Livraria Atlântica +'}`;
+  }
 
   if (feeEl) feeEl.innerText = premierConfig.valor ? `R$ ${premierConfig.valor}` : 'Gratuito';
 
@@ -5619,6 +5684,19 @@ window.openDecklistModal = function(defaultStageDate = '') {
 
   if (pixKeyEl) pixKeyEl.innerText = premierConfig.chavePix || 'A definir';
   if (pixNameEl) pixNameEl.innerText = premierConfig.titularPix || '';
+
+  if (rulesBox && rulesText) {
+    if (premierConfig.observacoes) {
+      rulesText.innerText = premierConfig.observacoes;
+      rulesBox.style.display = 'block';
+    } else {
+      rulesBox.style.display = 'none';
+    }
+  }
+
+  if (reqNote) {
+    reqNote.innerText = premierConfig.exigirDecklist === false ? '(Opcional no envio da inscrição)' : '(Obrigatória - 60 cartas)';
+  }
 
   if (statusEl) {
     if (isAbertas) {
@@ -5727,22 +5805,39 @@ window.submitDecklistWhatsApp = function() {
     return;
   }
 
+  const premierConfig = appData?.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || {};
+  const isDlMandatory = premierConfig.exigirDecklist !== false;
+
   const parsed = parseDecklistText(cardsText);
+
+  if (isDlMandatory && !cardsText && !limitlessUrl) {
+    if (!confirm("Aviso: A submissão da lista de 60 cartas é recomendada para este torneio. Deseja enviar a inscrição mesmo assim e entregar a lista pessoalmente?")) {
+      return;
+    }
+  }
 
   let msg = `🏆 *INSCRIÇÃO & DECKLIST - LIGA ATLÂNTICA*\n`;
   msg += `📍 *Evento:* ${eventTitle}\n`;
   msg += `👤 *Jogador:* ${name}\n`;
   msg += `🆔 *Play! Pokémon ID:* ${popId}\n`;
   msg += `🎂 *Nascimento:* ${birthYear || 'Não inf.'} (${category})\n`;
-  msg += `🃏 *Deck:* ${deckName || parsed.archetype || 'Personalizado'} (${parsed.total}/60 cartas)\n`;
+  msg += `🃏 *Deck:* ${deckName || parsed.archetype || 'A definir'} (${parsed.total}/60 cartas)\n`;
   if (limitlessUrl) {
     msg += `🔗 *Limitless:* ${limitlessUrl}\n`;
   }
-  msg += `\n📜 *LISTA DO BARALHO (${parsed.total} cartas):*\n${cardsText || '(Lista enviada via link Limitless)'}\n`;
+  if (cardsText) {
+    msg += `\n📜 *LISTA DO BARALHO (${parsed.total} cartas):*\n${cardsText}\n`;
+  } else {
+    msg += `\n📜 *Lista:* Entrega física antes da 1ª Rodada ou via link Limitless.\n`;
+  }
   msg += `\n💰 *Comprovante:* Segue anexo o comprovante de pagamento PIX da taxa de inscrição.`;
 
   const encodedMsg = encodeURIComponent(msg);
-  const waUrl = `https://api.whatsapp.com/send?text=${encodedMsg}`;
+  const waContact = (premierConfig.whatsappContato || '').replace(/\D/g, '');
+  let waUrl = `https://api.whatsapp.com/send?text=${encodedMsg}`;
+  if (waContact) {
+    waUrl = `https://api.whatsapp.com/send?phone=${waContact}&text=${encodedMsg}`;
+  }
 
   window.open(waUrl, '_blank');
   alert("Inscrição e decklist formatadas com sucesso! Sua mensagem foi direcionada para o WhatsApp.");
@@ -5765,8 +5860,11 @@ window.copyDecklistSubmission = function() {
   msg += `Jogador: ${name}\n`;
   msg += `Play! Pokémon ID: ${popId}\n`;
   msg += `Categoria: ${category} (${birthYear})\n`;
-  msg += `Deck: ${deckName || parsed.archetype} (${parsed.total}/60 cartas)\n\n`;
-  msg += `--- LISTA DO BARALHO ---\n${cardsText}\n`;
+  msg += `Deck: ${deckName || parsed.archetype || 'A definir'} (${parsed.total}/60 cartas)\n\n`;
+  if (cardsText) {
+    msg += `--- LISTA DO BARALHO ---\n${cardsText}\n`;
+  }
+  msg += `\nComprovante PIX: Pago`;
 
   navigator.clipboard.writeText(msg).then(() => {
     alert("Inscrição e Decklist copiadas para a área de transferência!");

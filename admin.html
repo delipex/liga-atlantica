@@ -1351,6 +1351,9 @@
             Clique em <strong>"Executar Auditoria Completa"</strong> para inspecionar todas as etapas e gerar o diagnóstico.
           </div>
         </div>
+      </section>
+    </div>
+
     <!-- ABA: DECKLISTS (CUPS & CHALLENGES) -->
     <div id="pane-decklists" class="tab-pane-content" style="display: none; max-width: 1000px; margin: 0 auto;">
       <section class="glass-card admin-card">
@@ -1360,7 +1363,7 @@
               📋 Gestão de Inscrições & Decklists (Premier Events)
             </h2>
             <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 4px;">
-              Gerencie e valide o envio de listas de 60 cartas de League Cups e League Challenges.
+              Gerencie, personalize o formulário online e valide o envio de listas de 60 cartas de League Cups e League Challenges.
             </p>
           </div>
           <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -1378,10 +1381,10 @@
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.5rem;">
             <div>
               <h3 style="font-size: 1.05rem; color: var(--accent-yellow); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-                ⚙️ Configuração das Inscrições Online (Premier)
+                ⚙️ Personalização & Controle de Inscrições (Premier)
               </h3>
               <p style="color: var(--text-secondary); font-size: 0.78rem; margin: 3px 0 0 0;">
-                Controle o status aberto/fechado, taxa PIX, vagas e dados exibidos no formulário online dos jogadores.
+                Personalize o banner, regras, taxa PIX, vagas, formato e requisitos de decklist exibidos aos jogadores.
               </p>
             </div>
             <div id="admin-premier-status-pill" style="font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">
@@ -1400,17 +1403,18 @@
               </select>
             </div>
             <div style="font-size: 0.74rem; color: var(--text-secondary); max-width: 280px; line-height: 1.35;">
-              Ao selecionar, o sistema preenche automaticamente o <strong>Nome</strong>, <strong>Data</strong>, <strong>Tipo</strong> e <strong>Horário</strong> do torneio.
+              Ao selecionar, o sistema preenche automaticamente o <strong>Nome</strong>, <strong>Data</strong>, <strong>Tipo</strong>, <strong>Local</strong> e <strong>Horário</strong> do torneio.
             </div>
           </div>
 
           <form id="admin-premier-config-form" onsubmit="handleSavePremierConfig(event)">
+            <!-- Linha 1: Status e Tipo -->
             <div class="form-row" style="margin-bottom: 0.85rem;">
               <div class="form-group">
                 <label for="adm-premier-abertas">Status das Inscrições</label>
                 <select id="adm-premier-abertas" class="search-input" style="width: 100%;" onchange="updateAdminPremierStatusPill()">
-                  <option value="true">🟢 Abertas (Aceitando Inscrições)</option>
-                  <option value="false">🔴 Fechadas / Encerradas</option>
+                  <option value="true">🟢 Abertas (Exibir botão e aceitar inscrições)</option>
+                  <option value="false">🔴 Fechadas / Ocultas (Ocultar botão no site)</option>
                 </select>
               </div>
               <div class="form-group">
@@ -1418,24 +1422,42 @@
                 <select id="adm-premier-tipo" class="search-input" style="width: 100%;">
                   <option value="Challenge">League Challenge (1.5x)</option>
                   <option value="Cup">League Cup (1.5x)</option>
-                  <option value="Especial">Torneio Especial</option>
-                  <option value="Liga">Sessão Regular</option>
+                  <option value="Especial">Torneio Especial / Comemorativo</option>
+                  <option value="Liga">Sessão Regular de Liga</option>
                 </select>
               </div>
             </div>
 
+            <!-- Linha 2: Nome e Subtítulo / Destaque -->
             <div class="form-row" style="margin-bottom: 0.85rem;">
               <div class="form-group">
                 <label for="adm-premier-nome">Nome Oficial do Evento</label>
                 <input type="text" id="adm-premier-nome" class="search-input" placeholder="Ex: League Challenge #2 — Temporada 5" required>
               </div>
               <div class="form-group">
-                <label for="adm-premier-data">Data do Evento</label>
-                <input type="date" id="adm-premier-data" class="search-input" required>
+                <label for="adm-premier-subtitulo">Subtítulo / Destaques / Premiação Resumida</label>
+                <input type="text" id="adm-premier-subtitulo" class="search-input" placeholder="Ex: Valendo 50 CP + Troféu Oficial + Premiação em Boosters">
               </div>
             </div>
 
-            <div class="form-row" style="margin-bottom: 0.85rem;">
+            <!-- Linha 3: Data, Horário e Local -->
+            <div class="form-row" style="margin-bottom: 0.85rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+              <div class="form-group">
+                <label for="adm-premier-data">Data do Evento</label>
+                <input type="date" id="adm-premier-data" class="search-input" required>
+              </div>
+              <div class="form-group">
+                <label for="adm-premier-horario">Horários / Cronograma</label>
+                <input type="text" id="adm-premier-horario" class="search-input" placeholder="Ex: Check-in: 13h30 | R1: 14h00">
+              </div>
+              <div class="form-group">
+                <label for="adm-premier-local">Local do Evento</label>
+                <input type="text" id="adm-premier-local" class="search-input" placeholder="Ex: Livraria Atlântica +">
+              </div>
+            </div>
+
+            <!-- Linha 4: Taxa, Vagas e Exigência de Decklist -->
+            <div class="form-row" style="margin-bottom: 0.85rem; display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 0.75rem;">
               <div class="form-group">
                 <label for="adm-premier-valor">Taxa de Inscrição (R$)</label>
                 <input type="text" id="adm-premier-valor" class="search-input" placeholder="Ex: 35,00" required>
@@ -1444,9 +1466,17 @@
                 <label for="adm-premier-vagas">Capacidade Máxima (Vagas)</label>
                 <input type="number" id="adm-premier-vagas" class="search-input" min="4" max="128" placeholder="Ex: 32" required>
               </div>
+              <div class="form-group">
+                <label for="adm-premier-exigir-decklist">Exigência de Decklist (60 Cartas)</label>
+                <select id="adm-premier-exigir-decklist" class="search-input" style="width: 100%;">
+                  <option value="true">📜 Obrigatória no formulário (60 cartas)</option>
+                  <option value="false">📝 Opcional (pode entregar até a Rodada 1)</option>
+                </select>
+              </div>
             </div>
 
-            <div class="form-row" style="margin-bottom: 0.85rem;">
+            <!-- Linha 5: Chave PIX, Titular e WhatsApp de Contato -->
+            <div class="form-row" style="margin-bottom: 0.85rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
               <div class="form-group">
                 <label for="adm-premier-pix">Chave PIX para Pagamento</label>
                 <input type="text" id="adm-premier-pix" class="search-input" placeholder="Ex: felipe.damasceno@pix.com" required>
@@ -1455,18 +1485,37 @@
                 <label for="adm-premier-titular">Favorecido / Titular do PIX</label>
                 <input type="text" id="adm-premier-titular" class="search-input" placeholder="Ex: Liga Atlântica TCG (Felipe Damasceno)" required>
               </div>
-            </div>
-
-            <div class="form-row" style="margin-bottom: 0.85rem;">
-              <div class="form-group" style="flex: 1;">
-                <label for="adm-premier-horario">Horários / Cronograma</label>
-                <input type="text" id="adm-premier-horario" class="search-input" placeholder="Ex: Check-in às 13:30 • Rodada 1 às 14:00">
+              <div class="form-group">
+                <label for="adm-premier-wa-contato">WhatsApp do Organizador (Envio Direto)</label>
+                <input type="text" id="adm-premier-wa-contato" class="search-input" placeholder="Ex: 5575999999999 (Vazio = padrão)">
               </div>
             </div>
 
+            <!-- Linha 6: Personalização Visual (Banner e Tema) -->
+            <div class="form-row" style="margin-bottom: 0.85rem; display: grid; grid-template-columns: 1.5fr 1fr; gap: 0.75rem;">
+              <div class="form-group">
+                <label for="adm-premier-banner">URL do Banner / Arte de Capa (Opcional)</label>
+                <input type="url" id="adm-premier-banner" class="search-input" placeholder="https://exemplo.com/banner-cup.jpg">
+              </div>
+              <div class="form-group">
+                <label for="adm-premier-tema">Tema de Cor / Energia</label>
+                <select id="adm-premier-tema" class="search-input" style="width: 100%;">
+                  <option value="lightning">⚡ Lightning / Amarelo (Padrão)</option>
+                  <option value="fire">🔥 Fire / Vermelho</option>
+                  <option value="water">💧 Water / Azul</option>
+                  <option value="psychic">🔮 Psychic / Roxo</option>
+                  <option value="grass">🌿 Grass / Verde Esmeralda</option>
+                  <option value="darkness">🌑 Darkness / Escuro</option>
+                  <option value="dragon">🐉 Dragon / Dourado</option>
+                  <option value="metal">⚙️ Metal / Prateado</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Linha 7: Instruções, Regras & Premiação Detalhada -->
             <div class="form-group" style="margin-bottom: 1rem;">
-              <label for="adm-premier-obs">Instruções / Observações no Modal</label>
-              <textarea id="adm-premier-obs" class="search-input" rows="2" style="font-size: 0.82rem; resize: vertical;" placeholder="Orientações aos jogadores..."></textarea>
+              <label for="adm-premier-obs">Instruções, Regras & Premiação no Modal de Inscrição</label>
+              <textarea id="adm-premier-obs" class="search-input" rows="3" style="font-size: 0.82rem; resize: vertical;" placeholder="Orientações aos jogadores, estrutura de premiação, regras de check-in..."></textarea>
             </div>
 
             <!-- Link Direto Compartilhável -->
@@ -6782,12 +6831,18 @@
       const abertasEl = document.getElementById('adm-premier-abertas');
       const tipoEl = document.getElementById('adm-premier-tipo');
       const nomeEl = document.getElementById('adm-premier-nome');
+      const subtituloEl = document.getElementById('adm-premier-subtitulo');
       const dataEl = document.getElementById('adm-premier-data');
+      const horarioEl = document.getElementById('adm-premier-horario');
+      const localEl = document.getElementById('adm-premier-local');
       const valorEl = document.getElementById('adm-premier-valor');
       const vagasEl = document.getElementById('adm-premier-vagas');
+      const exigirDlEl = document.getElementById('adm-premier-exigir-decklist');
       const pixEl = document.getElementById('adm-premier-pix');
       const titularEl = document.getElementById('adm-premier-titular');
-      const horarioEl = document.getElementById('adm-premier-horario');
+      const waContatoEl = document.getElementById('adm-premier-wa-contato');
+      const bannerEl = document.getElementById('adm-premier-banner');
+      const temaEl = document.getElementById('adm-premier-tema');
       const obsEl = document.getElementById('adm-premier-obs');
       const linkEl = document.getElementById('adm-premier-direct-link');
       const quickCal = document.getElementById('adm-premier-quick-calendar');
@@ -6795,12 +6850,18 @@
       if (abertasEl) abertasEl.value = pConf.abertas !== false ? 'true' : 'false';
       if (tipoEl) tipoEl.value = pConf.eventoTipo || 'Challenge';
       if (nomeEl) nomeEl.value = pConf.eventoNome || 'League Challenge #2 — Temporada 5';
+      if (subtituloEl) subtituloEl.value = pConf.subtitulo || '';
       if (dataEl) dataEl.value = pConf.eventoData || '2026-09-26';
+      if (horarioEl) horarioEl.value = pConf.horario || 'Check-in às 13:30 • Rodada 1 às 14:00';
+      if (localEl) localEl.value = pConf.local || 'Livraria Atlântica +';
       if (valorEl) valorEl.value = pConf.valor || '35,00';
       if (vagasEl) vagasEl.value = pConf.limiteVagas || 32;
+      if (exigirDlEl) exigirDlEl.value = pConf.exigirDecklist !== false ? 'true' : 'false';
       if (pixEl) pixEl.value = pConf.chavePix || '';
       if (titularEl) titularEl.value = pConf.titularPix || '';
-      if (horarioEl) horarioEl.value = pConf.horario || '';
+      if (waContatoEl) waContatoEl.value = pConf.whatsappContato || '';
+      if (bannerEl) bannerEl.value = pConf.bannerUrl || '';
+      if (temaEl) temaEl.value = pConf.temaCor || 'lightning';
       if (obsEl) obsEl.value = pConf.observacoes || '';
 
       if (linkEl) {
@@ -6853,19 +6914,25 @@
       else tipo = 'Liga';
 
       const nomeEl = document.getElementById('adm-premier-nome');
+      const subtituloEl = document.getElementById('adm-premier-subtitulo');
       const dataEl = document.getElementById('adm-premier-data');
       const tipoEl = document.getElementById('adm-premier-tipo');
       const horarioEl = document.getElementById('adm-premier-horario');
+      const localEl = document.getElementById('adm-premier-local');
       const abertasEl = document.getElementById('adm-premier-abertas');
       const obsEl = document.getElementById('adm-premier-obs');
 
       if (nomeEl) nomeEl.value = title;
+      if (subtituloEl && !subtituloEl.value) {
+        subtituloEl.value = tipo === 'Cup' ? 'Valendo 50 Championship Points (CP) + Troféu Oficial' : 'Valendo 15 Championship Points (CP) + Premiação';
+      }
       if (dataEl) dataEl.value = dateIso;
       if (tipoEl) tipoEl.value = tipo;
-      if (horarioEl) horarioEl.value = `Check-in às ${time} • Local: ${local}`;
+      if (horarioEl) horarioEl.value = `Check-in às ${time} • Início da R1 logo em seguida`;
+      if (localEl) localEl.value = local;
       if (abertasEl) abertasEl.value = 'true';
       if (obsEl && !obsEl.value) {
-        obsEl.value = `Traga sua decklist impressa ou envie diretamente pelo formulário online até o início da 1ª rodada.`;
+        obsEl.value = `Traga sua decklist impressa ou preencha diretamente pelo formulário online até o início da 1ª rodada.\nFormato: Standard (Padrão Oficial).`;
       }
 
       updateAdminPremierStatusPill();
@@ -6903,7 +6970,7 @@
         pill.style.color = '#10b981';
         pill.style.borderColor = 'rgba(16, 185, 129, 0.3)';
       } else {
-        pill.innerHTML = '🔴 Inscrições Fechadas / Encerradas';
+        pill.innerHTML = '🔴 Inscrições Fechadas / Ocultas';
         pill.style.background = 'rgba(239, 68, 68, 0.15)';
         pill.style.color = '#ef4444';
         pill.style.borderColor = 'rgba(239, 68, 68, 0.3)';
@@ -6932,12 +6999,18 @@
       const abertas = document.getElementById('adm-premier-abertas')?.value === 'true';
       const eventoTipo = document.getElementById('adm-premier-tipo')?.value || 'Challenge';
       const eventoNome = (document.getElementById('adm-premier-nome')?.value || '').trim();
+      const subtitulo = (document.getElementById('adm-premier-subtitulo')?.value || '').trim();
       const eventoData = document.getElementById('adm-premier-data')?.value || '';
+      const horario = (document.getElementById('adm-premier-horario')?.value || '').trim();
+      const local = (document.getElementById('adm-premier-local')?.value || '').trim();
       const valor = (document.getElementById('adm-premier-valor')?.value || '').trim();
       const limiteVagas = parseInt(document.getElementById('adm-premier-vagas')?.value, 10) || 32;
+      const exigirDecklist = document.getElementById('adm-premier-exigir-decklist')?.value === 'true';
       const chavePix = (document.getElementById('adm-premier-pix')?.value || '').trim();
       const titularPix = (document.getElementById('adm-premier-titular')?.value || '').trim();
-      const horario = (document.getElementById('adm-premier-horario')?.value || '').trim();
+      const whatsappContato = (document.getElementById('adm-premier-wa-contato')?.value || '').trim();
+      const bannerUrl = (document.getElementById('adm-premier-banner')?.value || '').trim();
+      const temaCor = document.getElementById('adm-premier-tema')?.value || 'lightning';
       const observacoes = (document.getElementById('adm-premier-obs')?.value || '').trim();
 
       const mult = (eventoTipo === 'Cup' || eventoTipo === 'Challenge') ? 1.5 : 1.0;
@@ -6949,14 +7022,20 @@
         const inscricoesPremier = {
           abertas,
           eventoNome,
+          subtitulo,
           eventoData,
           eventoTipo,
           multiplicador: mult,
+          horario,
+          local,
           valor,
           limiteVagas,
+          exigirDecklist,
           chavePix,
           titularPix,
-          horario,
+          whatsappContato,
+          bannerUrl,
+          temaCor,
           observacoes
         };
 
