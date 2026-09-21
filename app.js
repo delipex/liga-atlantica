@@ -5898,6 +5898,11 @@ window.openDecklistModal = function(defaultStageDate = '') {
     }).join('');
   }
 
+  const formEl = document.getElementById('decklist-form');
+  const successEl = document.getElementById('decklist-success-container');
+  if (formEl) formEl.style.display = 'block';
+  if (successEl) successEl.style.display = 'none';
+
   updateDecklistCategoryBadge();
   onDecklistCardsChanged();
 
@@ -5924,7 +5929,7 @@ window.closeDecklistModal = function() {
   document.body.style.overflow = '';
 };
 
-window.submitDecklistWhatsApp = function() {
+window.submitDecklistWhatsApp = async function() {
   const name = (document.getElementById('decklist-player-name')?.value || '').trim();
   const popId = (document.getElementById('decklist-player-popid')?.value || '').trim();
   const birthYear = (document.getElementById('decklist-player-birthyear')?.value || '').trim();
@@ -5934,6 +5939,7 @@ window.submitDecklistWhatsApp = function() {
   const limitlessUrl = (document.getElementById('decklist-limitless-url')?.value || '').trim();
   const eventSelect = document.getElementById('decklist-event-select');
   const eventTitle = eventSelect ? eventSelect.options[eventSelect.selectedIndex]?.text : 'Torneio Premier';
+  const eventDate = eventSelect ? eventSelect.value : '';
 
   if (!name) {
     alert("Por favor, preencha o Nome Completo.");
@@ -5955,7 +5961,51 @@ window.submitDecklistWhatsApp = function() {
     }
   }
 
+  const submitBtn = document.getElementById('decklist-submit-btn') || document.getElementById('decklist-submit-wa-btn');
+  const originalBtnText = submitBtn ? submitBtn.innerText : '';
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerText = "⏳ Enviando Inscrição...";
+  }
+
+  // Gera número de protocolo único
+  const datePart = new Date().toISOString().slice(0,10).replace(/-/g, '');
+  const randNum = Math.floor(1000 + Math.random() * 9000);
+  const protocolo = `LA-${datePart}-${randNum}`;
+
+  const payload = {
+    protocolo,
+    eventoNome: eventTitle,
+    eventoData: eventDate || premierConfig.eventoData || '',
+    nome: name,
+    popId: popId,
+    anoNascimento: birthYear,
+    categoria: category,
+    deckNome: deckName || parsed.archetype || 'A definir',
+    totalCartas: parsed.total,
+    decklistTexto: cardsText,
+    limitlessUrl: limitlessUrl,
+    statusPagamento: 'Pendente',
+    observacoes: ''
+  };
+
+  // Se houver Webhook configurado, envia para a planilha do Google
+  if (premierConfig.webhookUrl) {
+    try {
+      await fetch(premierConfig.webhookUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.warn("Aviso ao enviar para o webhook:", err);
+    }
+  }
+
+  // Monta mensagem formatada de WhatsApp
   let msg = `🏆 *INSCRIÇÃO & DECKLIST - LIGA ATLÂNTICA*\n`;
+  msg += `🔖 *Protocolo:* \`${protocolo}\`\n`;
   msg += `📍 *Evento:* ${eventTitle}\n`;
   msg += `👤 *Jogador:* ${name}\n`;
   msg += `🆔 *Play! Pokémon ID:* ${popId}\n`;
@@ -5978,8 +6028,39 @@ window.submitDecklistWhatsApp = function() {
     waUrl = `https://api.whatsapp.com/send?phone=${waContact}&text=${encodedMsg}`;
   }
 
-  window.open(waUrl, '_blank');
-  alert("Inscrição e decklist formatadas com sucesso! Sua mensagem foi direcionada para o WhatsApp.");
+  // Exibe a tela de confirmação de sucesso
+  const formEl = document.getElementById('decklist-form');
+  const successEl = document.getElementById('decklist-success-container');
+  const protocolEl = document.getElementById('decklist-success-protocol');
+  const summaryEl = document.getElementById('decklist-success-summary');
+  const successWaBtn = document.getElementById('decklist-success-wa-btn');
+
+  if (protocolEl) protocolEl.innerText = `#${protocolo}`;
+  if (summaryEl) {
+    summaryEl.innerHTML = `
+      <div><strong>Evento:</strong> ${escapeHTML(eventTitle)}</div>
+      <div><strong>Treinador:</strong> ${escapeHTML(name)} (<code>#${escapeHTML(popId)}</code>) &bull; <span class="badge-cat badge-cat-me" style="padding:1px 6px; font-size:0.75rem;">${escapeHTML(category)}</span></div>
+      <div><strong>Baralho:</strong> ${escapeHTML(deckName || parsed.archetype || 'A definir')} (${parsed.total}/60 cartas ${parsed.valid ? '✅' : '⚠️'})</div>
+      ${limitlessUrl ? `<div><strong>Limitless:</strong> <a href="${escapeHTML(limitlessUrl)}" target="_blank" style="color:var(--accent-yellow); text-decoration:underline;">Ver Lista Online</a></div>` : ''}
+    `;
+  }
+  if (successWaBtn) {
+    successWaBtn.onclick = function() {
+      window.open(waUrl, '_blank');
+    };
+  }
+
+  if (formEl && successEl) {
+    formEl.style.display = 'none';
+    successEl.style.display = 'block';
+  } else {
+    window.open(waUrl, '_blank');
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.innerText = originalBtnText;
+  }
 };
 
 window.copyDecklistSubmission = function() {

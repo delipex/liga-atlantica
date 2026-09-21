@@ -661,13 +661,55 @@ Siga-nos no Instagram
         <!-- Botões de Ação -->
         <div style="display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap;">
           <button type="button" class="btn" onclick="copyDecklistSubmission()" style="font-size: 0.82rem; padding: 0.5rem 0.9rem; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: #fff;">
-            📋 Copiar Inscrição
+            📋 Copiar Dados
           </button>
-          <button type="submit" id="decklist-submit-wa-btn" class="btn btn-whatsapp" style="font-size: 0.85rem; font-weight: 700; padding: 0.5rem 1.1rem; display: inline-flex; align-items: center; gap: 0.4rem;">
-            📲 Enviar Inscrição via WhatsApp
+          <button type="submit" id="decklist-submit-btn" class="btn btn-whatsapp" style="font-size: 0.88rem; font-weight: 800; padding: 0.55rem 1.25rem; display: inline-flex; align-items: center; gap: 0.4rem; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow);">
+            🚀 Confirmar Inscrição Online
           </button>
         </div>
       </form>
+
+      <!-- Container de Sucesso Pós-Envio -->
+      <div id="decklist-success-container" style="display: none; padding: 1.5rem 0.5rem; text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 0.5rem; animation: bounce 0.6s ease;">🎉</div>
+        <h3 style="color: #10b981; font-size: 1.4rem; font-weight: 800; margin-bottom: 0.35rem;">
+          Inscrição Enviada com Sucesso!
+        </h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.25rem;">
+          Seus dados e decklist foram registrados no sistema da Liga Atlântica.
+        </p>
+
+        <!-- Card de Protocolo e Resumo -->
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 1.1rem; text-align: left; margin-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.5rem;">
+            <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Protocolo</span>
+            <code id="decklist-success-protocol" style="color: var(--accent-yellow); font-size: 0.95rem; font-weight: 800; background: rgba(0,0,0,0.4); padding: 3px 8px; border-radius: 4px;">#LA-PENDENTE</code>
+          </div>
+          <div id="decklist-success-summary" style="font-size: 0.82rem; line-height: 1.6; color: #cbd5e1;">
+            <!-- Preenchido dinamicamente via JS -->
+          </div>
+        </div>
+
+        <!-- Box de Comprovante PIX -->
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1.25rem; text-align: left;">
+          <div style="color: #10b981; font-size: 0.82rem; font-weight: 700; margin-bottom: 3px;">
+            💰 Próximo Passo: Confirmação de Pagamento
+          </div>
+          <div style="font-size: 0.76rem; color: #a7f3d0; line-height: 1.4;">
+            Envie o comprovante do PIX pelo WhatsApp da organização para confirmar e garantir a sua vaga na lista oficial.
+          </div>
+        </div>
+
+        <!-- Ações pós-envio -->
+        <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+          <button type="button" id="decklist-success-wa-btn" class="btn btn-whatsapp" style="width: 100%; font-size: 0.92rem; font-weight: 800; padding: 0.7rem; justify-content: center; display: inline-flex; align-items: center; gap: 0.5rem;">
+            📲 Anexar Comprovante no WhatsApp
+          </button>
+          <button type="button" class="btn" onclick="closeDecklistModal()" style="width: 100%; font-size: 0.82rem; padding: 0.55rem; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: #fff;">
+            ✕ Concluir e Fechar
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

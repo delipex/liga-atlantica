@@ -28,6 +28,7 @@
         "whatsappContato": "",
         "bannerUrl": "",
         "temaCor": "lightning",
+        "webhookUrl": "",
         "observacoes": "Traga sua decklist impressa ou envie diretamente pelo formulário online até as 13:45. Formato Standard (Padrão)."
     },
     "minEtapasPokebolaOuro": 2,

@@ -1513,9 +1513,23 @@
             </div>
 
             <!-- Linha 7: Instruções, Regras & Premiação Detalhada -->
-            <div class="form-group" style="margin-bottom: 1rem;">
+            <div class="form-group" style="margin-bottom: 0.85rem;">
               <label for="adm-premier-obs">Instruções, Regras & Premiação no Modal de Inscrição</label>
               <textarea id="adm-premier-obs" class="search-input" rows="3" style="font-size: 0.82rem; resize: vertical;" placeholder="Orientações aos jogadores, estrutura de premiação, regras de check-in..."></textarea>
+            </div>
+
+            <!-- Linha 8: Webhook do Google Sheets / Banco de Dados -->
+            <div class="form-group" style="margin-bottom: 1rem; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 6px; padding: 0.75rem 1rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label for="adm-premier-webhook" style="color: #10b981; font-weight: 700; font-size: 0.78rem;">
+                  📊 URL do Webhook do Google Sheets (Banco de Inscrições)
+                </label>
+                <span style="font-size: 0.7rem; color: var(--text-secondary);">Apps Script Web App</span>
+              </div>
+              <input type="url" id="adm-premier-webhook" class="search-input" placeholder="https://script.google.com/macros/s/.../exec" style="font-family: monospace; font-size: 0.78rem; width: 100%;">
+              <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.35;">
+                As inscrições feitas pelo formulário do site serão salvas automaticamente na aba <code>Inscricoes</code> da sua planilha.
+              </div>
             </div>
 
             <!-- Link Direto Compartilhável -->
@@ -1537,42 +1551,117 @@
           </form>
         </div>
 
-        <!-- Seletor de Evento / Etapa -->
-        <div class="form-row" style="margin-bottom: 1.25rem; align-items: flex-end;">
-          <div class="form-group" style="flex: 1;">
-            <label for="admin-decklist-stage-selector">Selecione o Torneio / Etapa</label>
-            <select id="admin-decklist-stage-selector" class="search-input" style="width: 100%;" onchange="renderAdminDecklistsTable()">
-              <!-- Preenchido dinamicamente via JS -->
-            </select>
+        <!-- Sub-navegação: Inscrições Recebidas Online vs Decklists Arquivadas -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem; flex-wrap: wrap; justify-content: space-between; align-items: center;">
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button type="button" id="btn-subtab-online-regs" class="btn" onclick="switchPremierSubtab('online')" style="font-size: 0.82rem; font-weight: 700; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow);">
+              📥 Inscrições Recebidas Online (Ao Vivo)
+            </button>
+            <button type="button" id="btn-subtab-archived-dl" class="btn" onclick="switchPremierSubtab('archived')" style="font-size: 0.82rem; font-weight: 700; background: rgba(255,255,255,0.06); color: #cbd5e1; border-color: rgba(255,255,255,0.15);">
+              📁 Decklists Arquivadas
+            </button>
           </div>
-          <div class="form-group" style="flex: 1;">
-            <label for="admin-decklist-search-input">Filtrar por Treinador ou Deck</label>
-            <input type="text" id="admin-decklist-search-input" class="search-input" placeholder="Buscar por jogador, POP ID ou arquétipo..." oninput="renderAdminDecklistsTable()">
+          <div id="online-regs-quick-actions" style="display: flex; gap: 0.5rem;">
+            <button type="button" class="btn" onclick="fetchAdminOnlineRegistrations(true)" style="font-size: 0.78rem; padding: 0.4rem 0.8rem; background: rgba(16,185,129,0.15); color: #10b981; border-color: rgba(16,185,129,0.3); display: inline-flex; align-items: center; gap: 4px;">
+              🔄 Atualizar Planilha
+            </button>
+            <button type="button" class="btn" onclick="exportOnlineRegistrationsToTOM()" style="font-size: 0.78rem; padding: 0.4rem 0.8rem; background: rgba(59,130,246,0.15); color: #60a5fa; border-color: rgba(59,130,246,0.3); display: inline-flex; align-items: center; gap: 4px;">
+              📋 Copiar para o TOM
+            </button>
           </div>
         </div>
 
-        <!-- Resumo de Métricas do Torneio -->
-        <div id="admin-decklist-summary-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem;">
-          <!-- Preenchido dinamicamente -->
+        <!-- VISÃO 1: INSCRIÇÕES RECEBIDAS ONLINE (AO VIVO VIA GOOGLE SHEETS) -->
+        <div id="admin-online-registrations-view">
+          <div class="form-row" style="margin-bottom: 1.25rem; align-items: flex-end;">
+            <div class="form-group" style="flex: 1;">
+              <label for="admin-online-search-input">Buscar nos Inscritos Online</label>
+              <input type="text" id="admin-online-search-input" class="search-input" placeholder="Buscar por jogador, POP ID, arquétipo ou protocolo..." oninput="renderAdminOnlineRegistrationsTable()">
+            </div>
+            <div class="form-group" style="width: 200px;">
+              <label for="admin-online-cat-filter">Filtrar Categoria</label>
+              <select id="admin-online-cat-filter" class="search-input" style="width: 100%;" onchange="renderAdminOnlineRegistrationsTable()">
+                <option value="">Todas as Categorias</option>
+                <option value="Master">Master</option>
+                <option value="Senior">Senior</option>
+                <option value="Junior">Junior</option>
+              </select>
+            </div>
+            <div class="form-group" style="width: 180px;">
+              <label for="admin-online-status-filter">Filtrar Pagamento</label>
+              <select id="admin-online-status-filter" class="search-input" style="width: 100%;" onchange="renderAdminOnlineRegistrationsTable()">
+                <option value="">Todos os Status</option>
+                <option value="Confirmado">Confirmado / Pago ✅</option>
+                <option value="Pendente">Pendente ⏳</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Resumo de Métricas Online -->
+          <div id="admin-online-summary-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem;">
+            <!-- Preenchido dinamicamente -->
+          </div>
+
+          <!-- Tabela de Inscrições Online -->
+          <div class="table-responsive">
+            <table class="ranking-table" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th style="width: 110px;">Protocolo</th>
+                  <th>Treinador / POP ID</th>
+                  <th style="text-align: center; width: 100px;">Categoria</th>
+                  <th>Baralho / Arquétipo</th>
+                  <th style="text-align: center; width: 110px;">Lista</th>
+                  <th style="text-align: center; width: 120px;">Status PIX</th>
+                  <th style="text-align: right; width: 160px;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="admin-online-table-body">
+                <!-- Preenchido dinamicamente via JS -->
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <!-- Tabela de Decklists -->
-        <div class="table-responsive">
-          <table class="ranking-table" style="width: 100%;">
-            <thead>
-              <tr>
-                <th style="width: 50px; text-align: center;">#</th>
-                <th>Treinador / POP ID</th>
-                <th style="text-align: center; width: 110px;">Categoria</th>
-                <th>Deck / Arquétipo</th>
-                <th style="text-align: center; width: 130px;">Status Lista</th>
-                <th style="text-align: right; width: 150px;">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="admin-decklist-table-body">
-              <!-- Preenchido dinamicamente via JS -->
-            </tbody>
-          </table>
+        <!-- VISÃO 2: DECKLISTS ARQUIVADAS -->
+        <div id="admin-archived-decklists-view" style="display: none;">
+          <!-- Seletor de Evento / Etapa -->
+          <div class="form-row" style="margin-bottom: 1.25rem; align-items: flex-end;">
+            <div class="form-group" style="flex: 1;">
+              <label for="admin-decklist-stage-selector">Selecione o Torneio / Etapa</label>
+              <select id="admin-decklist-stage-selector" class="search-input" style="width: 100%;" onchange="renderAdminDecklistsTable()">
+                <!-- Preenchido dinamicamente via JS -->
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="admin-decklist-search-input">Filtrar por Treinador ou Deck</label>
+              <input type="text" id="admin-decklist-search-input" class="search-input" placeholder="Buscar por jogador, POP ID ou arquétipo..." oninput="renderAdminDecklistsTable()">
+            </div>
+          </div>
+
+          <!-- Resumo de Métricas do Torneio -->
+          <div id="admin-decklist-summary-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem;">
+            <!-- Preenchido dinamicamente -->
+          </div>
+
+          <!-- Tabela de Decklists -->
+          <div class="table-responsive">
+            <table class="ranking-table" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th style="width: 50px; text-align: center;">#</th>
+                  <th>Treinador / POP ID</th>
+                  <th style="text-align: center; width: 110px;">Categoria</th>
+                  <th>Deck / Arquétipo</th>
+                  <th style="text-align: center; width: 130px;">Status Lista</th>
+                  <th style="text-align: right; width: 150px;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="admin-decklist-table-body">
+                <!-- Preenchido dinamicamente via JS -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     </div>
@@ -7285,6 +7374,8 @@
       return { total, pokemon, trainer, energy, cards };
     }
 
+    let cachedOnlineRegistrations = [];
+
     function renderAdminPremierConfig() {
       const pConf = cachedConfig?.inscricoesPremier || {};
       const abertasEl = document.getElementById('adm-premier-abertas');
@@ -7303,6 +7394,7 @@
       const bannerEl = document.getElementById('adm-premier-banner');
       const temaEl = document.getElementById('adm-premier-tema');
       const obsEl = document.getElementById('adm-premier-obs');
+      const webhookEl = document.getElementById('adm-premier-webhook');
       const linkEl = document.getElementById('adm-premier-direct-link');
       const quickCal = document.getElementById('adm-premier-quick-calendar');
 
@@ -7322,6 +7414,7 @@
       if (bannerEl) bannerEl.value = pConf.bannerUrl || '';
       if (temaEl) temaEl.value = pConf.temaCor || 'lightning';
       if (obsEl) obsEl.value = pConf.observacoes || '';
+      if (webhookEl) webhookEl.value = pConf.webhookUrl || '';
 
       if (linkEl) {
         const origin = window.location.origin;
@@ -7471,6 +7564,7 @@
       const bannerUrl = (document.getElementById('adm-premier-banner')?.value || '').trim();
       const temaCor = document.getElementById('adm-premier-tema')?.value || 'lightning';
       const observacoes = (document.getElementById('adm-premier-obs')?.value || '').trim();
+      const webhookUrl = (document.getElementById('adm-premier-webhook')?.value || '').trim();
 
       const mult = (eventoTipo === 'Cup' || eventoTipo === 'Challenge') ? 1.5 : 1.0;
 
@@ -7495,6 +7589,7 @@
           whatsappContato,
           bannerUrl,
           temaCor,
+          webhookUrl,
           observacoes
         };
 
@@ -7540,8 +7635,352 @@
       }
     }
 
+    function switchPremierSubtab(tab) {
+      const btnOnline = document.getElementById('btn-subtab-online-regs');
+      const btnArchived = document.getElementById('btn-subtab-archived-dl');
+      const viewOnline = document.getElementById('admin-online-registrations-view');
+      const viewArchived = document.getElementById('admin-archived-decklists-view');
+      const quickActions = document.getElementById('online-regs-quick-actions');
+
+      if (tab === 'online') {
+        if (btnOnline) {
+          btnOnline.style.background = 'var(--accent-yellow)';
+          btnOnline.style.color = '#000';
+          btnOnline.style.borderColor = 'var(--accent-yellow)';
+        }
+        if (btnArchived) {
+          btnArchived.style.background = 'rgba(255,255,255,0.06)';
+          btnArchived.style.color = '#cbd5e1';
+          btnArchived.style.borderColor = 'rgba(255,255,255,0.15)';
+        }
+        if (viewOnline) viewOnline.style.display = 'block';
+        if (viewArchived) viewArchived.style.display = 'none';
+        if (quickActions) quickActions.style.display = 'flex';
+        fetchAdminOnlineRegistrations();
+      } else {
+        if (btnArchived) {
+          btnArchived.style.background = 'var(--accent-yellow)';
+          btnArchived.style.color = '#000';
+          btnArchived.style.borderColor = 'var(--accent-yellow)';
+        }
+        if (btnOnline) {
+          btnOnline.style.background = 'rgba(255,255,255,0.06)';
+          btnOnline.style.color = '#cbd5e1';
+          btnOnline.style.borderColor = 'rgba(255,255,255,0.15)';
+        }
+        if (viewOnline) viewOnline.style.display = 'none';
+        if (viewArchived) viewArchived.style.display = 'block';
+        if (quickActions) quickActions.style.display = 'none';
+        renderAdminDecklistsTable();
+      }
+    }
+
+    async function fetchAdminOnlineRegistrations(forceReload = false) {
+      const webhookUrl = cachedConfig?.inscricoesPremier?.webhookUrl || document.getElementById('adm-premier-webhook')?.value || '';
+      const tableBody = document.getElementById('admin-online-table-body');
+      const summaryCards = document.getElementById('admin-online-summary-cards');
+
+      if (!webhookUrl) {
+        if (tableBody) {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-secondary);">
+                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">⚙️</div>
+                <div style="font-weight: 700; color: #fff; margin-bottom: 0.25rem;">Webhook do Google Sheets não configurado</div>
+                <div style="font-size: 0.8rem; max-width: 480px; margin: 0 auto; line-height: 1.4;">
+                  Para receber e sincronizar as inscrições do site em tempo real, cole a <strong>URL do seu Webhook (Apps Script)</strong> no formulário acima e clique em "Salvar Configurações".
+                </div>
+              </td>
+            </tr>
+          `;
+        }
+        if (summaryCards) summaryCards.innerHTML = '';
+        return;
+      }
+
+      if (tableBody && (forceReload || cachedOnlineRegistrations.length === 0)) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 2rem 1rem; color: var(--accent-yellow);">
+              ⏳ Carregando inscrições da planilha do Google...
+            </td>
+          </tr>
+        `;
+      }
+
+      try {
+        const fetchUrl = `${webhookUrl}${webhookUrl.includes('?') ? '&' : '?'}action=list&v=${Date.now()}`;
+        const res = await fetch(fetchUrl);
+        const json = await res.json();
+
+        if (json && json.status === 'success' && Array.isArray(json.data)) {
+          cachedOnlineRegistrations = json.data;
+          renderAdminOnlineRegistrationsTable();
+          if (forceReload) showSuccess(`📥 ${cachedOnlineRegistrations.length} inscrições carregadas da planilha!`);
+        } else {
+          throw new Error(json.message || 'Formato de resposta inválido');
+        }
+      } catch (err) {
+        console.warn("Erro ao buscar inscrições online:", err);
+        if (tableBody) {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 2rem 1rem; color: #ef4444;">
+                ⚠️ Não foi possível carregar as inscrições da planilha no momento.<br>
+                <span style="font-size: 0.75rem; color: var(--text-secondary);">${escapeHTML(err.message)}</span>
+              </td>
+            </tr>
+          `;
+        }
+      }
+    }
+
+    function renderAdminOnlineRegistrationsTable() {
+      const tableBody = document.getElementById('admin-online-table-body');
+      const summaryCards = document.getElementById('admin-online-summary-cards');
+      const searchInput = document.getElementById('admin-online-search-input');
+      const catFilter = document.getElementById('admin-online-cat-filter')?.value || '';
+      const statusFilter = document.getElementById('admin-online-status-filter')?.value || '';
+      const filterText = (searchInput?.value || '').trim().toLowerCase();
+
+      if (!tableBody) return;
+
+      const list = cachedOnlineRegistrations || [];
+
+      // Filtro
+      const filtered = list.filter(item => {
+        const name = String(item.Nome || item.jogador || '').toLowerCase();
+        const popId = String(item.POP_ID || item.id || '').toLowerCase();
+        const arch = String(item.Deck || item.deck || '').toLowerCase();
+        const prot = String(item.Protocolo || item.protocolo || '').toLowerCase();
+        const cat = String(item.Categoria || item.categoria || '');
+        const status = String(item.StatusPagamento || item.statusPagamento || '');
+
+        const matchesText = !filterText || name.includes(filterText) || popId.includes(filterText) || arch.includes(filterText) || prot.includes(filterText);
+        const matchesCat = !catFilter || cat.toLowerCase() === catFilter.toLowerCase();
+        const matchesStatus = !statusFilter || status.toLowerCase().includes(statusFilter.toLowerCase());
+
+        return matchesText && matchesCat && matchesStatus;
+      });
+
+      // Métricas
+      const total = list.length;
+      let totalPago = 0;
+      let totalPendente = 0;
+      let countM = 0;
+      let countS = 0;
+      let countJ = 0;
+
+      list.forEach(item => {
+        const st = String(item.StatusPagamento || '').toLowerCase();
+        if (st.includes('pago') || st.includes('confirmado')) totalPago++;
+        else totalPendente++;
+
+        const c = String(item.Categoria || 'Master').toLowerCase();
+        if (c.includes('junior')) countJ++;
+        else if (c.includes('senior') || c.includes('sênior')) countS++;
+        else countM++;
+      });
+
+      if (summaryCards) {
+        summaryCards.innerHTML = `
+          <div class="glass-card" style="padding: 0.85rem; border-radius: 8px; text-align: center; border-color: rgba(255,255,255,0.08);">
+            <div style="font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Inscrições</div>
+            <div style="font-size: 1.35rem; font-weight: 800; color: #fff; margin-top: 2px;">${total}</div>
+          </div>
+          <div class="glass-card" style="padding: 0.85rem; border-radius: 8px; text-align: center; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05);">
+            <div style="font-size: 0.72rem; color: #10b981; text-transform: uppercase; font-weight: 700;">Confirmados / Pagos</div>
+            <div style="font-size: 1.35rem; font-weight: 800; color: #10b981; margin-top: 2px;">${totalPago}</div>
+          </div>
+          <div class="glass-card" style="padding: 0.85rem; border-radius: 8px; text-align: center; border-color: ${totalPendente > 0 ? 'rgba(245,158,11,0.3)' : 'rgba(255,255,255,0.08)'}; background: ${totalPendente > 0 ? 'rgba(245,158,11,0.05)' : 'transparent'};">
+            <div style="font-size: 0.72rem; color: ${totalPendente > 0 ? '#f59e0b' : 'var(--text-secondary)'}; text-transform: uppercase; font-weight: 700;">Pendentes</div>
+            <div style="font-size: 1.35rem; font-weight: 800; color: ${totalPendente > 0 ? '#f59e0b' : '#94a3b8'}; margin-top: 2px;">${totalPendente}</div>
+          </div>
+          <div class="glass-card" style="padding: 0.85rem; border-radius: 8px; text-align: center; border-color: rgba(255,203,5,0.3); background: rgba(255,203,5,0.05);">
+            <div style="font-size: 0.72rem; color: var(--accent-yellow); text-transform: uppercase; font-weight: 700;">Categorias</div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: #fff; margin-top: 5px;">
+              M: <strong>${countM}</strong> | S: <strong>${countS}</strong> | J: <strong>${countJ}</strong>
+            </div>
+          </div>
+        `;
+      }
+
+      if (filtered.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-secondary);">
+              ${list.length === 0 ? 'Nenhuma inscrição recebida ainda pela planilha.' : 'Nenhum inscrito encontrado com os filtros selecionados.'}
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tableBody.innerHTML = filtered.map(item => {
+        const prot = item.Protocolo || '—';
+        const name = item.Nome || item.jogador || 'Treinador';
+        const popId = item.POP_ID || item.id || '—';
+        const cat = item.Categoria || 'Master';
+        const deck = item.Deck || 'A definir';
+        const dlText = item.Decklist || '';
+        const limitUrl = item.LimitlessUrl || '';
+        const status = item.StatusPagamento || 'Pendente';
+        const isPaid = status.toLowerCase().includes('pago') || status.toLowerCase().includes('confirmado');
+
+        const parsed = parseAdminDecklistText(dlText);
+
+        let listBadge = '';
+        if (parsed.total === 60) {
+          listBadge = `<span style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); padding: 2px 7px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;">✅ 60/60</span>`;
+        } else if (parsed.total > 0) {
+          listBadge = `<span style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); padding: 2px 7px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;">⚠️ ${parsed.total}/60</span>`;
+        } else {
+          listBadge = `<span style="background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); padding: 2px 7px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;">❌ Sem Lista</span>`;
+        }
+
+        let catBadge = '';
+        if (cat.toLowerCase() === 'junior') {
+          catBadge = `<span style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); padding: 2px 7px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;">Junior</span>`;
+        } else if (cat.toLowerCase() === 'senior' || cat.toLowerCase() === 'sênior') {
+          catBadge = `<span style="background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); padding: 2px 7px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;">Senior</span>`;
+        } else {
+          catBadge = `<span style="background: rgba(255,203,5,0.15); color: var(--accent-yellow); border: 1px solid rgba(255,203,5,0.3); padding: 2px 7px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;">Master</span>`;
+        }
+
+        const statusBadge = isPaid
+          ? `<span style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">Confirmado ✅</span>`
+          : `<span style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">Pendente ⏳</span>`;
+
+        return `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <td>
+              <code style="color: var(--accent-yellow); font-size: 0.78rem; font-weight: 700; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">${escapeHTML(prot)}</code>
+            </td>
+            <td>
+              <div style="font-weight: 700; color: #fff;">${escapeHTML(name)}</div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);">POP ID: <strong>#${escapeHTML(popId)}</strong></div>
+            </td>
+            <td style="text-align: center;">${catBadge}</td>
+            <td>
+              <div style="font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 6px;">
+                ${getDeckEnergyBadgeHtml(deck)}
+                <span>${escapeHTML(deck)}</span>
+              </div>
+              ${limitUrl ? `<div style="font-size:0.72rem;"><a href="${escapeHTML(limitUrl)}" target="_blank" style="color:var(--accent-yellow); text-decoration:underline;">Link Limitless</a></div>` : ''}
+            </td>
+            <td style="text-align: center;">${listBadge}</td>
+            <td style="text-align: center;">${statusBadge}</td>
+            <td style="text-align: right;">
+              <div style="display: flex; gap: 0.35rem; justify-content: flex-end; flex-wrap: wrap;">
+                <button type="button" class="btn" onclick="previewOnlineDecklist('${escapeHTML(prot)}')" style="padding: 0.3rem 0.55rem; font-size: 0.72rem; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: #fff;" title="Ver Decklist">
+                  👁️ Lista
+                </button>
+                <button type="button" class="btn" onclick="toggleOnlineRegistrationStatus('${escapeHTML(prot)}', '${escapeHTML(status)}')" style="padding: 0.3rem 0.55rem; font-size: 0.72rem; background: ${isPaid ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)'}; border-color: ${isPaid ? 'rgba(245,158,11,0.3)' : 'rgba(16,185,129,0.3)'}; color: ${isPaid ? '#f59e0b' : '#10b981'};" title="${isPaid ? 'Marcar como Pendente' : 'Confirmar Pagamento'}">
+                  ${isPaid ? '⏳' : '✅ Pago'}
+                </button>
+                <button type="button" class="btn" onclick="deleteOnlineRegistration('${escapeHTML(prot)}', '${escapeHTML(name)}')" style="padding: 0.3rem 0.5rem; font-size: 0.72rem; background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.25); color: #ef4444;" title="Excluir Inscrição">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function toggleOnlineRegistrationStatus(protocolo, currentStatus) {
+      const webhookUrl = cachedConfig?.inscricoesPremier?.webhookUrl || document.getElementById('adm-premier-webhook')?.value || '';
+      if (!webhookUrl) return;
+
+      const isPaid = currentStatus.toLowerCase().includes('pago') || currentStatus.toLowerCase().includes('confirmado');
+      const newStatus = isPaid ? 'Pendente' : 'Confirmado';
+
+      try {
+        const fetchUrl = `${webhookUrl}${webhookUrl.includes('?') ? '&' : '?'}action=updateStatus&protocolo=${encodeURIComponent(protocolo)}&status=${encodeURIComponent(newStatus)}&v=${Date.now()}`;
+        await fetch(fetchUrl);
+
+        // Atualiza localmente
+        const found = (cachedOnlineRegistrations || []).find(r => r.Protocolo === protocolo);
+        if (found) found.StatusPagamento = newStatus;
+        renderAdminOnlineRegistrationsTable();
+        showSuccess(`Status da inscrição #${protocolo} alterado para "${newStatus}"!`);
+      } catch (err) {
+        showError("Erro ao atualizar status na planilha: " + err.message);
+      }
+    }
+
+    async function deleteOnlineRegistration(protocolo, name) {
+      const webhookUrl = cachedConfig?.inscricoesPremier?.webhookUrl || document.getElementById('adm-premier-webhook')?.value || '';
+      if (!webhookUrl) return;
+
+      if (!confirm(`Deseja realmente excluir a inscrição de "${name}" (Protocolo #${protocolo}) da planilha?`)) {
+        return;
+      }
+
+      try {
+        const fetchUrl = `${webhookUrl}${webhookUrl.includes('?') ? '&' : '?'}action=delete&protocolo=${encodeURIComponent(protocolo)}&v=${Date.now()}`;
+        await fetch(fetchUrl);
+
+        cachedOnlineRegistrations = (cachedOnlineRegistrations || []).filter(r => r.Protocolo !== protocolo);
+        renderAdminOnlineRegistrationsTable();
+        showSuccess(`Inscrição de "${name}" removida com sucesso!`);
+      } catch (err) {
+        showError("Erro ao excluir inscrição: " + err.message);
+      }
+    }
+
+    function previewOnlineDecklist(protocolo) {
+      const found = (cachedOnlineRegistrations || []).find(r => r.Protocolo === protocolo);
+      if (!found) return;
+
+      const rawText = found.Decklist || '';
+      if (!rawText) {
+        alert(`O treinador ${found.Nome} ainda não submeteu a lista de 60 cartas.`);
+        return;
+      }
+
+      const modal = document.getElementById('admin-decklist-modal');
+      if (!modal) return;
+
+      document.getElementById('admin-dl-player-name').value = found.Nome || '';
+      document.getElementById('admin-dl-pop-id').value = found.POP_ID || '';
+      document.getElementById('admin-dl-category').value = found.Categoria || 'Master';
+      document.getElementById('admin-dl-archetype').value = found.Deck || '';
+      document.getElementById('admin-dl-raw-text').value = rawText;
+      document.getElementById('admin-decklist-modal-title').innerText = `📋 Decklist Online — ${found.Nome}`;
+
+      handleAdminDlTextChange();
+      modal.style.display = 'flex';
+    }
+
+    function exportOnlineRegistrationsToTOM() {
+      const list = cachedOnlineRegistrations || [];
+      if (list.length === 0) {
+        alert("Nenhum inscrito na lista para exportar.");
+        return;
+      }
+
+      // Formato padrão do TOM: Nome \t POP_ID \t Nascimento \t Categoria
+      let lines = [];
+      list.forEach(item => {
+        const name = item.Nome || '';
+        const popId = item.POP_ID || '';
+        const birth = item.AnoNascimento || '';
+        const cat = item.Categoria || 'Master';
+        lines.push(`${name}\t${popId}\t${birth}\t${cat}`);
+      });
+
+      const text = lines.join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        showSuccess(`📋 ${list.length} jogadores copiados para a área de transferência no formato do TOM!`);
+      }).catch(() => {
+        prompt("Copie os dados para o TOM:", text);
+      });
+    }
+
     function renderAdminDecklists() {
       renderAdminPremierConfig();
+      fetchAdminOnlineRegistrations();
       const stageSelect = document.getElementById('admin-decklist-stage-selector');
       if (!stageSelect) return;
 
