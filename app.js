@@ -5540,11 +5540,19 @@ function onDecklistCardsChanged() {
   }
 }
 
+function formatDateBR(dateStr) {
+  if (!dateStr) return '';
+  const parts = String(dateStr).split('-');
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  if (dateStr.length === 6 && /^\d+$/.test(dateStr)) return `${dateStr.substring(0,2)}/${dateStr.substring(2,4)}/20${dateStr.substring(4,6)}`;
+  return dateStr;
+}
+
 window.openDecklistModal = function(defaultStageDate = '') {
   const modal = document.getElementById('decklist-modal');
   if (!modal) return;
 
-  const premierConfig = appData.Configuracoes?.inscricoesPremier || {};
+  const premierConfig = appData?.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || {};
   const isAbertas = premierConfig.abertas !== false;
 
   // 1. Atualizar o Banner Hero do Evento
@@ -5562,7 +5570,7 @@ window.openDecklistModal = function(defaultStageDate = '') {
   if (titleEl) titleEl.innerText = premierConfig.eventoNome || 'League Challenge — Liga Atlântica';
   if (typeBadgeEl) typeBadgeEl.innerText = `🏆 TORNEIO PREMIER • ${premierConfig.eventoTipo || 'CHALLENGE'}`;
   
-  const formattedDate = premierConfig.eventoData ? formatDateDDMMYY(premierConfig.eventoData) : '';
+  const formattedDate = premierConfig.eventoData ? formatDateBR(premierConfig.eventoData) : '';
   const scheduleParts = [formattedDate, premierConfig.horario].filter(Boolean);
   if (scheduleEl) scheduleEl.innerText = scheduleParts.length ? `📅 ${scheduleParts.join(' • ')}` : '📅 Data e horário a definir';
 
@@ -5619,7 +5627,7 @@ window.openDecklistModal = function(defaultStageDate = '') {
     if (premierConfig.eventoNome && premierConfig.eventoData) {
       options.push({
         data: premierConfig.eventoData,
-        label: `🏆 ${premierConfig.eventoNome} (${formatDateDDMMYY(premierConfig.eventoData)})`
+        label: `🏆 ${premierConfig.eventoNome} (${formatDateBR(premierConfig.eventoData)})`
       });
     }
 
@@ -5627,7 +5635,7 @@ window.openDecklistModal = function(defaultStageDate = '') {
       if (!options.some(o => o.data === stg.data)) {
         options.push({
           data: stg.data,
-          label: `📅 ${getStageDisplayName(stg, chronologicalStages)} (${formatDateDDMMYY(stg.data)})`
+          label: `📅 ${getStageDisplayName(stg, chronologicalStages)} (${formatDateBR(stg.data)})`
         });
       }
     });
