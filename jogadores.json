@@ -37,12 +37,9 @@
     },
     {
         "id": "5744139",
-        "jogador": "ANTONIO CRISPIM",
+        "jogador": "Antonio Crispim",
         "categoria": "Master",
-        "posicaoFinal": "",
-        "Jogador": "ANTONIO CRISPIM",
-        "ID": "5744139",
-        "Categoria": "Master"
+        "posicaoFinal": ""
     },
     {
         "id": "",
@@ -138,7 +135,10 @@
         "id": "6205814",
         "jogador": "CAROLINA CAMPOS",
         "categoria": "Master",
-        "posicaoFinal": ""
+        "posicaoFinal": "",
+        "Jogador": "CAROLINA CAMPOS",
+        "ID": "6205814",
+        "Categoria": "Master"
     },
     {
         "id": "6152334",
