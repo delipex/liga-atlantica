@@ -9643,6 +9643,7 @@
     let auditResults = [];
     let currentAuditFilter = 'all';
     let currentRankingAudit = null;
+    let cachedAuditStages = [];
 
     async function runFullAudit() {
       const container = document.getElementById('audit-stages-container');
@@ -9743,6 +9744,7 @@
 
         const cleanStages = stages.filter(s => s && typeof s.data === 'string');
         const chronologicalStages = [...cleanStages].sort((a, b) => a.data.localeCompare(b.data));
+        cachedAuditStages = chronologicalStages;
 
         let totalPlayersAudited = 0;
         let totalVedCompliant = 0;
@@ -10134,7 +10136,7 @@
                 <span style="font-size: 1.1rem;">🏆</span>
                 <div>
                   <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">
-                    ${escapeHTML(getDisplayEventType(stg.type, stg.date, chronologicalStages) || `Etapa ${stg.stageNumber} — ${dateFormatted}`)}
+                    ${escapeHTML(getDisplayEventType(stg.type, stg.date, cachedAuditStages) || `Etapa ${stg.stageNumber} — ${dateFormatted}`)}
                   </div>
                   <div style="font-size: 0.75rem; color: var(--text-secondary);">
                     ${stg.players.length} jogadores &bull; Multiplicador: ${stg.multiplier}x &bull; Arquivo: <code>etapas/${stg.date}.tdf</code>
