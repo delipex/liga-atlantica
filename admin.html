@@ -1638,7 +1638,7 @@
       <form id="calendar-edit-form" onsubmit="handleSaveCalendar(event)">
         <input type="hidden" id="calendar-edit-index" value="-1">
 
-        <div class="form-row" style="margin-bottom: 1rem;">
+        <div class="form-row" style="margin-bottom: 0.85rem;">
           <div class="form-group">
             <label for="calendar-edit-date">Data do Torneio</label>
             <input type="text" id="calendar-edit-date" class="search-input" placeholder="Ex: 2026-09-20 ou 20-09-2026" required>
@@ -1649,9 +1649,41 @@
           </div>
         </div>
 
-        <div class="form-group" style="margin-bottom: 1rem;">
-          <label for="calendar-edit-title">Título do Evento</label>
-          <input type="text" id="calendar-edit-title" class="search-input" placeholder="Ex: League Cup #1 ou League Challenge #2" required oninput="onCalendarTitleInput(this.value)">
+        <!-- Linha Estruturada: Tipo de Evento, Temporada, Número e Formato -->
+        <div class="form-row" style="margin-bottom: 0.85rem; display: grid; grid-template-columns: 1.4fr 0.9fr 0.9fr 1.2fr; gap: 0.65rem;">
+          <div class="form-group">
+            <label for="calendar-edit-type">Tipo de Evento</label>
+            <select id="calendar-edit-type" class="search-input" style="width: 100%; font-size: 0.82rem;" onchange="onCalendarTypeSelectorChange(this.value)">
+              <option value="Liga">⚔️ Sessão de Liga (1.0x)</option>
+              <option value="Challenge">🏅 League Challenge (1.5x)</option>
+              <option value="Cup">🏆 League Cup (1.5x)</option>
+              <option value="Especial">✨ Torneio Especial</option>
+              <option value="Casual">🎓 Treino / Casual</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="calendar-edit-season">Temporada</label>
+            <input type="number" id="calendar-edit-season" class="search-input" min="1" value="5" style="font-size: 0.82rem;" oninput="syncCalendarTitleFromSelectors()">
+          </div>
+          <div class="form-group">
+            <label for="calendar-edit-number">Nº da Etapa</label>
+            <input type="number" id="calendar-edit-number" class="search-input" min="1" value="1" style="font-size: 0.82rem;" oninput="syncCalendarTitleFromSelectors()">
+          </div>
+          <div class="form-group">
+            <label for="calendar-edit-format">Formato</label>
+            <select id="calendar-edit-format" class="search-input" style="width: 100%; font-size: 0.82rem;" onchange="syncCalendarTitleFromSelectors()">
+              <option value="Standard">Standard (Padrão)</option>
+              <option value="Expanded">Expandido</option>
+              <option value="GLC">Gym Leader Challenge</option>
+              <option value="Selado">Selado / Pre-Release</option>
+              <option value="Casual">Livre / Casual</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label for="calendar-edit-title">Título Oficial do Evento</label>
+          <input type="text" id="calendar-edit-title" class="search-input" placeholder="Ex: League Cup #1 — Temporada 5" required oninput="onCalendarTitleInput(this.value)">
         </div>
 
         <div class="form-row" style="margin-bottom: 1rem;">
@@ -2999,9 +3031,49 @@
     }
 
     function handleDateChange() {
+      const dateVal = document.getElementById('event-date')?.value;
+      if (dateVal && Array.isArray(cachedCalendario) && cachedCalendario.length > 0) {
+        // Encontra evento correspondente no calendário
+        const matched = cachedCalendario.find(ev => {
+          const d = ev.data || ev.Data || '';
+          if (!d) return false;
+          if (d === dateVal) return true;
+          const p = d.split(/[-/]/);
+          if (p.length === 3) {
+            const iso = p[0].length === 4 ? `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}` : `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
+            return iso === dateVal;
+          }
+          return false;
+        });
+
+        if (matched) {
+          const title = matched.evento || matched.Evento || matched.titulo || matched.Titulo || '';
+          let matchedType = 'Liga';
+          if (title.toLowerCase().includes('cup')) matchedType = 'Cup';
+          else if (title.toLowerCase().includes('challenge')) matchedType = 'Challenge';
+          else if (title.toLowerCase().includes('especial')) matchedType = 'Especial';
+          else if (title.toLowerCase().includes('personalizado')) matchedType = 'Personalizado';
+
+          const seasonMatch = title.match(/Temporada\s*(\d+)/i) || title.match(/T(\d+)/i);
+          if (seasonMatch && seasonMatch[1]) {
+            const seasonInput = document.getElementById('event-season');
+            if (seasonInput) seasonInput.value = seasonMatch[1];
+          }
+          const numMatch = title.match(/#(\d+)/);
+          if (numMatch && numMatch[1]) {
+            const numInput = document.getElementById('event-number');
+            if (numInput) numInput.value = numMatch[1];
+          }
+
+          if (window.selectEventType) {
+            window.selectEventType(matchedType, false);
+          }
+        }
+      }
+
       resetValidation();
       handleEventTypeChange();
-      const text = document.getElementById('raw-input').value;
+      const text = document.getElementById('raw-input')?.value;
       if (text) {
         processTDFText(text);
       }
@@ -5755,12 +5827,107 @@
       if (pill) pill.style.display = isOpen ? 'inline-block' : 'none';
     }
 
-    function onCalendarTitleInput(title) {
-      const tLow = (title || '').toLowerCase();
+    function onCalendarTypeSelectorChange(typeVal) {
       const chk = document.getElementById('cal-edit-open-premier');
       const tipoEl = document.getElementById('cal-premier-tipo');
       const subtituloEl = document.getElementById('cal-premier-subtitulo');
-      const temaEl = document.getElementById('cal-premier-tema');
+      
+      const isNewEvent = document.getElementById('calendar-edit-index')?.value === '-1';
+      if (isNewEvent) {
+        const nextNum = getNextCalendarNumberForType(typeVal);
+        const numInput = document.getElementById('calendar-edit-number');
+        if (numInput) numInput.value = nextNum;
+      }
+
+      if (typeVal === 'Cup' || typeVal === 'Challenge' || typeVal === 'Especial') {
+        if (chk && !chk.checked) {
+          chk.checked = true;
+          toggleCalPremierFields(true);
+        }
+        if (tipoEl) tipoEl.value = (typeVal === 'Cup' || typeVal === 'Challenge' || typeVal === 'Especial') ? typeVal : 'Cup';
+        if (subtituloEl) {
+          if (typeVal === 'Cup' && (!subtituloEl.value || subtituloEl.value.includes('Championship Points'))) {
+            subtituloEl.value = 'Valendo 50 Championship Points (CP) + Troféu Oficial';
+          } else if (typeVal === 'Challenge' && (!subtituloEl.value || subtituloEl.value.includes('Championship Points'))) {
+            subtituloEl.value = 'Valendo 15 Championship Points (CP) + Premiação em Boosters';
+          }
+        }
+      }
+
+      syncCalendarTitleFromSelectors();
+    }
+
+    function getNextCalendarNumberForType(typeVal) {
+      let maxNum = 0;
+      if (Array.isArray(cachedCalendario)) {
+        cachedCalendario.forEach(ev => {
+          const title = ev.evento || ev.Evento || ev.titulo || ev.Titulo || '';
+          let matchesType = false;
+          if (typeVal === 'Cup' && title.toLowerCase().includes('cup')) matchesType = true;
+          else if (typeVal === 'Challenge' && title.toLowerCase().includes('challenge')) matchesType = true;
+          else if (typeVal === 'Especial' && title.toLowerCase().includes('especial')) matchesType = true;
+          else if (typeVal === 'Casual' && title.toLowerCase().includes('casual')) matchesType = true;
+          else if (typeVal === 'Liga' && (title.toLowerCase().includes('sessão de liga') || title.toLowerCase().includes('sessao de liga') || (!title.toLowerCase().includes('cup') && !title.toLowerCase().includes('challenge') && !title.toLowerCase().includes('especial') && !title.toLowerCase().includes('casual')))) matchesType = true;
+          
+          if (matchesType) {
+            const m = title.match(/#(\d+)/);
+            if (m && m[1]) {
+              const n = parseInt(m[1], 10);
+              if (n > maxNum) maxNum = n;
+            }
+          }
+        });
+      }
+      return maxNum + 1;
+    }
+
+    function syncCalendarTitleFromSelectors() {
+      const typeVal = document.getElementById('calendar-edit-type')?.value || 'Liga';
+      const seasonVal = document.getElementById('calendar-edit-season')?.value || '5';
+      const numVal = document.getElementById('calendar-edit-number')?.value || '1';
+      const formatVal = document.getElementById('calendar-edit-format')?.value || 'Standard';
+      const titleInput = document.getElementById('calendar-edit-title');
+      if (!titleInput) return;
+
+      let formatted = '';
+      if (typeVal === 'Liga') formatted = `Sessão de Liga #${numVal} — Temporada ${seasonVal}`;
+      else if (typeVal === 'Challenge') formatted = `League Challenge #${numVal} — Temporada ${seasonVal}`;
+      else if (typeVal === 'Cup') formatted = `League Cup #${numVal} — Temporada ${seasonVal}`;
+      else if (typeVal === 'Especial') formatted = `Torneio Especial #${numVal} — Temporada ${seasonVal}`;
+      else if (typeVal === 'Casual') formatted = `Encontro Casual — Temporada ${seasonVal}`;
+
+      if (formatVal && formatVal !== 'Standard') {
+        formatted += ` (${formatVal})`;
+      }
+
+      titleInput.value = formatted;
+    }
+
+    function onCalendarTitleInput(title) {
+      const tLow = (title || '').toLowerCase();
+      const typeSelect = document.getElementById('calendar-edit-type');
+      if (typeSelect) {
+        if (tLow.includes('cup')) typeSelect.value = 'Cup';
+        else if (tLow.includes('challenge')) typeSelect.value = 'Challenge';
+        else if (tLow.includes('especial')) typeSelect.value = 'Especial';
+        else if (tLow.includes('casual')) typeSelect.value = 'Casual';
+        else if (tLow.includes('liga')) typeSelect.value = 'Liga';
+      }
+
+      const numMatch = title.match(/#(\d+)/);
+      if (numMatch && numMatch[1]) {
+        const numInput = document.getElementById('calendar-edit-number');
+        if (numInput) numInput.value = numMatch[1];
+      }
+      const seasonMatch = title.match(/Temporada\s*(\d+)/i) || title.match(/T(\d+)/i);
+      if (seasonMatch && seasonMatch[1]) {
+        const seasonInput = document.getElementById('calendar-edit-season');
+        if (seasonInput) seasonInput.value = seasonMatch[1];
+      }
+
+      const chk = document.getElementById('cal-edit-open-premier');
+      const tipoEl = document.getElementById('cal-premier-tipo');
+      const subtituloEl = document.getElementById('cal-premier-subtitulo');
 
       if (tLow.includes('cup')) {
         if (chk && !chk.checked) {
@@ -5769,7 +5936,6 @@
         }
         if (tipoEl) tipoEl.value = 'Cup';
         if (subtituloEl && !subtituloEl.value) subtituloEl.value = 'Valendo 50 Championship Points (CP) + Troféu Oficial';
-        if (temaEl && temaEl.value === 'lightning') temaEl.value = 'lightning';
       } else if (tLow.includes('challenge')) {
         if (chk && !chk.checked) {
           chk.checked = true;
@@ -5788,17 +5954,33 @@
 
     function openNewCalendarModal() {
       const pConf = cachedConfig?.inscricoesPremier || {};
+      const curSeason = cachedConfig?.temporadaAtual || 5;
+
       document.getElementById('calendar-modal-title').innerText = '📅 Cadastrar Novo Evento';
       document.getElementById('calendar-edit-index').value = '-1';
       document.getElementById('calendar-edit-date').value = '';
       document.getElementById('calendar-edit-time').value = '14:00';
-      document.getElementById('calendar-edit-title').value = '';
       document.getElementById('calendar-edit-location').value = 'Livraria Atlântica +';
       document.getElementById('calendar-edit-status').value = 'confirmado';
       document.getElementById('calendar-edit-desc').value = '';
       document.getElementById('calendar-edit-maps').value = 'https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6';
       document.getElementById('calendar-edit-signup').value = '';
       document.getElementById('calendar-edit-photo').value = '';
+
+      // Initialize structured selectors
+      const typeElSel = document.getElementById('calendar-edit-type');
+      if (typeElSel) typeElSel.value = 'Liga';
+
+      const seasonEl = document.getElementById('calendar-edit-season');
+      if (seasonEl) seasonEl.value = curSeason;
+
+      const numEl = document.getElementById('calendar-edit-number');
+      if (numEl) numEl.value = getNextCalendarNumberForType('Liga');
+
+      const formatElSel = document.getElementById('calendar-edit-format');
+      if (formatElSel) formatElSel.value = 'Standard';
+
+      syncCalendarTitleFromSelectors();
 
       // Reset Premier sub-fields
       const chk = document.getElementById('cal-edit-open-premier');
@@ -5838,6 +6020,36 @@
       const evDate = ev.data || ev.Data || '';
       const evTitle = ev.evento || ev.Evento || ev.titulo || ev.Titulo || '';
 
+      // Parse structured attributes from evTitle
+      let detectedType = 'Liga';
+      if (evTitle.toLowerCase().includes('cup')) detectedType = 'Cup';
+      else if (evTitle.toLowerCase().includes('challenge')) detectedType = 'Challenge';
+      else if (evTitle.toLowerCase().includes('especial')) detectedType = 'Especial';
+      else if (evTitle.toLowerCase().includes('casual')) detectedType = 'Casual';
+
+      const seasonMatch = evTitle.match(/Temporada\s*(\d+)/i) || evTitle.match(/T(\d+)/i);
+      const evSeason = seasonMatch ? seasonMatch[1] : (cachedConfig?.temporadaAtual || 5);
+
+      const numMatch = evTitle.match(/#(\d+)/);
+      const evNum = numMatch ? numMatch[1] : 1;
+
+      let evFormat = 'Standard';
+      if (evTitle.toLowerCase().includes('expanded') || evTitle.toLowerCase().includes('expandido')) evFormat = 'Expanded';
+      else if (evTitle.toLowerCase().includes('glc')) evFormat = 'GLC';
+      else if (evTitle.toLowerCase().includes('selado') || evTitle.toLowerCase().includes('sealed')) evFormat = 'Selado';
+
+      const typeElSel = document.getElementById('calendar-edit-type');
+      if (typeElSel) typeElSel.value = detectedType;
+
+      const seasonEl = document.getElementById('calendar-edit-season');
+      if (seasonEl) seasonEl.value = evSeason;
+
+      const numEl = document.getElementById('calendar-edit-number');
+      if (numEl) numEl.value = evNum;
+
+      const formatElSel = document.getElementById('calendar-edit-format');
+      if (formatElSel) formatElSel.value = evFormat;
+
       // Verifica se este evento é o que está ativo no config
       let dateIso = evDate;
       const parts = evDate.split(/[-/]/);
@@ -5875,12 +6087,8 @@
       const titularEl = document.getElementById('cal-premier-titular');
       const temaEl = document.getElementById('cal-premier-tema');
 
-      let detectedTipo = 'Cup';
-      if (evTitle.toLowerCase().includes('challenge')) detectedTipo = 'Challenge';
-      else if (evTitle.toLowerCase().includes('especial')) detectedTipo = 'Especial';
-
-      if (tipoEl) tipoEl.value = isMatchingPremier ? (pConf.eventoTipo || detectedTipo) : detectedTipo;
-      if (subtituloEl) subtituloEl.value = isMatchingPremier ? (pConf.subtitulo || '') : (detectedTipo === 'Cup' ? 'Valendo 50 Championship Points (CP) + Troféu Oficial' : 'Valendo 15 Championship Points (CP) + Premiação em Boosters');
+      if (tipoEl) tipoEl.value = isMatchingPremier ? (pConf.eventoTipo || (detectedType === 'Liga' ? 'Cup' : detectedType)) : (detectedType === 'Liga' ? 'Cup' : detectedType);
+      if (subtituloEl) subtituloEl.value = isMatchingPremier ? (pConf.subtitulo || '') : (detectedType === 'Cup' ? 'Valendo 50 Championship Points (CP) + Troféu Oficial' : 'Valendo 15 Championship Points (CP) + Premiação em Boosters');
       if (valorEl) valorEl.value = isMatchingPremier ? (pConf.valor || '35,00') : (pConf.valor || '35,00');
       if (vagasEl) vagasEl.value = isMatchingPremier ? (pConf.limiteVagas || 32) : (pConf.limiteVagas || 32);
       if (exigirDlEl) exigirDlEl.value = isMatchingPremier ? (pConf.exigirDecklist !== false ? 'true' : 'false') : 'true';
