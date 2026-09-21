@@ -929,7 +929,8 @@ async function loadData() {
         LinkInstagram: configObj.linkInstagram || '',
         ProximoEvento: configObj.proximoEvento || configObj.nextEvent || null,
         MinEtapasPokebolaOuro: configObj.minEtapasPokebolaOuro || 2,
-        TamanhoPodio: configObj.tamanhoPodio || 4
+        TamanhoPodio: configObj.tamanhoPodio || 4,
+        inscricoesPremier: configObj.inscricoesPremier || null
       };
     } else if (spreadsheetId) {
       let configuracoes = [];
@@ -1323,8 +1324,8 @@ function renderAll() {
   }
 
   // 4. Controle dinâmico do botão de Inscrição & Decklist no site
-  const premierConf = appData.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || {};
-  const isPremierOpen = premierConf.abertas !== false;
+  const premierConf = appData.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || null;
+  const isPremierOpen = !!(premierConf && premierConf.abertas === true);
   const navDeckBtn = document.getElementById('nav-decklist-link');
   if (navDeckBtn) {
     navDeckBtn.style.display = isPremierOpen ? 'inline-flex' : 'none';
@@ -1512,8 +1513,8 @@ function renderDashboard() {
           ${renderEventLinkButton(eventConf.signupLink)}
         </div>
         ${(() => {
-          const premierConfig = appData.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || {};
-          if (premierConfig.abertas !== false) {
+          const premierConfig = appData.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || null;
+          if (premierConfig && premierConfig.abertas === true) {
             return `
               <button type="button" class="btn btn-whatsapp" onclick="openDecklistModal('${escapeHTML(premierConfig.eventoData || dateIso)}')" style="width: 100%; justify-content: center; margin-top: 0.85rem; font-weight: 800; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; box-shadow: 0 4px 15px rgba(255, 203, 5, 0.2);">
                 📋 Fazer Inscrição & Enviar Decklist (Online)
@@ -1925,8 +1926,8 @@ function renderCalendarCard(evt, isNext = false, isPast = false) {
     }
   }
 
-  const premierConfig = appData.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || {};
-  const isPremierActiveForEvent = !isPast && (premierConfig.abertas !== false) && (
+  const premierConfig = appData.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || null;
+  const isPremierActiveForEvent = !isPast && (premierConfig && premierConfig.abertas === true) && (
     (premierConfig.eventoData && (iso === premierConfig.eventoData || rawDate === premierConfig.eventoData)) ||
     (premierConfig.eventoNome && eventTitle.toLowerCase().includes((premierConfig.eventoTipo || 'cup').toLowerCase()))
   );
@@ -5726,8 +5727,8 @@ window.openDecklistModal = function(defaultStageDate = '') {
   const modal = document.getElementById('decklist-modal');
   if (!modal) return;
 
-  const premierConfig = appData?.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || {};
-  const isAbertas = premierConfig.abertas !== false;
+  const premierConfig = appData?.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || null;
+  const isAbertas = !!(premierConfig && premierConfig.abertas === true);
 
   // 1. Atualizar o Banner Hero do Evento com Tema de Cores / Energia
   const heroEl = document.getElementById('decklist-premier-hero');
