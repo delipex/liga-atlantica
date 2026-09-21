@@ -98,15 +98,31 @@ html {
   min-height: 100vh;
 }
 
+html {
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+  -webkit-text-size-adjust: 100%;
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 body {
   font-family: var(--font-body);
   font-weight: 300;
   color: var(--text-primary);
   line-height: 1.6;
   overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
   background: transparent;
   min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
+  -webkit-font-smoothing: antialiased;
 }
 
 
@@ -1619,7 +1635,7 @@ tbody tr.top-8 .row-rank,
 .modal-container {
   width: 92%;
   max-width: 440px;
-  max-height: 88vh;
+  max-height: min(88vh, calc(100dvh - 32px));
   display: flex;
   flex-direction: column;
   background: var(--bg-dark-card);
@@ -1632,6 +1648,7 @@ tbody tr.top-8 .row-rank,
   transform: translateY(20px);
   transition: transform 0.3s ease;
   position: relative;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-overlay.active .modal-container {
@@ -1708,16 +1725,9 @@ tbody tr.top-8 .row-rank,
 .modal-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.5rem;
+  gap: 0.4rem;
   text-align: center;
   margin-bottom: 0.25rem;
-}
-
-@media (max-width: 440px) {
-  .modal-stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-  }
 }
 
 .modal-stat-box {
@@ -2095,47 +2105,82 @@ tbody tr.top-8 .row-rank,
   
   .modal-container {
     width: 95%;
+    max-width: 420px;
+    border-radius: 16px;
+    max-height: min(92vh, calc(100dvh - 20px));
   }
   
   .modal-header {
-    padding: 1.5rem 1rem 1rem 1rem;
+    padding: 1rem 0.85rem 0.35rem 0.85rem;
   }
   
   .modal-avatar {
-    width: 56px;
-    height: 56px;
-    font-size: 1.5rem;
+    width: 44px;
+    height: 44px;
+    font-size: 1.25rem;
+    margin: 0 auto 0.25rem auto;
   }
   
   .modal-player-name {
-    font-size: 1.35rem;
+    font-size: 1.15rem;
+    line-height: 1.2;
+    margin-bottom: 2px;
   }
   
   .modal-body {
-    padding: 1.25rem 1rem;
+    padding: 0.7rem 0.85rem;
+    gap: 0.5rem;
   }
   
   .modal-stats-grid {
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 0.35rem;
+    margin-bottom: 0.25rem;
   }
   
   .modal-stat-box {
-    padding: 0.5rem 0.25rem;
-    border-radius: var(--radius);
+    padding: 0.35rem 0.15rem;
+    border-radius: 8px;
   }
   
   .modal-stat-value {
-    font-size: 1.2rem;
+    font-size: 1.05rem;
+    font-weight: 800;
   }
   
   .modal-stat-label {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.02em;
+  }
+  
+  .modal-details {
+    padding: 0.45rem 0.6rem;
+    gap: 0.3rem;
   }
   
   .modal-detail-row {
-    font-size: 0.8rem;
-    padding-bottom: 0.5rem;
+    font-size: 0.75rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .modal-section-title {
+    font-size: 0.7rem;
+    margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .timeline-step {
+    padding: 5px 8px;
+    min-width: 66px;
+  }
+
+  .timeline-step .step-pos {
+    font-size: 0.95rem;
+  }
+
+  .timeline-step .step-pts {
+    font-size: 0.65rem;
+    padding: 1px 5px;
   }
 }
 
@@ -4011,6 +4056,41 @@ tbody tr.top-8 .row-rank,
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-primary);
   white-space: nowrap;
+}
+
+/* ==========================================================================
+   MODAL DE INSCRIÇÕES PREMIER & DECKLIST (MOBILE-FIRST)
+   ========================================================================== */
+.decklist-modal-container {
+  max-width: 680px;
+  width: 95%;
+  padding: 1.5rem;
+  max-height: min(90vh, calc(100dvh - 24px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 600px) {
+  .decklist-modal-container {
+    padding: 1.1rem 0.85rem !important;
+    border-radius: 16px;
+    max-height: min(94vh, calc(100dvh - 16px));
+  }
+  
+  #decklist-premier-hero {
+    padding: 0.85rem 0.75rem !important;
+    margin-bottom: 0.85rem !important;
+  }
+
+  #decklist-banner-title {
+    font-size: 1.15rem !important;
+  }
+
+  #decklist-form input,
+  #decklist-form select,
+  #decklist-form textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* ==========================================================================
