@@ -1362,6 +1362,106 @@
           </div>
         </div>
 
+        <!-- Painel de Controle de Inscrições do Próximo Premier -->
+        <div class="glass-card" style="margin-bottom: 1.5rem; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 203, 5, 0.25); border-radius: var(--radius); padding: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.5rem;">
+            <div>
+              <h3 style="font-size: 1.05rem; color: var(--accent-yellow); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                ⚙️ Configuração das Inscrições Online (Premier)
+              </h3>
+              <p style="color: var(--text-secondary); font-size: 0.78rem; margin: 3px 0 0 0;">
+                Controle o status aberto/fechado, taxa PIX, vagas e dados exibidos no formulário online dos jogadores.
+              </p>
+            </div>
+            <div id="admin-premier-status-pill" style="font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">
+              🟢 Inscrições Abertas
+            </div>
+          </div>
+
+          <form id="admin-premier-config-form" onsubmit="handleSavePremierConfig(event)">
+            <div class="form-row" style="margin-bottom: 0.85rem;">
+              <div class="form-group">
+                <label for="adm-premier-abertas">Status das Inscrições</label>
+                <select id="adm-premier-abertas" class="search-input" style="width: 100%;" onchange="updateAdminPremierStatusPill()">
+                  <option value="true">🟢 Abertas (Aceitando Inscrições)</option>
+                  <option value="false">🔴 Fechadas / Encerradas</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="adm-premier-tipo">Tipo de Torneio</label>
+                <select id="adm-premier-tipo" class="search-input" style="width: 100%;">
+                  <option value="Challenge">League Challenge (1.5x)</option>
+                  <option value="Cup">League Cup (1.5x)</option>
+                  <option value="Especial">Torneio Especial</option>
+                  <option value="Liga">Sessão Regular</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row" style="margin-bottom: 0.85rem;">
+              <div class="form-group">
+                <label for="adm-premier-nome">Nome Oficial do Evento</label>
+                <input type="text" id="adm-premier-nome" class="search-input" placeholder="Ex: League Challenge #2 — Temporada 5" required>
+              </div>
+              <div class="form-group">
+                <label for="adm-premier-data">Data do Evento</label>
+                <input type="date" id="adm-premier-data" class="search-input" required>
+              </div>
+            </div>
+
+            <div class="form-row" style="margin-bottom: 0.85rem;">
+              <div class="form-group">
+                <label for="adm-premier-valor">Taxa de Inscrição (R$)</label>
+                <input type="text" id="adm-premier-valor" class="search-input" placeholder="Ex: 35,00" required>
+              </div>
+              <div class="form-group">
+                <label for="adm-premier-vagas">Capacidade Máxima (Vagas)</label>
+                <input type="number" id="adm-premier-vagas" class="search-input" min="4" max="128" placeholder="Ex: 32" required>
+              </div>
+            </div>
+
+            <div class="form-row" style="margin-bottom: 0.85rem;">
+              <div class="form-group">
+                <label for="adm-premier-pix">Chave PIX para Pagamento</label>
+                <input type="text" id="adm-premier-pix" class="search-input" placeholder="Ex: felipe.damasceno@pix.com" required>
+              </div>
+              <div class="form-group">
+                <label for="adm-premier-titular">Favorecido / Titular do PIX</label>
+                <input type="text" id="adm-premier-titular" class="search-input" placeholder="Ex: Liga Atlântica TCG (Felipe Damasceno)" required>
+              </div>
+            </div>
+
+            <div class="form-row" style="margin-bottom: 0.85rem;">
+              <div class="form-group" style="flex: 1;">
+                <label for="adm-premier-horario">Horários / Cronograma</label>
+                <input type="text" id="adm-premier-horario" class="search-input" placeholder="Ex: Check-in às 13:30 • Rodada 1 às 14:00">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label for="adm-premier-obs">Instruções / Observações no Modal</label>
+              <textarea id="adm-premier-obs" class="search-input" rows="2" style="font-size: 0.82rem; resize: vertical;" placeholder="Orientações aos jogadores..."></textarea>
+            </div>
+
+            <!-- Link Direto Compartilhável -->
+            <div style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 240px;">
+                <div style="font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">🔗 Link Direto para Divulgação (WhatsApp / Instagram)</div>
+                <input type="text" id="adm-premier-direct-link" readonly class="search-input" style="width: 100%; margin-top: 4px; font-size: 0.78rem; background: rgba(0,0,0,0.4); color: var(--accent-yellow); font-family: monospace;" value="https://liga-atlantica.vercel.app/#inscricao">
+              </div>
+              <button type="button" class="btn" onclick="copyAdminPremierDirectLink()" style="font-size: 0.8rem; padding: 0.5rem 0.9rem; align-self: flex-end; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); color: #fff;">
+                📋 Copiar Link
+              </button>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+              <button type="submit" id="btn-save-premier-config" class="btn btn-whatsapp" style="font-size: 0.85rem; font-weight: 700; padding: 0.5rem 1.25rem; background: var(--accent-yellow); border-color: var(--accent-yellow); color: #000;">
+                💾 Salvar Configurações do Premier
+              </button>
+            </div>
+          </form>
+        </div>
+
         <!-- Seletor de Evento / Etapa -->
         <div class="form-row" style="margin-bottom: 1.25rem; align-items: flex-end;">
           <div class="form-group" style="flex: 1;">
@@ -6630,7 +6730,151 @@
       return { total, pokemon, trainer, energy, cards };
     }
 
+    function renderAdminPremierConfig() {
+      const pConf = cachedConfig?.inscricoesPremier || {};
+      const abertasEl = document.getElementById('adm-premier-abertas');
+      const tipoEl = document.getElementById('adm-premier-tipo');
+      const nomeEl = document.getElementById('adm-premier-nome');
+      const dataEl = document.getElementById('adm-premier-data');
+      const valorEl = document.getElementById('adm-premier-valor');
+      const vagasEl = document.getElementById('adm-premier-vagas');
+      const pixEl = document.getElementById('adm-premier-pix');
+      const titularEl = document.getElementById('adm-premier-titular');
+      const horarioEl = document.getElementById('adm-premier-horario');
+      const obsEl = document.getElementById('adm-premier-obs');
+      const linkEl = document.getElementById('adm-premier-direct-link');
+
+      if (abertasEl) abertasEl.value = pConf.abertas !== false ? 'true' : 'false';
+      if (tipoEl) tipoEl.value = pConf.eventoTipo || 'Challenge';
+      if (nomeEl) nomeEl.value = pConf.eventoNome || 'League Challenge #2 — Temporada 5';
+      if (dataEl) dataEl.value = pConf.eventoData || '2026-09-26';
+      if (valorEl) valorEl.value = pConf.valor || '35,00';
+      if (vagasEl) vagasEl.value = pConf.limiteVagas || 32;
+      if (pixEl) pixEl.value = pConf.chavePix || '';
+      if (titularEl) titularEl.value = pConf.titularPix || '';
+      if (horarioEl) horarioEl.value = pConf.horario || '';
+      if (obsEl) obsEl.value = pConf.observacoes || '';
+
+      if (linkEl) {
+        const origin = window.location.origin;
+        const basePath = window.location.pathname.replace(/\/admin\.html$/i, '').replace(/\/+$/, '');
+        linkEl.value = `${origin}${basePath}/#inscricao`;
+      }
+
+      updateAdminPremierStatusPill();
+    }
+
+    function updateAdminPremierStatusPill() {
+      const pill = document.getElementById('admin-premier-status-pill');
+      const abertasVal = document.getElementById('adm-premier-abertas')?.value === 'true';
+      if (!pill) return;
+      if (abertasVal) {
+        pill.innerHTML = '🟢 Inscrições Abertas';
+        pill.style.background = 'rgba(16, 185, 129, 0.15)';
+        pill.style.color = '#10b981';
+        pill.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+      } else {
+        pill.innerHTML = '🔴 Inscrições Fechadas / Encerradas';
+        pill.style.background = 'rgba(239, 68, 68, 0.15)';
+        pill.style.color = '#ef4444';
+        pill.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+      }
+    }
+
+    function copyAdminPremierDirectLink() {
+      const linkEl = document.getElementById('adm-premier-direct-link');
+      if (!linkEl) return;
+      navigator.clipboard.writeText(linkEl.value).then(() => {
+        showSuccess("Link direto de inscrição copiado para a área de transferência!");
+      }).catch(() => {
+        prompt("Copie o link direto:", linkEl.value);
+      });
+    }
+
+    async function handleSavePremierConfig(e) {
+      if (e) e.preventDefault();
+      const submitBtn = document.getElementById('btn-save-premier-config');
+
+      if (!runtimeToken) {
+        showError("Sessão expirada. Faça login novamente no painel.");
+        return;
+      }
+
+      const abertas = document.getElementById('adm-premier-abertas')?.value === 'true';
+      const eventoTipo = document.getElementById('adm-premier-tipo')?.value || 'Challenge';
+      const eventoNome = (document.getElementById('adm-premier-nome')?.value || '').trim();
+      const eventoData = document.getElementById('adm-premier-data')?.value || '';
+      const valor = (document.getElementById('adm-premier-valor')?.value || '').trim();
+      const limiteVagas = parseInt(document.getElementById('adm-premier-vagas')?.value, 10) || 32;
+      const chavePix = (document.getElementById('adm-premier-pix')?.value || '').trim();
+      const titularPix = (document.getElementById('adm-premier-titular')?.value || '').trim();
+      const horario = (document.getElementById('adm-premier-horario')?.value || '').trim();
+      const observacoes = (document.getElementById('adm-premier-obs')?.value || '').trim();
+
+      const mult = (eventoTipo === 'Cup' || eventoTipo === 'Challenge') ? 1.5 : 1.0;
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "⏳ Salvando Configurações no GitHub...";
+
+      try {
+        const inscricoesPremier = {
+          abertas,
+          eventoNome,
+          eventoData,
+          eventoTipo,
+          multiplicador: mult,
+          valor,
+          limiteVagas,
+          chavePix,
+          titularPix,
+          horario,
+          observacoes
+        };
+
+        const updatedConfig = {
+          ...(cachedConfig || {}),
+          inscricoesPremier
+        };
+
+        const config = GITHUB_CONFIG;
+        const confUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/config.json`;
+        let confSha = await getLatestSha(confUrl);
+
+        const commitPayload = {
+          message: `Atualizar inscrições Premier (${eventoNome}, Abertas: ${abertas})`,
+          content: encodeBase64UTF8(JSON.stringify(updatedConfig, null, 4)),
+          branch: config.branch
+        };
+        if (confSha) commitPayload.sha = confSha;
+
+        const res = await fetch(confUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao salvar config.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedConfig = updatedConfig;
+        renderAdminPremierConfig();
+        showSuccess(`⚙️ Configurações de inscrição do "${eventoNome}" salvas com sucesso no GitHub!`);
+      } catch (err) {
+        console.error("Erro ao salvar config premier:", err);
+        showError("Erro ao salvar configuração do Premier: " + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "💾 Salvar Configurações do Premier";
+      }
+    }
+
     function renderAdminDecklists() {
+      renderAdminPremierConfig();
       const stageSelect = document.getElementById('admin-decklist-stage-selector');
       if (!stageSelect) return;
 

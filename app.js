@@ -3810,7 +3810,21 @@ function initNavigation() {
   }
 
   function handleHashRoute() {
-    const hash = window.location.hash.substring(1);
+    const rawHash = window.location.hash.substring(1);
+    const hash = rawHash.split('?')[0];
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Suporte a link direto de inscrição / envio de decklist
+    if (hash === 'inscricao' || hash === 'decklist' || urlParams.has('inscricao')) {
+      setTimeout(() => {
+        if (typeof openDecklistModal === 'function') {
+          openDecklistModal();
+        }
+      }, 150);
+      navigateTo('dashboard');
+      return;
+    }
+
     const validSections = ['dashboard', 'ranking', 'calendar', 'rules', 'champions', 'gallery', 'metagame'];
     if (hash && validSections.includes(hash)) {
       navigateTo(hash);
@@ -5528,31 +5542,111 @@ function onDecklistCardsChanged() {
 
 window.openDecklistModal = function(defaultStageDate = '') {
   const modal = document.getElementById('decklist-modal');
-  const eventSelect = document.getElementById('decklist-event-select');
   if (!modal) return;
 
+  const premierConfig = appData.Configuracoes?.inscricoesPremier || {};
+  const isAbertas = premierConfig.abertas !== false;
+
+  // 1. Atualizar o Banner Hero do Evento
+  const titleEl = document.getElementById('decklist-banner-title');
+  const typeBadgeEl = document.getElementById('decklist-banner-type-badge');
+  const scheduleEl = document.getElementById('decklist-banner-schedule');
+  const statusEl = document.getElementById('decklist-banner-status');
+  const feeEl = document.getElementById('decklist-banner-fee');
+  const spotsEl = document.getElementById('decklist-banner-spots');
+  const pixKeyEl = document.getElementById('decklist-banner-pix-key');
+  const pixNameEl = document.getElementById('decklist-banner-pix-name');
+  const closedAlert = document.getElementById('decklist-closed-alert');
+  const submitBtn = document.getElementById('decklist-submit-wa-btn');
+
+  if (titleEl) titleEl.innerText = premierConfig.eventoNome || 'League Challenge — Liga Atlântica';
+  if (typeBadgeEl) typeBadgeEl.innerText = `🏆 TORNEIO PREMIER • ${premierConfig.eventoTipo || 'CHALLENGE'}`;
+  
+  const formattedDate = premierConfig.eventoData ? formatDateDDMMYY(premierConfig.eventoData) : '';
+  const scheduleParts = [formattedDate, premierConfig.horario].filter(Boolean);
+  if (scheduleEl) scheduleEl.innerText = scheduleParts.length ? `📅 ${scheduleParts.join(' • ')}` : '📅 Data e horário a definir';
+
+  if (feeEl) feeEl.innerText = premierConfig.valor ? `R$ ${premierConfig.valor}` : 'Gratuito';
+
+  // Contagem de inscritos para este evento
+  const eventDate = premierConfig.eventoData || '';
+  let countEnrolled = 0;
+  if (appData.Decklists) {
+    if (Array.isArray(appData.Decklists)) {
+      countEnrolled = appData.Decklists.filter(d => (d.etapaData === eventDate || d.data === eventDate)).length;
+    } else if (typeof appData.Decklists === 'object' && appData.Decklists[eventDate]) {
+      countEnrolled = Object.keys(appData.Decklists[eventDate]).length;
+    }
+  }
+
+  const cap = premierConfig.limiteVagas || 32;
+  const remaining = Math.max(0, cap - countEnrolled);
+  if (spotsEl) {
+    spotsEl.innerHTML = `<strong>${countEnrolled}</strong> / ${cap} <span style="font-size:0.75rem; font-weight:600; color:var(--text-secondary);">(${remaining} vagas restantes)</span>`;
+  }
+
+  if (pixKeyEl) pixKeyEl.innerText = premierConfig.chavePix || 'A definir';
+  if (pixNameEl) pixNameEl.innerText = premierConfig.titularPix || '';
+
+  if (statusEl) {
+    if (isAbertas) {
+      statusEl.innerHTML = '🟢 Inscrições Abertas';
+      statusEl.style.background = 'rgba(16, 185, 129, 0.15)';
+      statusEl.style.color = '#10b981';
+      statusEl.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+    } else {
+      statusEl.innerHTML = '🔴 Inscrições Fechadas';
+      statusEl.style.background = 'rgba(239, 68, 68, 0.15)';
+      statusEl.style.color = '#ef4444';
+      statusEl.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+    }
+  }
+
+  if (closedAlert) closedAlert.style.display = isAbertas ? 'none' : 'block';
+  if (submitBtn) {
+    submitBtn.disabled = !isAbertas;
+    submitBtn.style.opacity = isAbertas ? '1' : '0.5';
+    submitBtn.style.cursor = isAbertas ? 'pointer' : 'not-allowed';
+  }
+
+  // 2. Preencher Select de Eventos
+  const eventSelect = document.getElementById('decklist-event-select');
   if (eventSelect) {
     const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
     const chronologicalStages = [...cleanStages].sort((a, b) => a.data.localeCompare(b.data));
     
-    // Filtrar preferencialmente torneios Premier (Challenge, Cup, etc.), ou todos os recentes
-    const premierStages = chronologicalStages.filter(s => {
-      const type = (s.tipo || '').toLowerCase();
-      return type.includes('challenge') || type.includes('cup') || Number(s.multiplicador) > 1.0;
+    const options = [];
+    if (premierConfig.eventoNome && premierConfig.eventoData) {
+      options.push({
+        data: premierConfig.eventoData,
+        label: `🏆 ${premierConfig.eventoNome} (${formatDateDDMMYY(premierConfig.eventoData)})`
+      });
+    }
+
+    chronologicalStages.slice(-6).reverse().forEach(stg => {
+      if (!options.some(o => o.data === stg.data)) {
+        options.push({
+          data: stg.data,
+          label: `📅 ${getStageDisplayName(stg, chronologicalStages)} (${formatDateDDMMYY(stg.data)})`
+        });
+      }
     });
 
-    const listToRender = premierStages.length > 0 ? premierStages : chronologicalStages.slice(-5);
-
-    eventSelect.innerHTML = listToRender.map(stg => {
-      const parts = stg.data.split('-');
-      const dateFmt = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : stg.data;
-      const title = getStageDisplayName(stg, chronologicalStages);
-      return `<option value="${escapeHTML(stg.data)}">${escapeHTML(title)} (${dateFmt})</option>`;
-    }).join('');
-
-    if (defaultStageDate && eventSelect.querySelector(`option[value="${defaultStageDate}"]`)) {
+    eventSelect.innerHTML = options.map(o => `<option value="${escapeHTML(o.data)}">${escapeHTML(o.label)}</option>`).join('');
+    if (defaultStageDate && options.some(o => o.data === defaultStageDate)) {
       eventSelect.value = defaultStageDate;
+    } else if (premierConfig.eventoData) {
+      eventSelect.value = premierConfig.eventoData;
     }
+  }
+
+  // 3. Sugestões de Jogadores Cadastrados
+  const suggestDatalist = document.getElementById('decklist-players-suggest');
+  if (suggestDatalist && appData.JogadoresSheet) {
+    suggestDatalist.innerHTML = appData.JogadoresSheet.map(j => {
+      const name = j.Jogador || j.jogador || '';
+      return name ? `<option value="${escapeHTML(name)}">` : '';
+    }).join('');
   }
 
   updateDecklistCategoryBadge();
@@ -5560,6 +5654,19 @@ window.openDecklistModal = function(defaultStageDate = '') {
 
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
+};
+
+window.copyPixKey = function() {
+  const pixKey = appData.Configuracoes?.inscricoesPremier?.chavePix || document.getElementById('decklist-banner-pix-key')?.innerText || '';
+  if (!pixKey || pixKey === 'A definir') {
+    alert("Chave PIX não configurada no momento.");
+    return;
+  }
+  navigator.clipboard.writeText(pixKey).then(() => {
+    alert(`Chave PIX copiada:\n${pixKey}\n\nEnvie o comprovante para a organização da Liga Atlântica!`);
+  }).catch(() => {
+    prompt("Copie a Chave PIX:", pixKey);
+  });
 };
 
 window.closeDecklistModal = function() {

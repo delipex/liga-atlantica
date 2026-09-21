@@ -11,6 +11,19 @@
     "proximoEvento": {
         "ativo": true
     },
+    "inscricoesPremier": {
+        "abertas": true,
+        "eventoNome": "League Challenge #2 — Temporada 5",
+        "eventoData": "2026-09-26",
+        "eventoTipo": "Challenge",
+        "multiplicador": 1.5,
+        "valor": "35,00",
+        "limiteVagas": 32,
+        "chavePix": "felipe.damasceno@pix.com",
+        "titularPix": "Liga Atlântica TCG (Felipe Damasceno)",
+        "horario": "Check-in às 13:30 • Rodada 1 às 14:00",
+        "observacoes": "Traga sua decklist impressa ou envie diretamente pelo formulário online até as 13:45."
+    },
     "minEtapasPokebolaOuro": 2,
     "tamanhoPodio": 4,
     "historicalScoresTab": "ScoresAntigos"

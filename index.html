@@ -488,18 +488,56 @@ Siga-nos no Instagram
     </div>
   <!-- MODAL: INSCRIÇÃO & ENVIO DE DECKLIST (CUPS E CHALLENGES) -->
   <div class="modal-overlay" id="decklist-modal">
-    <div class="modal-container glass-card" style="max-width: 650px; padding: 1.75rem; max-height: 90vh; overflow-y: auto;">
+    <div class="modal-container glass-card" style="max-width: 680px; padding: 1.75rem; max-height: 90vh; overflow-y: auto;">
       <button class="modal-close-btn" onclick="closeDecklistModal()" aria-label="Fechar">✕</button>
-      <div class="modal-header" style="text-align: left; margin-bottom: 1.25rem;">
-        <div style="font-size: 0.8rem; color: var(--accent-yellow); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
-          Torneios Oficiais Premier
+      
+      <!-- Top Dynamic Event Banner -->
+      <div id="decklist-premier-hero" style="margin-bottom: 1.25rem; border-radius: 10px; padding: 1.1rem 1.25rem; background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%); border: 1px solid rgba(255, 203, 5, 0.25);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; flex-wrap: wrap;">
+          <div>
+            <span id="decklist-banner-type-badge" style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; background: rgba(255,203,5,0.2); color: var(--accent-yellow); padding: 3px 8px; border-radius: 6px; letter-spacing: 0.05em; border: 1px solid rgba(255,203,5,0.3);">
+              🏆 TORNEIO OFICIAL PREMIER
+            </span>
+            <h2 id="decklist-banner-title" style="font-size: 1.35rem; color: #fff; margin: 0.4rem 0 0.2rem 0; font-weight: 800;">
+              League Challenge #2 — Temporada 5
+            </h2>
+            <div id="decklist-banner-schedule" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">
+              📅 26/09/2026 • Check-in às 13:30 • Rodada 1 às 14:00
+            </div>
+          </div>
+          <div id="decklist-banner-status" style="font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">
+            🟢 Inscrições Abertas
+          </div>
         </div>
-        <h2 style="font-size: 1.35rem; color: #fff; margin: 0.25rem 0;">
-          📋 Inscrição & Envio de Decklist
-        </h2>
-        <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">
-          Inscrição oficial para League Cups e League Challenges da Liga Atlântica.
-        </p>
+
+        <!-- Badges de Vagas e Valor -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-top: 0.85rem;">
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 0.5rem 0.75rem;">
+            <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Taxa de Inscrição</div>
+            <div id="decklist-banner-fee" style="font-size: 1.1rem; font-weight: 800; color: #10b981; margin-top: 2px;">R$ 35,00</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 0.5rem 0.75rem;">
+            <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Vagas Disponíveis</div>
+            <div id="decklist-banner-spots" style="font-size: 1.1rem; font-weight: 800; color: #60a5fa; margin-top: 2px;">0 / 32 inscritos</div>
+          </div>
+        </div>
+
+        <!-- Box de Chave PIX com Cópia Rápida -->
+        <div id="decklist-banner-pix-box" style="margin-top: 0.85rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 6px; padding: 0.65rem 0.85rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
+          <div style="font-size: 0.78rem;">
+            <span style="color: #10b981; font-weight: 700;">💳 Chave PIX:</span> 
+            <code id="decklist-banner-pix-key" style="color: #fff; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: 4px;">felipe.damasceno@pix.com</code>
+            <div id="decklist-banner-pix-name" style="font-size: 0.72rem; color: #a7f3d0; margin-top: 2px;">Liga Atlântica TCG (Felipe Damasceno)</div>
+          </div>
+          <button type="button" class="btn" onclick="copyPixKey()" style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.75rem; background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.4); color: #10b981;">
+            📋 Copiar PIX
+          </button>
+        </div>
+
+        <!-- Alerta de Inscrições Encerradas -->
+        <div id="decklist-closed-alert" style="display: none; margin-top: 0.85rem; padding: 0.65rem 0.85rem; border-radius: 6px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; font-size: 0.8rem; font-weight: 600; text-align: center;">
+          ⛔ As inscrições online para este torneio estão atualmente encerradas. Caso tenha dúvidas, consulte a organização.
+        </div>
       </div>
 
       <form id="decklist-form" onsubmit="event.preventDefault(); submitDecklistWhatsApp();">
@@ -603,7 +641,7 @@ Siga-nos no Instagram
           <button type="button" class="btn" onclick="copyDecklistSubmission()" style="font-size: 0.82rem; padding: 0.5rem 0.9rem; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: #fff;">
             📋 Copiar Inscrição
           </button>
-          <button type="submit" class="btn btn-whatsapp" style="font-size: 0.85rem; font-weight: 700; padding: 0.5rem 1.1rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+          <button type="submit" id="decklist-submit-wa-btn" class="btn btn-whatsapp" style="font-size: 0.85rem; font-weight: 700; padding: 0.5rem 1.1rem; display: inline-flex; align-items: center; gap: 0.4rem;">
             📲 Enviar Inscrição via WhatsApp
           </button>
         </div>
