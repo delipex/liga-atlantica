@@ -3105,6 +3105,62 @@ function calculatePokebolaMurchaCandidates(rankingData, cleanStages = []) {
 }
 
 /* ==========================================================================
+   CÁLCULO DO DITTO PLAYER - MAIOR VARIEDADE DE DECKS & VERSATILIDADE
+   ========================================================================== */
+function calculateDittoCandidates(rankingData, cleanStages = []) {
+  const dittoCandidates = [];
+  const stagesList = (cleanStages && cleanStages.length > 0) ? cleanStages : (stagesIndex || appData.Etapas || []);
+  const validStages = stagesList.filter(s => s && typeof s.data === 'string');
+  const cupChallengeStages = validStages.filter(s => {
+    const t = String(s.tipo || '').toLowerCase();
+    return t.includes('cup') || t.includes('challenge') || t.includes('copa') || t.includes('desafio');
+  });
+
+  (rankingData || []).forEach(r => {
+    if (!r) return;
+    const playerName = r.Jogador || r.Player || r.Name;
+    if (!playerName) return;
+    
+    const uniqueDecksNormalized = new Set();
+    const uniqueDecksOriginal = [];
+    validStages.forEach(stage => {
+      if (!stage || !stage.data) return;
+      const deck = getDeckForStage(playerName, stage.data, r.ID);
+      if (deck && deck !== 'Não registrado' && deck !== 'Sem deck registrado' && deck !== 'Desconhecido') {
+        const trimmedDeck = deck.trim();
+        const normDeck = trimmedDeck.toLowerCase();
+        if (!uniqueDecksNormalized.has(normDeck)) {
+          uniqueDecksNormalized.add(normDeck);
+          uniqueDecksOriginal.push(trimmedDeck);
+        }
+      }
+    });
+    
+    if (uniqueDecksNormalized.size > 0) {
+      const partCount = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data, r.ID) !== null).length;
+      const mediaColocacao = toNumber(r.MediaColocacao);
+      dittoCandidates.push({
+        player: playerName,
+        count: uniqueDecksNormalized.size,
+        decks: uniqueDecksOriginal,
+        participations: partCount,
+        mediaColocacao: mediaColocacao
+      });
+    }
+  });
+
+  dittoCandidates.sort((a, b) => {
+    if (b.count !== a.count) return b.count - a.count;
+    const mediaA = a.mediaColocacao > 0 ? a.mediaColocacao : 999999;
+    const mediaB = b.mediaColocacao > 0 ? b.mediaColocacao : 999999;
+    if (mediaA !== mediaB) return mediaA - mediaB;
+    return b.participations - a.participations;
+  });
+
+  return dittoCandidates;
+}
+
+/* ==========================================================================
    MODO TELÃO DA LOJA (TV BROADCAST DISPLAY MODE)
    ========================================================================== */
 let tvModeActive = false;
@@ -3205,7 +3261,7 @@ function renderTvSlide(slideIdx) {
   const ranking = appData.Ranking || [];
 
   if (slideIdx === 0) {
-    // Slide 1: Top 4 Podium
+    // Slide 1: Top 4 Podium Oficial com Decks Reais Resolvidos
     if (titleEl) titleEl.innerText = 'TOP 4 DA TEMPORADA';
     const top4 = ranking.slice(0, 4);
     const badges = ['🥇', '🥈', '🥉', '🎖️'];
@@ -3213,14 +3269,18 @@ function renderTvSlide(slideIdx) {
     body.innerHTML = `
       <div class="tv-podium-grid">
         ${top4.map((player, idx) => {
+          const resolvedDeck = (player.Deck && player.Deck !== 'Não registrado' && player.Deck !== 'Sem deck registrado' && isNaN(Number(player.Deck)))
+            ? player.Deck
+            : (getLatestDeckForPlayer(player.Jogador, player.ID) || 'Sem deck registrado');
+
           return `
             <div class="tv-podium-card rank-${idx + 1}">
               <div class="tv-podium-badge">${badges[idx]}</div>
               <div class="tv-podium-name">${escapeHTML(player.Jogador)}</div>
               <div class="tv-podium-score">${toNumber(player.Pontos)} PTS</div>
-              <div class="tv-podium-deck">${escapeHTML(player.Deck || 'Deck Não Registrado')}</div>
+              <div class="tv-podium-deck">${escapeHTML(resolvedDeck)}</div>
               <div style="margin-top:10px; font-size:0.85rem; color:var(--text-secondary);">
-                ${player.Vitorias || 0}V • ${player.Empates || 0}E • ${player.Derrotas || 0}D
+                ${player.Vitorias || 0}V • ${player.Empates || 0}E • ${player.Derrotas || 0}D (${toNumber(player.Podio)} pódios)
               </div>
             </div>
           `;
@@ -3228,7 +3288,7 @@ function renderTvSlide(slideIdx) {
       </div>
     `;
   } else if (slideIdx === 1) {
-    // Slide 2: Top 12 Leaderboard
+    // Slide 2: Top 12 Leaderboard Geral
     if (titleEl) titleEl.innerText = 'CLASSIFICAÇÃO GERAL';
     const top12 = ranking.slice(0, 12);
     const col1 = top12.slice(0, 6);
@@ -3243,7 +3303,10 @@ function renderTvSlide(slideIdx) {
                 <strong style="color:var(--accent-yellow); min-width:28px;">${idx + 1}º</strong>
                 <span>${escapeHTML(p.Jogador)}</span>
               </div>
-              <strong style="color:#fff;">${toNumber(p.Pontos)} PTS</strong>
+              <div style="display:flex; align-items:center; gap:14px;">
+                <span style="font-size:0.82rem; color:var(--text-secondary);">${p.Vitorias || 0}V-${p.Empates || 0}E-${p.Derrotas || 0}D</span>
+                <strong style="color:#fff;">${toNumber(p.Pontos)} PTS</strong>
+              </div>
             </div>
           `).join('')}
         </div>
@@ -3254,14 +3317,17 @@ function renderTvSlide(slideIdx) {
                 <strong style="color:var(--text-secondary); min-width:28px;">${idx + 7}º</strong>
                 <span>${escapeHTML(p.Jogador)}</span>
               </div>
-              <strong style="color:#fff;">${toNumber(p.Pontos)} PTS</strong>
+              <div style="display:flex; align-items:center; gap:14px;">
+                <span style="font-size:0.82rem; color:var(--text-secondary);">${p.Vitorias || 0}V-${p.Empates || 0}E-${p.Derrotas || 0}D</span>
+                <strong style="color:#fff;">${toNumber(p.Pontos)} PTS</strong>
+              </div>
             </div>
           `).join('')}
         </div>
       </div>
     `;
   } else if (slideIdx === 2) {
-    // Slide 3: Premiações da Temporada
+    // Slide 3: Premiações da Temporada com Cálculos Precisos
     if (titleEl) titleEl.innerText = 'PREMIAÇÕES DA TEMPORADA (EM DISPUTA)';
 
     const goldCandidates = calculatePokebolaDeOuroCandidates(ranking);
@@ -3277,6 +3343,9 @@ function renderTvSlide(slideIdx) {
         mostActive = { player: p.Jogador, part };
       }
     });
+
+    const dittoCandidates = calculateDittoCandidates(ranking, appData.Etapas || []);
+    const bestDitto = dittoCandidates[0] || null;
 
     body.innerHTML = `
       <div class="tv-awards-grid">
@@ -3297,8 +3366,8 @@ function renderTvSlide(slideIdx) {
         <div class="tv-award-card" style="border-color:rgba(141,86,255,0.4);">
           <div class="tv-award-icon">🧬</div>
           <div class="tv-award-title">Ditto Player</div>
-          <div class="tv-award-player">${ranking[0] ? escapeHTML(ranking[0].Jogador) : '-'}</div>
-          <div class="tv-award-stat">Maior versatilidade de decks</div>
+          <div class="tv-award-player">${bestDitto ? escapeHTML(bestDitto.player) : '-'}</div>
+          <div class="tv-award-stat">${bestDitto ? `${bestDitto.count} Decks Diferentes jogados` : 'Maior versatilidade'}</div>
         </div>
 
         <div class="tv-award-card" style="border-color:rgba(239,68,68,0.4);">
@@ -3309,6 +3378,60 @@ function renderTvSlide(slideIdx) {
         </div>
       </div>
     `;
+  } else if (slideIdx === 3) {
+    // Slide 4: Próximos Torneios & Calendário Oficial
+    if (titleEl) titleEl.innerText = 'PRÓXIMOS TORNEIOS & CALENDÁRIO';
+    const events = appData.Calendario || [];
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const upcoming = events.filter(e => {
+      const rawDate = e.data || e.Data || '';
+      const d = parseDateSafe(rawDate);
+      return isNaN(d) || d >= startOfToday;
+    }).slice(0, 4);
+
+    if (upcoming.length === 0) {
+      body.innerHTML = `
+        <div style="display:flex; justify-content:center; align-items:center; height:100%; color:var(--text-secondary); font-size:1.2rem;">
+          Nenhum evento agendado no momento. Acompanhe nosso grupo do WhatsApp!
+        </div>
+      `;
+    } else {
+      body.innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem; width:100%;">
+          ${upcoming.map((ev, i) => {
+            const date = ev.data || ev.Data || '';
+            const title = ev.evento || ev.Evento || ev.titulo || 'Torneio';
+            const time = ev.horario || ev.Horario || '14:00';
+            const local = ev.local || ev.Local || 'Livraria Atlântica +';
+            const status = (ev.status || ev.Status || 'confirmado').toUpperCase();
+            const desc = ev.descricao || ev.Descricao || '';
+            const isHighlight = i === 0;
+
+            return `
+              <div class="tv-award-card" style="border-color:${isHighlight ? 'var(--accent-yellow)' : 'rgba(255,255,255,0.1)'}; background:${isHighlight ? 'rgba(255,203,5,0.06)' : 'rgba(255,255,255,0.02)'}; text-align:left; display:flex; flex-direction:column; justify-content:space-between; padding:1.25rem;">
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:0.75rem; font-weight:800; color:var(--accent-yellow); text-transform:uppercase;">${isHighlight ? '🔥 PRÓXIMO EVENTO' : '📅 AGENDADO'}</span>
+                    <span style="font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(16,185,129,0.2); color:#10b981;">${escapeHTML(status)}</span>
+                  </div>
+                  <div style="font-size:1.2rem; font-weight:800; color:#fff; margin-bottom:8px; line-height:1.2;">
+                    ${escapeHTML(title)}
+                  </div>
+                  <div style="font-size:0.9rem; color:var(--accent-yellow); margin-bottom:4px; font-weight:600;">
+                    📅 ${formatDateBR(date)} • 🕒 ${escapeHTML(time)}
+                  </div>
+                  <div style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:8px;">
+                    📍 ${escapeHTML(local)}
+                  </div>
+                  ${desc ? `<div style="font-size:0.78rem; color:#cbd5e1; line-height:1.35; margin-top:6px;">${escapeHTML(desc)}</div>` : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
   }
 }
 

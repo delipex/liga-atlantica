@@ -12,7 +12,7 @@
         "ativo": true
     },
     "inscricoesPremier": {
-        "abertas": true,
+        "abertas": false,
         "eventoNome": "League Challenge #2 — Temporada 5",
         "subtitulo": "Valendo 15 Championship Points (CP) + Premiação em Boosters",
         "eventoData": "2026-09-26",
