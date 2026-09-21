@@ -1651,7 +1651,7 @@
 
         <div class="form-group" style="margin-bottom: 1rem;">
           <label for="calendar-edit-title">Título do Evento</label>
-          <input type="text" id="calendar-edit-title" class="search-input" placeholder="Ex: Sessão de Liga Especial #4" required>
+          <input type="text" id="calendar-edit-title" class="search-input" placeholder="Ex: League Cup #1 ou League Challenge #2" required oninput="onCalendarTitleInput(this.value)">
         </div>
 
         <div class="form-row" style="margin-bottom: 1rem;">
@@ -1667,6 +1667,83 @@
               <option value="concluido">Concluído</option>
               <option value="cancelado">Cancelado</option>
             </select>
+          </div>
+        </div>
+
+        <!-- Seção Integrada: Inscrições & Decklist Premier -->
+        <div style="margin-bottom: 1rem; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(255, 203, 5, 0.06); border: 1px solid rgba(255, 203, 5, 0.25);">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+            <label style="font-size: 0.82rem; font-weight: 700; color: var(--accent-yellow); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin: 0;">
+              <input type="checkbox" id="cal-edit-open-premier" style="width: 17px; height: 17px; accent-color: var(--accent-yellow); cursor: pointer;" onchange="toggleCalPremierFields(this.checked)">
+              <span>📋 Abrir Inscrições & Decklist Online para este Evento (Cup/Challenge)</span>
+            </label>
+            <span id="cal-edit-premier-pill" style="font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); display: none;">
+              🟢 Ativo no Site
+            </span>
+          </div>
+          <p style="font-size: 0.72rem; color: var(--text-secondary); margin: 4px 0 0 0; line-height: 1.35;">
+            Ao cadastrar um Cup ou Challenge, esta opção ativa o formulário público no site para recebimento de inscrições, comprovantes PIX e decklists.
+          </p>
+
+          <!-- Campos Expansíveis de Configuração do Premier -->
+          <div id="cal-edit-premier-fields" style="display: none; margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px solid rgba(255, 203, 5, 0.15);">
+            <div class="form-row" style="margin-bottom: 0.75rem; display: grid; grid-template-columns: 1fr 1.5fr; gap: 0.75rem;">
+              <div class="form-group">
+                <label for="cal-premier-tipo" style="font-size: 0.74rem;">Tipo Premier</label>
+                <select id="cal-premier-tipo" class="search-input" style="width: 100%; font-size: 0.8rem;">
+                  <option value="Cup">League Cup (1.5x)</option>
+                  <option value="Challenge">League Challenge (1.5x)</option>
+                  <option value="Especial">Torneio Especial</option>
+                  <option value="Liga">Sessão Regular</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="cal-premier-subtitulo" style="font-size: 0.74rem;">Destaque / Premiação</label>
+                <input type="text" id="cal-premier-subtitulo" class="search-input" style="font-size: 0.8rem;" placeholder="Ex: Valendo 50 CP + Troféu + Boosters">
+              </div>
+            </div>
+
+            <div class="form-row" style="margin-bottom: 0.75rem; display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 0.75rem;">
+              <div class="form-group">
+                <label for="cal-premier-valor" style="font-size: 0.74rem;">Taxa (R$)</label>
+                <input type="text" id="cal-premier-valor" class="search-input" style="font-size: 0.8rem;" placeholder="Ex: 35,00" value="35,00">
+              </div>
+              <div class="form-group">
+                <label for="cal-premier-vagas" style="font-size: 0.74rem;">Vagas</label>
+                <input type="number" id="cal-premier-vagas" class="search-input" style="font-size: 0.8rem;" min="4" max="128" placeholder="Ex: 32" value="32">
+              </div>
+              <div class="form-group">
+                <label for="cal-premier-exigir-dl" style="font-size: 0.74rem;">Exigência de Decklist</label>
+                <select id="cal-premier-exigir-dl" class="search-input" style="width: 100%; font-size: 0.8rem;">
+                  <option value="true">📜 Obrigatória (60 cartas)</option>
+                  <option value="false">📝 Opcional (até a R1)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row" style="margin-bottom: 0.75rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+              <div class="form-group">
+                <label for="cal-premier-pix" style="font-size: 0.74rem;">Chave PIX</label>
+                <input type="text" id="cal-premier-pix" class="search-input" style="font-size: 0.8rem;" placeholder="Ex: chave@pix.com">
+              </div>
+              <div class="form-group">
+                <label for="cal-premier-titular" style="font-size: 0.74rem;">Favorecido / Titular</label>
+                <input type="text" id="cal-premier-titular" class="search-input" style="font-size: 0.8rem;" placeholder="Ex: Liga Atlântica TCG">
+              </div>
+              <div class="form-group">
+                <label for="cal-premier-tema" style="font-size: 0.74rem;">Tema de Energia</label>
+                <select id="cal-premier-tema" class="search-input" style="width: 100%; font-size: 0.8rem;">
+                  <option value="lightning">⚡ Lightning / Amarelo</option>
+                  <option value="fire">🔥 Fire / Vermelho</option>
+                  <option value="water">💧 Water / Azul</option>
+                  <option value="psychic">🔮 Psychic / Roxo</option>
+                  <option value="grass">🌿 Grass / Verde</option>
+                  <option value="darkness">🌑 Darkness / Escuro</option>
+                  <option value="dragon">🐉 Dragon / Dourado</option>
+                  <option value="metal">⚙️ Metal / Prateado</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -5633,8 +5710,8 @@
           : '';
 
         const premierActionBtn = isPremierActive
-          ? `<button type="button" class="btn" onclick="activatePremierFromCalendar(${ev._origIndex})" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; font-weight: 700; background: rgba(16, 185, 129, 0.2); color: #10b981; border-color: rgba(16, 185, 129, 0.4);" title="Inscrições abertas no site. Clique para gerenciar.">⚙️ Inscrições Ativas</button>`
-          : `<button type="button" class="btn" onclick="activatePremierFromCalendar(${ev._origIndex})" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; background: rgba(129, 140, 248, 0.12); color: #c7d2fe; border-color: rgba(129, 140, 248, 0.3); font-weight: 600;" title="Abrir inscrições e formulário de decklist no site para este evento">📋 Ativar Inscrição</button>`;
+          ? `<button type="button" class="btn" onclick="openEditCalendarModal(${ev._origIndex}, true)" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; font-weight: 700; background: rgba(16, 185, 129, 0.2); color: #10b981; border-color: rgba(16, 185, 129, 0.4);" title="Inscrições abertas no site. Clique para editar ou gerenciar.">⚙️ Inscrições Ativas</button>`
+          : `<button type="button" class="btn" onclick="openEditCalendarModal(${ev._origIndex}, true)" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; background: rgba(129, 140, 248, 0.12); color: #c7d2fe; border-color: rgba(129, 140, 248, 0.3); font-weight: 600;" title="Abrir inscrições e formulário de decklist no site para este evento">📋 Ativar Inscrição</button>`;
 
         return `
           <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; opacity: ${isPast ? '0.75' : '1'};">
@@ -5671,11 +5748,46 @@
       }).join('');
     }
 
-    function filterCalendarCatalog() {
-      renderCalendarCatalog();
+    function toggleCalPremierFields(isOpen) {
+      const fields = document.getElementById('cal-edit-premier-fields');
+      const pill = document.getElementById('cal-edit-premier-pill');
+      if (fields) fields.style.display = isOpen ? 'block' : 'none';
+      if (pill) pill.style.display = isOpen ? 'inline-block' : 'none';
+    }
+
+    function onCalendarTitleInput(title) {
+      const tLow = (title || '').toLowerCase();
+      const chk = document.getElementById('cal-edit-open-premier');
+      const tipoEl = document.getElementById('cal-premier-tipo');
+      const subtituloEl = document.getElementById('cal-premier-subtitulo');
+      const temaEl = document.getElementById('cal-premier-tema');
+
+      if (tLow.includes('cup')) {
+        if (chk && !chk.checked) {
+          chk.checked = true;
+          toggleCalPremierFields(true);
+        }
+        if (tipoEl) tipoEl.value = 'Cup';
+        if (subtituloEl && !subtituloEl.value) subtituloEl.value = 'Valendo 50 Championship Points (CP) + Troféu Oficial';
+        if (temaEl && temaEl.value === 'lightning') temaEl.value = 'lightning';
+      } else if (tLow.includes('challenge')) {
+        if (chk && !chk.checked) {
+          chk.checked = true;
+          toggleCalPremierFields(true);
+        }
+        if (tipoEl) tipoEl.value = 'Challenge';
+        if (subtituloEl && !subtituloEl.value) subtituloEl.value = 'Valendo 15 Championship Points (CP) + Premiação em Boosters';
+      } else if (tLow.includes('especial')) {
+        if (chk && !chk.checked) {
+          chk.checked = true;
+          toggleCalPremierFields(true);
+        }
+        if (tipoEl) tipoEl.value = 'Especial';
+      }
     }
 
     function openNewCalendarModal() {
+      const pConf = cachedConfig?.inscricoesPremier || {};
       document.getElementById('calendar-modal-title').innerText = '📅 Cadastrar Novo Evento';
       document.getElementById('calendar-edit-index').value = '-1';
       document.getElementById('calendar-edit-date').value = '';
@@ -5687,28 +5799,95 @@
       document.getElementById('calendar-edit-maps').value = 'https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6';
       document.getElementById('calendar-edit-signup').value = '';
       document.getElementById('calendar-edit-photo').value = '';
+
+      // Reset Premier sub-fields
+      const chk = document.getElementById('cal-edit-open-premier');
+      if (chk) chk.checked = false;
+      toggleCalPremierFields(false);
+
+      const tipoEl = document.getElementById('cal-premier-tipo');
+      const subtituloEl = document.getElementById('cal-premier-subtitulo');
+      const valorEl = document.getElementById('cal-premier-valor');
+      const vagasEl = document.getElementById('cal-premier-vagas');
+      const exigirDlEl = document.getElementById('cal-premier-exigir-dl');
+      const pixEl = document.getElementById('cal-premier-pix');
+      const titularEl = document.getElementById('cal-premier-titular');
+      const temaEl = document.getElementById('cal-premier-tema');
+
+      if (tipoEl) tipoEl.value = 'Cup';
+      if (subtituloEl) subtituloEl.value = '';
+      if (valorEl) valorEl.value = pConf.valor || '35,00';
+      if (vagasEl) vagasEl.value = pConf.limiteVagas || 32;
+      if (exigirDlEl) exigirDlEl.value = 'true';
+      if (pixEl) pixEl.value = pConf.chavePix || '';
+      if (titularEl) titularEl.value = pConf.titularPix || '';
+      if (temaEl) temaEl.value = pConf.temaCor || 'lightning';
+
       document.getElementById('calendar-modal-error').style.display = 'none';
       document.getElementById('calendar-edit-modal').style.display = 'flex';
     }
 
-    function openEditCalendarModal(index) {
+    function openEditCalendarModal(index, forceOpenPremier = false) {
       const ev = cachedCalendario[index];
       if (!ev) {
         showError("Evento não encontrado.");
         return;
       }
 
-      document.getElementById('calendar-modal-title').innerText = `📅 Editar: ${ev.evento || ev.Evento || ev.titulo || 'Evento'}`;
+      const pConf = cachedConfig?.inscricoesPremier || {};
+      const evDate = ev.data || ev.Data || '';
+      const evTitle = ev.evento || ev.Evento || ev.titulo || ev.Titulo || '';
+
+      // Verifica se este evento é o que está ativo no config
+      let dateIso = evDate;
+      const parts = evDate.split(/[-/]/);
+      if (parts.length === 3) {
+        if (parts[0].length === 4) dateIso = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+        else dateIso = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+      }
+
+      const isMatchingPremier = (pConf.eventoData === dateIso || pConf.eventoData === evDate || (pConf.eventoNome && evTitle.toLowerCase() === pConf.eventoNome.toLowerCase()));
+      const shouldOpenPremier = forceOpenPremier || (isMatchingPremier && pConf.abertas !== false) || evTitle.toLowerCase().includes('cup') || evTitle.toLowerCase().includes('challenge');
+
+      document.getElementById('calendar-modal-title').innerText = `📅 Editar: ${evTitle}`;
       document.getElementById('calendar-edit-index').value = String(index);
-      document.getElementById('calendar-edit-date').value = ev.data || ev.Data || '';
+      document.getElementById('calendar-edit-date').value = evDate;
       document.getElementById('calendar-edit-time').value = ev.horario || ev.Horario || '';
-      document.getElementById('calendar-edit-title').value = ev.evento || ev.Evento || ev.titulo || ev.Titulo || '';
+      document.getElementById('calendar-edit-title').value = evTitle;
       document.getElementById('calendar-edit-location').value = ev.local || ev.Local || 'Livraria Atlântica +';
       document.getElementById('calendar-edit-status').value = (ev.status || ev.Status || 'confirmado').toLowerCase();
       document.getElementById('calendar-edit-desc').value = ev.descricao || ev.Descricao || '';
       document.getElementById('calendar-edit-maps').value = ev.linkMaps || ev.LinkMaps || '';
       document.getElementById('calendar-edit-signup').value = ev.linkInscricao || ev.LinkInscricao || '';
       document.getElementById('calendar-edit-photo').value = ev.foto || ev.Foto || '';
+
+      // Popula campos do Premier
+      const chk = document.getElementById('cal-edit-open-premier');
+      if (chk) chk.checked = shouldOpenPremier;
+      toggleCalPremierFields(shouldOpenPremier);
+
+      const tipoEl = document.getElementById('cal-premier-tipo');
+      const subtituloEl = document.getElementById('cal-premier-subtitulo');
+      const valorEl = document.getElementById('cal-premier-valor');
+      const vagasEl = document.getElementById('cal-premier-vagas');
+      const exigirDlEl = document.getElementById('cal-premier-exigir-dl');
+      const pixEl = document.getElementById('cal-premier-pix');
+      const titularEl = document.getElementById('cal-premier-titular');
+      const temaEl = document.getElementById('cal-premier-tema');
+
+      let detectedTipo = 'Cup';
+      if (evTitle.toLowerCase().includes('challenge')) detectedTipo = 'Challenge';
+      else if (evTitle.toLowerCase().includes('especial')) detectedTipo = 'Especial';
+
+      if (tipoEl) tipoEl.value = isMatchingPremier ? (pConf.eventoTipo || detectedTipo) : detectedTipo;
+      if (subtituloEl) subtituloEl.value = isMatchingPremier ? (pConf.subtitulo || '') : (detectedTipo === 'Cup' ? 'Valendo 50 Championship Points (CP) + Troféu Oficial' : 'Valendo 15 Championship Points (CP) + Premiação em Boosters');
+      if (valorEl) valorEl.value = isMatchingPremier ? (pConf.valor || '35,00') : (pConf.valor || '35,00');
+      if (vagasEl) vagasEl.value = isMatchingPremier ? (pConf.limiteVagas || 32) : (pConf.limiteVagas || 32);
+      if (exigirDlEl) exigirDlEl.value = isMatchingPremier ? (pConf.exigirDecklist !== false ? 'true' : 'false') : 'true';
+      if (pixEl) pixEl.value = pConf.chavePix || '';
+      if (titularEl) titularEl.value = pConf.titularPix || '';
+      if (temaEl) temaEl.value = isMatchingPremier ? (pConf.temaCor || 'lightning') : 'lightning';
+
       document.getElementById('calendar-modal-error').style.display = 'none';
       document.getElementById('calendar-edit-modal').style.display = 'flex';
     }
@@ -5743,6 +5922,16 @@
       const signup = document.getElementById('calendar-edit-signup').value.trim();
       const photo = document.getElementById('calendar-edit-photo').value.trim();
 
+      const isPremierChecked = document.getElementById('cal-edit-open-premier')?.checked === true;
+      const calTipo = document.getElementById('cal-premier-tipo')?.value || 'Cup';
+      const calSubtitulo = (document.getElementById('cal-premier-subtitulo')?.value || '').trim();
+      const calValor = (document.getElementById('cal-premier-valor')?.value || '').trim();
+      const calVagas = parseInt(document.getElementById('cal-premier-vagas')?.value, 10) || 32;
+      const calExigirDl = document.getElementById('cal-premier-exigir-dl')?.value === 'true';
+      const calPix = (document.getElementById('cal-premier-pix')?.value || '').trim();
+      const calTitular = (document.getElementById('cal-premier-titular')?.value || '').trim();
+      const calTema = document.getElementById('cal-premier-tema')?.value || 'lightning';
+
       if (!date || !title) {
         if (errBox) {
           errBox.innerText = "Por favor, preencha a data e o título do evento.";
@@ -5752,7 +5941,7 @@
       }
 
       submitBtn.disabled = true;
-      submitBtn.innerText = "⏳ Salvando...";
+      submitBtn.innerText = "⏳ Salvando Evento & Inscrições...";
 
       try {
         const updatedList = [...cachedCalendario];
@@ -5800,9 +5989,71 @@
         }
 
         cachedCalendario = updatedList;
+
+        // Se o checkbox de Premier estiver marcado, atualiza config.json com este evento imediatamente!
+        if (isPremierChecked) {
+          // Normaliza data para YYYY-MM-DD
+          let dateIso = date;
+          const parts = date.split(/[-/]/);
+          if (parts.length === 3) {
+            if (parts[0].length === 4) dateIso = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+            else dateIso = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+          }
+
+          const mult = (calTipo === 'Cup' || calTipo === 'Challenge') ? 1.5 : 1.0;
+          const updatedInscricoesPremier = {
+            ...(cachedConfig?.inscricoesPremier || {}),
+            abertas: true,
+            eventoNome: title,
+            subtitulo: calSubtitulo,
+            eventoData: dateIso,
+            eventoTipo: calTipo,
+            multiplicador: mult,
+            horario: time ? `Check-in às ${time} • Início da R1 logo em seguida` : 'Check-in às 13:30',
+            local: local,
+            valor: calValor || '35,00',
+            limiteVagas: calVagas,
+            exigirDecklist: calExigirDl,
+            chavePix: calPix || (cachedConfig?.inscricoesPremier?.chavePix || ''),
+            titularPix: calTitular || (cachedConfig?.inscricoesPremier?.titularPix || ''),
+            bannerUrl: photo || (cachedConfig?.inscricoesPremier?.bannerUrl || ''),
+            temaCor: calTema,
+            observacoes: desc || (cachedConfig?.inscricoesPremier?.observacoes || '')
+          };
+
+          const updatedConfig = {
+            ...(cachedConfig || {}),
+            inscricoesPremier: updatedInscricoesPremier
+          };
+
+          const confUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/config.json`;
+          let confSha = await getLatestSha(confUrl);
+
+          const confPayload = {
+            message: `Ativar inscrições Premier para "${title}" (${dateIso})`,
+            content: encodeBase64UTF8(JSON.stringify(updatedConfig, null, 4)),
+            branch: config.branch
+          };
+          if (confSha) confPayload.sha = confSha;
+
+          const confRes = await fetch(confUrl, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `token ${runtimeToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(confPayload)
+          });
+
+          if (confRes.ok) {
+            cachedConfig = updatedConfig;
+            renderAdminPremierConfig();
+          }
+        }
+
         renderCalendarCatalog();
         closeCalendarEditModal();
-        showSuccess(`📅 Evento "${title}" salvo com sucesso no calendário!`);
+        showSuccess(`📅 Evento "${title}" salvo com sucesso! ${isPremierChecked ? '📋 Inscrições online ativadas no site para este torneio!' : ''}`);
 
       } catch (err) {
         console.error("Erro ao salvar evento:", err);
