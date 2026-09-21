@@ -1152,7 +1152,18 @@ async function loadData() {
       return [];
     })();
 
-    const [ranking, loadedStages, jogadoresSheet, decks, metagame, calendario, campeoes, regras, galeria, scoresAntigos] = await Promise.all([
+    let decklistsPromise = (async () => {
+      try {
+        const res = await fetch(`decklists.json?v=${timestamp}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) return data;
+        }
+      } catch (e) {}
+      return [];
+    })();
+
+    const [ranking, loadedStages, jogadoresSheet, decks, metagame, calendario, campeoes, regras, galeria, scoresAntigos, decklists] = await Promise.all([
       rankingPromise,
       stagesPromise,
       jogadoresPromise,
@@ -1162,7 +1173,8 @@ async function loadData() {
       campeoesPromise,
       regrasPromise,
       galeriaPromise,
-      scoresAntigosPromise
+      scoresAntigosPromise,
+      decklistsPromise
     ]);
 
     stagesIndex = loadedStages || [];
@@ -1177,8 +1189,14 @@ async function loadData() {
     if (campeoes && campeoes.length) appData.Campeoes = campeoes;
     if (regras && regras.length) appData.Regras = regras;
     if (galeria && galeria.length) appData.Galeria = galeria;
+    appData.Decklists = decklists || [];
 
     isOfflineMode = false;
+    
+    // Pré-carregamento não bloqueante de pontos por etapa em background
+    if (typeof preloadStageScores === 'function') {
+      preloadStageScores().catch(e => console.warn("Preload stage scores error:", e));
+    }
 
     if (statusBadge) {
       const statusTemporada = appData.Configuracoes?.StatusTemporada || 'ativa';
@@ -1725,6 +1743,20 @@ function renderRankingTable(players, page = 1) {
               <span style="display:inline-block;vertical-align:middle;">${energyDot}</span>
               <span style="font-size:0.68rem; font-weight:500; color:var(--text-secondary); max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:middle;">${escapeHTML(deckName)}</span>
             </div>
+          `;
+        }
+
+        // Checa se o jogador possui decklist oficial cadastrada nesta etapa
+        const hasDecklist = (appData.Decklists || []).find(dl => 
+          (dl.etapaData === selector.value || dl.data === selector.value) && 
+          ((dl.id && String(dl.id).trim() === String(player.ID).trim()) || 
+           normalizePlayerName(dl.nome || dl.jogador) === normalizePlayerName(player.Jogador))
+        );
+        if (hasDecklist) {
+          deckIconHtml += `
+            <button type="button" class="btn" onclick="event.stopPropagation(); openDecklistViewerModal('${escapeHTML(hasDecklist.id || player.ID || '')}', '${escapeHTML(selector.value)}')" style="padding: 2px 6px; font-size: 0.68rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 4px; margin-left: 4px;" title="Ver lista de 60 cartas oficial deste jogador">
+              📄 Lista
+            </button>
           `;
         }
       }
@@ -2415,6 +2447,128 @@ function closeLightbox() {
   document.body.style.overflow = '';
 }
 
+let stageScoresCache = null;
+let isPreloadingScores = false;
+
+async function preloadStageScores() {
+  if (stageScoresCache) return stageScoresCache;
+  if (isPreloadingScores) return null;
+  isPreloadingScores = true;
+  stageScoresCache = {};
+
+  const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
+  if (cleanStages.length === 0) {
+    isPreloadingScores = false;
+    return stageScoresCache;
+  }
+
+  const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  let baseRankingUrl = (typeof githubSources !== 'undefined' && githubSources.Ranking) ? githubSources.Ranking : '';
+  if (window.latestCommitSha && baseRankingUrl) {
+    baseRankingUrl = baseRankingUrl.replace(/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)/, `/raw.githubusercontent.com/$1/$2/${window.latestCommitSha}`);
+  }
+
+  const promises = cleanStages.map(async stg => {
+    try {
+      let stageTdfUrl = '';
+      if (isLocalHost) {
+        stageTdfUrl = `etapas/${stg.data}.tdf?v=${new Date().getTime()}`;
+      } else if (baseRankingUrl) {
+        stageTdfUrl = baseRankingUrl.replace('ranking.tdf', `etapas/${stg.data}.tdf`);
+      } else {
+        stageTdfUrl = `etapas/${stg.data}.tdf`;
+      }
+
+      const res = await fetch(stageTdfUrl);
+      if (res.ok) {
+        const text = await res.text();
+        const rows = parseTDF(text);
+        const mult = Number(stg.multiplicador) || 1.0;
+        const playerMap = new Map();
+
+        rows.forEach(r => {
+          const rawId = getPlayerId(r);
+          const cleanId = rawId ? String(rawId).trim() : '';
+          const rawName = r.Jogador || r.Player || r.Name || '';
+          const normName = normalizePlayerName(rawName);
+          const rawPts = Number(getFirstDefined(r, ['Pontos', 'Points', 'Pts'])) || 0;
+          const finalPts = rawPts * mult;
+
+          if (cleanId) playerMap.set(cleanId, finalPts);
+          if (normName) playerMap.set(normName, finalPts);
+        });
+        stageScoresCache[stg.data] = playerMap;
+      }
+    } catch (e) {
+      console.warn("Falha ao carregar pontuação da etapa " + stg.data, e);
+    }
+  });
+
+  await Promise.allSettled(promises);
+  isPreloadingScores = false;
+  return stageScoresCache;
+}
+
+function renderPlayerTimeline(player) {
+  const timelineContainer = document.getElementById('modal-player-timeline');
+  if (!timelineContainer) return;
+  timelineContainer.innerHTML = '';
+  const historyStr = player.HistoricoColocacoes || '';
+  if (!historyStr) {
+    timelineContainer.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;padding:0.25rem 0;">Sem histórico nesta temporada.</div>';
+    return;
+  }
+
+  const historyArr = String(historyStr).split(';');
+  const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
+  const chronologicalStages = [...cleanStages].sort((a, b) => a.data.localeCompare(b.data));
+
+  const stepsHtml = historyArr.map((pos, index) => {
+    const stageInfo = chronologicalStages[index] || stagesIndex[index];
+    const stageLabel = stageInfo ? getStageShortCode(stageInfo, chronologicalStages) : `E${index + 1}`;
+    let dateLabel = '-';
+    if (stageInfo && stageInfo.data) {
+      const parts = stageInfo.data.split('-');
+      dateLabel = parts.length === 3 ? `${parts[2]}/${parts[1]}` : stageInfo.data;
+    }
+    const stageTitle = stageInfo ? getStageDisplayName(stageInfo, chronologicalStages) : `Etapa ${index + 1}`;
+    const isParticipating = pos !== '-' && pos !== '' && !isNaN(Number(pos));
+    const isPodiumClass = isParticipating && toNumber(pos) <= 4 ? 'podium' : '';
+    const emptyClass = !isParticipating ? 'step-empty' : '';
+    const posText = isParticipating ? `${pos}º` : '-';
+
+    // Obter pontuação da etapa para o jogador
+    let ptsText = '-';
+    let ptsVal = null;
+    if (isParticipating && stageInfo && stageScoresCache && stageScoresCache[stageInfo.data]) {
+      const stageMap = stageScoresCache[stageInfo.data];
+      const cleanId = player.ID ? String(player.ID).trim() : '';
+      const normName = normalizePlayerName(player.Jogador);
+      if (cleanId && stageMap.has(cleanId)) {
+        ptsVal = stageMap.get(cleanId);
+      } else if (normName && stageMap.has(normName)) {
+        ptsVal = stageMap.get(normName);
+      }
+    }
+
+    if (ptsVal !== null && !isNaN(ptsVal)) {
+      ptsText = `+${toNumber(ptsVal)} pts`;
+    } else if (isParticipating) {
+      ptsText = '...';
+    }
+
+    return `
+      <div class="timeline-step ${isPodiumClass} ${emptyClass}" title="${escapeHTML(stageTitle)}: ${posText} ${ptsVal !== null ? '(' + ptsText + ')' : ''}">
+        <span class="step-num">${escapeHTML(stageLabel)}</span>
+        <span class="step-pos">${posText}</span>
+        <span class="step-pts ${!isParticipating ? 'step-pts-empty' : ''}">${ptsText}</span>
+        <span class="step-date">${dateLabel}</span>
+      </div>
+    `;
+  }).join('');
+  timelineContainer.innerHTML = stepsHtml;
+}
+
 window.openPlayerModal = function(playerRef, playerIdRef = '') {
   const modal = document.getElementById('player-modal');
   let player = null;
@@ -2545,39 +2699,52 @@ window.openPlayerModal = function(playerRef, playerIdRef = '') {
     }
   }
 
-  // Timeline
-  const timelineContainer = document.getElementById('modal-player-timeline');
-  if (timelineContainer) {
-    timelineContainer.innerHTML = '';
-    const historyStr = player.HistoricoColocacoes || '';
-    if (!historyStr) {
-      timelineContainer.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;padding:0.25rem 0;">Sem histórico nesta temporada.</div>';
-    } else {
-      const historyArr = String(historyStr).split(';');
-      const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
-      const chronologicalStages = [...cleanStages].sort((a, b) => a.data.localeCompare(b.data));
-
-      const stepsHtml = historyArr.map((pos, index) => {
-        const stageInfo = chronologicalStages[index] || stagesIndex[index];
-        const stageLabel = stageInfo ? getStageShortCode(stageInfo, chronologicalStages) : `E${index + 1}`;
-        let dateLabel = '-';
-        if (stageInfo && stageInfo.data) {
-          const parts = stageInfo.data.split('-');
-          dateLabel = parts.length === 3 ? `${parts[2]}/${parts[1]}` : stageInfo.data;
-        }
-        const stageTitle = stageInfo ? getStageDisplayName(stageInfo, chronologicalStages) : `Etapa ${index + 1}`;
-        const isPodiumClass = pos !== '-' && toNumber(pos) <= 4 ? 'podium' : '';
-        const posText = pos !== '-' ? `${pos}º` : '-';
-        return `
-          <div class="timeline-step ${isPodiumClass}" title="${escapeHTML(stageTitle)}: ${posText}">
-            <span class="step-num">${escapeHTML(stageLabel)}</span>
-            <span class="step-pos">${posText}</span>
-            <span class="step-date">${dateLabel}</span>
-          </div>
-        `;
-      }).join('');
-      timelineContainer.innerHTML = stepsHtml;
+  // Marca d'água holográfica sutil do último deck usado
+  const watermarkEl = document.getElementById('modal-deck-watermark');
+  if (watermarkEl) {
+    let lastUsedDeck = '';
+    const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
+    const chronologicalStages = [...cleanStages].sort((a, b) => a.data.localeCompare(b.data));
+    for (let i = chronologicalStages.length - 1; i >= 0; i--) {
+      const stg = chronologicalStages[i];
+      const dName = getDeckForStage(player.Jogador, stg.data, player.ID);
+      if (dName && dName.trim() !== '' && dName !== 'Não registrado' && dName !== 'Sem deck registrado') {
+        lastUsedDeck = dName;
+        break;
+      }
     }
+    if (!lastUsedDeck && player.Deck && player.Deck !== 'Não registrado' && player.Deck !== 'Sem deck registrado') {
+      lastUsedDeck = player.Deck;
+    }
+
+    let deckImgUrl = '';
+    if (lastUsedDeck && appData.Decks && appData.Decks.length > 0) {
+      const normDeck = normalizePlayerName(lastUsedDeck);
+      const deckObj = appData.Decks.find(d => normalizePlayerName(d.deck || d.Deck || '') === normDeck);
+      if (deckObj) {
+        deckImgUrl = deckObj.imagem || deckObj.icone || '';
+      }
+    }
+
+    if (deckImgUrl) {
+      watermarkEl.style.backgroundImage = `url('${deckImgUrl}')`;
+      watermarkEl.style.display = 'block';
+    } else {
+      watermarkEl.style.backgroundImage = 'none';
+      watermarkEl.style.display = 'none';
+    }
+  }
+
+  // Renderiza timeline com colocação e pontos conquistados por etapa
+  renderPlayerTimeline(player);
+
+  if (!stageScoresCache) {
+    preloadStageScores().then(() => {
+      const activeModal = document.getElementById('player-modal');
+      if (activeModal && activeModal.classList.contains('active')) {
+        renderPlayerTimeline(player);
+      }
+    });
   }
 
   modal.classList.add('active');
@@ -2800,12 +2967,12 @@ window.runSimulation = function() {
 };
 
 /* ==========================================================================
-   CÁLCULO DA POKÉBOLA DE OURO - RANKING MULTIDIMENSIONAL DE PERFORMANCE
+   CÁLCULO DA POKÉBOLA DE OURO - SALDO LÍQUIDO DE VITÓRIAS (V - D)
    ========================================================================== */
 function calculatePokebolaDeOuroCandidates(rankingData) {
   const minEtapas = appData.Configuracoes?.MinEtapasPokebolaOuro !== undefined 
     ? toNumber(appData.Configuracoes.MinEtapasPokebolaOuro) 
-    : 2;
+    : 4;
   const eligible = (rankingData || []).filter(r => r && toNumber(r.Participacoes) >= minEtapas).map(r => {
     const wins = toNumber(r.Vitorias);
     const losses = toNumber(r.Derrotas);
@@ -2815,6 +2982,7 @@ function calculatePokebolaDeOuroCandidates(rankingData) {
     const participations = toNumber(r.Participacoes);
     const podiums = toNumber(r.Podio);
     const points = toNumber(r.Pontos);
+    const saldo = wins - losses;
     return {
       player: r.Jogador || r.Player || r.Name || 'Desconhecido',
       raw: r,
@@ -2826,49 +2994,75 @@ function calculatePokebolaDeOuroCandidates(rankingData) {
       participations,
       podiums,
       points,
-      rankWR: 0,
-      rankV: 0,
-      rankPod: 0,
-      ptsWR: 0,
-      ptsV: 0,
-      ptsPod: 0,
-      score: 0,
-      firstPlaces: 0
+      saldo,
+      score: saldo
     };
   });
 
-  const N = eligible.length;
-  if (N === 0) return [];
+  eligible.sort((a, b) => {
+    if (b.saldo !== a.saldo) return b.saldo - a.saldo; // 1º Maior Saldo Positivo (V - D)
+    if (b.participations !== a.participations) return b.participations - a.participations; // 2º Etapas Disputadas (Assiduidade)
+    if (b.winRate !== a.winRate) return b.winRate - a.winRate; // 3º Maior Win Rate %
+    if (b.podiums !== a.podiums) return b.podiums - a.podiums; // 4º Pódios
+    return b.points - a.points;
+  });
 
-  // Helper para ranquear e pontuar um pilar
-  function rankPillar(getValue, setRank, setPts) {
-    const sorted = [...eligible].sort((a, b) => getValue(b) - getValue(a));
-    let currentRank = 1;
-    for (let i = 0; i < sorted.length; i++) {
-      if (i > 0 && getValue(sorted[i]) < getValue(sorted[i - 1])) {
-        currentRank = i + 1;
-      }
-      setRank(sorted[i], currentRank);
-      setPts(sorted[i], Math.max(1, N - currentRank + 1));
-    }
+  return eligible;
+}
+
+/* ==========================================================================
+   CÁLCULO DA POKÉBOLA MURCHA - DÉFICIT DE VITÓRIAS (D - V) & ASSIDUIDADE
+   ========================================================================== */
+function calculatePokebolaMurchaCandidates(rankingData, cleanStages = []) {
+  const minEtapas = appData.Configuracoes?.MinEtapasPokebolaMurcha !== undefined 
+    ? toNumber(appData.Configuracoes.MinEtapasPokebolaMurcha) 
+    : 4;
+
+  const cupChallengeStages = (cleanStages || []).filter(s => {
+    const t = String(s.tipo || '').toLowerCase();
+    return t.includes('cup') || t.includes('challenge') || t.includes('copa') || t.includes('desafio');
+  });
+
+  // Filtra quem disputou no mínimo o corte de etapas e tem mais derrotas do que vitórias (D > V)
+  let baseList = (rankingData || []).filter(r => r && toNumber(r.Participacoes) >= minEtapas && toNumber(r.Derrotas) > toNumber(r.Vitorias));
+  // Fallback se ninguém tiver D > V com o corte
+  if (baseList.length === 0) {
+    baseList = (rankingData || []).filter(r => r && toNumber(r.Participacoes) >= minEtapas);
   }
 
-  rankPillar(p => p.winRate, (p, r) => p.rankWR = r, (p, pts) => p.ptsWR = pts);
-  rankPillar(p => p.wins, (p, r) => p.rankV = r, (p, pts) => p.ptsV = pts);
-  rankPillar(p => p.podiums, (p, r) => p.rankPod = r, (p, pts) => p.ptsPod = pts);
+  const eligible = baseList.map(r => {
+    const playerName = r.Jogador || r.Player || r.Name || 'Desconhecido';
+    const wins = toNumber(r.Vitorias);
+    const losses = toNumber(r.Derrotas);
+    const draws = toNumber(r.Empates);
+    const total = wins + losses + draws;
+    const lossRate = total > 0 ? (losses / total) : 0;
+    const participations = toNumber(r.Participacoes);
+    const deficit = losses - wins;
+    const assiduidadeCupChal = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data, r.ID) !== null).length;
 
-  eligible.forEach(p => {
-    p.score = p.ptsWR + p.ptsV + p.ptsPod;
-    p.firstPlaces = (p.rankWR === 1 ? 1 : 0) + (p.rankV === 1 ? 1 : 0) + (p.rankPod === 1 ? 1 : 0);
+    return {
+      player: playerName,
+      raw: r,
+      wins,
+      losses,
+      defeats: losses,
+      draws,
+      total,
+      lossRate,
+      participations,
+      deficit,
+      ratio: participations > 0 ? (losses / participations) : 0,
+      assiduidade: assiduidadeCupChal
+    };
   });
 
   eligible.sort((a, b) => {
-    if (b.score !== a.score) return b.score - a.score;
-    if (b.firstPlaces !== a.firstPlaces) return b.firstPlaces - a.firstPlaces;
-    if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    if (b.podiums !== a.podiums) return b.podiums - a.podiums;
-    return b.points - a.points;
+    if (b.deficit !== a.deficit) return b.deficit - a.deficit; // 1º Maior Déficit de Vitórias (D - V)
+    if (b.participations !== a.participations) return b.participations - a.participations; // 2º Etapas Disputadas (Assiduidade e Persistência)
+    if (b.lossRate !== a.lossRate) return b.lossRate - a.lossRate; // 3º Maior Taxa de Derrotas %
+    if (b.defeats !== a.defeats) return b.defeats - a.defeats; // 4º Total de Derrotas
+    return b.assiduidade - a.assiduidade;
   });
 
   return eligible;
@@ -3037,19 +3231,14 @@ function renderTvSlide(slideIdx) {
     const goldCandidates = calculatePokebolaDeOuroCandidates(ranking);
     const bestGold = goldCandidates[0] || null;
 
+    const murchaCandidates = calculatePokebolaMurchaCandidates(ranking, appData.Etapas || []);
+    const bestMurcha = murchaCandidates[0] || null;
+
     let mostActive = null;
-    let mostLosses = null;
-
     ranking.forEach(p => {
-      const d = toNumber(p.Derrotas);
       const part = toNumber(p.Participacoes);
-
       if (!mostActive || part > mostActive.part) {
         mostActive = { player: p.Jogador, part };
-      }
-
-      if (!mostLosses || d > mostLosses.d) {
-        mostLosses = { player: p.Jogador, d };
       }
     });
 
@@ -3059,7 +3248,7 @@ function renderTvSlide(slideIdx) {
           <div class="tv-award-icon">🥇</div>
           <div class="tv-award-title">Pokébola de Ouro</div>
           <div class="tv-award-player">${bestGold ? escapeHTML(bestGold.player) : '-'}</div>
-          <div class="tv-award-stat">${bestGold ? `${bestGold.score} PTS • WR ${bestGold.rankWR}º | Vit ${bestGold.rankV}º | Pod ${bestGold.rankPod}º` : 'Em disputa'}</div>
+          <div class="tv-award-stat">${bestGold ? `Saldo +${bestGold.saldo} (${bestGold.wins}V - ${bestGold.losses}D em ${bestGold.participations} et)` : 'Em disputa'}</div>
         </div>
 
         <div class="tv-award-card" style="border-color:rgba(16,185,129,0.4);">
@@ -3079,8 +3268,8 @@ function renderTvSlide(slideIdx) {
         <div class="tv-award-card" style="border-color:rgba(239,68,68,0.4);">
           <div class="tv-award-icon">🥀</div>
           <div class="tv-award-title">Pokébola Murcha</div>
-          <div class="tv-award-player">${mostLosses ? escapeHTML(mostLosses.player) : '-'}</div>
-          <div class="tv-award-stat">${mostLosses ? `${mostLosses.d} derrotas acumuladas` : 'Em disputa'}</div>
+          <div class="tv-award-player">${bestMurcha ? escapeHTML(bestMurcha.player) : '-'}</div>
+          <div class="tv-award-stat">${bestMurcha ? `Déficit +${bestMurcha.deficit} (${bestMurcha.defeats}D vs ${bestMurcha.wins}V em ${bestMurcha.participations} et)` : 'Em disputa'}</div>
         </div>
       </div>
     `;
@@ -3138,14 +3327,17 @@ window.openAwardModal = function(awardKey) {
     const goldCandidates = calculatePokebolaDeOuroCandidates(appData.Ranking || []);
     const top = goldCandidates[0];
     winnerName = top ? top.player : 'Em disputa';
-    description = 'Prêmio de honra máxima individual da temporada pelo Ranking Multidimensional de Performance, avaliando o desempenho do treinador nos 3 pilares competitivos.';
+    description = 'Prêmio de honra máxima individual da temporada pelo Saldo Líquido de Vitórias (V - D), consagrando o treinador mais consistente e vitorioso que mais venceu além do que perdeu.';
     formulaHtml = `
       <div style="font-size:0.75rem; background:rgba(255,203,5,0.06); border:1px solid rgba(255,203,5,0.2); padding:8px 10px; border-radius:10px; color:var(--text-secondary); margin-top:6px;">
-        <div style="color:var(--accent-yellow); font-weight:700; margin-bottom:2px;">3 Pilares de Performance Oficial:</div>
+        <div style="color:var(--accent-yellow); font-weight:700; margin-bottom:2px;">Critérios Oficiais de Performance (Saldo V - D):</div>
         <div style="color:#fff; font-size:0.75rem; margin:3px 0; line-height:1.3;">
-          Ranking ponderado em: <strong>Winrate %</strong>, <strong>Vitórias (V)</strong> e <strong>Pódios (Top 4)</strong>.
+          • <strong>1º Critério Principal:</strong> Maior Saldo Positivo (<strong>Vitórias − Derrotas</strong>).<br>
+          • <strong>2º Desempate:</strong> Maior <strong>Quantidade de Etapas Disputadas</strong> (assiduidade).<br>
+          • <strong>3º Desempate:</strong> Maior <strong>Win Rate %</strong> (V ÷ Total de Jogos).<br>
+          • <strong>4º Desempate:</strong> Maior número de <strong>Pódios (Top 4)</strong>.
         </div>
-        <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">• Em cada pilar, o líder ganha pontuação máxima. Vence a maior soma combinada de posições (mín. 2 etapas disputadas).</div>
+        <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">* Exige corte mínimo de 4 etapas disputadas na temporada.</div>
       </div>
     `;
     if (top) {
@@ -3156,20 +3348,20 @@ window.openAwardModal = function(awardKey) {
             <strong style="color:#fff; font-size:0.95rem;">${escapeHTML(top.player)}</strong>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="color:var(--text-secondary);">Pontuação Geral:</span>
-            <strong style="color:var(--accent-yellow); font-size:1.1rem;">${top.score} PTS</strong>
+            <span style="color:var(--text-secondary);">Saldo Líquido (V − D):</span>
+            <strong style="color:var(--accent-yellow); font-size:1.1rem;">+${top.saldo} Vitórias</strong>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="color:var(--text-secondary);">Posições nos 3 Pilares:</span>
-            <span>WR: <strong>${top.rankWR}º</strong> | Vitórias: <strong>${top.rankV}º</strong> | Pódios: <strong>${top.rankPod}º</strong></span>
+            <span style="color:var(--text-secondary);">Assiduidade / Presença:</span>
+            <span><strong>${top.participations} etapas</strong> disputadas</span>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <span style="color:var(--text-secondary);">Cartel Real:</span>
-            <span>${top.wins}V - ${top.draws}E - ${top.losses}D (${(top.winRate * 100).toFixed(1)}% WR)</span>
+            <span>${top.wins}V - ${top.draws}E - ${top.losses}D (<strong>${(top.winRate * 100).toFixed(1)}% WR</strong>)</span>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <span style="color:var(--text-secondary);">Pódios Conquistados:</span>
-            <span>${top.podiums} Top 4 (${top.participations} etapas disputadas)</span>
+            <span>${top.podiums} Top 4 (${toNumber(top.points).toFixed(0)} PTS)</span>
           </div>
         </div>
       `;
@@ -3186,8 +3378,8 @@ window.openAwardModal = function(awardKey) {
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.68rem; text-transform: uppercase;">
                 <th style="padding: 4px 5px;">Pos</th>
                 <th style="padding: 4px 5px;">Jogador</th>
-                <th style="padding: 4px 5px; text-align: center;">PTS</th>
-                <th style="padding: 4px 5px; text-align: right;">Ranks (WR / Vit / Pód)</th>
+                <th style="padding: 4px 5px; text-align: center;">Saldo</th>
+                <th style="padding: 4px 5px; text-align: right;">Cartel (WR / Etapas)</th>
               </tr>
             </thead>
             <tbody>
@@ -3195,9 +3387,9 @@ window.openAwardModal = function(awardKey) {
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); color: ${i === 0 ? 'var(--accent-yellow)' : '#fff'}">
                   <td style="padding: 4px 5px; font-weight: bold;">${i + 1}º</td>
                   <td style="padding: 4px 5px;">${escapeHTML(c.player)}</td>
-                  <td style="padding: 4px 5px; text-align: center; font-weight: bold; color:var(--accent-yellow);">${c.score}</td>
+                  <td style="padding: 4px 5px; text-align: center; font-weight: bold; color:var(--accent-yellow);">+${c.saldo}</td>
                   <td style="padding: 4px 5px; text-align: right; font-size:0.72rem; color:var(--text-secondary);">
-                    ${c.rankWR}º WR • ${c.rankV}º Vit • ${c.rankPod}º Pód
+                    ${c.wins}V-${c.losses}D (${(c.winRate * 100).toFixed(1)}% WR em ${c.participations} et)
                   </td>
                 </tr>
               `).join('')}
@@ -3409,44 +3601,29 @@ window.openAwardModal = function(awardKey) {
         <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/black-sludge.png" style="width:36px; height:36px; object-fit:contain; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2;" alt="Black Sludge">
       </span>
     `;
-    const murchaCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) > 0).map(r => {
-      const playerName = r.Jogador || r.Player || r.Name;
-      const ratio = toNumber(r.Derrotas) / toNumber(r.Participacoes);
-      const assiduidade = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data) !== null).length;
-      return {
-        player: playerName || 'Desconhecido',
-        ratio: ratio,
-        defeats: toNumber(r.Derrotas),
-        participations: toNumber(r.Participacoes),
-        assiduidade: assiduidade
-      };
-    });
-    murchaCandidates.sort((a, b) => {
-      if (b.ratio !== a.ratio) return b.ratio - a.ratio;
-      return b.assiduidade - a.assiduidade;
-    });
-    
+    const murchaCandidates = calculatePokebolaMurchaCandidates(appData.Ranking || [], appData.Etapas || []);
     const top = murchaCandidates[0];
     winnerName = top ? top.player : 'Nenhum';
-    description = 'Prêmio de consolação para o jogador com a maior média de derrotas reais por etapa disputada na temporada, com desempate pela assiduidade em etapas de Cup/Challenge.';
+    description = 'Prêmio de consolação e resiliência para o treinador frequente com o maior déficit de vitórias (mais derrotas do que vitórias acumuladas), utilizando a quantidade de etapas jogadas como critério de persistência.';
     formulaHtml = `
       <div style="font-size:0.8rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:4px; color:var(--text-secondary); margin-top:8px;">
-        <div><strong>Critérios de Ordenação:</strong></div>
-        <div style="color:var(--accent-yellow); font-family:monospace; font-size:0.85rem;">Média de Derrotas = Total de Derrotas ÷ Total de Etapas</div>
+        <div style="color:var(--accent-yellow); font-weight:700;">Critérios de Ordenação (Déficit D − V):</div>
         <div style="font-size:0.75rem; margin-top:4px; line-height:1.4;">
-          • <strong>Regra de Derrotas:</strong> Em todos os eventos (mesmo 1.5x ou 2.0x), cada derrota vale sempre <strong>1 derrota física real</strong> (nunca multiplica).<br>
-          • <strong>Valores Decimais:</strong> O número exibido (ex: ${(top ? top.ratio.toFixed(2) : '1.67')}) é a <strong>média aritmética</strong> exata de derrotas por participação.<br>
-          • <strong>Desempate:</strong> Assiduidade em etapas oficiais de League Cup e League Challenge.
+          • <strong>1º Critério Principal:</strong> Maior Déficit de Vitórias (<strong>Derrotas − Vitórias</strong>).<br>
+          • <strong>2º Desempate:</strong> Maior <strong>Quantidade de Etapas Disputadas</strong> (persistência de quem comparece à loja).<br>
+          • <strong>3º Desempate:</strong> Maior <strong>Taxa de Derrotas %</strong> (D ÷ Total de Partidas).<br>
+          • <strong>4º Desempate:</strong> Maior Total Absoluto de <strong>Derrotas</strong>.
         </div>
+        <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">* Exige corte mínimo de 4 etapas disputadas e mais derrotas do que vitórias (D > V).</div>
       </div>
     `;
     if (top) {
       detailHtml = `
         <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; margin-top:8px;">
           <div style="font-weight:600; color:#fff; font-size:1rem; margin-bottom:4px;">Cálculo do Vencedor (${escapeHTML(top.player)}):</div>
-          <div style="display:flex; justify-content:space-between;"><span>Média de Derrotas/Etapa:</span><strong style="color:var(--accent-yellow); font-size:1.05rem;">${top.ratio.toFixed(2)} por etapa</strong></div>
-          <div style="display:flex; justify-content:space-between;"><span>Derrotas Reais Totais:</span><strong style="color:#fff;">${top.defeats} derrotas em ${top.participations} etapas</strong></div>
-          <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:-6px; text-align:right;">(${top.defeats} derrotas ÷ ${top.participations} etapas = ${top.ratio.toFixed(2)})</div>
+          <div style="display:flex; justify-content:space-between;"><span>Déficit de Vitórias (D − V):</span><strong style="color:#f87171; font-size:1.05rem;">+${top.deficit} Derrotas</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Assiduidade / Presença:</span><strong style="color:var(--accent-yellow);">${top.participations} etapas disputadas</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Cartel Real:</span><strong style="color:#fff;">${top.defeats}D vs ${top.wins}V (${(top.lossRate * 100).toFixed(1)}% Derrotas)</strong></div>
           <div style="display:flex; justify-content:space-between; margin-top:4px;"><span>Presença em Cup/Challenge:</span><strong style="color:#fff;">${top.assiduidade} etapas</strong></div>
         </div>
       `;
@@ -3463,7 +3640,8 @@ window.openAwardModal = function(awardKey) {
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase;">
                 <th style="padding: 4px 6px;">Pos</th>
                 <th style="padding: 4px 6px;">Jogador</th>
-                <th style="padding: 4px 6px; text-align: right;">Média (Derrotas / Etapas)</th>
+                <th style="padding: 4px 6px; text-align: center;">Déficit</th>
+                <th style="padding: 4px 6px; text-align: right;">Cartel (Derrotas / Etapas)</th>
               </tr>
             </thead>
             <tbody>
@@ -3471,9 +3649,10 @@ window.openAwardModal = function(awardKey) {
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); color: ${i === 0 ? 'var(--accent-yellow)' : '#fff'}">
                   <td style="padding: 4px 6px; font-weight: bold;">${i + 1}º</td>
                   <td style="padding: 4px 6px;">${escapeHTML(c.player)}</td>
+                  <td style="padding: 4px 6px; text-align: center; font-weight: bold; color:#f87171;">+${c.deficit}</td>
                   <td style="padding: 4px 6px; text-align: right; font-weight: bold;">
-                    ${c.ratio.toFixed(2)} 
-                    <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">(${c.defeats}D / ${c.participations}et)</span>
+                    ${c.defeats}D vs ${c.wins}V 
+                    <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">(${(c.lossRate * 100).toFixed(1)}% em ${c.participations}et)</span>
                   </td>
                 </tr>
               `).join('')}
@@ -4382,24 +4561,9 @@ function updateMetagameDisplay() {
       });
       const dittoPlayer = dittoCandidates[0];
 
-      // 4. Pokébola Murcha: Maior taxa de derrotas por participação (desempate por assiduidade em Cups/Challenges)
-      const murchaCandidates = (appData.Ranking || []).filter(r => r && toNumber(r.Participacoes) > 0).map(r => {
-        const playerName = r.Jogador || r.Player || r.Name;
-        const ratio = toNumber(r.Derrotas) / toNumber(r.Participacoes);
-        const assiduidade = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data, r.ID) !== null).length;
-        return {
-          player: playerName || 'Desconhecido',
-          ratio: ratio,
-          defeats: toNumber(r.Derrotas),
-          participations: toNumber(r.Participacoes),
-          assiduidade: assiduidade
-        };
-      });
-      murchaCandidates.sort((a, b) => {
-        if (b.ratio !== a.ratio) return b.ratio - a.ratio;
-        return b.assiduidade - a.assiduidade;
-      });
-      const murchaPlayer = murchaCandidates[0];
+      // 4. Pokébola Murcha: Maior déficit de vitórias (D - V) com desempate por assiduidade
+      const murchaCandidates = calculatePokebolaMurchaCandidates(appData.Ranking || [], appData.Etapas || []);
+      const murchaPlayer = murchaCandidates[0] || null;
 
       const goldCardHtml = bestGoldCandidate ? `
         <div class="glass-card" onclick="window.openAwardModal('gold')" style="flex: 1 1 250px; padding: 1.5rem; display:flex; flex-direction:column; gap:10px; border-radius:var(--radius); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
@@ -4413,11 +4577,11 @@ function updateMetagameDisplay() {
             </div>
           </div>
           <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
-            Líder multidimensional de performance nos 3 pilares: Winrate, Vitórias e Pódios.
+            Maior saldo líquido de vitórias (+${bestGoldCandidate.saldo}) com menor taxa de derrotas.
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
-            <div>Performance: <strong style="color:var(--accent-yellow); font-size:1.05rem;">${bestGoldCandidate.score} PTS</strong></div>
-            <div>Ranks: <strong>${bestGoldCandidate.rankWR}º WR • ${bestGoldCandidate.rankV}º V • ${bestGoldCandidate.rankPod}º Pód</strong></div>
+            <div>Saldo: <strong style="color:var(--accent-yellow); font-size:1.05rem;">+${bestGoldCandidate.saldo}</strong></div>
+            <div>Cartel: <strong>${bestGoldCandidate.wins}V - ${bestGoldCandidate.losses}D (${bestGoldCandidate.participations} et)</strong></div>
           </div>
           <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver classificação completa ➔</div>
         </div>
@@ -4492,11 +4656,11 @@ function updateMetagameDisplay() {
             </div>
           </div>
           <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
-            Maior média de derrotas reais por etapa jogada na temporada.
+            Maior déficit de derrotas (+${murchaPlayer.deficit}) e persistência nas etapas.
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
-            <div>Média/Etapa: <strong>${murchaPlayer.ratio.toFixed(2)}</strong></div>
-            <div>Total: <strong>${murchaPlayer.defeats} em ${murchaPlayer.participations} et.</strong></div>
+            <div>Déficit: <strong style="color:#f87171; font-size:1.05rem;">+${murchaPlayer.deficit}</strong></div>
+            <div>Cartel: <strong>${murchaPlayer.defeats}D vs ${murchaPlayer.wins}V (${murchaPlayer.participations} et.)</strong></div>
           </div>
           <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver classificação e detalhes ➔</div>
         </div>
@@ -5177,4 +5341,387 @@ function toggleHistoryCollapse() {
     btn.classList.toggle('expanded');
   }
 }
+
+/* ==========================================================================
+   PLATAFORMA DE DECKLISTS & INSCRIÇÃO PREMIER (CUPS & CHALLENGES)
+   ========================================================================== */
+function parseDecklistText(rawText) {
+  if (!rawText || !rawText.trim()) {
+    return { valid: false, total: 0, pokemon: 0, trainer: 0, energy: 0, cards: [], archetype: '' };
+  }
+
+  const lines = rawText.split('\n').map(l => l.trim()).filter(l => l);
+  let currentCategory = 'pokemon';
+  let pokemonCount = 0;
+  let trainerCount = 0;
+  let energyCount = 0;
+  const cards = [];
+
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+    if (lower.startsWith('pokémon') || lower.startsWith('pokemon')) {
+      currentCategory = 'pokemon';
+      continue;
+    }
+    if (lower.startsWith('treinador') || lower.startsWith('trainer') || lower.startsWith('trainers')) {
+      currentCategory = 'trainer';
+      continue;
+    }
+    if (lower.startsWith('energia') || lower.startsWith('energy') || lower.startsWith('energies')) {
+      currentCategory = 'energy';
+      continue;
+    }
+    if (lower.startsWith('total de cartas') || lower.startsWith('total cards') || lower.startsWith('total:')) {
+      continue;
+    }
+
+    const match = line.match(/^(\d+)\s*x?\s+(.+)$/i);
+    if (match) {
+      const qty = parseInt(match[1], 10);
+      const rest = match[2].trim();
+      cards.push({ qty, name: rest, category: currentCategory });
+      if (currentCategory === 'pokemon') pokemonCount += qty;
+      else if (currentCategory === 'trainer') trainerCount += qty;
+      else if (currentCategory === 'energy') energyCount += qty;
+    }
+  }
+
+  const total = pokemonCount + trainerCount + energyCount;
+
+  // Sugestão inteligente de arquétipo
+  let archetype = '';
+  const allNames = cards.map(c => c.name.toLowerCase()).join(' ');
+  if (appData.Decks && appData.Decks.length > 0) {
+    for (const dk of appData.Decks) {
+      const dName = dk.Deck || dk.deck || '';
+      if (dName && allNames.includes(dName.toLowerCase())) {
+        archetype = dName;
+        break;
+      }
+    }
+  }
+  if (!archetype) {
+    if (allNames.includes('charizard ex')) archetype = 'Charizard ex';
+    else if (allNames.includes('dragapult ex')) archetype = 'Dragapult ex';
+    else if (allNames.includes('regidrago')) archetype = 'Regidrago VSTAR';
+    else if (allNames.includes('raging bolt')) archetype = 'Raging Bolt ex';
+    else if (allNames.includes('lugia')) archetype = 'Lugia VSTAR';
+    else if (allNames.includes('gardevoir')) archetype = 'Gardevoir ex';
+    else if (allNames.includes('gholdengo')) archetype = 'Gholdengo ex';
+    else if (allNames.includes('miraidon')) archetype = 'Miraidon ex';
+    else if (allNames.includes('terapagos')) archetype = 'Terapagos ex';
+    else if (allNames.includes('roaring moon')) archetype = 'Roaring Moon ex';
+    else if (allNames.includes('archaludon')) archetype = 'Archaludon ex';
+    else if (allNames.includes('iron thorns')) archetype = 'Iron Thorns ex';
+    else if (allNames.includes('pikachu ex')) archetype = 'Pikachu ex';
+  }
+
+  return {
+    valid: total === 60,
+    total,
+    pokemon: pokemonCount,
+    trainer: trainerCount,
+    energy: energyCount,
+    cards,
+    archetype
+  };
+}
+
+function getCategoryFromBirthYear(year) {
+  const y = parseInt(year, 10);
+  if (!y || isNaN(y)) return 'MASTER';
+  if (y >= 2014) return 'JUNIOR';
+  if (y >= 2010) return 'SENIOR';
+  return 'MASTER';
+}
+
+function updateDecklistCategoryBadge() {
+  const yearInput = document.getElementById('decklist-player-birthyear');
+  const badge = document.getElementById('decklist-category-badge');
+  const note = document.getElementById('decklist-category-note');
+  if (!yearInput || !badge) return;
+
+  const cat = getCategoryFromBirthYear(yearInput.value);
+  badge.innerText = cat;
+  badge.className = `badge-cat badge-cat-${cat === 'JUNIOR' ? 'jr' : (cat === 'SENIOR' ? 'sr' : 'me')}`;
+  if (note) {
+    if (cat === 'JUNIOR') note.innerText = 'Até 11 anos';
+    else if (cat === 'SENIOR') note.innerText = '12 a 15 anos';
+    else note.innerText = 'A partir de 16 anos';
+  }
+}
+
+function onDecklistPlayerNameInput() {
+  const nameInput = document.getElementById('decklist-player-name');
+  const popInput = document.getElementById('decklist-player-popid');
+  const datalist = document.getElementById('decklist-players-suggest');
+  if (!nameInput || !popInput) return;
+
+  const typed = nameInput.value.trim().toLowerCase();
+  const pool = appData.Jogadores || [];
+
+  if (datalist && pool.length > 0 && datalist.children.length === 0) {
+    datalist.innerHTML = pool.map(p => {
+      const pName = p.Jogador || p.Name || '';
+      const pId = p.ID || p.id || '';
+      return `<option value="${escapeHTML(pName)}">${pId ? 'POP ID: ' + pId : ''}</option>`;
+    }).join('');
+  }
+
+  if (typed.length >= 3 && pool.length > 0) {
+    const match = pool.find(p => (p.Jogador || p.Name || '').toLowerCase() === typed);
+    if (match && (match.ID || match.id) && !popInput.value) {
+      popInput.value = match.ID || match.id;
+    }
+  }
+}
+
+function onDecklistCardsChanged() {
+  const textarea = document.getElementById('decklist-cards-text');
+  const countBadge = document.getElementById('decklist-count-badge');
+  const breakdownEl = document.getElementById('decklist-breakdown-text');
+  const statusEl = document.getElementById('decklist-validity-status');
+  const deckNameInput = document.getElementById('decklist-deck-name');
+  if (!textarea) return;
+
+  const parsed = parseDecklistText(textarea.value);
+
+  if (countBadge) {
+    countBadge.innerText = `${parsed.total} / 60 Cartas`;
+    countBadge.style.color = parsed.total === 60 ? '#10b981' : (parsed.total > 60 ? '#ef4444' : '#f59e0b');
+    countBadge.style.background = parsed.total === 60 ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)';
+  }
+
+  if (breakdownEl) {
+    if (parsed.total === 0) {
+      breakdownEl.innerHTML = 'Aguardando colagem da lista de 60 cartas...';
+    } else {
+      breakdownEl.innerHTML = `
+        <span style="color:#60a5fa;">${parsed.pokemon} Pokémon</span> &bull; 
+        <span style="color:#a78bfa;">${parsed.trainer} Treinadores</span> &bull; 
+        <span style="color:#facc15;">${parsed.energy} Energias</span>
+        ${parsed.archetype ? `<span style="margin-left:6px; color:#fff; font-weight:600;">(✨ ${escapeHTML(parsed.archetype)})</span>` : ''}
+      `;
+    }
+  }
+
+  if (statusEl) {
+    if (parsed.total === 60) {
+      statusEl.innerHTML = '✅ Válida (60 Cartas)';
+      statusEl.style.color = '#10b981';
+    } else if (parsed.total > 60) {
+      statusEl.innerHTML = `⚠️ Excesso (${parsed.total - 60} a mais)`;
+      statusEl.style.color = '#ef4444';
+    } else if (parsed.total > 0) {
+      statusEl.innerHTML = `⚠️ Faltam ${60 - parsed.total} cartas`;
+      statusEl.style.color = '#f59e0b';
+    } else {
+      statusEl.innerHTML = 'Pendente';
+      statusEl.style.color = 'var(--text-muted)';
+    }
+  }
+
+  if (deckNameInput && !deckNameInput.value && parsed.archetype) {
+    deckNameInput.value = parsed.archetype;
+  }
+}
+
+window.openDecklistModal = function(defaultStageDate = '') {
+  const modal = document.getElementById('decklist-modal');
+  const eventSelect = document.getElementById('decklist-event-select');
+  if (!modal) return;
+
+  if (eventSelect) {
+    const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
+    const chronologicalStages = [...cleanStages].sort((a, b) => a.data.localeCompare(b.data));
+    
+    // Filtrar preferencialmente torneios Premier (Challenge, Cup, etc.), ou todos os recentes
+    const premierStages = chronologicalStages.filter(s => {
+      const type = (s.tipo || '').toLowerCase();
+      return type.includes('challenge') || type.includes('cup') || Number(s.multiplicador) > 1.0;
+    });
+
+    const listToRender = premierStages.length > 0 ? premierStages : chronologicalStages.slice(-5);
+
+    eventSelect.innerHTML = listToRender.map(stg => {
+      const parts = stg.data.split('-');
+      const dateFmt = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : stg.data;
+      const title = getStageDisplayName(stg, chronologicalStages);
+      return `<option value="${escapeHTML(stg.data)}">${escapeHTML(title)} (${dateFmt})</option>`;
+    }).join('');
+
+    if (defaultStageDate && eventSelect.querySelector(`option[value="${defaultStageDate}"]`)) {
+      eventSelect.value = defaultStageDate;
+    }
+  }
+
+  updateDecklistCategoryBadge();
+  onDecklistCardsChanged();
+
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeDecklistModal = function() {
+  const modal = document.getElementById('decklist-modal');
+  if (modal) modal.classList.remove('active');
+  document.body.style.overflow = '';
+};
+
+window.submitDecklistWhatsApp = function() {
+  const name = (document.getElementById('decklist-player-name')?.value || '').trim();
+  const popId = (document.getElementById('decklist-player-popid')?.value || '').trim();
+  const birthYear = (document.getElementById('decklist-player-birthyear')?.value || '').trim();
+  const category = document.getElementById('decklist-category-badge')?.innerText || 'MASTER';
+  const deckName = (document.getElementById('decklist-deck-name')?.value || '').trim();
+  const cardsText = (document.getElementById('decklist-cards-text')?.value || '').trim();
+  const limitlessUrl = (document.getElementById('decklist-limitless-url')?.value || '').trim();
+  const eventSelect = document.getElementById('decklist-event-select');
+  const eventTitle = eventSelect ? eventSelect.options[eventSelect.selectedIndex]?.text : 'Torneio Premier';
+
+  if (!name) {
+    alert("Por favor, preencha o Nome Completo.");
+    return;
+  }
+  if (!popId) {
+    alert("Por favor, informe seu Play! Pokémon Player ID (POP ID).");
+    return;
+  }
+
+  const parsed = parseDecklistText(cardsText);
+
+  let msg = `🏆 *INSCRIÇÃO & DECKLIST - LIGA ATLÂNTICA*\n`;
+  msg += `📍 *Evento:* ${eventTitle}\n`;
+  msg += `👤 *Jogador:* ${name}\n`;
+  msg += `🆔 *Play! Pokémon ID:* ${popId}\n`;
+  msg += `🎂 *Nascimento:* ${birthYear || 'Não inf.'} (${category})\n`;
+  msg += `🃏 *Deck:* ${deckName || parsed.archetype || 'Personalizado'} (${parsed.total}/60 cartas)\n`;
+  if (limitlessUrl) {
+    msg += `🔗 *Limitless:* ${limitlessUrl}\n`;
+  }
+  msg += `\n📜 *LISTA DO BARALHO (${parsed.total} cartas):*\n${cardsText || '(Lista enviada via link Limitless)'}\n`;
+  msg += `\n💰 *Comprovante:* Segue anexo o comprovante de pagamento PIX da taxa de inscrição.`;
+
+  const encodedMsg = encodeURIComponent(msg);
+  const waUrl = `https://api.whatsapp.com/send?text=${encodedMsg}`;
+
+  window.open(waUrl, '_blank');
+  alert("Inscrição e decklist formatadas com sucesso! Sua mensagem foi direcionada para o WhatsApp.");
+};
+
+window.copyDecklistSubmission = function() {
+  const name = (document.getElementById('decklist-player-name')?.value || '').trim();
+  const popId = (document.getElementById('decklist-player-popid')?.value || '').trim();
+  const birthYear = (document.getElementById('decklist-player-birthyear')?.value || '').trim();
+  const category = document.getElementById('decklist-category-badge')?.innerText || 'MASTER';
+  const deckName = (document.getElementById('decklist-deck-name')?.value || '').trim();
+  const cardsText = (document.getElementById('decklist-cards-text')?.value || '').trim();
+  const eventSelect = document.getElementById('decklist-event-select');
+  const eventTitle = eventSelect ? eventSelect.options[eventSelect.selectedIndex]?.text : 'Torneio Premier';
+
+  const parsed = parseDecklistText(cardsText);
+
+  let msg = `🏆 INSCRIÇÃO PREMIER - LIGA ATLÂNTICA\n`;
+  msg += `Evento: ${eventTitle}\n`;
+  msg += `Jogador: ${name}\n`;
+  msg += `Play! Pokémon ID: ${popId}\n`;
+  msg += `Categoria: ${category} (${birthYear})\n`;
+  msg += `Deck: ${deckName || parsed.archetype} (${parsed.total}/60 cartas)\n\n`;
+  msg += `--- LISTA DO BARALHO ---\n${cardsText}\n`;
+
+  navigator.clipboard.writeText(msg).then(() => {
+    alert("Inscrição e Decklist copiadas para a área de transferência!");
+  }).catch(() => {
+    prompt("Copie sua inscrição:", msg);
+  });
+};
+
+let currentViewerDecklistText = '';
+
+window.openDecklistViewerModal = function(playerId, stageDate) {
+  const modal = document.getElementById('decklist-viewer-modal');
+  if (!modal) return;
+
+  const decklists = appData.Decklists || [];
+  const cleanId = String(playerId || '').trim();
+  const found = decklists.find(dl => 
+    (dl.etapaData === stageDate || dl.data === stageDate) && 
+    (String(dl.id || dl.ID || '').trim() === cleanId)
+  );
+
+  if (!found) {
+    alert("Decklist detalhada ainda não foi submetida por este jogador.");
+    return;
+  }
+
+  currentViewerDecklistText = found.decklistTexto || found.texto || '';
+  const parsed = parseDecklistText(currentViewerDecklistText);
+
+  const tagEl = document.getElementById('viewer-event-tag');
+  const titleEl = document.getElementById('viewer-deck-title');
+  const infoEl = document.getElementById('viewer-player-info');
+  const totalEl = document.getElementById('viewer-total-cards');
+  const container = document.getElementById('viewer-cards-container');
+
+  if (tagEl) tagEl.innerText = found.eventoNome || `Etapa ${stageDate}`;
+  if (titleEl) titleEl.innerText = found.deckNome || parsed.archetype || 'Baralho Oficial';
+  if (infoEl) infoEl.innerHTML = `Treinador: <strong>${escapeHTML(found.nome || found.jogador)}</strong> &bull; POP ID: <code>#${escapeHTML(found.id)}</code> &bull; ${found.categoria || 'MASTER'}`;
+  if (totalEl) totalEl.innerText = `${parsed.total} / 60 Cartas ${parsed.valid ? '✅' : '⚠️'}`;
+
+  if (container) {
+    const pCards = parsed.cards.filter(c => c.category === 'pokemon');
+    const tCards = parsed.cards.filter(c => c.category === 'trainer');
+    const eCards = parsed.cards.filter(c => c.category === 'energy');
+
+    container.innerHTML = `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+        <div style="background: rgba(255,255,255,0.02); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+          <div style="font-weight: 700; color: #60a5fa; font-size: 0.85rem; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(96,165,250,0.2); padding-bottom: 0.25rem;">
+            ⚡ Pokémon (${parsed.pokemon})
+          </div>
+          <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.78rem; color: #e2e8f0; line-height: 1.5;">
+            ${pCards.map(c => `<li><strong>${c.qty}x</strong> ${escapeHTML(c.name)}</li>`).join('')}
+          </ul>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.02); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+          <div style="font-weight: 700; color: #a78bfa; font-size: 0.85rem; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(167,139,250,0.2); padding-bottom: 0.25rem;">
+            🎒 Treinadores (${parsed.trainer})
+          </div>
+          <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.78rem; color: #e2e8f0; line-height: 1.5;">
+            ${tCards.map(c => `<li><strong>${c.qty}x</strong> ${escapeHTML(c.name)}</li>`).join('')}
+          </ul>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.02); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+          <div style="font-weight: 700; color: #facc15; font-size: 0.85rem; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(250,204,21,0.2); padding-bottom: 0.25rem;">
+            🔮 Energias (${parsed.energy})
+          </div>
+          <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.78rem; color: #e2e8f0; line-height: 1.5;">
+            ${eCards.map(c => `<li><strong>${c.qty}x</strong> ${escapeHTML(c.name)}</li>`).join('')}
+          </ul>
+        </div>
+      </div>
+    `;
+  }
+
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeDecklistViewerModal = function() {
+  const modal = document.getElementById('decklist-viewer-modal');
+  if (modal) modal.classList.remove('active');
+  document.body.style.overflow = '';
+};
+
+window.copyViewerDecklistText = function() {
+  if (!currentViewerDecklistText) return;
+  navigator.clipboard.writeText(currentViewerDecklistText).then(() => {
+    alert("Lista de 60 cartas copiada com sucesso para a área de transferência!");
+  }).catch(() => {
+    prompt("Copie a lista:", currentViewerDecklistText);
+  });
+};
+
 

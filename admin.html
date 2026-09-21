@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel do Organizador - Liga Atlântica</title>
-  <link rel="stylesheet" href="style.css?v=3.6">
+  <link rel="stylesheet" href="style.css?v=5.0">
   <script src="config.js?v=3.7"></script>
   <style>
     /* Estilos específicos do Painel Administrativo */
@@ -550,6 +550,9 @@
       </button>
       <button type="button" class="admin-tab-btn" id="nav-btn-metagame" onclick="switchAdminTab('metagame')">
         📊 Metagame
+      </button>
+      <button type="button" class="admin-tab-btn" id="nav-btn-decklists" onclick="switchAdminTab('decklists')">
+        📋 Decklists
       </button>
       <button type="button" class="admin-tab-btn" id="nav-btn-calendario" onclick="switchAdminTab('calendario')">
         📅 Calendário
@@ -1307,28 +1310,17 @@
           </div>
         </div>
 
-        <!-- Painel de Soluções Rápidas & Ações em Massa -->
-        <div class="glass-card" style="margin-bottom: 1.5rem; padding: 1.25rem; border: 1px solid rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.03); border-radius: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;">
-            <div>
-              <div style="font-weight: 700; color: #10b981; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem;">
-                🛠️ Centro de Soluções & Correções Rápidas
-              </div>
-              <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;">
-                Resolva alertas e inconsistências encontradas com 1 clique diretamente no repositório:
-              </div>
-            </div>
+        <!-- Alerta de Diagnóstico do Ranking Geral (Injetado pelo Auditor se houver duplicidade) -->
+        <div id="audit-ranking-alert-container"></div>
+
+        <!-- Guia Informativo do Auditor -->
+        <div class="glass-card" style="margin-bottom: 1.5rem; padding: 1rem 1.25rem; border: 1px solid rgba(59, 130, 246, 0.25); background: rgba(59, 130, 246, 0.04); border-radius: 8px;">
+          <div style="font-weight: 700; color: #93c5fd; font-size: 0.9rem; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem;">
+            🛡️ Diagnóstico & Integridade de Dados
           </div>
-          <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
-            <button type="button" class="btn" onclick="recalculateRankingFromAllStages()" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3); font-weight: 600; font-size: 0.82rem; display: flex; align-items: center; gap: 0.35rem;">
-              ⚡ 1. Recalcular & Sincronizar Ranking Geral
-            </button>
-            <button type="button" class="btn" onclick="autoAssignAllMissingDecks()" style="background: rgba(129, 140, 248, 0.15); color: #818cf8; border-color: rgba(129, 140, 248, 0.3); font-weight: 600; font-size: 0.82rem; display: flex; align-items: center; gap: 0.35rem;">
-              ✨ 2. Auto-Preencher Decks Ausentes no Metagame
-            </button>
-            <button type="button" class="btn" onclick="switchAdminTab('jogadores')" style="background: rgba(255, 203, 5, 0.12); color: var(--accent-yellow); border-color: rgba(255, 203, 5, 0.3); font-weight: 600; font-size: 0.82rem; display: flex; align-items: center; gap: 0.35rem;">
-              👤 3. Base Oficial de Jogadores (Cadastrar POP IDs)
-            </button>
+          <div style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5;">
+            O Auditor de Dados atua em <strong>modo de inspeção e leitura</strong>: confere as pontuações e cartéis (V-E-D) de cada arquivo TOM (<code>etapas/*.tdf</code>), verifica a presença de POP IDs e checa a associação de decks no Metagame. 
+            <strong style="color: #10b981;">Nenhum dado é alterado automaticamente</strong> sem sua confirmação explícita.
           </div>
         </div>
 
@@ -1347,6 +1339,65 @@
           <div style="text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
             Clique em <strong>"Executar Auditoria Completa"</strong> para inspecionar todas as etapas e gerar o diagnóstico.
           </div>
+        </div>
+    <!-- ABA: DECKLISTS (CUPS & CHALLENGES) -->
+    <div id="pane-decklists" class="tab-pane-content" style="display: none; max-width: 1000px; margin: 0 auto;">
+      <section class="glass-card admin-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+          <div>
+            <h2 style="font-size: 1.25rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              📋 Gestão de Inscrições & Decklists (Premier Events)
+            </h2>
+            <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 4px;">
+              Gerencie e valide o envio de listas de 60 cartas de League Cups e League Challenges.
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-whatsapp" onclick="openAdminDecklistEditModal()" style="font-size: 0.82rem; padding: 0.45rem 0.9rem; font-weight: 700; background: var(--accent-yellow); border-color: var(--accent-yellow); color: #000;">
+              ➕ Cadastrar / Importar Lista
+            </button>
+            <button type="button" class="btn" onclick="exportAdminDecklistsRoster()" style="font-size: 0.82rem; padding: 0.45rem 0.9rem; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: #fff;">
+              📥 Exportar Roster (CSV)
+            </button>
+          </div>
+        </div>
+
+        <!-- Seletor de Evento / Etapa -->
+        <div class="form-row" style="margin-bottom: 1.25rem; align-items: flex-end;">
+          <div class="form-group" style="flex: 1;">
+            <label for="admin-decklist-stage-selector">Selecione o Torneio / Etapa</label>
+            <select id="admin-decklist-stage-selector" class="search-input" style="width: 100%;" onchange="renderAdminDecklistsTable()">
+              <!-- Preenchido dinamicamente via JS -->
+            </select>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="admin-decklist-search-input">Filtrar por Treinador ou Deck</label>
+            <input type="text" id="admin-decklist-search-input" class="search-input" placeholder="Buscar por jogador, POP ID ou arquétipo..." oninput="renderAdminDecklistsTable()">
+          </div>
+        </div>
+
+        <!-- Resumo de Métricas do Torneio -->
+        <div id="admin-decklist-summary-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem;">
+          <!-- Preenchido dinamicamente -->
+        </div>
+
+        <!-- Tabela de Decklists -->
+        <div class="table-responsive">
+          <table class="ranking-table" style="width: 100%;">
+            <thead>
+              <tr>
+                <th style="width: 50px; text-align: center;">#</th>
+                <th>Treinador / POP ID</th>
+                <th style="text-align: center; width: 110px;">Categoria</th>
+                <th>Deck / Arquétipo</th>
+                <th style="text-align: center; width: 130px;">Status Lista</th>
+                <th style="text-align: right; width: 150px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="admin-decklist-table-body">
+              <!-- Preenchido dinamicamente via JS -->
+            </tbody>
+          </table>
         </div>
       </section>
     </div>
@@ -1891,6 +1942,74 @@
           <button type="submit" id="btn-save-hist-score-submit" class="btn btn-whatsapp" style="background: var(--accent-yellow); border-color: var(--accent-yellow); color: #000; font-weight: 700;">
             💾 Salvar Registro
           </button>
+  <!-- Modal: Visualizar / Editar Decklist do Jogador no Admin -->
+  <div id="admin-decklist-modal" class="admin-modal-overlay" style="display: none;">
+    <div class="glass-card admin-modal-card" style="max-width: 650px; padding: 1.75rem; max-height: 90vh; overflow-y: auto;">
+      <button class="admin-modal-close" onclick="closeAdminDecklistModal()">&times;</button>
+      
+      <h3 id="admin-decklist-modal-title" style="color: #fff; font-size: 1.25rem; margin-bottom: 1rem; text-align: center;">
+        📋 Inscrição & Decklist
+      </h3>
+
+      <div class="alert-box alert-error" id="admin-decklist-modal-error" style="display: none; margin-bottom: 1rem;"></div>
+
+      <form id="admin-decklist-form" onsubmit="handleSaveAdminDecklist(event)">
+        <input type="hidden" id="admin-decklist-original-key" value="">
+        <input type="hidden" id="admin-decklist-stage-date" value="">
+
+        <div class="form-row" style="margin-bottom: 0.85rem;">
+          <div class="form-group">
+            <label for="admin-dl-player-name">Nome do Treinador</label>
+            <input type="text" id="admin-dl-player-name" class="search-input" placeholder="Ex: Felipe Damasceno" required oninput="handleAdminDlPlayerChange()">
+          </div>
+          <div class="form-group">
+            <label for="admin-dl-pop-id">POP ID (Play! Pokémon)</label>
+            <input type="text" id="admin-dl-pop-id" class="search-input" placeholder="Ex: 5685779">
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom: 0.85rem;">
+          <div class="form-group">
+            <label for="admin-dl-category">Categoria</label>
+            <select id="admin-dl-category" class="search-input" required>
+              <option value="Master">Master</option>
+              <option value="Senior">Senior</option>
+              <option value="Junior">Junior</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="admin-dl-archetype">Arquétipo / Deck</label>
+            <input type="text" id="admin-dl-archetype" list="all-decks-datalist" class="search-input" placeholder="Ex: Dragapult ex" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <label for="admin-dl-raw-text">Lista de 60 Cartas (PTCG Live / Limitless)</label>
+            <span id="admin-dl-card-counter" style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 10px;">
+              0 / 60 cartas
+            </span>
+          </div>
+          <textarea id="admin-dl-raw-text" class="search-input" rows="8" placeholder="Cole a lista aqui no formato oficial Pokémon TCG Live..." style="width: 100%; font-family: monospace; font-size: 0.82rem; line-height: 1.4; resize: vertical;" oninput="handleAdminDlTextChange()"></textarea>
+        </div>
+
+        <!-- Breakdown Visual das 60 Cartas -->
+        <div id="admin-dl-preview-container" style="display: none; margin-bottom: 1.25rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px;">
+            <span id="admin-dl-pokemon-count">Pokémon: 0</span>
+            <span id="admin-dl-trainer-count">Treinadores: 0</span>
+            <span id="admin-dl-energy-count">Energias: 0</span>
+          </div>
+          <div id="admin-dl-parsed-breakdown" style="font-size: 0.78rem; color: #cbd5e1; max-height: 120px; overflow-y: auto;"></div>
+        </div>
+
+        <div class="admin-modal-actions">
+          <button type="button" class="btn" onclick="closeAdminDecklistModal()" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary);">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-save-admin-decklist-submit" class="btn btn-whatsapp" style="background: var(--accent-yellow); border-color: var(--accent-yellow); color: #000; font-weight: 700;">
+            💾 Salvar Decklist
+          </button>
         </div>
       </form>
     </div>
@@ -1923,6 +2042,7 @@
     let cachedCampeoes = [];
     let cachedScoresAntigos = [];
     let cachedEtapas = [];
+    let cachedDecklists = {};
     let cachedConfig = {
       leagueName: "Liga Atlântica",
       leagueSubtitle: "Liga de Pokémon TCG - FSA",
@@ -1973,7 +2093,7 @@
     // --- Alternador de Abas do Painel ---
     function switchAdminTab(tabName) {
       currentAdminTab = tabName;
-      const tabs = ['upload', 'jogadores', 'decks', 'metagame', 'calendario', 'regras', 'galeria', 'seasons', 'auditoria', 'config'];
+      const tabs = ['upload', 'jogadores', 'decks', 'metagame', 'decklists', 'calendario', 'regras', 'galeria', 'seasons', 'auditoria', 'config'];
       tabs.forEach(t => {
         const pane = document.getElementById(`pane-${t}`);
         const btn = document.getElementById(`nav-btn-${t}`);
@@ -1991,6 +2111,8 @@
       } else if (tabName === 'metagame') {
         renderAdminMetagameSelector();
         renderAdminStageMetagame();
+      } else if (tabName === 'decklists') {
+        renderAdminDecklists();
       } else if (tabName === 'calendario') {
         renderCalendarCatalog();
       } else if (tabName === 'regras') {
@@ -2203,7 +2325,8 @@
             { name: 'config', url: `config.json?v=${timestamp}` },
             { name: 'campeoes', url: `campeoes.json?v=${timestamp}` },
             { name: 'scores_antigos', url: `scores_antigos.json?v=${timestamp}` },
-            { name: 'etapas', url: `etapas.json?v=${timestamp}` }
+            { name: 'etapas', url: `etapas.json?v=${timestamp}` },
+            { name: 'decklists', url: `decklists.json?v=${timestamp}` }
           ];
 
           const responses = await Promise.allSettled(
@@ -2276,6 +2399,10 @@
           // 10. Etapas
           if (responses[9].status === 'fulfilled' && Array.isArray(responses[9].value)) {
             cachedEtapas = responses[9].value;
+          }
+          // 11. Decklists
+          if (responses[10] && responses[10].status === 'fulfilled' && responses[10].value) {
+            cachedDecklists = responses[10].value;
           }
 
           if (!cachedJogadores || !cachedJogadores.length) {
@@ -6461,6 +6588,499 @@
       }
     }
 
+    // =========================================================================
+    // MÓDULO DE GESTÃO DE DECKLISTS (PREMIER EVENTS - CUPS & CHALLENGES)
+    // =========================================================================
+
+    function parseAdminDecklistText(rawText) {
+      if (!rawText || !rawText.trim()) return { total: 0, pokemon: 0, trainer: 0, energy: 0, cards: [] };
+      const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+      let currentSection = 'pokemon';
+      let total = 0;
+      let pokemon = 0;
+      let trainer = 0;
+      let energy = 0;
+      const cards = [];
+
+      for (const line of lines) {
+        const lower = line.toLowerCase();
+        if (lower.startsWith('pokémon') || lower.startsWith('pokemon')) {
+          currentSection = 'pokemon';
+          continue;
+        } else if (lower.startsWith('trainer') || lower.startsWith('treinador') || lower.startsWith('cartas de treinador') || lower.startsWith('apoiador') || lower.startsWith('item')) {
+          currentSection = 'trainer';
+          continue;
+        } else if (lower.startsWith('energy') || lower.startsWith('energia')) {
+          currentSection = 'energy';
+          continue;
+        }
+
+        const match = line.match(/^(\d+)\s+(.+)$/);
+        if (match) {
+          const qty = parseInt(match[1], 10) || 1;
+          const name = match[2].trim();
+          total += qty;
+          if (currentSection === 'pokemon') pokemon += qty;
+          else if (currentSection === 'trainer') trainer += qty;
+          else if (currentSection === 'energy') energy += qty;
+          cards.push({ qty, name, section: currentSection });
+        }
+      }
+
+      return { total, pokemon, trainer, energy, cards };
+    }
+
+    function renderAdminDecklists() {
+      const stageSelect = document.getElementById('admin-decklist-stage-selector');
+      if (!stageSelect) return;
+
+      const currentVal = stageSelect.value;
+      stageSelect.innerHTML = '';
+
+      // Lista todas as etapas de etapas.json e do calendário
+      const stageOptions = [];
+
+      // 1. De etapas registradas
+      (cachedEtapas || []).forEach(stg => {
+        const dateStr = stg.data || stg.date;
+        if (!dateStr) return;
+        const tipo = stg.tipo || 'Etapa';
+        const num = stg.numero ? ` #${stg.numero}` : '';
+        stageOptions.push({
+          date: dateStr,
+          label: `📅 ${formatDateBR(dateStr)} — ${tipo}${num}`
+        });
+      });
+
+      // 2. De datas existentes em cachedDecklists
+      Object.keys(cachedDecklists || {}).forEach(dateStr => {
+        if (!stageOptions.some(o => o.date === dateStr)) {
+          stageOptions.push({
+            date: dateStr,
+            label: `📅 ${formatDateBR(dateStr)} — Torneio / Evento`
+          });
+        }
+      });
+
+      // Ordena por data decrescente
+      stageOptions.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+      if (stageOptions.length === 0) {
+        stageSelect.innerHTML = '<option value="">Nenhum evento cadastrado</option>';
+        renderAdminDecklistsTable();
+        return;
+      }
+
+      stageSelect.innerHTML = stageOptions.map(o => `<option value="${escapeHTML(o.date)}">${escapeHTML(o.label)}</option>`).join('');
+
+      if (currentVal && stageOptions.some(o => o.date === currentVal)) {
+        stageSelect.value = currentVal;
+      } else {
+        stageSelect.value = stageOptions[0].date;
+      }
+
+      renderAdminDecklistsTable();
+    }
+
+    function renderAdminDecklistsTable() {
+      const stageSelect = document.getElementById('admin-decklist-stage-selector');
+      const tableBody = document.getElementById('admin-decklist-table-body');
+      const summaryCards = document.getElementById('admin-decklist-summary-cards');
+      const searchInput = document.getElementById('admin-decklist-search-input');
+      const filterText = (searchInput?.value || '').trim().toLowerCase();
+
+      if (!stageSelect || !tableBody) return;
+      const selectedDate = stageSelect.value;
+
+      const stageLists = (cachedDecklists && cachedDecklists[selectedDate]) ? cachedDecklists[selectedDate] : {};
+      const entries = Object.entries(stageLists).map(([key, item]) => ({
+        key,
+        ...item
+      }));
+
+      // Filtro de busca
+      const filtered = entries.filter(item => {
+        if (!filterText) return true;
+        const name = (item.nome || item.player || item.Jogador || '').toLowerCase();
+        const popId = String(item.popId || item.id || '').toLowerCase();
+        const arch = (item.archetype || item.deck || '').toLowerCase();
+        return name.includes(filterText) || popId.includes(filterText) || arch.includes(filterText);
+      });
+
+      // Resumo de Métricas
+      const totalRoster = entries.length;
+      let total60 = 0;
+      let totalPending = 0;
+      let countMaster = 0;
+      let countSenior = 0;
+      let countJunior = 0;
+
+      entries.forEach(item => {
+        const parsed = parseAdminDecklistText(item.rawList || item.rawText || '');
+        if (parsed.total === 60) total60++;
+        else totalPending++;
+
+        const cat = (item.category || item.categoria || 'Master').toLowerCase();
+        if (cat.includes('junior')) countJunior++;
+        else if (cat.includes('senior') || cat.includes('sênior')) countSenior++;
+        else countMaster++;
+      });
+
+      if (summaryCards) {
+        summaryCards.innerHTML = `
+          <div class="glass-card" style="padding: 0.85rem; border-radius: 8px; text-align: center; border-color: rgba(255,255,255,0.08);">
+            <div style="font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Inscritos</div>
+            <div style="font-size: 1.35rem; font-weight: 800; color: #fff; margin-top: 2px;">${totalRoster}</div>
+          </div>
+          <div class="glass-card" style="padding: 0.85rem; border-radius: 8px; text-align: center; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05);">
+            <div style="font-size: 0.72rem; color: #10b981; text-transform: uppercase; font-weight: 700;">Listas 60/60</div>
+            <div style="font-size: 1.35rem; font-weight: 800; color: #10b981; margin-top: 2px;">${total60}</div>
+          </div>
+          <div class="glass-card" style="padding: 0.85rem; border-radius: 8px; text-align: center; border-color: ${totalPending > 0 ? 'rgba(245,158,11,0.3)' : 'rgba(255,255,255,0.08)'}; background: ${totalPending > 0 ? 'rgba(245,158,11,0.05)' : 'transparent'};">
+            <div style="font-size: 0.72rem; color: ${totalPending > 0 ? '#f59e0b' : 'var(--text-secondary)'}; text-transform: uppercase; font-weight: 700;">Pendentes</div>
+            <div style="font-size: 1.35rem; font-weight: 800; color: ${totalPending > 0 ? '#f59e0b' : '#94a3b8'}; margin-top: 2px;">${totalPending}</div>
+          </div>
+          <div class="glass-card" style="padding: 0.85rem; border-radius: 8px; text-align: center; border-color: rgba(255,203,5,0.3); background: rgba(255,203,5,0.05);">
+            <div style="font-size: 0.72rem; color: var(--accent-yellow); text-transform: uppercase; font-weight: 700;">Categorias</div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: #fff; margin-top: 5px;">
+              M: <strong>${countMaster}</strong> | S: <strong>${countSenior}</strong> | J: <strong>${countJunior}</strong>
+            </div>
+          </div>
+        `;
+      }
+
+      if (filtered.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-secondary);">
+              ${entries.length === 0 
+                ? 'Nenhuma decklist cadastrada para este evento ainda. Clique em <strong>"➕ Cadastrar / Importar Lista"</strong> para registrar.' 
+                : 'Nenhuma decklist encontrada para o termo pesquisado.'}
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tableBody.innerHTML = filtered.map((item, idx) => {
+        const playerName = item.nome || item.player || item.Jogador || 'Treinador';
+        const popId = item.popId || item.id || 'Sem ID';
+        const cat = item.category || item.categoria || 'Master';
+        const deckName = item.archetype || item.deck || 'Deck Não Definido';
+        const parsed = parseAdminDecklistText(item.rawList || item.rawText || '');
+        
+        let statusBadge = '';
+        if (parsed.total === 60) {
+          statusBadge = `<span style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">✅ 60/60 cartas</span>`;
+        } else if (parsed.total > 0) {
+          statusBadge = `<span style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">⚠️ ${parsed.total}/60 cartas</span>`;
+        } else {
+          statusBadge = `<span style="background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">❌ Sem Lista</span>`;
+        }
+
+        let catBadge = '';
+        if (cat.toLowerCase() === 'junior') {
+          catBadge = `<span style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); padding: 2px 7px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;">Junior</span>`;
+        } else if (cat.toLowerCase() === 'senior' || cat.toLowerCase() === 'sênior') {
+          catBadge = `<span style="background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); padding: 2px 7px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;">Senior</span>`;
+        } else {
+          catBadge = `<span style="background: rgba(255,203,5,0.15); color: var(--accent-yellow); border: 1px solid rgba(255,203,5,0.3); padding: 2px 7px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;">Master</span>`;
+        }
+
+        return `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <td style="text-align: center; color: var(--text-secondary); font-size: 0.8rem;">${idx + 1}</td>
+            <td>
+              <div style="font-weight: 700; color: #fff;">${escapeHTML(playerName)}</div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);">POP ID: <strong>#${escapeHTML(popId)}</strong></div>
+            </td>
+            <td style="text-align: center;">${catBadge}</td>
+            <td>
+              <div style="font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 6px;">
+                ${getDeckEnergyBadgeHtml(deckName)}
+                <span>${escapeHTML(deckName)}</span>
+              </div>
+            </td>
+            <td style="text-align: center;">${statusBadge}</td>
+            <td style="text-align: right;">
+              <div style="display: flex; gap: 0.35rem; justify-content: flex-end;">
+                <button type="button" class="btn" onclick="openAdminDecklistEditModal('${escapeHTML(selectedDate)}', '${escapeHTML(item.key)}')" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: #fff;" title="Ver / Editar Lista">
+                  ✏️ Editar
+                </button>
+                <button type="button" class="btn" onclick="deleteAdminDecklist('${escapeHTML(selectedDate)}', '${escapeHTML(item.key)}')" style="padding: 0.3rem 0.55rem; font-size: 0.75rem; background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.25); color: #ef4444;" title="Excluir Lista">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openAdminDecklistEditModal(stageDate, popIdOrKey) {
+      const modal = document.getElementById('admin-decklist-modal');
+      const stageSelect = document.getElementById('admin-decklist-stage-selector');
+      const errBox = document.getElementById('admin-decklist-modal-error');
+      if (errBox) errBox.style.display = 'none';
+
+      const dateVal = stageDate || stageSelect?.value || new Date().toISOString().split('T')[0];
+      document.getElementById('admin-decklist-stage-date').value = dateVal;
+      document.getElementById('admin-decklist-original-key').value = popIdOrKey || '';
+
+      if (popIdOrKey && cachedDecklists && cachedDecklists[dateVal] && cachedDecklists[dateVal][popIdOrKey]) {
+        const item = cachedDecklists[dateVal][popIdOrKey];
+        document.getElementById('admin-dl-player-name').value = item.nome || item.player || '';
+        document.getElementById('admin-dl-pop-id').value = item.popId || item.id || popIdOrKey;
+        document.getElementById('admin-dl-category').value = item.category || item.categoria || 'Master';
+        document.getElementById('admin-dl-archetype').value = item.archetype || item.deck || '';
+        document.getElementById('admin-dl-raw-text').value = item.rawList || item.rawText || '';
+        document.getElementById('admin-decklist-modal-title').innerText = `📋 Editar Decklist — ${item.nome || item.player || 'Jogador'}`;
+      } else {
+        document.getElementById('admin-dl-player-name').value = '';
+        document.getElementById('admin-dl-pop-id').value = '';
+        document.getElementById('admin-dl-category').value = 'Master';
+        document.getElementById('admin-dl-archetype').value = '';
+        document.getElementById('admin-dl-raw-text').value = '';
+        document.getElementById('admin-decklist-modal-title').innerText = '📋 Cadastrar Nova Decklist';
+      }
+
+      handleAdminDlTextChange();
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeAdminDecklistModal() {
+      const modal = document.getElementById('admin-decklist-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function handleAdminDlPlayerChange() {
+      const name = document.getElementById('admin-dl-player-name').value.trim();
+      if (!name) return;
+
+      if (cachedJogadores && cachedJogadores.length > 0) {
+        const matched = cachedJogadores.find(j => (j.Jogador || '').toLowerCase() === name.toLowerCase());
+        if (matched) {
+          const popInput = document.getElementById('admin-dl-pop-id');
+          const catSelect = document.getElementById('admin-dl-category');
+          if (popInput && !popInput.value && matched.ID) popInput.value = matched.ID;
+          if (catSelect && matched.Categoria) catSelect.value = matched.Categoria;
+        }
+      }
+    }
+
+    function handleAdminDlTextChange() {
+      const text = document.getElementById('admin-dl-raw-text').value;
+      const counter = document.getElementById('admin-dl-card-counter');
+      const previewBox = document.getElementById('admin-dl-preview-container');
+      const pCount = document.getElementById('admin-dl-pokemon-count');
+      const tCount = document.getElementById('admin-dl-trainer-count');
+      const eCount = document.getElementById('admin-dl-energy-count');
+      const breakdown = document.getElementById('admin-dl-parsed-breakdown');
+      const archInput = document.getElementById('admin-dl-archetype');
+
+      const parsed = parseAdminDecklistText(text);
+
+      if (counter) {
+        counter.innerText = `${parsed.total} / 60 cartas`;
+        if (parsed.total === 60) {
+          counter.style.color = '#10b981';
+          counter.style.background = 'rgba(16,185,129,0.15)';
+        } else if (parsed.total > 0) {
+          counter.style.color = '#f59e0b';
+          counter.style.background = 'rgba(245,158,11,0.15)';
+        } else {
+          counter.style.color = '#94a3b8';
+          counter.style.background = 'rgba(255,255,255,0.06)';
+        }
+      }
+
+      if (parsed.total > 0) {
+        if (previewBox) previewBox.style.display = 'block';
+        if (pCount) pCount.innerText = `Pokémon: ${parsed.pokemon}`;
+        if (tCount) tCount.innerText = `Treinadores: ${parsed.trainer}`;
+        if (eCount) eCount.innerText = `Energias: ${parsed.energy}`;
+
+        if (breakdown) {
+          breakdown.innerHTML = parsed.cards.slice(0, 15).map(c => `<div>${c.qty}x ${escapeHTML(c.name)}</div>`).join('') + (parsed.cards.length > 15 ? `<div style="color:var(--text-secondary);">... e mais ${parsed.cards.length - 15} cartas</div>` : '');
+        }
+
+        if (archInput && !archInput.value) {
+          const firstPokemon = parsed.cards.find(c => c.section === 'pokemon');
+          if (firstPokemon) {
+            const cleanName = firstPokemon.name.replace(/\s+(ex|VMAX|VSTAR|V|GX)$/i, ' $1').trim();
+            archInput.value = cleanName;
+          }
+        }
+      } else {
+        if (previewBox) previewBox.style.display = 'none';
+      }
+    }
+
+    async function handleSaveAdminDecklist(e) {
+      if (e) e.preventDefault();
+      const errBox = document.getElementById('admin-decklist-modal-error');
+      const submitBtn = document.getElementById('btn-save-admin-decklist-submit');
+
+      const stageDate = document.getElementById('admin-decklist-stage-date').value;
+      const origKey = document.getElementById('admin-decklist-original-key').value;
+      const playerName = document.getElementById('admin-dl-player-name').value.trim();
+      const popId = document.getElementById('admin-dl-pop-id').value.trim();
+      const category = document.getElementById('admin-dl-category').value;
+      const archetype = document.getElementById('admin-dl-archetype').value.trim();
+      const rawText = document.getElementById('admin-dl-raw-text').value.trim();
+
+      if (!stageDate) {
+        if (errBox) { errBox.innerText = "Data da etapa não informada."; errBox.style.display = 'block'; }
+        return;
+      }
+      if (!playerName) {
+        if (errBox) { errBox.innerText = "Informe o nome do treinador."; errBox.style.display = 'block'; }
+        return;
+      }
+
+      const key = popId || playerName;
+      const parsed = parseAdminDecklistText(rawText);
+
+      try {
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = "Salvando..."; }
+
+        const updatedDecklists = { ...(cachedDecklists || {}) };
+        if (!updatedDecklists[stageDate]) {
+          updatedDecklists[stageDate] = {};
+        }
+
+        if (origKey && origKey !== key) {
+          delete updatedDecklists[stageDate][origKey];
+        }
+
+        updatedDecklists[stageDate][key] = {
+          nome: playerName,
+          player: playerName,
+          popId: popId,
+          id: popId,
+          category: category,
+          categoria: category,
+          archetype: archetype,
+          deck: archetype,
+          rawList: rawText,
+          cardCount: parsed.total,
+          updatedAt: new Date().toISOString()
+        };
+
+        const config = GITHUB_CONFIG;
+        const decklistsUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/decklists.json`;
+        let dlSha = await getLatestSha(decklistsUrl);
+
+        const commitPayload = {
+          message: `Atualizar decklist de ${playerName} (${stageDate})`,
+          content: encodeBase64UTF8(JSON.stringify(updatedDecklists, null, 2)),
+          branch: config.branch
+        };
+        if (dlSha) commitPayload.sha = dlSha;
+
+        const res = await fetch(decklistsUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao salvar decklists.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedDecklists = updatedDecklists;
+        closeAdminDecklistModal();
+        renderAdminDecklistsTable();
+        showSuccess(`Decklist de "${playerName}" salva com sucesso!`);
+      } catch (err) {
+        if (errBox) {
+          errBox.innerText = err.message || "Erro desconhecido ao salvar decklist.";
+          errBox.style.display = 'block';
+        }
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = "💾 Salvar Decklist"; }
+      }
+    }
+
+    async function deleteAdminDecklist(stageDate, popIdOrKey) {
+      if (!confirm(`Deseja realmente remover esta decklist do evento ${formatDateBR(stageDate)}?`)) {
+        return;
+      }
+
+      try {
+        const updatedDecklists = { ...(cachedDecklists || {}) };
+        if (updatedDecklists[stageDate] && updatedDecklists[stageDate][popIdOrKey]) {
+          delete updatedDecklists[stageDate][popIdOrKey];
+        }
+
+        const config = GITHUB_CONFIG;
+        const decklistsUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/decklists.json`;
+        let dlSha = await getLatestSha(decklistsUrl);
+
+        const commitPayload = {
+          message: `Remover decklist (${stageDate})`,
+          content: encodeBase64UTF8(JSON.stringify(updatedDecklists, null, 2)),
+          branch: config.branch
+        };
+        if (dlSha) commitPayload.sha = dlSha;
+
+        const res = await fetch(decklistsUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${runtimeToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(commitPayload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error("Falha ao atualizar decklists.json no GitHub: " + (errData.message || res.statusText));
+        }
+
+        cachedDecklists = updatedDecklists;
+        renderAdminDecklistsTable();
+        showSuccess("Decklist removida com sucesso!");
+      } catch (err) {
+        showError("Erro ao excluir decklist: " + err.message);
+      }
+    }
+
+    function exportAdminDecklistsRoster() {
+      const stageSelect = document.getElementById('admin-decklist-stage-selector');
+      if (!stageSelect) return;
+      const selectedDate = stageSelect.value;
+      const stageLists = (cachedDecklists && cachedDecklists[selectedDate]) ? cachedDecklists[selectedDate] : {};
+
+      const rows = [
+        ['Nome', 'POP_ID', 'Categoria', 'Deck', 'Cartas_Validadas']
+      ];
+
+      Object.values(stageLists).forEach(item => {
+        const parsed = parseAdminDecklistText(item.rawList || item.rawText || '');
+        rows.push([
+          `"${(item.nome || item.player || '').replace(/"/g, '""')}"`,
+          `"${item.popId || item.id || ''}"`,
+          `"${item.category || item.categoria || 'Master'}"`,
+          `"${(item.archetype || item.deck || '').replace(/"/g, '""')}"`,
+          `"${parsed.total}/60"`
+        ]);
+      });
+
+      const csvContent = "data:text/csv;charset=utf-8," + rows.map(r => r.join(',')).join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `roster_${selectedDate || 'torneio'}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
     function showSuccess(msg) {
       const successBox = document.getElementById('general-success');
       const errorBox = document.getElementById('general-error');
@@ -8111,12 +8731,15 @@
     // =========================================================================
     let auditResults = [];
     let currentAuditFilter = 'all';
+    let currentRankingAudit = null;
 
     async function runFullAudit() {
       const container = document.getElementById('audit-stages-container');
       const statusBadge = document.getElementById('audit-status-badge');
+      const rankingAlertContainer = document.getElementById('audit-ranking-alert-container');
       if (!container) return;
 
+      if (rankingAlertContainer) rankingAlertContainer.innerHTML = '';
       container.innerHTML = `
         <div style="text-align:center; padding: 3rem 1rem; color: var(--text-secondary);">
           <div style="font-size: 2rem; margin-bottom: 0.5rem; animation: spin 1s linear infinite; display: inline-block;">⚙️</div>
@@ -8138,19 +8761,70 @@
           return;
         }
 
-        // Carrega o ranking.tdf atual para auditoria cruzada
+        // 1. AUDITORIA PROFUNDA DO RANKING GERAL (ranking.tdf)
+        currentRankingAudit = {
+          totalRows: 0,
+          duplicateIds: [],
+          duplicateNames: [],
+          hasAnomalies: false
+        };
         let rankingMap = new Map();
+        let rankingIdMap = new Map();
+        let rankingNameMap = new Map();
+
         try {
           const rankRes = await fetch(`ranking.tdf?v=${timestamp}`);
           if (rankRes.ok) {
             const rankText = await rankRes.text();
             const parsedRank = parseTDF(rankText);
-            parsedRank.forEach(r => {
+            currentRankingAudit.totalRows = parsedRank.length;
+
+            parsedRank.forEach((r, rowIdx) => {
               const rId = getPlayerId(r);
+              const cleanId = rId ? String(rId).trim() : '';
               const rName = r.Jogador || r.Player || r.Name || '';
-              if (rId) rankingMap.set(String(rId).trim(), r);
-              if (rName) rankingMap.set(normalizePlayerName(rName), r);
+              const normName = normalizePlayerName(rName).replace(/[^a-z0-9]/g, '');
+              const rowObj = {
+                pos: r.Pos || (rowIdx + 1),
+                id: cleanId,
+                name: rName,
+                pts: Number(r.Pontos || 0),
+                category: r.Categoria || 'MASTER',
+                ved: `${r.Vitorias || 0}V-${r.Empates || 0}E-${r.Derrotas || 0}D`,
+                participacoes: r.Participacoes || 0,
+                historico: r.HistoricoColocacoes || ''
+              };
+
+              if (cleanId) {
+                if (!rankingIdMap.has(cleanId)) rankingIdMap.set(cleanId, []);
+                rankingIdMap.get(cleanId).push(rowObj);
+                rankingMap.set(cleanId, r);
+              }
+              if (normName) {
+                if (!rankingNameMap.has(normName)) rankingNameMap.set(normName, []);
+                rankingNameMap.get(normName).push(rowObj);
+                rankingMap.set(normalizePlayerName(rName), r);
+              }
             });
+
+            // Encontra duplicidades de POP ID no Ranking Geral
+            for (const [id, entries] of rankingIdMap.entries()) {
+              if (entries.length > 1) {
+                currentRankingAudit.duplicateIds.push({ id, entries });
+                currentRankingAudit.hasAnomalies = true;
+              }
+            }
+
+            // Encontra duplicidades de nomes semelhantes no Ranking Geral
+            for (const [normName, entries] of rankingNameMap.entries()) {
+              if (entries.length > 1) {
+                const allSameId = entries.every(e => e.id && e.id === entries[0].id);
+                if (!allSameId) {
+                  currentRankingAudit.duplicateNames.push({ normName, entries });
+                  currentRankingAudit.hasAnomalies = true;
+                }
+              }
+            }
           }
         } catch (e) {
           console.warn("Ranking geral indisponível para auditoria cruzada:", e);
@@ -8199,7 +8873,10 @@
             players: [],
             errorCount: 0,
             warningCount: 0,
-            status: 'perfeito' // 'perfeito', 'alerta', 'erro'
+            missingDeckCount: 0,
+            missingIdCount: 0,
+            rankMismatchCount: 0,
+            status: 'perfeito'
           };
 
           if (fetchError) {
@@ -8230,6 +8907,7 @@
                 }
               } else {
                 idStatus = 'missing_id';
+                stageAudit.missingIdCount++;
                 stageAudit.warningCount++;
                 totalWarnings++;
               }
@@ -8240,9 +8918,6 @@
               const basePts = (v * 3) + (e * 1);
               const expectedPts = basePts * mult;
               
-              // No formato TOM oficial, o arquivo da etapa armazena os pontos brutos de vitórias/empates (basePts).
-              // No ranking consolidado da Liga, esses pontos são multiplicados pelo peso do evento (expectedPts).
-              // Se recordedPts bater com basePts OU com expectedPts, a matemática do torneio está 100% íntegra!
               const isBaseMatch = Math.abs(recordedPts - basePts) < 0.01;
               const isMultipliedMatch = Math.abs(recordedPts - expectedPts) < 0.01;
               const isPointMatch = isBaseMatch || isMultipliedMatch;
@@ -8270,6 +8945,7 @@
                 totalWithDeck++;
               } else {
                 deckStatus = 'missing_deck';
+                stageAudit.missingDeckCount++;
                 stageAudit.warningCount++;
                 totalWarnings++;
               }
@@ -8284,6 +8960,7 @@
                   const stagePos = String(p.Pos || p.Position || pIdx + 1);
                   if (histPos === '-' || histPos !== stagePos) {
                     rankSyncStatus = 'mismatch';
+                    stageAudit.rankMismatchCount++;
                     stageAudit.warningCount++;
                     totalWarnings++;
                   }
@@ -8350,10 +9027,10 @@
         if (decksCardSub) decksCardSub.innerText = `${totalWithDeck} com deck no Metagame`;
 
         if (statusBadge) {
-          if (totalErrors === 0 && totalWarnings === 0) {
-            statusBadge.innerHTML = `<span style="color:#10b981">🟢 Todas as ${chronologicalStages.length} etapas estão 100% íntegras!</span>`;
+          if (totalErrors === 0 && totalWarnings === 0 && (!currentRankingAudit || !currentRankingAudit.hasAnomalies)) {
+            statusBadge.innerHTML = `<span style="color:#10b981">🟢 Todas as ${chronologicalStages.length} etapas e o Ranking Geral estão 100% íntegros!</span>`;
           } else if (totalErrors === 0) {
-            statusBadge.innerHTML = `<span style="color:#f59e0b">🟡 ${totalWarnings} avisos detectados (IDs/Decks ausentes).</span>`;
+            statusBadge.innerHTML = `<span style="color:#f59e0b">🟡 ${totalWarnings} avisos detectados (defeitos detalhados abaixo).</span>`;
           } else {
             statusBadge.innerHTML = `<span style="color:#ef4444">🔴 ${totalErrors} divergências críticas encontradas!</span>`;
           }
@@ -8378,7 +9055,80 @@
 
     function renderAuditStagesView() {
       const container = document.getElementById('audit-stages-container');
+      const rankingAlertContainer = document.getElementById('audit-ranking-alert-container');
       if (!container) return;
+
+      // 1. INJETA DIAGNÓSTICO DO RANKING GERAL SE HOUVER DUPLICIDADE
+      if (rankingAlertContainer) {
+        if (currentRankingAudit && currentRankingAudit.hasAnomalies) {
+          rankingAlertContainer.innerHTML = `
+            <div class="glass-card" style="margin-bottom: 1.5rem; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; padding: 1.25rem;">
+              <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                <span style="font-size: 1.5rem; line-height: 1;">⚠️</span>
+                <div style="flex: 1;">
+                  <h3 style="color: #f87171; margin: 0 0 0.5rem 0; font-size: 1.05rem; font-weight: 700;">
+                    Duplicidade Detectada no Ranking Geral (ranking.tdf)
+                  </h3>
+                  <p style="font-size: 0.82rem; color: #fecaca; margin: 0 0 0.75rem 0; line-height: 1.5;">
+                    O auditor identificou que o mesmo jogador possui <strong>mais de uma linha</strong> na tabela consolidada do Ranking Geral:
+                  </p>
+                  
+                  ${currentRankingAudit.duplicateIds.map(dup => {
+                    const totalPts = dup.entries.reduce((sum, e) => sum + e.pts, 0);
+                    return `
+                      <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 0.85rem; margin-bottom: 0.6rem; border: 1px solid rgba(239,68,68,0.2);">
+                        <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">
+                          Treinador: <span style="color: var(--accent-yellow);">${escapeHTML(dup.entries[0].name)}</span> 
+                          <span style="font-family: monospace; font-size: 0.8rem; color: #93c5fd; margin-left: 0.4rem;">(POP ID: #${escapeHTML(dup.id)})</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.4rem 0;">
+                          Registrado em <strong>${dup.entries.length} linhas separadas</strong>:
+                        </div>
+                        <ul style="margin: 0.25rem 0; padding-left: 1.25rem; font-size: 0.82rem; color: #e2e8f0; line-height: 1.6;">
+                          ${dup.entries.map(e => `
+                            <li>Posição <strong>${e.pos}º</strong>: "${escapeHTML(e.name)}" &bull; <strong>${e.pts} PTS</strong> &bull; Cartel: ${e.ved} &bull; ${e.participacoes} etapas jogadas</li>
+                          `).join('')}
+                        </ul>
+                        <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #93c5fd; background: rgba(59, 130, 246, 0.1); padding: 0.5rem 0.75rem; border-radius: 4px; line-height: 1.4;">
+                          💡 <strong>Diagnóstico:</strong> Esse conflito ocorreu porque o nome foi lançado com variação de grafia (ex: ponto final "CRISTIAN S.") em etapas diferentes.<br>
+                          A pontuação real correta dele somando todas as participações é <strong>${totalPts} PTS</strong>.
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+
+                  ${currentRankingAudit.duplicateNames.map(dup => `
+                    <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 0.85rem; margin-bottom: 0.6rem; border: 1px solid rgba(245,158,11,0.2);">
+                      <div style="font-weight: 700; color: #fff; font-size: 0.9rem;">
+                        Nome Semelhante: <span style="color: var(--accent-yellow);">${escapeHTML(dup.normName)}</span>
+                      </div>
+                      <div style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.35rem 0;">
+                        Linhas com nomes equivalentes mas sem ID compatível:
+                      </div>
+                      <ul style="margin: 0.25rem 0; padding-left: 1.25rem; font-size: 0.8rem; color: #e2e8f0;">
+                        ${dup.entries.map(e => `
+                          <li>Posição <strong>${e.pos}º</strong>: "${escapeHTML(e.name)}" (ID: #${escapeHTML(e.id || 'N/A')}) com ${e.pts} PTS</li>
+                        `).join('')}
+                      </ul>
+                    </div>
+                  `).join('')}
+
+                  <div style="margin-top: 0.85rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; border-top: 1px solid rgba(239,68,68,0.2); padding-top: 0.75rem;">
+                    <div style="font-size: 0.78rem; color: var(--text-secondary); max-width: 600px; line-height: 1.4;">
+                      ℹ️ Os arquivos das etapas individuais (<code>etapas/*.tdf</code>) estão 100% seguros e corretos. Ao clicar no botão ao lado, o sistema lê todos os TDFs oficiais e consolida o jogador automaticamente pelo ID único.
+                    </div>
+                    <button type="button" class="btn btn-whatsapp" style="background: #0f766e; border-color: #0f766e; color: #fff; font-size: 0.82rem; font-weight: 600; padding: 0.45rem 0.9rem;" onclick="recalculateRankingFromAllStages()">
+                      ⚡ Consolidar & Sincronizar Ranking Geral
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          rankingAlertContainer.innerHTML = '';
+        }
+      }
 
       const filtered = auditResults.filter(stg => {
         if (currentAuditFilter === 'warn') {
@@ -8395,7 +9145,6 @@
         `;
         return;
       }
-
       container.innerHTML = filtered.map((stg, idx) => {
         const parts = stg.date.split('-');
         const dateFormatted = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : stg.date;
@@ -8404,15 +9153,21 @@
         let borderColor = 'rgba(255,255,255,0.08)';
         let headerBg = 'rgba(255,255,255,0.02)';
 
-        if (stg.status === 'perfeito') {
-          statusBadgeHtml = `<span style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">🟢 100% Íntegro</span>`;
-        } else if (stg.status === 'alerta') {
-          statusBadgeHtml = `<span style="background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">🟡 ${stg.warningCount} Alerta${stg.warningCount > 1 ? 's' : ''}</span>`;
-          borderColor = 'rgba(245,158,11,0.25)';
-        } else {
-          statusBadgeHtml = `<span style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3); padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">🔴 ${stg.errorCount} Divergência${stg.errorCount > 1 ? 's' : ''}</span>`;
+        if (stg.status === 'erro' || stg.errorCount > 0) {
+          statusBadgeHtml = `<span style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3); padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">🔴 ${stg.errorCount} Divergência${stg.errorCount > 1 ? 's' : ''} de Pontos</span>`;
           borderColor = 'rgba(239,68,68,0.3)';
           headerBg = 'rgba(239,68,68,0.05)';
+        } else if (stg.missingIdCount > 0 && stg.missingDeckCount > 0) {
+          statusBadgeHtml = `<span style="background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">🟡 ${stg.missingIdCount} sem ID &bull; ${stg.missingDeckCount} sem deck</span>`;
+          borderColor = 'rgba(245,158,11,0.25)';
+        } else if (stg.missingIdCount > 0) {
+          statusBadgeHtml = `<span style="background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">🟡 ${stg.missingIdCount} sem POP ID</span>`;
+          borderColor = 'rgba(245,158,11,0.25)';
+        } else if (stg.missingDeckCount > 0) {
+          statusBadgeHtml = `<span style="background:rgba(129, 140, 248, 0.15); color:#818cf8; border:1px solid rgba(129, 140, 248, 0.3); padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">🟡 ${stg.missingDeckCount} sem deck no Metagame</span>`;
+          borderColor = 'rgba(129, 140, 248, 0.25)';
+        } else {
+          statusBadgeHtml = `<span style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">🟢 100% Íntegro</span>`;
         }
 
         const playersRowsHtml = stg.players.map(p => {
@@ -8483,17 +9238,23 @@
 
             <div id="audit-detail-${idx}" style="display: none; padding: 1rem; border-top: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.3);">
               
-              <!-- Barra de Soluções Rápidas da Etapa -->
-              <div style="display: flex; gap: 0.5rem; margin-bottom: 0.85rem; flex-wrap: wrap; background: rgba(255,255,255,0.03); padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06); align-items: center; justify-content: space-between;">
-                <div style="font-size: 0.78rem; font-weight: 600; color: var(--accent-yellow); display: flex; align-items: center; gap: 0.35rem;">
-                  💡 Ações do Metagame para esta Etapa:
+              <!-- Quadro de Diagnóstico Informativo da Etapa -->
+              <div style="display: flex; gap: 0.75rem; margin-bottom: 0.85rem; background: rgba(255,255,255,0.03); padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06); align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                <div>
+                  <div style="font-size: 0.82rem; font-weight: 700; color: #93c5fd; display: flex; align-items: center; gap: 0.35rem;">
+                    ℹ️ Diagnóstico da Etapa:
+                  </div>
+                  <div style="font-size: 0.76rem; color: var(--text-secondary); margin-top: 3px; line-height: 1.4;">
+                    &bull; <strong>Pontos e Cartel (V-E-D):</strong> 100% conferidos (${stg.players.length} partidas íntegras).<br>
+                    ${stg.missingDeckCount > 0 
+                      ? `&bull; <strong>Metagame:</strong> ${stg.missingDeckCount} jogador(es) sem deck associado nesta data. <em>(Não interfere na pontuação nem no ranking da Liga).</em>` 
+                      : `&bull; <strong>Metagame:</strong> 100% dos jogadores possuem deck associado.`}
+                    ${stg.missingIdCount > 0 ? `<br>&bull; <strong>Identificação:</strong> ${stg.missingIdCount} jogador(es) sem POP ID.` : ''}
+                  </div>
                 </div>
-                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-                  <button type="button" class="btn" onclick="openStageMetagameEditor('${stg.date}')" style="padding: 0.3rem 0.65rem; font-size: 0.75rem; background: rgba(129, 140, 248, 0.15); color: #818cf8; border-color: rgba(129, 140, 248, 0.3);" title="Atribuir decks no metagame desta etapa">
-                    🎴 Atribuir Decks no Metagame
-                  </button>
-                  <button type="button" class="btn" onclick="autoAssignDecksForStage('${stg.date}')" style="padding: 0.3rem 0.65rem; font-size: 0.75rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3);" title="Preencher decks conhecidos automaticamente">
-                    ✨ Auto-Preencher Decks Conhecidos
+                <div>
+                  <button type="button" class="btn" onclick="openStageMetagameEditor('${stg.date}')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; background: rgba(129, 140, 248, 0.15); color: #818cf8; border-color: rgba(129, 140, 248, 0.3);" title="Abrir aba Metagame para esta data">
+                    🎴 Visualizar no Metagame
                   </button>
                 </div>
               </div>

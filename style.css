@@ -1833,10 +1833,35 @@ tbody tr.top-8 .row-rank,
   color: #10b981;
 }
 
+.timeline-step .step-pts {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 9999px;
+  padding: 1px 7px;
+  margin: 0.25rem 0;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.timeline-step.podium .step-pts {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.timeline-step.step-empty .step-pts {
+  color: var(--text-muted);
+  background: transparent;
+  border-color: transparent;
+}
+
 .timeline-step .step-date {
   font-size: 0.75rem;
   color: var(--text-secondary);
-  margin-top: 0.25rem;
+  margin-top: 0.15rem;
   letter-spacing: 0.02em;
   line-height: 1.2;
 }
@@ -3918,6 +3943,25 @@ tbody tr.top-8 .row-rank,
   );
   pointer-events: none;
   transform: rotate(25deg);
+}
+
+.trainer-card-deck-watermark {
+  position: absolute;
+  right: -25px;
+  top: -15px;
+  width: 240px;
+  height: 240px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.12;
+  filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.25));
+  mask-image: radial-gradient(circle at center, black 35%, transparent 75%);
+  -webkit-mask-image: radial-gradient(circle at center, black 35%, transparent 75%);
+  pointer-events: none;
+  z-index: 0;
+  transform: rotate(12deg);
+  transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
 .trainer-titles-grid {
