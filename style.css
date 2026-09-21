@@ -1668,6 +1668,8 @@ tbody tr.top-8 .row-rank,
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   text-align: center;
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .modal-avatar {
@@ -1699,6 +1701,8 @@ tbody tr.top-8 .row-rank,
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  position: relative;
+  z-index: 1;
 }
 
 .modal-stats-grid {
@@ -3949,20 +3953,18 @@ tbody tr.top-8 .row-rank,
 
 .trainer-card-deck-watermark {
   position: absolute;
-  right: -25px;
-  top: -15px;
-  width: 240px;
-  height: 240px;
+  right: -10px;
+  top: 10px;
+  width: 220px;
+  height: 220px;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  opacity: 0.12;
-  filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.25));
-  mask-image: radial-gradient(circle at center, black 35%, transparent 75%);
-  -webkit-mask-image: radial-gradient(circle at center, black 35%, transparent 75%);
+  opacity: 0.18;
+  filter: drop-shadow(0 0 20px rgba(255, 203, 5, 0.4)) drop-shadow(0 0 35px rgba(255, 255, 255, 0.25));
   pointer-events: none;
   z-index: 0;
-  transform: rotate(12deg);
+  transform: rotate(8deg);
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
 

@@ -2484,65 +2484,82 @@ function closeLightbox() {
 }
 
 let stageScoresCache = null;
-let isPreloadingScores = false;
+let preloadStageScoresPromise = null;
+
+function getPlayerId(r) {
+  if (!r) return '';
+  return String(r.ID || r.id || r.POPID || r['Player ID'] || r['Play! ID'] || '').trim();
+}
 
 async function preloadStageScores() {
-  if (stageScoresCache) return stageScoresCache;
-  if (isPreloadingScores) return null;
-  isPreloadingScores = true;
-  stageScoresCache = {};
-
-  const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
-  if (cleanStages.length === 0) {
-    isPreloadingScores = false;
+  if (stageScoresCache && Object.keys(stageScoresCache).length > 0) {
     return stageScoresCache;
   }
-
-  const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  let baseRankingUrl = (typeof githubSources !== 'undefined' && githubSources.Ranking) ? githubSources.Ranking : '';
-  if (window.latestCommitSha && baseRankingUrl) {
-    baseRankingUrl = baseRankingUrl.replace(/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)/, `/raw.githubusercontent.com/$1/$2/${window.latestCommitSha}`);
+  if (preloadStageScoresPromise) {
+    return preloadStageScoresPromise;
   }
 
-  const promises = cleanStages.map(async stg => {
-    try {
-      let stageTdfUrl = '';
-      if (isLocalHost) {
-        stageTdfUrl = `etapas/${stg.data}.tdf?v=${new Date().getTime()}`;
-      } else if (baseRankingUrl) {
-        stageTdfUrl = baseRankingUrl.replace('ranking.tdf', `etapas/${stg.data}.tdf`);
-      } else {
-        stageTdfUrl = `etapas/${stg.data}.tdf`;
-      }
-
-      const res = await fetch(stageTdfUrl);
-      if (res.ok) {
-        const text = await res.text();
-        const rows = parseTDF(text);
-        const mult = Number(stg.multiplicador) || 1.0;
-        const playerMap = new Map();
-
-        rows.forEach(r => {
-          const rawId = getPlayerId(r);
-          const cleanId = rawId ? String(rawId).trim() : '';
-          const rawName = r.Jogador || r.Player || r.Name || '';
-          const normName = normalizePlayerName(rawName);
-          const rawPts = Number(getFirstDefined(r, ['Pontos', 'Points', 'Pts'])) || 0;
-          const finalPts = rawPts * mult;
-
-          if (cleanId) playerMap.set(cleanId, finalPts);
-          if (normName) playerMap.set(normName, finalPts);
-        });
-        stageScoresCache[stg.data] = playerMap;
-      }
-    } catch (e) {
-      console.warn("Falha ao carregar pontuação da etapa " + stg.data, e);
+  preloadStageScoresPromise = (async () => {
+    const cleanStages = (stagesIndex || []).filter(s => s && typeof s.data === 'string');
+    if (cleanStages.length === 0) {
+      return stageScoresCache || {};
     }
-  });
 
-  await Promise.allSettled(promises);
-  isPreloadingScores = false;
-  return stageScoresCache;
+    const newCache = stageScoresCache || {};
+    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    let baseRankingUrl = (typeof githubSources !== 'undefined' && githubSources.Ranking) ? githubSources.Ranking : '';
+    if (window.latestCommitSha && baseRankingUrl) {
+      baseRankingUrl = baseRankingUrl.replace(/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)/, `/raw.githubusercontent.com/$1/$2/${window.latestCommitSha}`);
+    }
+
+    const promises = cleanStages.map(async stg => {
+      try {
+        const urlsToTry = [
+          `etapas/${stg.data}.tdf?v=${Date.now()}`,
+          baseRankingUrl ? baseRankingUrl.replace('ranking.tdf', `etapas/${stg.data}.tdf`) : null,
+          `etapas/${stg.data}.tdf`
+        ].filter(Boolean);
+
+        let text = '';
+        for (const url of urlsToTry) {
+          try {
+            const resp = await fetch(url);
+            if (resp.ok) {
+              text = await resp.text();
+              break;
+            }
+          } catch (err) {}
+        }
+
+        if (text) {
+          const rows = parseTDF(text);
+          const mult = Number(stg.multiplicador) || 1.0;
+          const playerMap = new Map();
+
+          rows.forEach(r => {
+            const cleanId = getPlayerId(r);
+            const rawName = r.Jogador || r.Player || r.Name || '';
+            const normName = normalizePlayerName(rawName);
+            const rawPts = Number(getFirstDefined(r, ['Pontos', 'Points', 'Pts'])) || 0;
+            const finalPts = rawPts * mult;
+
+            if (cleanId) playerMap.set(cleanId, finalPts);
+            if (normName) playerMap.set(normName, finalPts);
+          });
+          newCache[stg.data] = playerMap;
+        }
+      } catch (e) {
+        console.warn("Falha ao carregar pontuação da etapa " + stg.data, e);
+      }
+    });
+
+    await Promise.allSettled(promises);
+    stageScoresCache = newCache;
+    preloadStageScoresPromise = null;
+    return stageScoresCache;
+  })();
+
+  return preloadStageScoresPromise;
 }
 
 function renderPlayerTimeline(player) {
@@ -2758,7 +2775,7 @@ window.openPlayerModal = function(playerRef, playerIdRef = '') {
       const normDeck = normalizePlayerName(lastUsedDeck);
       const deckObj = appData.Decks.find(d => normalizePlayerName(d.deck || d.Deck || '') === normDeck);
       if (deckObj) {
-        deckImgUrl = deckObj.imagem || deckObj.icone || '';
+        deckImgUrl = deckObj.icone || deckObj.imagem || '';
       }
     }
 
@@ -2774,14 +2791,12 @@ window.openPlayerModal = function(playerRef, playerIdRef = '') {
   // Renderiza timeline com colocação e pontos conquistados por etapa
   renderPlayerTimeline(player);
 
-  if (!stageScoresCache) {
-    preloadStageScores().then(() => {
-      const activeModal = document.getElementById('player-modal');
-      if (activeModal && activeModal.classList.contains('active')) {
-        renderPlayerTimeline(player);
-      }
-    });
-  }
+  preloadStageScores().then(() => {
+    const activeModal = document.getElementById('player-modal');
+    if (activeModal && activeModal.classList.contains('active')) {
+      renderPlayerTimeline(player);
+    }
+  });
 
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
