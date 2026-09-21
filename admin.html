@@ -24,10 +24,21 @@
       color: var(--accent-yellow) !important;
     }
 
-    select.search-input {
+    select.search-input, select.select-input {
       background-color: rgba(15, 23, 42, 0.85) !important;
       color: #fff !important;
       cursor: pointer;
+      padding-left: 0.9rem !important;
+      padding-right: 2.25rem !important;
+      border-radius: var(--radius-pill);
+      min-height: 42px;
+      font-size: 0.85rem;
+      box-sizing: border-box;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 0.85rem center !important;
+      background-size: 1.1em !important;
     }
 
     .admin-container {
@@ -792,7 +803,7 @@
 
         <div style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap;">
           <input type="text" id="player-catalog-search" class="search-input" placeholder="🔍 Buscar por nome ou POP ID..." oninput="filterPlayersCatalog()" style="flex: 2; min-width: 200px;">
-          <select id="player-category-filter" class="search-input" onchange="filterPlayersCatalog()" style="flex: 1; min-width: 140px;">
+          <select id="player-category-filter" class="search-input select-input" onchange="filterPlayersCatalog()" style="flex: 1; min-width: 170px;">
             <option value="all">Todas as Categorias</option>
             <option value="Master">Master</option>
             <option value="Senior">Sênior</option>
@@ -919,13 +930,13 @@
         </div>
 
         <div style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem; align-items: center; flex-wrap: wrap;">
-          <input type="text" id="calendar-search-input" class="search-input" placeholder="🔍 Buscar por evento, data ou local..." oninput="filterCalendarCatalog()" style="flex: 2; min-width: 180px;">
-          <select id="calendar-period-filter" class="search-input" onchange="filterCalendarCatalog()" style="flex: 1; min-width: 140px;">
+          <input type="text" id="calendar-search-input" class="search-input" placeholder="🔍 Buscar por evento, data ou local..." oninput="filterCalendarCatalog()" style="flex: 2; min-width: 200px;">
+          <select id="calendar-period-filter" class="search-input select-input" onchange="filterCalendarCatalog()" style="flex: 1.2; min-width: 185px;">
             <option value="upcoming" selected>⏳ Próximos Eventos</option>
             <option value="all">📅 Todos os Períodos</option>
             <option value="past">📜 Eventos Passados</option>
           </select>
-          <select id="calendar-status-filter" class="search-input" onchange="filterCalendarCatalog()" style="flex: 1; min-width: 130px;">
+          <select id="calendar-status-filter" class="search-input select-input" onchange="filterCalendarCatalog()" style="flex: 1.1; min-width: 165px;">
             <option value="all">Todos os Status</option>
             <option value="confirmado">Confirmado</option>
             <option value="pendente">Pendente</option>
