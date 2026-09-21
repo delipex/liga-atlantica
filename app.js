@@ -1499,6 +1499,17 @@ function renderDashboard() {
           </div>
           ${renderEventLinkButton(eventConf.signupLink)}
         </div>
+        ${(() => {
+          const premierConfig = appData.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || {};
+          if (premierConfig.abertas !== false) {
+            return `
+              <button type="button" class="btn btn-whatsapp" onclick="openDecklistModal('${escapeHTML(premierConfig.eventoData || dateIso)}')" style="width: 100%; justify-content: center; margin-top: 0.85rem; font-weight: 800; background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; box-shadow: 0 4px 15px rgba(255, 203, 5, 0.2);">
+                📋 Fazer Inscrição & Enviar Decklist (Online)
+              </button>
+            `;
+          }
+          return '';
+        })()}
       `;
 
       startCountdown();
@@ -1902,9 +1913,21 @@ function renderCalendarCard(evt, isNext = false, isPast = false) {
     }
   }
 
+  const premierConfig = appData.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || {};
+  const isPremierActiveForEvent = !isPast && (premierConfig.abertas !== false) && (
+    (premierConfig.eventoData && (iso === premierConfig.eventoData || rawDate === premierConfig.eventoData)) ||
+    (premierConfig.eventoNome && eventTitle.toLowerCase().includes((premierConfig.eventoTipo || 'cup').toLowerCase()))
+  );
+
   let actionHtml = '';
   if (!isPast) {
-    if (eventLink) {
+    if (isPremierActiveForEvent) {
+      actionHtml = `
+        <button type="button" class="btn btn-whatsapp" onclick="openDecklistModal('${escapeHTML(iso)}')" style="font-size:0.8rem; padding: 0.5rem 0.9rem; font-weight:700; background:var(--accent-yellow); color:#000; border-color:var(--accent-yellow); display:inline-flex; align-items:center; gap:0.4rem; box-shadow: 0 2px 10px rgba(255,203,5,0.25);">
+          <span>📋 Inscrição & Decklist</span>
+        </button>
+      `;
+    } else if (eventLink) {
       actionHtml = renderEventLinkButton(eventLink);
     } else if (appData.Configuracoes?.LinkWhatsApp) {
       actionHtml = `
@@ -1929,6 +1952,7 @@ function renderCalendarCard(evt, isNext = false, isPast = false) {
       <div class="calendar-card-content">
         <div class="calendar-card-badges">
           ${isNext ? '<span class="calendar-badge-next">🔥 Próximo Torneio</span>' : ''}
+          ${isPremierActiveForEvent ? '<span class="calendar-status confirmado" style="background:rgba(16,185,129,0.2); color:#10b981; border:1px solid rgba(16,185,129,0.4); font-weight:700;">🟢 Inscrições Abertas</span>' : ''}
           <span class="calendar-tag ${eventType.class}">${eventType.label}</span>
           <span class="calendar-status ${statusKey}">${escapeHTML(statusLabel)}</span>
           <span class="calendar-time">🕒 ${escapeHTML(eventHour)}</span>

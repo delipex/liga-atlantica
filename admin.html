@@ -1363,7 +1363,7 @@
         </div>
 
         <!-- Painel de Controle de Inscrições do Próximo Premier -->
-        <div class="glass-card" style="margin-bottom: 1.5rem; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 203, 5, 0.25); border-radius: var(--radius); padding: 1.25rem;">
+        <div class="glass-card" id="admin-premier-config-card" style="margin-bottom: 1.5rem; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 203, 5, 0.25); border-radius: var(--radius); padding: 1.25rem;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.5rem;">
             <div>
               <h3 style="font-size: 1.05rem; color: var(--accent-yellow); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
@@ -1375,6 +1375,21 @@
             </div>
             <div id="admin-premier-status-pill" style="font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">
               🟢 Inscrições Abertas
+            </div>
+          </div>
+
+          <!-- Acionador e Seletor Rápido do Calendário -->
+          <div style="background: rgba(255, 203, 5, 0.06); border: 1px solid rgba(255, 203, 5, 0.2); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 250px;">
+              <label for="adm-premier-quick-calendar" style="font-size: 0.75rem; color: var(--accent-yellow); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">
+                ⚡ Vincular a um Evento do Calendário Oficial:
+              </label>
+              <select id="adm-premier-quick-calendar" class="search-input" style="width: 100%; font-size: 0.82rem;" onchange="handleSelectCalendarEventForPremier(this.value)">
+                <option value="">-- Selecione um evento do calendário para vincular --</option>
+              </select>
+            </div>
+            <div style="font-size: 0.74rem; color: var(--text-secondary); max-width: 280px; line-height: 1.35;">
+              Ao selecionar, o sistema preenche automaticamente o <strong>Nome</strong>, <strong>Data</strong>, <strong>Tipo</strong> e <strong>Horário</strong> do torneio.
             </div>
           </div>
 
@@ -5542,12 +5557,32 @@
         const isPast = !isNaN(d) && d < startOfToday;
         const pastBadge = isPast ? `<span style="background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.68rem;">Passado</span>` : '';
 
+        // Detecção se este evento está vinculado com inscrições ativas no site
+        const pConf = cachedConfig?.inscricoesPremier || {};
+        const pDateIso = pConf.eventoData || '';
+        let evDateIso = date;
+        const pDateParts = date.split(/[-/]/);
+        if (pDateParts.length === 3) {
+          if (pDateParts[0].length === 4) evDateIso = `${pDateParts[0]}-${pDateParts[1].padStart(2, '0')}-${pDateParts[2].padStart(2, '0')}`;
+          else evDateIso = `${pDateParts[2]}-${pDateParts[1].padStart(2, '0')}-${pDateParts[0].padStart(2, '0')}`;
+        }
+
+        const isPremierActive = (pConf.abertas !== false) && (evDateIso === pDateIso || (pConf.eventoNome && title.toLowerCase() === pConf.eventoNome.toLowerCase()));
+        const premierPill = isPremierActive 
+          ? `<span style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">🟢 Inscrições Ativas no Site</span>` 
+          : '';
+
+        const premierActionBtn = isPremierActive
+          ? `<button type="button" class="btn" onclick="activatePremierFromCalendar(${ev._origIndex})" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; font-weight: 700; background: rgba(16, 185, 129, 0.2); color: #10b981; border-color: rgba(16, 185, 129, 0.4);" title="Inscrições abertas no site. Clique para gerenciar.">⚙️ Inscrições Ativas</button>`
+          : `<button type="button" class="btn" onclick="activatePremierFromCalendar(${ev._origIndex})" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; background: rgba(129, 140, 248, 0.12); color: #c7d2fe; border-color: rgba(129, 140, 248, 0.3); font-weight: 600;" title="Abrir inscrições e formulário de decklist no site para este evento">📋 Ativar Inscrição</button>`;
+
         return `
           <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; opacity: ${isPast ? '0.75' : '1'};">
             <div style="flex: 1; min-width: 250px;">
               <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.3rem; flex-wrap: wrap;">
                 <span style="font-weight: 700; color: #fff; font-size: 1rem;">${escapeHTML(title)}</span>
                 ${statusPill}
+                ${premierPill}
                 ${pastBadge}
               </div>
               <div style="font-size: 0.82rem; color: var(--accent-yellow); display: flex; gap: 1rem; align-items: center; margin-bottom: 0.4rem; flex-wrap: wrap;">
@@ -5563,6 +5598,7 @@
             </div>
 
             <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+              ${premierActionBtn}
               <button type="button" class="btn" onclick="openEditCalendarModal(${ev._origIndex})" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; background: rgba(255, 203, 5, 0.15); color: var(--accent-yellow); border-color: rgba(255, 203, 5, 0.3);">
                 ✏️ Editar
               </button>
@@ -6743,6 +6779,7 @@
       const horarioEl = document.getElementById('adm-premier-horario');
       const obsEl = document.getElementById('adm-premier-obs');
       const linkEl = document.getElementById('adm-premier-direct-link');
+      const quickCal = document.getElementById('adm-premier-quick-calendar');
 
       if (abertasEl) abertasEl.value = pConf.abertas !== false ? 'true' : 'false';
       if (tipoEl) tipoEl.value = pConf.eventoTipo || 'Challenge';
@@ -6761,7 +6798,88 @@
         linkEl.value = `${origin}${basePath}/#inscricao`;
       }
 
+      // Popula o seletor de eventos do calendário
+      if (quickCal && cachedCalendario) {
+        quickCal.innerHTML = '<option value="">-- Selecione um evento do calendário para vincular --</option>' + 
+          (cachedCalendario || []).map((ev, idx) => {
+            const date = ev.data || ev.Data || '';
+            const title = ev.evento || ev.Evento || ev.titulo || 'Evento';
+            return `<option value="${idx}">📅 ${escapeHTML(date)} — ${escapeHTML(title)}</option>`;
+          }).join('');
+      }
+
       updateAdminPremierStatusPill();
+    }
+
+    function handleSelectCalendarEventForPremier(idxStr) {
+      if (idxStr === '' || idxStr === undefined) return;
+      const idx = parseInt(idxStr, 10);
+      const ev = (cachedCalendario || [])[idx];
+      if (!ev) return;
+
+      const title = ev.evento || ev.Evento || ev.titulo || '';
+      const rawDate = ev.data || ev.Data || '';
+      const time = ev.horario || ev.Horario || '14:00';
+      const local = ev.local || ev.Local || 'Livraria Atlântica +';
+
+      // Converter data para formato YYYY-MM-DD
+      let dateIso = rawDate;
+      const parts = rawDate.split(/[-/]/);
+      if (parts.length === 3) {
+        if (parts[0].length === 4) {
+          dateIso = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+        } else {
+          dateIso = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        }
+      }
+
+      // Detecção inteligente de tipo
+      const tLow = title.toLowerCase();
+      let tipo = 'Challenge';
+      if (tLow.includes('cup')) tipo = 'Cup';
+      else if (tLow.includes('challenge')) tipo = 'Challenge';
+      else if (tLow.includes('especial')) tipo = 'Especial';
+      else tipo = 'Liga';
+
+      const nomeEl = document.getElementById('adm-premier-nome');
+      const dataEl = document.getElementById('adm-premier-data');
+      const tipoEl = document.getElementById('adm-premier-tipo');
+      const horarioEl = document.getElementById('adm-premier-horario');
+      const abertasEl = document.getElementById('adm-premier-abertas');
+      const obsEl = document.getElementById('adm-premier-obs');
+
+      if (nomeEl) nomeEl.value = title;
+      if (dataEl) dataEl.value = dateIso;
+      if (tipoEl) tipoEl.value = tipo;
+      if (horarioEl) horarioEl.value = `Check-in às ${time} • Local: ${local}`;
+      if (abertasEl) abertasEl.value = 'true';
+      if (obsEl && !obsEl.value) {
+        obsEl.value = `Traga sua decklist impressa ou envie diretamente pelo formulário online até o início da 1ª rodada.`;
+      }
+
+      updateAdminPremierStatusPill();
+      showSuccess(`⚡ Dados do evento "${title}" vinculados! Ajuste taxa/vagas e clique em "Salvar Configurações do Premier".`);
+    }
+
+    function activatePremierFromCalendar(index) {
+      const ev = (cachedCalendario || [])[index];
+      if (!ev) return;
+      switchAdminTab('decklists');
+      setTimeout(() => {
+        handleSelectCalendarEventForPremier(String(index));
+        const quickCal = document.getElementById('adm-premier-quick-calendar');
+        if (quickCal) quickCal.value = String(index);
+        const card = document.getElementById('admin-premier-config-card');
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          card.style.boxShadow = '0 0 25px rgba(255, 203, 5, 0.45)';
+          card.style.borderColor = 'var(--accent-yellow)';
+          setTimeout(() => { 
+            card.style.boxShadow = ''; 
+            card.style.borderColor = 'rgba(255, 203, 5, 0.25)';
+          }, 2500);
+        }
+      }, 120);
     }
 
     function updateAdminPremierStatusPill() {
