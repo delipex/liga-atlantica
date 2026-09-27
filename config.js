@@ -14,15 +14,7 @@ const CONFIG = {
     Ranking: "https://raw.githubusercontent.com/delipex/liga-atlantica/main/ranking.tdf"
   },
 
-  nextEvent: {
-    title: "Sessão de Liga Padrão",
-    date: "2026-09-26",
-    time: "14:00",
-    location: "Livraria Atlântica +",
-    locationUrl: "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6",
-    description: "Formato Standard. Traga seu melhor deck e venha disputar pontos para o ranking oficial!",
-    active: true
-  }
+  nextEvent: null
 };
 
 window.CONFIG = CONFIG;

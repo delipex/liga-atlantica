@@ -1346,18 +1346,62 @@ function renderAll() {
   renderMetagame();
 }
 
+function parseEventDateTime(rawDate, rawTime) {
+  if (!rawDate) return new Date(NaN);
+  const clean = String(rawDate).replace(/\//g, '-').trim();
+  const parts = clean.split('-');
+  let y = 2026, m = 1, d = 1;
+  if (parts.length === 3) {
+    if (parts[0].length === 4) {
+      y = parseInt(parts[0], 10);
+      m = parseInt(parts[1], 10);
+      d = parseInt(parts[2], 10);
+    } else {
+      d = parseInt(parts[0], 10);
+      m = parseInt(parts[1], 10);
+      y = parseInt(parts[2], 10);
+    }
+  }
+  let hr = 14, min = 0;
+  if (rawTime) {
+    const tParts = String(rawTime).trim().split(':');
+    hr = parseInt(tParts[0] || '14', 10);
+    min = parseInt(tParts[1] || '0', 10);
+  }
+  return new Date(`${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}T${String(hr).padStart(2, '0')}:${String(min).padStart(2, '0')}:00-03:00`);
+}
+
+function getEventEndDateTime(rawDate, rawTime) {
+  const start = parseEventDateTime(rawDate, rawTime);
+  // Torneio é considerado ativo/em andamento por até 4 horas após o horário oficial de início
+  return new Date(start.getTime() + 4 * 60 * 60 * 1000);
+}
+
 function getNextEventFromCalendar() {
   const events = appData.Calendario || [];
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
   const future = events.filter(e => {
     const rawDate = e?.Data || e?.data;
     if (!rawDate) return false;
     const status = String(e.Status || e.status || '').toLowerCase().trim();
     if (status === 'concluido' || status === 'cancelado') return false;
-    const d = parseDateSafe(rawDate);
-    return !isNaN(d) && d >= startOfToday;
-  }).sort((a,b) => parseDateSafe(a.Data || a.data) - parseDateSafe(b.Data || b.data));
+
+    // Se já está registrado nas etapas concluídas, passa para o próximo
+    const isoDate = normalizeDateISO(rawDate);
+    const isAlreadyRecorded = (appData.Etapas || []).some(stg => normalizeDateISO(stg.data) === isoDate);
+    if (isAlreadyRecorded) return false;
+
+    const start = parseEventDateTime(rawDate, e.Horario || e.horario);
+    if (isNaN(start.getTime())) return false;
+    const end = getEventEndDateTime(rawDate, e.Horario || e.horario);
+
+    // O evento só permanece como próximo/ativo se o término ainda não passou
+    return end.getTime() >= now.getTime();
+  }).sort((a, b) => {
+    return parseEventDateTime(a.Data || a.data, a.Horario || a.horario).getTime() - 
+           parseEventDateTime(b.Data || b.data, b.Horario || b.horario).getTime();
+  });
+
   if (!future.length) return null;
   const e = future[0];
   const rawDate = e.Data || e.data;
@@ -1486,7 +1530,7 @@ function renderDashboard() {
         </div>
         
         <!-- Timer Regressivo -->
-        <div class="countdown-container" id="countdown-timer" data-target-date="${eventConf.date}T${eventConf.time}:00">
+        <div class="countdown-container" id="countdown-timer" data-target-date="${eventConf.date}T${eventConf.time}:00-03:00">
           <div class="countdown-box">
             <span class="countdown-val" id="timer-days">00</span>
             <span class="countdown-lbl">Dias</span>
@@ -2380,8 +2424,6 @@ window.toggleRule = function(index) {
 
 let countdownInterval;
 let eventFinalized = false;
-const EVENT_END_HOUR = 21;
-const EVENT_END_MINUTE = 30;
 
 function startCountdown() {
   const timerEl = document.getElementById('countdown-timer');
@@ -2392,8 +2434,8 @@ function startCountdown() {
 
   if (isNaN(targetTime)) return;
 
-  const endTime = new Date(targetTime);
-  endTime.setHours(EVENT_END_HOUR, EVENT_END_MINUTE, 0, 0);
+  // Torneio permanece ativo/ao vivo por até 4 horas após o início
+  const endTime = new Date(targetTime + 4 * 60 * 60 * 1000);
 
   if (countdownInterval) clearInterval(countdownInterval);
 
@@ -2424,10 +2466,20 @@ function startCountdown() {
       if (widget) {
         const badge = widget.querySelector('.event-badge-alert');
         if (badge) {
-          badge.innerHTML = `<span style="background:#10b981"></span> Acontecendo Agora!`;
+          badge.innerHTML = `<span style="background:#10b981;box-shadow:0 0 8px #10b981;"></span> Acontecendo Agora!`;
           badge.style.color = '#10b981';
           badge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
           badge.style.background = 'rgba(16, 185, 129, 0.15)';
+        }
+        const timerContainer = document.getElementById('countdown-timer');
+        if (timerContainer && !timerContainer.classList.contains('is-live-mode')) {
+          timerContainer.classList.add('is-live-mode');
+          timerContainer.innerHTML = `
+            <div style="grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 0.6rem; padding: 0.85rem; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; color: #10b981; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981;"></span>
+              Torneio em Andamento • Ao Vivo
+            </div>
+          `;
         }
       }
       return;
@@ -2436,9 +2488,12 @@ function startCountdown() {
     if (!eventFinalized) {
       eventFinalized = true;
       clearInterval(countdownInterval);
-      if (typeof renderAll === 'function') {
-        renderAll();
-      }
+      setTimeout(() => {
+        eventFinalized = false;
+        if (typeof renderDashboard === 'function') {
+          renderDashboard();
+        }
+      }, 1000);
     }
   }
 

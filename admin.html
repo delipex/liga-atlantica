@@ -655,9 +655,25 @@
         </div>
         
         <div class="form-group" id="multiplier-group" style="margin-bottom: 1.25rem;">
-          <label for="event-multiplier">Multiplicador de Pontos</label>
-          <input type="number" id="event-multiplier" class="search-input" step="0.1" min="0.1" value="1.0" style="width: 100%; box-sizing: border-box;">
-          <span class="small-text-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <label for="event-multiplier" style="margin-bottom: 0;">Multiplicador de Pontos</label>
+            <span id="multiplier-special-badge" style="display: none; font-size: 0.72rem; font-weight: 700; color: #c084fc; background: rgba(168, 85, 247, 0.15); padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(168, 85, 247, 0.3);">✨ Modificador Livre</span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button type="button" class="btn" id="btn-mult-minus" style="width: 42px; height: 38px; padding: 0; font-weight: 900; font-size: 1.1rem; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer;" onclick="adjustMultiplierAdmin(-0.25)">-</button>
+            <input type="number" id="event-multiplier" class="search-input" step="0.05" min="0.1" max="10.0" value="1.0" style="flex: 1; box-sizing: border-box; text-align: center; font-weight: 800; color: var(--accent-yellow);" oninput="updateMultiplierSimHint()">
+            <button type="button" class="btn" id="btn-mult-plus" style="width: 42px; height: 38px; padding: 0; font-weight: 900; font-size: 1.1rem; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer;" onclick="adjustMultiplierAdmin(0.25)">+</button>
+          </div>
+          <div id="multiplier-presets" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+            <button type="button" class="btn-preset-mult" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: var(--text-secondary); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" onclick="setMultiplierAdmin(1.0)">1.0x</button>
+            <button type="button" class="btn-preset-mult" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: var(--text-secondary); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" onclick="setMultiplierAdmin(1.25)">1.25x</button>
+            <button type="button" class="btn-preset-mult" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: var(--text-secondary); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" onclick="setMultiplierAdmin(1.5)">1.5x</button>
+            <button type="button" class="btn-preset-mult" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: var(--text-secondary); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" onclick="setMultiplierAdmin(1.75)">1.75x</button>
+            <button type="button" class="btn-preset-mult" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: var(--text-secondary); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" onclick="setMultiplierAdmin(2.0)">2.0x</button>
+            <button type="button" class="btn-preset-mult" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: var(--text-secondary); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" onclick="setMultiplierAdmin(2.5)">2.5x</button>
+            <button type="button" class="btn-preset-mult" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: var(--text-secondary); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" onclick="setMultiplierAdmin(3.0)">3.0x</button>
+          </div>
+          <span class="small-text-hint" id="multiplier-hint" style="display:block; margin-top:0.35rem; font-size:0.75rem; color:var(--text-secondary);">
             Define o peso dos pontos do torneio no ranking consolidado. Multiplicadores oficiais: Liga (1.0x), Challenge (1.5x) e Cup (1.5x) são travados automaticamente.
           </span>
         </div>
@@ -3252,17 +3268,20 @@
       const structuredFields = document.getElementById('structured-fields');
       const suggestionDiv = document.getElementById('column-code-suggestion');
       const customTitleGroup = document.getElementById('custom-title-group');
+      const specialBadge = document.getElementById('multiplier-special-badge');
       
       // Multiplier remains visible at all times
       if (multGroup) multGroup.style.display = 'block';
       
       if (eventType === 'Personalizado') {
         if (customTitleGroup) customTitleGroup.style.display = 'block';
+        if (specialBadge) specialBadge.style.display = 'inline-block';
         multInput.disabled = false;
         multInput.style.opacity = '1.0';
         multInput.style.cursor = 'text';
       } else if (eventType === 'Especial') {
         if (customTitleGroup) customTitleGroup.style.display = 'block';
+        if (specialBadge) specialBadge.style.display = 'inline-block';
         const customTitleInput = document.getElementById('event-custom-title');
         if (customTitleInput && !customTitleInput.value) {
           customTitleInput.placeholder = "Ex: Sessão Especial #30, Formato Retro... (Opcional)";
@@ -3273,6 +3292,7 @@
         if (!multInput.value || multInput.value === '1.5') multInput.value = '1.0';
       } else {
         if (customTitleGroup) customTitleGroup.style.display = 'none';
+        if (specialBadge) specialBadge.style.display = 'none';
         multInput.disabled = true;
         multInput.style.opacity = '0.6';
         multInput.style.cursor = 'not-allowed';
@@ -3283,6 +3303,10 @@
         } else if (eventType === 'Challenge' || eventType === 'Cup') {
           multInput.value = '1.5';
         }
+      }
+      
+      if (typeof updateMultiplierSimHint === 'function') {
+        updateMultiplierSimHint();
       }
       
       // Structured fields always visible
@@ -3322,6 +3346,37 @@
         }
       }
     }
+
+    window.adjustMultiplierAdmin = function(delta) {
+      const multInput = document.getElementById('event-multiplier');
+      if (!multInput) return;
+      const cur = parseFloat(multInput.value) || 1.0;
+      const next = Math.max(0.1, Math.min(10.0, parseFloat((cur + delta).toFixed(2))));
+      multInput.value = next.toFixed(2).replace(/\.00$/, '').replace(/(\.[1-9])0$/, '$1');
+      if (typeof updateMultiplierSimHint === 'function') updateMultiplierSimHint();
+    };
+
+    window.setMultiplierAdmin = function(val) {
+      const multInput = document.getElementById('event-multiplier');
+      if (!multInput) return;
+      multInput.value = Number(val).toFixed(2).replace(/\.00$/, '').replace(/(\.[1-9])0$/, '$1');
+      if (typeof updateMultiplierSimHint === 'function') updateMultiplierSimHint();
+    };
+
+    window.updateMultiplierSimHint = function() {
+      const multInput = document.getElementById('event-multiplier');
+      const hint = document.getElementById('multiplier-hint');
+      if (!multInput || !hint) return;
+      const mult = parseFloat(multInput.value) || 1.0;
+      const eventType = document.getElementById('event-type')?.value;
+      if (mult !== 1.0 || eventType === 'Especial' || eventType === 'Personalizado') {
+        const vPts = (3 * mult).toFixed(1);
+        const ePts = (1 * mult).toFixed(1);
+        hint.innerHTML = `✨ <strong>Simulador (${mult}x):</strong> Vitória: <strong style="color:var(--accent-yellow);">${vPts} pts</strong> (3 &times; ${mult}) &bull; Empate: <strong style="color:var(--accent-yellow);">${ePts} pts</strong> (1 &times; ${mult}) &bull; <em style="color:rgba(192,132,252,0.9);">Multiplicador livre aplicado a todos os atletas no ranking consolidado.</em>`;
+      } else {
+        hint.innerHTML = 'Define o peso dos pontos do torneio no ranking consolidado. Multiplicadores oficiais: Liga (1.0x), Challenge (1.5x) e Cup (1.5x) são travados automaticamente.';
+      }
+    };
 
     function parseTDFDate(dateStr) {
       if (!dateStr || typeof dateStr !== 'string') return null;
@@ -3389,20 +3444,35 @@
     function extractTDFMetadata(tdfText) {
       if (!tdfText) return null;
       const trimmed = tdfText.trim();
+      let tournamentName = null;
+      let tournamentDate = null;
+
       if (trimmed.startsWith('<?xml') || trimmed.includes('<tournament')) {
-        try {
-          const parser = new DOMParser();
-          const xmlDoc = parser.parseFromString(trimmed, "text/xml");
-          const nameNode = xmlDoc.getElementsByTagName("name")[0];
-          const dateNode = xmlDoc.getElementsByTagName("startdate")[0];
-          
-          let tournamentName = nameNode ? nameNode.textContent.trim() : null;
-          let tournamentDate = dateNode ? dateNode.textContent.trim() : null;
-          
-          return { name: tournamentName, date: tournamentDate };
-        } catch (err) {
-          console.warn("Falha ao extrair metadados do TDF:", err);
+        // 1. Tenta extrair diretamente com Regex (imune a parsererror e entidades não escapadas)
+        const nameMatch = trimmed.match(/<name>([\s\S]*?)<\/name>/i);
+        if (nameMatch) tournamentName = nameMatch[1].trim();
+
+        const dateMatch = trimmed.match(/<startdate>([\s\S]*?)<\/startdate>/i);
+        if (dateMatch) tournamentDate = dateMatch[1].trim();
+
+        // 2. Se não encontrou, tenta via DOMParser como fallback
+        if (!tournamentName || !tournamentDate) {
+          try {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(trimmed, "text/xml");
+            if (!tournamentName) {
+              const nameNode = xmlDoc.getElementsByTagName("name")[0];
+              if (nameNode) tournamentName = nameNode.textContent.trim();
+            }
+            if (!tournamentDate) {
+              const dateNode = xmlDoc.getElementsByTagName("startdate")[0];
+              if (dateNode) tournamentDate = dateNode.textContent.trim();
+            }
+          } catch (err) {
+            console.warn("Falha ao extrair metadados do TDF:", err);
+          }
         }
+        return { name: tournamentName, date: tournamentDate };
       }
       return null;
     }
@@ -3446,6 +3516,13 @@
 
       if (dateInfo && dateInfo.iso && dateInput) {
         dateInput.value = dateInfo.iso;
+      } else if (dateInput && (!dateInput.value || dateInput.value === '')) {
+        // Fallback seguro: preenche com a data atual para não travar a publicação do organizador
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        dateInput.value = `${yyyy}-${mm}-${dd}`;
       }
 
       // Detecção do tipo de evento e número (verifica tanto no XML quanto no nome do arquivo)
@@ -3595,9 +3672,11 @@
 
     function handleFileSelect(e) {
       resetValidation();
-      if (e.target.files && e.target.files.length > 0) {
-        handleMultipleFiles(e.target.files);
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        handleMultipleFiles(files);
       }
+      if (e.target) e.target.value = '';
     }
     
     function handleRawInput() {
@@ -3692,6 +3771,206 @@
       return { v, e, d };
     }
 
+    function parseTOMXmlRegex(xmlText) {
+      try {
+        const playersMap = new Map();
+        const playerBlockRegex = /<player\s+userid="([^"]+)"[^>]*>([\s\S]*?)<\/player>/gi;
+        let pMatch;
+        while ((pMatch = playerBlockRegex.exec(xmlText)) !== null) {
+          const userid = pMatch[1];
+          const pBody = pMatch[2];
+
+          const fn = (pBody.match(/<firstname>([\s\S]*?)<\/firstname>/i) || [])[1] || '';
+          const ln = (pBody.match(/<lastname>([\s\S]*?)<\/lastname>/i) || [])[1] || '';
+          let fullName = (fn.trim() + ' ' + ln.trim()).trim();
+          if (!fullName) {
+            const nm = (pBody.match(/<name>([\s\S]*?)<\/name>/i) || [])[1];
+            fullName = nm ? nm.trim() : ('Jogador ' + userid);
+          }
+          const bd = (pBody.match(/<birthdate>([\s\S]*?)<\/birthdate>/i) || [])[1] || '';
+          playersMap.set(userid, { name: fullName, birthdate: bd.trim() });
+        }
+
+        if (playersMap.size === 0) return [];
+
+        const statsMap = new Map();
+        const opponentsMap = new Map();
+        playersMap.forEach((_, id) => {
+          statsMap.set(id, { v: 0, e: 0, d: 0 });
+          opponentsMap.set(id, new Set());
+        });
+
+        const matchRegex = /<match\s+outcome="(\d+)"[^>]*>([\s\S]*?)<\/match>/gi;
+        let mMatch;
+        while ((mMatch = matchRegex.exec(xmlText)) !== null) {
+          const outcome = parseInt(mMatch[1], 10);
+          const matchContent = mMatch[2];
+
+          const p1 = (matchContent.match(/<player1\s+userid="([^"]+)"/i) || [])[1];
+          const p2 = (matchContent.match(/<player2\s+userid="([^"]+)"/i) || [])[1];
+          const singleP = (matchContent.match(/<player\s+userid="([^"]+)"/i) || [])[1];
+
+          if (p1 && p2) {
+            if (!statsMap.has(p1)) {
+              statsMap.set(p1, { v: 0, e: 0, d: 0 });
+              opponentsMap.set(p1, new Set());
+            }
+            if (!statsMap.has(p2)) {
+              statsMap.set(p2, { v: 0, e: 0, d: 0 });
+              opponentsMap.set(p2, new Set());
+            }
+
+            opponentsMap.get(p1).add(p2);
+            opponentsMap.get(p2).add(p1);
+
+            if (outcome === 1) {
+              statsMap.get(p1).v++;
+              statsMap.get(p2).d++;
+            } else if (outcome === 2) {
+              statsMap.get(p1).d++;
+              statsMap.get(p2).v++;
+            } else if (outcome === 3) {
+              statsMap.get(p1).e++;
+              statsMap.get(p2).e++;
+            }
+          } else if (p1 && !p2) {
+            if (statsMap.has(p1)) statsMap.get(p1).v++;
+          } else if (singleP) {
+            if (statsMap.has(singleP) && (outcome === 5 || outcome === 1)) {
+              statsMap.get(singleP).v++;
+            }
+          }
+        }
+
+        const winRates = new Map();
+        playersMap.forEach((_, id) => {
+          const st = statsMap.get(id) || { v: 0, e: 0, d: 0 };
+          const points = st.v * 3 + st.e * 1;
+          const opps = opponentsMap.get(id);
+          const totalMatches = opps ? opps.size : 0;
+          if (totalMatches === 0) {
+            winRates.set(id, 0.25);
+          } else {
+            winRates.set(id, Math.max(0.25, points / (totalMatches * 3)));
+          }
+        });
+
+        const omwMap = new Map();
+        playersMap.forEach((_, id) => {
+          const opps = opponentsMap.get(id);
+          if (!opps || opps.size === 0) {
+            omwMap.set(id, 0.25);
+          } else {
+            let sum = 0;
+            opps.forEach(oppId => {
+              sum += winRates.get(oppId) || 0.25;
+            });
+            omwMap.set(id, sum / opps.size);
+          }
+        });
+
+        const playersResult = [];
+        const podRegex = /<pod\s+category="([^"]+)"(?:\s+type="([^"]+)")?[^>]*>([\s\S]*?)<\/pod>/gi;
+        let podMatch;
+        while ((podMatch = podRegex.exec(xmlText)) !== null) {
+          const catCode = podMatch[1];
+          const podType = podMatch[2] || 'finished';
+          const podContent = podMatch[3];
+
+          let categoria = 'MASTER';
+          if (catCode === '10' || catCode === '2') categoria = 'MASTER';
+          else if (catCode === '11' || catCode === '1') categoria = 'SENIOR';
+          else if (catCode === '12' || catCode === '0') categoria = 'JUNIOR';
+
+          const pInPodRegex = /<player\s+id="([^"]+)"(?:\s+place="([^"]+)")?[^>]*\/>/gi;
+          let pipMatch;
+          let fallbackPlace = 1;
+
+          while ((pipMatch = pInPodRegex.exec(podContent)) !== null) {
+            const id = pipMatch[1];
+            const place = pipMatch[2] ? parseInt(pipMatch[2], 10) : fallbackPlace++;
+            const pInfo = playersMap.get(id) || { name: 'Jogador ' + id, birthdate: '' };
+            const st = statsMap.get(id) || { v: 0, e: 0, d: 0 };
+            const pontos = st.v * 3 + st.e * 1;
+            const omw = omwMap.get(id) || 0.25;
+
+            playersResult.push({
+              Pos: place,
+              Jogador: pInfo.name,
+              Categoria: categoria,
+              Pontos: pontos,
+              Vitorias: st.v,
+              Empates: st.e,
+              Derrotas: st.d,
+              Podio: 0,
+              MediaColocacao: place,
+              Deck: 'Não registrado',
+              TipoEnergia: 'colorless',
+              id: id,
+              omw: omw,
+              isDnf: podType === 'dnf'
+            });
+          }
+        }
+
+        if (playersResult.length === 0 && playersMap.size > 0) {
+          let idx = 1;
+          playersMap.forEach((pInfo, id) => {
+            const st = statsMap.get(id) || { v: 0, e: 0, d: 0 };
+            const pontos = st.v * 3 + st.e * 1;
+            playersResult.push({
+              Pos: idx,
+              Jogador: pInfo.name,
+              Categoria: 'MASTER',
+              Pontos: pontos,
+              Vitorias: st.v,
+              Empates: st.e,
+              Derrotas: st.d,
+              Podio: 0,
+              MediaColocacao: idx,
+              Deck: 'Não registrado',
+              TipoEnergia: 'colorless',
+              id: id,
+              omw: omwMap.get(id) || 0.25,
+              isDnf: false
+            });
+            idx++;
+          });
+        }
+
+        playersResult.sort((a, b) => {
+          const ptsA = Number(a.Pontos) || 0;
+          const ptsB = Number(b.Pontos) || 0;
+          if (ptsB !== ptsA) return ptsB - ptsA;
+
+          const vA = Number(a.Vitorias) || 0;
+          const vB = Number(b.Vitorias) || 0;
+          if (vB !== vA) return vB - vA;
+
+          const omwA = Number(a.omw) || 0;
+          const omwB = Number(b.omw) || 0;
+          if (Math.abs(omwB - omwA) > 0.0001) return omwB - omwA;
+
+          const posA = Number(a.Pos || a.MediaColocacao) || 999;
+          const posB = Number(b.Pos || b.MediaColocacao) || 999;
+          if (posA !== posB) return posA - posB;
+
+          return (a.Jogador || '').localeCompare(b.Jogador || '', 'pt-BR');
+        });
+
+        playersResult.forEach((p, idx) => {
+          p.Pos = idx + 1;
+          p.MediaColocacao = idx + 1;
+          p.Podio = (p.Pos <= 4 && !p.isDnf) ? 1 : 0;
+        });
+
+        return playersResult;
+      } catch (e) {
+        console.error('Erro no parseTOMXmlRegex:', e);
+        return [];
+      }
+    }
+
     function parseTDF(tdfText) {
       if (!tdfText || !tdfText.trim()) return [];
       
@@ -3702,242 +3981,247 @@
         try {
           const parser = new DOMParser();
           const xmlDoc = parser.parseFromString(cleanText, "text/xml");
+          const parseError = xmlDoc.getElementsByTagName("parsererror");
           
-          // Get all players details under <players>
-          const playersMap = new Map(); // userid -> { name, birthdate }
-          const playersContainer = xmlDoc.getElementsByTagName("players")[0];
-          if (playersContainer) {
-            const pNodes = playersContainer.getElementsByTagName("player");
-            for (let i = 0; i < pNodes.length; i++) {
-              const node = pNodes[i];
-              const userid = node.getAttribute("userid");
-              const firstname = node.getElementsByTagName("firstname")[0]?.textContent || "";
-              const lastname = node.getElementsByTagName("lastname")[0]?.textContent || "";
-              let fullName = `${firstname} ${lastname}`.trim();
-              if (!fullName) {
-                fullName = node.getElementsByTagName("name")[0]?.textContent?.trim() || node.getAttribute("name") || `Jogador ${userid}`;
-              }
-              const birthdate = node.getElementsByTagName("birthdate")[0]?.textContent || "";
-              playersMap.set(userid, {
-                name: fullName,
-                birthdate: birthdate
-              });
-            }
-          }
-          
-          // Get pod category from standings or pods
-          let podCategory = "MASTER";
-          const podNodes = xmlDoc.getElementsByTagName("pod");
-          for (let i = 0; i < podNodes.length; i++) {
-            const cat = podNodes[i].getAttribute("category");
-            if (cat) {
-              if (cat === "10" || cat === "2") podCategory = "MASTER";
-              else if (cat === "11" || cat === "1") podCategory = "SENIOR";
-              else if (cat === "12" || cat === "0") podCategory = "JUNIOR";
-              break;
-            }
-          }
-          
-          // Initialize match stats and opponents sets for all players
-          const statsMap = new Map(); // userid -> { v: 0, e: 0, d: 0 }
-          const opponentsMap = new Map(); // userid -> Set
-          playersMap.forEach((p, userid) => {
-            statsMap.set(userid, { v: 0, e: 0, d: 0 });
-            opponentsMap.set(userid, new Set());
-          });
-          
-          // Parse matches inside all rounds containers to calculate Wins, Draws, Losses and opponents
-          const roundsContainers = xmlDoc.getElementsByTagName("rounds");
-          for (let rcIdx = 0; rcIdx < roundsContainers.length; rcIdx++) {
-            const roundsContainer = roundsContainers[rcIdx];
-            const matches = roundsContainer.getElementsByTagName("match");
-            for (let i = 0; i < matches.length; i++) {
-              const match = matches[i];
-              const outcome = Number(match.getAttribute("outcome")); // 1 = player1 wins, 2 = player2 wins, 3 = draw
-              const player1Node = match.getElementsByTagName("player1")[0];
-              const player2Node = match.getElementsByTagName("player2")[0];
-              
-              const p1id = player1Node ? player1Node.getAttribute("userid") : null;
-              const p2id = player2Node ? player2Node.getAttribute("userid") : null;
-              
-              if (p1id && !statsMap.has(p1id)) {
-                statsMap.set(p1id, { v: 0, e: 0, d: 0 });
-                opponentsMap.set(p1id, new Set());
-              }
-              if (p2id && !statsMap.has(p2id)) {
-                statsMap.set(p2id, { v: 0, e: 0, d: 0 });
-                opponentsMap.set(p2id, new Set());
-              }
-              
-              if (p1id && p2id) {
-                // Add to opponents
-                opponentsMap.get(p1id).add(p2id);
-                opponentsMap.get(p2id).add(p1id);
-                
-                if (outcome === 1) {
-                  statsMap.get(p1id).v++;
-                  statsMap.get(p2id).d++;
-                } else if (outcome === 2) {
-                  statsMap.get(p1id).d++;
-                  statsMap.get(p2id).v++;
-                } else {
-                  statsMap.get(p1id).e++;
-                  statsMap.get(p2id).e++;
-                }
-              } else if (p1id && !p2id) {
-                // Bye (TDF older standard)
-                statsMap.get(p1id).v++;
-              } else {
-                // Bye or single player match (Tome XML standard)
-                const singlePlayerNode = match.getElementsByTagName("player")[0];
-                const spid = singlePlayerNode ? singlePlayerNode.getAttribute("userid") : null;
-                if (spid) {
-                  if (!statsMap.has(spid)) {
-                    statsMap.set(spid, { v: 0, e: 0, d: 0 });
-                    opponentsMap.set(spid, new Set());
-                  }
-                  if (outcome === 5) {
-                    statsMap.get(spid).v++; // 3-point Bye (Win)
-                  }
-                }
-              }
-            }
-          }
-          
-          // Calculate individual Win Rates for OMW calculation (max(0.25, points / (rounds * 3)))
-          const winRates = new Map();
-          playersMap.forEach((p, id) => {
-            const stats = statsMap.get(id) || { v: 0, e: 0, d: 0 };
-            const points = stats.v * 3 + stats.e * 1;
-            const opps = opponentsMap.get(id);
-            const totalMatches = opps ? opps.size : 0;
-            if (totalMatches === 0) {
-              winRates.set(id, 0.25);
-            } else {
-              const rate = points / (totalMatches * 3);
-              winRates.set(id, Math.max(0.25, rate));
-            }
-          });
-          
-          // Calculate OMW (Opponent Match Win Percentage)
-          const omwMap = new Map();
-          playersMap.forEach((p, id) => {
-            const opps = opponentsMap.get(id);
-            if (!opps || opps.size === 0) {
-              omwMap.set(id, 0.25);
-            } else {
-              let sum = 0;
-              opps.forEach(oppId => {
-                sum += winRates.get(oppId) || 0.25;
-              });
-              omwMap.set(id, sum / opps.size);
-            }
-          });
-          
-          // Parse standings to get placement
-          const playersResult = [];
-          const standingsContainer = xmlDoc.getElementsByTagName("standings")[0];
-          if (standingsContainer) {
-            const podNodes = standingsContainer.getElementsByTagName("pod");
-            for (let podIdx = 0; podIdx < podNodes.length; podIdx++) {
-              const finishedPod = podNodes[podIdx];
-              const type = finishedPod.getAttribute("type"); // "finished" or "dnf"
-              const categoryAttr = finishedPod.getAttribute("category");
-              
-              let currentCategory = "MASTER";
-              if (categoryAttr === "10" || categoryAttr === "2") currentCategory = "MASTER";
-              else if (categoryAttr === "11" || categoryAttr === "1") currentCategory = "SENIOR";
-              else if (categoryAttr === "12" || categoryAttr === "0") currentCategory = "JUNIOR";
-              
-              const pNodes = finishedPod.getElementsByTagName("player");
+          if (parseError.length === 0) {
+            // Get all players details under <players>
+            const playersMap = new Map(); // userid -> { name, birthdate }
+            const playersContainer = xmlDoc.getElementsByTagName("players")[0];
+            if (playersContainer) {
+              const pNodes = playersContainer.getElementsByTagName("player");
               for (let i = 0; i < pNodes.length; i++) {
                 const node = pNodes[i];
-                const id = node.getAttribute("id");
-                const place = Number(node.getAttribute("place")) || (i + 1);
+                const userid = node.getAttribute("userid");
+                const firstname = node.getElementsByTagName("firstname")[0]?.textContent || "";
+                const lastname = node.getElementsByTagName("lastname")[0]?.textContent || "";
+                let fullName = `${firstname} ${lastname}`.trim();
+                if (!fullName) {
+                  fullName = node.getElementsByTagName("name")[0]?.textContent?.trim() || node.getAttribute("name") || `Jogador ${userid}`;
+                }
+                const birthdate = node.getElementsByTagName("birthdate")[0]?.textContent || "";
+                playersMap.set(userid, {
+                  name: fullName,
+                  birthdate: birthdate
+                });
+              }
+            }
+            
+            // Get pod category from standings or pods
+            let podCategory = "MASTER";
+            const podNodes = xmlDoc.getElementsByTagName("pod");
+            for (let i = 0; i < podNodes.length; i++) {
+              const cat = podNodes[i].getAttribute("category");
+              if (cat) {
+                if (cat === "10" || cat === "2") podCategory = "MASTER";
+                else if (cat === "11" || cat === "1") podCategory = "SENIOR";
+                else if (cat === "12" || cat === "0") podCategory = "JUNIOR";
+                break;
+              }
+            }
+            
+            // Initialize match stats and opponents sets for all players
+            const statsMap = new Map(); // userid -> { v: 0, e: 0, d: 0 }
+            const opponentsMap = new Map(); // userid -> Set
+            playersMap.forEach((p, userid) => {
+              statsMap.set(userid, { v: 0, e: 0, d: 0 });
+              opponentsMap.set(userid, new Set());
+            });
+            
+            // Parse matches inside all rounds containers to calculate Wins, Draws, Losses and opponents
+            const roundsContainers = xmlDoc.getElementsByTagName("rounds");
+            for (let rcIdx = 0; rcIdx < roundsContainers.length; rcIdx++) {
+              const roundsContainer = roundsContainers[rcIdx];
+              const matches = roundsContainer.getElementsByTagName("match");
+              for (let i = 0; i < matches.length; i++) {
+                const match = matches[i];
+                const outcome = Number(match.getAttribute("outcome")); // 1 = player1 wins, 2 = player2 wins, 3 = draw
+                const player1Node = match.getElementsByTagName("player1")[0];
+                const player2Node = match.getElementsByTagName("player2")[0];
                 
-                const pInfo = playersMap.get(id) || { name: `Jogador ${id}`, birthdate: "" };
+                const p1id = player1Node ? player1Node.getAttribute("userid") : null;
+                const p2id = player2Node ? player2Node.getAttribute("userid") : null;
+                
+                if (p1id && !statsMap.has(p1id)) {
+                  statsMap.set(p1id, { v: 0, e: 0, d: 0 });
+                  opponentsMap.set(p1id, new Set());
+                }
+                if (p2id && !statsMap.has(p2id)) {
+                  statsMap.set(p2id, { v: 0, e: 0, d: 0 });
+                  opponentsMap.set(p2id, new Set());
+                }
+                
+                if (p1id && p2id) {
+                  opponentsMap.get(p1id).add(p2id);
+                  opponentsMap.get(p2id).add(p1id);
+                  
+                  if (outcome === 1) {
+                    statsMap.get(p1id).v++;
+                    statsMap.get(p2id).d++;
+                  } else if (outcome === 2) {
+                    statsMap.get(p1id).d++;
+                    statsMap.get(p2id).v++;
+                  } else {
+                    statsMap.get(p1id).e++;
+                    statsMap.get(p2id).e++;
+                  }
+                } else if (p1id && !p2id) {
+                  statsMap.get(p1id).v++;
+                } else {
+                  const singlePlayerNode = match.getElementsByTagName("player")[0];
+                  const spid = singlePlayerNode ? singlePlayerNode.getAttribute("userid") : null;
+                  if (spid) {
+                    if (!statsMap.has(spid)) {
+                      statsMap.set(spid, { v: 0, e: 0, d: 0 });
+                      opponentsMap.set(spid, new Set());
+                    }
+                    if (outcome === 5) {
+                      statsMap.get(spid).v++;
+                    }
+                  }
+                }
+              }
+            }
+            
+            // Calculate individual Win Rates for OMW calculation (max(0.25, points / (rounds * 3)))
+            const winRates = new Map();
+            playersMap.forEach((p, id) => {
+              const stats = statsMap.get(id) || { v: 0, e: 0, d: 0 };
+              const points = stats.v * 3 + stats.e * 1;
+              const opps = opponentsMap.get(id);
+              const totalMatches = opps ? opps.size : 0;
+              if (totalMatches === 0) {
+                winRates.set(id, 0.25);
+              } else {
+                const rate = points / (totalMatches * 3);
+                winRates.set(id, Math.max(0.25, rate));
+              }
+            });
+            
+            // Calculate OMW (Opponent Match Win Percentage)
+            const omwMap = new Map();
+            playersMap.forEach((p, id) => {
+              const opps = opponentsMap.get(id);
+              if (!opps || opps.size === 0) {
+                omwMap.set(id, 0.25);
+              } else {
+                let sum = 0;
+                opps.forEach(oppId => {
+                  sum += winRates.get(oppId) || 0.25;
+                });
+                omwMap.set(id, sum / opps.size);
+              }
+            });
+            
+            // Parse standings to get placement
+            const playersResult = [];
+            const standingsContainer = xmlDoc.getElementsByTagName("standings")[0];
+            if (standingsContainer) {
+              const podNodes = standingsContainer.getElementsByTagName("pod");
+              for (let podIdx = 0; podIdx < podNodes.length; podIdx++) {
+                const finishedPod = podNodes[podIdx];
+                const type = finishedPod.getAttribute("type");
+                const categoryAttr = finishedPod.getAttribute("category");
+                
+                let currentCategory = "MASTER";
+                if (categoryAttr === "10" || categoryAttr === "2") currentCategory = "MASTER";
+                else if (categoryAttr === "11" || categoryAttr === "1") currentCategory = "SENIOR";
+                else if (categoryAttr === "12" || categoryAttr === "0") currentCategory = "JUNIOR";
+                
+                const pNodes = finishedPod.getElementsByTagName("player");
+                for (let i = 0; i < pNodes.length; i++) {
+                  const node = pNodes[i];
+                  const id = node.getAttribute("id");
+                  const place = Number(node.getAttribute("place")) || (i + 1);
+                  
+                  const pInfo = playersMap.get(id) || { name: `Jogador ${id}`, birthdate: "" };
+                  const pStats = statsMap.get(id) || { v: 0, e: 0, d: 0 };
+                  const points = pStats.v * 3 + pStats.e * 1;
+                  
+                  playersResult.push({
+                    Pos: place,
+                    Jogador: pInfo.name,
+                    Categoria: currentCategory,
+                    Pontos: points,
+                    Vitorias: pStats.v,
+                    Empates: pStats.e,
+                    Derrotas: pStats.d,
+                    Podio: 0,
+                    MediaColocacao: place,
+                    Deck: "Não registrado",
+                    TipoEnergia: "colorless",
+                    id: id,
+                    omw: omwMap.get(id) || 0.25,
+                    isDnf: type === "dnf"
+                  });
+                }
+              }
+            }
+            
+            if (playersResult.length === 0 && playersMap.size > 0) {
+              let idx = 1;
+              playersMap.forEach((pInfo, id) => {
                 const pStats = statsMap.get(id) || { v: 0, e: 0, d: 0 };
                 const points = pStats.v * 3 + pStats.e * 1;
-                
                 playersResult.push({
-                  Pos: place,
+                  Pos: idx,
                   Jogador: pInfo.name,
-                  Categoria: currentCategory,
+                  Categoria: podCategory,
                   Pontos: points,
                   Vitorias: pStats.v,
                   Empates: pStats.e,
                   Derrotas: pStats.d,
-                  Podio: 0, // Recalculado abaixo com base no ranking geral unificado
-                  MediaColocacao: place,
+                  Podio: 0,
+                  MediaColocacao: idx,
                   Deck: "Não registrado",
                   TipoEnergia: "colorless",
                   id: id,
                   omw: omwMap.get(id) || 0.25,
-                  isDnf: type === "dnf"
+                  isDnf: false
                 });
-              }
+                idx++;
+              });
+            }
+            
+            if (playersResult.length > 0) {
+              playersResult.sort((a, b) => {
+                const ptsA = Number(a.Pontos) || 0;
+                const ptsB = Number(b.Pontos) || 0;
+                if (ptsB !== ptsA) return ptsB - ptsA;
+
+                const vA = Number(a.Vitorias) || 0;
+                const vB = Number(b.Vitorias) || 0;
+                if (vB !== vA) return vB - vA;
+
+                const omwA = Number(a.omw) || 0;
+                const omwB = Number(b.omw) || 0;
+                if (Math.abs(omwB - omwA) > 0.0001) return omwB - omwA;
+
+                const posA = Number(a.Pos || a.MediaColocacao) || 999;
+                const posB = Number(b.Pos || b.MediaColocacao) || 999;
+                if (posA !== posB) return posA - posB;
+
+                return (a.Jogador || '').localeCompare(b.Jogador || '', 'pt-BR');
+              });
+
+              playersResult.forEach((p, idx) => {
+                p.Pos = idx + 1;
+                p.MediaColocacao = idx + 1;
+                p.Podio = (p.Pos <= 4 && !p.isDnf) ? 1 : 0;
+              });
+              
+              return playersResult;
             }
           }
-          
-          // If standings was empty but we have players, just list them with default values
-          if (playersResult.length === 0 && playersMap.size > 0) {
-            let idx = 1;
-            playersMap.forEach((pInfo, id) => {
-              const pStats = statsMap.get(id) || { v: 0, e: 0, d: 0 };
-              const points = pStats.v * 3 + pStats.e * 1;
-              playersResult.push({
-                Pos: idx,
-                Jogador: pInfo.name,
-                Categoria: podCategory,
-                Pontos: points,
-                Vitorias: pStats.v,
-                Empates: pStats.e,
-                Derrotas: pStats.d,
-                Podio: 0, // Recalculado abaixo
-                MediaColocacao: idx,
-                Deck: "Não registrado",
-                TipoEnergia: "colorless",
-                id: id,
-                omw: omwMap.get(id) || 0.25,
-                isDnf: false
-              });
-              idx++;
-            });
-          }
-          
-          // Ordenação estrita oficial: Pontos DESC > Vitorias DESC > OMW DESC > Colocação Oficial ASC
-          playersResult.sort((a, b) => {
-            const ptsA = Number(a.Pontos) || 0;
-            const ptsB = Number(b.Pontos) || 0;
-            if (ptsB !== ptsA) return ptsB - ptsA;
-
-            const vA = Number(a.Vitorias) || 0;
-            const vB = Number(b.Vitorias) || 0;
-            if (vB !== vA) return vB - vA;
-
-            const omwA = Number(a.omw) || 0;
-            const omwB = Number(b.omw) || 0;
-            if (Math.abs(omwB - omwA) > 0.0001) return omwB - omwA;
-
-            const posA = Number(a.Pos || a.MediaColocacao) || 999;
-            const posB = Number(b.Pos || b.MediaColocacao) || 999;
-            if (posA !== posB) return posA - posB;
-
-            return (a.Jogador || '').localeCompare(b.Jogador || '', 'pt-BR');
-          });
-
-          // Garante numeração contínua sequencial da etapa (Pos 1..N) e cálculo correto do Pódio
-          playersResult.forEach((p, idx) => {
-            p.Pos = idx + 1;
-            p.MediaColocacao = idx + 1;
-            p.Podio = (p.Pos <= 4 && !p.isDnf) ? 1 : 0;
-          });
-          
-          return playersResult;
         } catch (err) {
-          console.error("Erro ao processar TDF XML:", err);
-          return [];
+          console.warn("Aviso no processamento TDF XML DOMParser, ativando fallback regex:", err);
         }
+
+        // FALLBACK ROBUSTO: Se o DOMParser falhou por qualquer erro de entidade ou sintaxe no XML do TOM:
+        const regexPlayers = parseTOMXmlRegex(cleanText);
+        if (regexPlayers.length > 0) {
+          return regexPlayers;
+        }
+        return [];
       }
       
       // Otherwise, process as plain text TSV/CSV
