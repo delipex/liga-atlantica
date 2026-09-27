@@ -1179,6 +1179,7 @@ async function loadData() {
     ]);
 
     stagesIndex = loadedStages || [];
+    appData.Etapas = stagesIndex;
     populateStageSelector();
 
     if (jogadoresSheet && jogadoresSheet.length) appData.Jogadores = jogadoresSheet;
@@ -1368,7 +1369,7 @@ function parseEventDateTime(rawDate, rawTime) {
     hr = parseInt(tParts[0] || '14', 10);
     min = parseInt(tParts[1] || '0', 10);
   }
-  return new Date(`${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}T${String(hr).padStart(2, '0')}:${String(min).padStart(2, '0')}:00-03:00`);
+  return new Date(y, m - 1, d, hr, min, 0, 0);
 }
 
 function getEventEndDateTime(rawDate, rawTime) {
@@ -1384,11 +1385,12 @@ function getNextEventFromCalendar() {
     const rawDate = e?.Data || e?.data;
     if (!rawDate) return false;
     const status = String(e.Status || e.status || '').toLowerCase().trim();
-    if (status === 'concluido' || status === 'cancelado') return false;
+    if (status === 'concluido' || status === 'concluído' || status === 'cancelado' || status === 'finalizado') return false;
 
     // Se já está registrado nas etapas concluídas, passa para o próximo
     const isoDate = normalizeDateISO(rawDate);
-    const isAlreadyRecorded = (appData.Etapas || []).some(stg => normalizeDateISO(stg.data) === isoDate);
+    const recordedStages = stagesIndex || appData.Etapas || [];
+    const isAlreadyRecorded = recordedStages.some(stg => normalizeDateISO(stg.data) === isoDate);
     if (isAlreadyRecorded) return false;
 
     const start = parseEventDateTime(rawDate, e.Horario || e.horario);
@@ -1506,13 +1508,31 @@ function renderDashboard() {
     const jsonEvent = appData.Configuracoes?.ProximoEvento;
     const isEventActive = !jsonEvent || jsonEvent.ativo !== false;
 
-    // Busca sempre dinamicamente o próximo torneio futuro oficial do calendário
-    const eventConf = isEventActive ? getNextEventFromCalendar() : null;
+    // Se o organizador configurou título e data explícitos em config.json, usa a configuração manual;
+    // caso contrário, busca dinamicamente o próximo evento futuro oficial do calendário
+    let eventConf = null;
+    if (isEventActive) {
+      if (jsonEvent && jsonEvent.title && jsonEvent.date) {
+        eventConf = {
+          title: jsonEvent.title,
+          date: normalizeDateISO(jsonEvent.date),
+          time: jsonEvent.time || '14:00',
+          location: jsonEvent.location || 'Livraria Atlântica +',
+          locationUrl: jsonEvent.locationUrl || '',
+          description: jsonEvent.description || '',
+          signupLink: jsonEvent.signupLink || '',
+          active: true
+        };
+      } else {
+        eventConf = getNextEventFromCalendar();
+      }
+    }
     
     if (eventConf && eventConf.active) {
       const dateIso = normalizeDateISO(eventConf.date);
       const dateParts = dateIso.split('-');
       const formattedDate = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : eventConf.date;
+      const targetTimeMs = parseEventDateTime(eventConf.date, eventConf.time).getTime();
       
       eventContainer.innerHTML = `
         <div class="event-header">
@@ -1530,7 +1550,7 @@ function renderDashboard() {
         </div>
         
         <!-- Timer Regressivo -->
-        <div class="countdown-container" id="countdown-timer" data-target-date="${eventConf.date}T${eventConf.time}:00-03:00">
+        <div class="countdown-container" id="countdown-timer" data-target-timestamp="${targetTimeMs}" data-target-date="${eventConf.date}T${eventConf.time}:00">
           <div class="countdown-box">
             <span class="countdown-val" id="timer-days">00</span>
             <span class="countdown-lbl">Dias</span>
@@ -2429,8 +2449,12 @@ function startCountdown() {
   const timerEl = document.getElementById('countdown-timer');
   if (!timerEl) return;
 
-  const targetStr = timerEl.getAttribute('data-target-date');
-  const targetTime = new Date(targetStr).getTime();
+  const tsAttr = timerEl.getAttribute('data-target-timestamp');
+  let targetTime = tsAttr ? Number(tsAttr) : NaN;
+  if (isNaN(targetTime) || !targetTime) {
+    const targetStr = timerEl.getAttribute('data-target-date');
+    targetTime = new Date(targetStr).getTime();
+  }
 
   if (isNaN(targetTime)) return;
 
