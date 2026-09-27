@@ -2722,7 +2722,13 @@
           ];
 
           const responses = await Promise.allSettled(
-            endpoints.map(ep => fetch(ep.url).then(r => r.ok ? r.json() : Promise.reject(`Status ${r.status}`)))
+            endpoints.map(ep => {
+              const controller = new AbortController();
+              const timer = setTimeout(() => controller.abort(), 6000);
+              return fetch(ep.url, { signal: controller.signal })
+                .then(r => r.ok ? r.json() : Promise.reject(`Status ${r.status}`))
+                .finally(() => clearTimeout(timer));
+            })
           );
 
           // 1. Jogadores
@@ -3594,16 +3600,32 @@
       const previewSection = document.getElementById('preview-section');
       const tbody = document.getElementById('preview-tbody');
       if (previewSection) previewSection.style.display = 'block';
-      if (files.length > 1) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 1rem;">⏳ Unindo ${files.length} categorias/arquivos da mesma etapa...</td></tr>`;
+      if (tbody) {
+        tbody.innerHTML = files.length > 1
+          ? `<tr><td colspan="7" style="text-align:center; padding: 1.5rem; color: var(--accent-yellow);"><div style="font-size:1.5rem; margin-bottom:0.5rem;">⏳</div>Unindo e consolidando ${files.length} categorias/arquivos da mesma etapa...</td></tr>`
+          : `<tr><td colspan="7" style="text-align:center; padding: 1.5rem; color: var(--accent-yellow);"><div style="font-size:1.5rem; margin-bottom:0.5rem;">⏳</div>Processando e analisando arquivo TDF oficial do torneio...</td></tr>`;
       }
 
       const filePromises = Array.from(files).map(file => {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = (evt) => resolve({ name: file.name, text: evt.target.result });
+          reader.onload = (evt) => {
+            let text = evt.target.result || '';
+            if (text.includes('\uFFFD')) {
+              try {
+                const r2 = new FileReader();
+                r2.onload = (evt2) => resolve({ name: file.name, text: evt2.target.result || text });
+                r2.onerror = () => resolve({ name: file.name, text });
+                r2.readAsText(file, 'ISO-8859-1');
+                return;
+              } catch (e) {
+                // Mantém o texto UTF-8 padrão se houver erro
+              }
+            }
+            resolve({ name: file.name, text });
+          };
           reader.onerror = (err) => reject(err);
-          reader.readAsText(file);
+          reader.readAsText(file, 'UTF-8');
         });
       });
 
@@ -3690,21 +3712,29 @@
 
     const dropzone = document.getElementById('dropzone');
     ['dragenter', 'dragover'].forEach(eventName => {
+      window.addEventListener(eventName, (e) => {
+        e.preventDefault();
+      }, false);
       dropzone.addEventListener(eventName, (e) => {
         e.preventDefault();
         dropzone.classList.add('dragover');
       }, false);
     });
     ['dragleave', 'drop'].forEach(eventName => {
+      window.addEventListener(eventName, (e) => {
+        e.preventDefault();
+      }, false);
       dropzone.addEventListener(eventName, (e) => {
         e.preventDefault();
         dropzone.classList.remove('dragover');
       }, false);
     });
     dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       resetValidation();
       const dt = e.dataTransfer;
-      if (dt.files && dt.files.length > 0) {
+      if (dt && dt.files && dt.files.length > 0) {
         handleMultipleFiles(dt.files);
       }
     });
@@ -4426,6 +4456,14 @@
         
         const previewSec = document.getElementById('preview-section');
         if (previewSec) previewSec.style.display = 'block';
+
+        if (unresolvedPlayers.length === 0) {
+          try {
+            runValidation();
+          } catch (valErr) {
+            console.warn("Aviso na auto-validação:", valErr);
+          }
+        }
       } catch (err) {
         console.error("Erro em processTDFText:", err);
         showError("Erro ao processar dados da etapa: " + err.message);
@@ -4500,15 +4538,15 @@
             <td style="padding: 0.5rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">${escapeHTML(catLabel)}</td>
             <td style="padding: 0.5rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">${escapeHTML(idVal)}</td>
             <td style="padding: 0.5rem;">
-              <select class="search-input" style="width: 100%; padding: 0.4rem; font-size: 0.85rem; background: rgba(0,0,0,0.6);" onchange="handleResolutionChange('${escapeHTML(rawName)}', this.value)">
+              <select class="search-input" style="width: 100%; padding: 0.4rem; font-size: 0.85rem; background: rgba(0,0,0,0.6);" data-rawname="${escapeHTML(rawName)}" onchange="handleResolutionChange(this.getAttribute('data-rawname'), this.value)">
                 ${selectOptions}
               </select>
             </td>
             <td style="padding: 0.5rem; text-align: center; white-space: nowrap;">
-              <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3); margin-right: 0.25rem;" onclick="copySingleRow('${escapeHTML(idVal)}', '${escapeHTML(rawName)}', '${escapeHTML(catVal)}', this)">
+              <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3); margin-right: 0.25rem;" data-id="${escapeHTML(idVal)}" data-name="${escapeHTML(rawName)}" data-cat="${escapeHTML(catVal)}" onclick="copySingleRow(this.dataset.id, this.dataset.name, this.dataset.cat, this)">
                 📋 Copiar
               </button>
-              <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: #2563eb; color: #fff; border-color: #2563eb;" onclick="openNewPlayerModal('${escapeHTML(idVal)}', '${escapeHTML(rawName)}', '${escapeHTML(catVal)}')">
+              <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: #2563eb; color: #fff; border-color: #2563eb;" data-id="${escapeHTML(idVal)}" data-name="${escapeHTML(rawName)}" data-cat="${escapeHTML(catVal)}" onclick="openNewPlayerModal(this.dataset.id, this.dataset.name, this.dataset.cat)">
                 ⚡ Cadastrar
               </button>
             </td>
@@ -5015,6 +5053,145 @@
       return null;
     }
 
+    async function putGitHubFileWithRetry(fileUrl, payload, token, maxRetries = 3) {
+      let lastError = null;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const currentSha = await getLatestSha(fileUrl);
+          const bodyPayload = { ...payload };
+          if (currentSha) {
+            bodyPayload.sha = currentSha;
+          } else {
+            delete bodyPayload.sha;
+          }
+
+          const res = await fetch(fileUrl, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `token ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(bodyPayload)
+          });
+
+          if (res.ok) {
+            return await res.json();
+          }
+
+          // Se for 409 (Conflict - branch ref ou sha mudou) ou 422, espera e tenta novamente com o novo SHA
+          if (res.status === 409 || res.status === 422) {
+            console.warn(`[GitHub API] Status ${res.status} ao salvar ${fileUrl}. Tentativa ${attempt}/${maxRetries}. Aguardando retentativa...`);
+            await new Promise(r => setTimeout(r, 1200 * attempt));
+            continue;
+          }
+
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || res.statusText || `HTTP ${res.status}`);
+        } catch (err) {
+          lastError = err;
+          console.warn(`[GitHub API] Tentativa ${attempt} falhou:`, err.message);
+          if (attempt < maxRetries) {
+            await new Promise(r => setTimeout(r, 1000 * attempt));
+          }
+        }
+      }
+      throw lastError || new Error(`Falha ao salvar arquivo no GitHub após ${maxRetries} tentativas.`);
+    }
+
+    async function deleteGitHubFileWithRetry(fileUrl, message, branch, token, maxRetries = 3) {
+      let lastError = null;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const currentSha = await getLatestSha(fileUrl);
+          if (!currentSha) {
+            return { deleted: true };
+          }
+          const deletePayload = {
+            message: message,
+            sha: currentSha,
+            branch: branch
+          };
+          const res = await fetch(fileUrl, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `token ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(deletePayload)
+          });
+          if (res.ok) {
+            return await res.json();
+          }
+          if (res.status === 409 || res.status === 422) {
+            await new Promise(r => setTimeout(r, 1200 * attempt));
+            continue;
+          }
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || res.statusText || `HTTP ${res.status}`);
+        } catch (err) {
+          lastError = err;
+          if (attempt < maxRetries) {
+            await new Promise(r => setTimeout(r, 1000 * attempt));
+          }
+        }
+      }
+      throw lastError || new Error(`Falha ao excluir arquivo no GitHub após ${maxRetries} tentativas.`);
+    }
+
+    function resetUploadForm() {
+      activeContent = "";
+      currentRawPlayers = [];
+      unresolvedPlayers = [];
+      newPlayersToRegister = [];
+      resolvedNamesMap = {};
+      isFileValidated = false;
+
+      const rawInput = document.getElementById('raw-input');
+      if (rawInput) rawInput.value = '';
+
+      const fileInfo = document.getElementById('file-info');
+      if (fileInfo) fileInfo.style.display = 'none';
+
+      const previewSec = document.getElementById('preview-section');
+      if (previewSec) previewSec.style.display = 'none';
+
+      const tbody = document.getElementById('preview-tbody');
+      if (tbody) tbody.innerHTML = '';
+
+      const nameResSec = document.getElementById('name-resolution-section');
+      if (nameResSec) nameResSec.style.display = 'none';
+
+      const newPlayersSec = document.getElementById('new-players-section');
+      if (newPlayersSec) newPlayersSec.style.display = 'none';
+
+      const checkBadge = document.getElementById('check-badge');
+      if (checkBadge) {
+        checkBadge.innerText = "Aguardando Arquivo";
+        checkBadge.style.background = "rgba(255, 255, 255, 0.05)";
+        checkBadge.style.color = "var(--text-secondary)";
+        checkBadge.style.borderColor = "var(--border-glass)";
+      }
+
+      const publishBtn = document.getElementById('btn-publish');
+      if (publishBtn) {
+        publishBtn.style.display = 'none';
+        publishBtn.disabled = true;
+        publishBtn.innerText = "🚀 Publicar Ranking e Salvar Metagame no Site";
+        publishBtn.style.background = "var(--accent-yellow)";
+        publishBtn.style.borderColor = "var(--accent-yellow)";
+        publishBtn.style.color = "#000";
+      }
+
+      const validateBtn = document.getElementById('btn-validate');
+      if (validateBtn) {
+        validateBtn.style.display = 'none';
+        validateBtn.disabled = true;
+        validateBtn.innerText = "🔍 Validar Dados do Arquivo";
+      }
+
+      hideAlerts();
+    }
+
     async function publishRanking() {
       const config = GITHUB_CONFIG;
       if (!runtimeToken) {
@@ -5055,14 +5232,13 @@
       
       const btn = document.getElementById('btn-publish');
       btn.disabled = true;
-      btn.innerText = "⏳ Processando e Publicando...";
+      btn.innerText = "⏳ 1/4: Preparando publicação...";
       hideAlerts();
       
       const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
       const shouldAccumulate = true;
       
       try {
-        let sha = null;
         let oldTdfText = "";
 
         // Busca o ranking consolidado atual no GitHub (com cache buster)
@@ -5072,7 +5248,6 @@
           });
           if (res.ok) {
             const fileData = await res.json();
-            sha = fileData.sha;
             if (shouldAccumulate && fileData.content) {
               oldTdfText = decodeBase64UTF8(fileData.content);
             }
@@ -5083,7 +5258,6 @@
 
         // Busca o etapas.json no GitHub (com cache buster)
         let stagesList = [];
-        let etapasSha = null;
         const etapasUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas.json`;
         try {
           const res = await fetch(etapasUrl + `?ref=${config.branch}&t=${new Date().getTime()}`, {
@@ -5091,7 +5265,6 @@
           });
           if (res.ok) {
             const fileData = await res.json();
-            etapasSha = fileData.sha;
             if (fileData.content) {
               stagesList = JSON.parse(decodeBase64UTF8(fileData.content));
             }
@@ -5141,28 +5314,15 @@
         const stageTdfContent = mergeRankings("", activeContent, 1.0, -1);
         const stageTdfUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/etapas/${eventDate}.tdf`;
 
-        // 1. Commit da etapa individual (Busca o SHA mais recente em tempo real)
-        let stageSha = await getLatestSha(stageTdfUrl);
+        // 1. Commit da etapa individual
+        btn.innerText = `⏳ 1/4: Salvando etapa individual (${eventDate}.tdf)...`;
         const commitStagePayload = {
           message: `Salvar etapa individual ${eventDate} (${savedEventType})`,
           content: encodeBase64UTF8(stageTdfContent),
           branch: config.branch
         };
-        if (stageSha) commitStagePayload.sha = stageSha;
-        
-        const stageRes = await fetch(stageTdfUrl, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `token ${runtimeToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(commitStagePayload)
-        });
-        
-        if (!stageRes.ok) {
-          const data = await stageRes.json();
-          throw new Error("Falha ao salvar arquivo de etapa individual: " + (data.message || stageRes.statusText));
-        }
+        await putGitHubFileWithRetry(stageTdfUrl, commitStagePayload, runtimeToken);
+        await new Promise(r => setTimeout(r, 400));
 
         // Atualiza a lista de etapas
         if (existingStageIdx >= 0) {
@@ -5172,30 +5332,18 @@
         }
         stagesList.sort((a, b) => a.data.localeCompare(b.data));
 
-        // 2. Commit do etapas.json (Busca o SHA mais recente em tempo real)
-        let currentEtapasSha = await getLatestSha(etapasUrl);
+        // 2. Commit do etapas.json
+        btn.innerText = `⏳ 2/4: Atualizando índice de etapas (etapas.json)...`;
         const commitEtapasPayload = {
           message: `Atualizar índice de etapas (etapas.json)`,
           content: encodeBase64UTF8(JSON.stringify(stagesList, null, 2)),
           branch: config.branch
         };
-        if (currentEtapasSha) commitEtapasPayload.sha = currentEtapasSha;
-        
-        const etapasRes = await fetch(etapasUrl, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `token ${runtimeToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(commitEtapasPayload)
-        });
-        
-        if (!etapasRes.ok) {
-          const data = await etapasRes.json();
-          throw new Error("Falha ao salvar índice de etapas (etapas.json): " + (data.message || etapasRes.statusText));
-        }
+        await putGitHubFileWithRetry(etapasUrl, commitEtapasPayload, runtimeToken);
+        await new Promise(r => setTimeout(r, 400));
 
-        // 3. Commit do metagame.json da etapa
+        // 3. Commit do metagame.json da etapa e decks.json
+        btn.innerText = `⏳ 3/4: Salvando metagame e novos decks...`;
         try {
           const seasonVal = document.getElementById('event-season')?.value || '5';
           const numVal = document.getElementById('event-number')?.value || '1';
@@ -5235,19 +5383,13 @@
           };
 
           const metaUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/metagame.json`;
-          let metaSha = await getLatestSha(metaUrl);
           const commitMetaPayload = {
             message: `Salvar metagame da etapa ${eventDate} (${sessionCode})`,
             content: encodeBase64UTF8(JSON.stringify(cachedMetagameData, null, 4)),
             branch: config.branch
           };
-          if (metaSha) commitMetaPayload.sha = metaSha;
-          
-          await fetch(metaUrl, {
-            method: 'PUT',
-            headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(commitMetaPayload)
-          });
+          await putGitHubFileWithRetry(metaUrl, commitMetaPayload, runtimeToken);
+          await new Promise(r => setTimeout(r, 400));
 
           if (newDecksToRegister.length > 0) {
             newDecksToRegister.forEach(deckName => {
@@ -5261,50 +5403,92 @@
             });
             cachedDecks.sort((a, b) => (a.deck || '').localeCompare(b.deck || '', 'pt-BR'));
             const decksUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/decks.json`;
-            let decksSha = await getLatestSha(decksUrl);
             const commitDecksPayload = {
               message: `Auto-cadastrar decks da etapa: ${newDecksToRegister.join(', ')}`,
               content: encodeBase64UTF8(JSON.stringify(cachedDecks, null, 4)),
               branch: config.branch
             };
-            if (decksSha) commitDecksPayload.sha = decksSha;
-            await fetch(decksUrl, {
-              method: 'PUT',
-              headers: { 'Authorization': `token ${runtimeToken}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify(commitDecksPayload)
-            });
+            await putGitHubFileWithRetry(decksUrl, commitDecksPayload, runtimeToken);
             renderDeckDatalist();
+            await new Promise(r => setTimeout(r, 400));
           }
         } catch (metaErr) {
           console.warn("Aviso ao sincronizar metagame.json:", metaErr);
         }
 
-        // 4. Commit do ranking geral (Busca o SHA mais recente em tempo real)
-        let currentRankingSha = await getLatestSha(url);
+        // 4. Commit do ranking geral
+        btn.innerText = `⏳ 4/4: Consolidando ranking geral (ranking.tdf)...`;
         const commitRankingPayload = {
           message: `Atualização de ranking geral - ${shouldAccumulate ? 'Acumulado' : 'Substituído'} (${new Date().toLocaleString('pt-BR')})`,
           content: encodeBase64UTF8(finalContent),
           branch: config.branch
         };
-        if (currentRankingSha) commitRankingPayload.sha = currentRankingSha;
+        await putGitHubFileWithRetry(url, commitRankingPayload, runtimeToken);
         
-        const rankingRes = await fetch(url, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `token ${runtimeToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(commitRankingPayload)
-        });
-        
-        if (!rankingRes.ok) {
-          const data = await rankingRes.json();
-          throw new Error("Falha ao salvar ranking geral: " + (data.message || rankingRes.statusText));
+        // Sucesso completo!
+        cachedEtapas = stagesList;
+
+        btn.innerText = "✅ Publicado com Sucesso!";
+        btn.style.background = "#10b981";
+        btn.style.borderColor = "#10b981";
+        btn.style.color = "#fff";
+        btn.disabled = true;
+
+        const validateBtn = document.getElementById('btn-validate');
+        if (validateBtn) validateBtn.style.display = 'none';
+
+        // Notificação de celebração na tabela
+        const tbody = document.getElementById('preview-tbody');
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 2.5rem 1.5rem; background: rgba(16, 185, 129, 0.08);">
+                <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🎉</div>
+                <h3 style="color: #10b981; margin: 0 0 0.5rem 0; font-size: 1.25rem;">Etapa Publicada e Consolidada!</h3>
+                <p style="color: #e2e8f0; margin: 0 0 1.25rem 0; font-size: 0.95rem; line-height: 1.6;">
+                  A etapa de <strong>${escapeHTML(eventDate)}</strong> (${escapeHTML(savedEventType)}) foi salva em <code>etapas/${escapeHTML(eventDate)}.tdf</code>, o metagame foi sincronizado e o ranking geral está atualizado.
+                </p>
+                <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                  <a href="index.html" target="_blank" class="btn" style="background: #2563eb; color: #fff; text-decoration: none; padding: 0.65rem 1.25rem; font-weight: 600; border-radius: 8px;">
+                    🌐 Ver Ranking no Site Oficial
+                  </a>
+                  <button type="button" class="btn" onclick="resetUploadForm()" style="background: rgba(255,255,255,0.1); color: #fff; padding: 0.65rem 1.25rem; border-radius: 8px; border: 1px solid var(--border-glass);">
+                    ➕ Subir Próxima Etapa
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
         }
-        
+
+        // Limpa estados e formulários
+        activeContent = "";
+        currentRawPlayers = [];
+        unresolvedPlayers = [];
+        isFileValidated = false;
+
+        const rawInput = document.getElementById('raw-input');
+        if (rawInput) rawInput.value = '';
+
+        const nameResSec = document.getElementById('name-resolution-section');
+        if (nameResSec) nameResSec.style.display = 'none';
+
+        const newPlayersSec = document.getElementById('new-players-section');
+        if (newPlayersSec) newPlayersSec.style.display = 'none';
+
+        const fileInfo = document.getElementById('file-info');
+        if (fileInfo) fileInfo.style.display = 'none';
+
+        const checkBadge = document.getElementById('check-badge');
+        if (checkBadge) {
+          checkBadge.innerText = "Concluído ✓";
+          checkBadge.style.background = "rgba(16, 185, 129, 0.15)";
+          checkBadge.style.color = "#10b981";
+        }
+
         const successMsg = shouldAccumulate
-          ? "🚀 Ranking e Metagame acumulados e publicados com sucesso! A etapa foi salva e os dados foram atualizados no repositório."
-          : "🚀 Ranking publicado com sucesso! O arquivo anterior foi substituído por esta etapa.";
+          ? `🚀 Etapa ${eventDate} (${savedEventType}) e Metagame acumulados e publicados com sucesso!`
+          : `🚀 Ranking publicado com sucesso! O arquivo anterior foi substituído por esta etapa.`;
           
         showSuccess(successMsg);
         window.scrollTo(0, 0);
@@ -5312,10 +5496,13 @@
         loadAndRenderStages();
         
       } catch (err) {
+        console.error("Erro na publicação:", err);
         showError("Erro ao publicar: " + err.message);
-      } finally {
         btn.disabled = false;
-        btn.innerText = "🚀 Publicar Ranking no Site";
+        btn.innerText = "🚀 Tentar Publicar Novamente";
+        btn.style.background = "var(--accent-yellow)";
+        btn.style.borderColor = "var(--accent-yellow)";
+        btn.style.color = "#000";
       }
     }
 
@@ -6549,33 +6736,19 @@
 
         const config = GITHUB_CONFIG;
         const calUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/calendario.json`;
-        let calSha = await getLatestSha(calUrl);
 
         const commitPayload = {
           message: idx >= 0 ? `Atualizar evento "${title}" no calendário` : `Cadastrar novo evento "${title}" no calendário`,
           content: encodeBase64UTF8(JSON.stringify(updatedList, null, 4)),
           branch: config.branch
         };
-        if (calSha) commitPayload.sha = calSha;
-
-        const res = await fetch(calUrl, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `token ${runtimeToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(commitPayload)
-        });
-
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error("Falha ao salvar calendario.json no GitHub: " + (errData.message || res.statusText));
-        }
-
+        await putGitHubFileWithRetry(calUrl, commitPayload, runtimeToken);
         cachedCalendario = updatedList;
 
         // Se o checkbox de Premier estiver marcado, atualiza config.json com este evento imediatamente!
         if (isPremierChecked) {
+          await new Promise(r => setTimeout(r, 400));
+
           // Normaliza data para YYYY-MM-DD
           let dateIso = date;
           const parts = date.split(/[-/]/);
@@ -6611,28 +6784,14 @@
           };
 
           const confUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/config.json`;
-          let confSha = await getLatestSha(confUrl);
-
           const confPayload = {
             message: `Ativar inscrições Premier para "${title}" (${dateIso})`,
             content: encodeBase64UTF8(JSON.stringify(updatedConfig, null, 4)),
             branch: config.branch
           };
-          if (confSha) confPayload.sha = confSha;
-
-          const confRes = await fetch(confUrl, {
-            method: 'PUT',
-            headers: {
-              'Authorization': `token ${runtimeToken}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(confPayload)
-          });
-
-          if (confRes.ok) {
-            cachedConfig = updatedConfig;
-            renderAdminPremierConfig();
-          }
+          await putGitHubFileWithRetry(confUrl, confPayload, runtimeToken);
+          cachedConfig = updatedConfig;
+          renderAdminPremierConfig();
         }
 
         renderCalendarCatalog();
@@ -6669,28 +6828,13 @@
 
         const config = GITHUB_CONFIG;
         const calUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/calendario.json`;
-        let calSha = await getLatestSha(calUrl);
 
         const commitPayload = {
           message: `Excluir evento "${title}" do calendário`,
           content: encodeBase64UTF8(JSON.stringify(updatedList, null, 4)),
           branch: config.branch
         };
-        if (calSha) commitPayload.sha = calSha;
-
-        const res = await fetch(calUrl, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `token ${runtimeToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(commitPayload)
-        });
-
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error("Falha ao atualizar calendario.json no GitHub: " + (errData.message || res.statusText));
-        }
+        await putGitHubFileWithRetry(calUrl, commitPayload, runtimeToken);
 
         cachedCalendario = updatedList;
         renderCalendarCatalog();
@@ -9115,68 +9259,28 @@
         // 4. Executa a lógica de recálculo (rollback)
         const newRankText = removeStageFromRanking(oldRankText, stageTdfText, stageMultiplier, stageIndex, stagesList);
         
-        // 5. Deleta o arquivo da etapa individual no GitHub (apenas se ele existir)
+        // 5. Deleta o arquivo da etapa individual no GitHub (se existir)
         if (stageTdfSha) {
-          const deletePayload = {
-            message: `Remover arquivo da etapa ${eventDate}`,
-            sha: stageTdfSha,
-            branch: config.branch
-          };
-          const delRes = await fetch(stageTdfUrl, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `token ${runtimeToken}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(deletePayload)
-          });
-          if (!delRes.ok) {
-            const errData = await delRes.json();
-            throw new Error("Falha ao excluir arquivo da etapa no GitHub: " + (errData.message || delRes.statusText));
-          }
+          await deleteGitHubFileWithRetry(stageTdfUrl, `Remover arquivo da etapa ${eventDate}`, config.branch, runtimeToken);
+          await new Promise(r => setTimeout(r, 400));
         }
         
-        // 6. Atualiza etapas.json no GitHub (SHA dinâmico)
-        let currentEtapasSha = await getLatestSha(etapasUrl);
+        // 6. Atualiza etapas.json no GitHub
         const commitEtapasPayload = {
           message: `Excluir etapa ${eventDate} do índice etapas.json`,
           content: encodeBase64UTF8(JSON.stringify(stagesList, null, 2)),
           branch: config.branch
         };
-        if (currentEtapasSha) commitEtapasPayload.sha = currentEtapasSha;
-        const etRes = await fetch(etapasUrl, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `token ${runtimeToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(commitEtapasPayload)
-        });
-        if (!etRes.ok) {
-          const errData = await etRes.json();
-          throw new Error("Falha ao atualizar o índice etapas.json: " + (errData.message || etRes.statusText));
-        }
+        await putGitHubFileWithRetry(etapasUrl, commitEtapasPayload, runtimeToken);
+        await new Promise(r => setTimeout(r, 400));
         
-        // 7. Atualiza ranking.tdf no GitHub (SHA dinâmico)
-        let currentRankingSha = await getLatestSha(rankingUrl);
+        // 7. Atualiza ranking.tdf no GitHub
         const commitRankingPayload = {
           message: `Recalcular ranking geral após exclusão da etapa ${eventDate}`,
           content: encodeBase64UTF8(newRankText),
           branch: config.branch
         };
-        if (currentRankingSha) commitRankingPayload.sha = currentRankingSha;
-        const rkRes = await fetch(rankingUrl, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `token ${runtimeToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(commitRankingPayload)
-        });
-        if (!rkRes.ok) {
-          const errData = await rkRes.json();
-          throw new Error("Falha ao atualizar o ranking geral consolidado: " + (errData.message || rkRes.statusText));
-        }
+        await putGitHubFileWithRetry(rankingUrl, commitRankingPayload, runtimeToken);
         
         showSuccess(`🚀 Etapa de ${formatDateISOToPT(eventDate)} excluída com sucesso e o ranking consolidado foi recalculado!`);
         await loadAndRenderStages();
