@@ -6267,12 +6267,11 @@
 
         let matchPeriod = true;
         const d = parseDateSafe(rawDate);
-        if (!isNaN(d)) {
-          if (periodVal === 'upcoming') {
-            matchPeriod = d >= startOfToday;
-          } else if (periodVal === 'past') {
-            matchPeriod = d < startOfToday;
-          }
+        const isCompletedOrPassed = status === 'concluido' || status === 'concluído' || status === 'cancelado' || (!isNaN(d) && d < startOfToday);
+        if (periodVal === 'upcoming') {
+          matchPeriod = !isCompletedOrPassed;
+        } else if (periodVal === 'past') {
+          matchPeriod = isCompletedOrPassed;
         }
 
         return matchSearch && matchStatus && matchPeriod;

@@ -1378,28 +1378,37 @@ function getEventEndDateTime(rawDate, rawTime) {
   return new Date(start.getTime() + 4 * 60 * 60 * 1000);
 }
 
+function isEventPast(e) {
+  if (!e) return true;
+  const rawDate = e?.Data || e?.data;
+  if (!rawDate) return true;
+
+  // 1. Status explícito de encerramento
+  const status = String(e?.Status || e?.status || '').toLowerCase().trim();
+  if (status === 'concluido' || status === 'concluído' || status === 'cancelado' || status === 'finalizado') {
+    return true;
+  }
+
+  // 2. Já registrado no índice de etapas concluídas do ranking
+  const isoDate = normalizeDateISO(rawDate);
+  const recordedStages = stagesIndex || appData.Etapas || [];
+  if (recordedStages.some(stg => normalizeDateISO(stg.data) === isoDate)) {
+    return true;
+  }
+
+  // 3. Comparação de data/horário com o momento atual
+  const start = parseEventDateTime(rawDate, e?.Horario || e?.horario);
+  if (isNaN(start.getTime())) return true;
+
+  // Torneio é considerado passado assim que o horário de término (início + 4h) passar
+  const now = new Date();
+  const end = getEventEndDateTime(rawDate, e?.Horario || e?.horario);
+  return end.getTime() < now.getTime();
+}
+
 function getNextEventFromCalendar() {
   const events = appData.Calendario || [];
-  const now = new Date();
-  const future = events.filter(e => {
-    const rawDate = e?.Data || e?.data;
-    if (!rawDate) return false;
-    const status = String(e.Status || e.status || '').toLowerCase().trim();
-    if (status === 'concluido' || status === 'concluído' || status === 'cancelado' || status === 'finalizado') return false;
-
-    // Se já está registrado nas etapas concluídas, passa para o próximo
-    const isoDate = normalizeDateISO(rawDate);
-    const recordedStages = stagesIndex || appData.Etapas || [];
-    const isAlreadyRecorded = recordedStages.some(stg => normalizeDateISO(stg.data) === isoDate);
-    if (isAlreadyRecorded) return false;
-
-    const start = parseEventDateTime(rawDate, e.Horario || e.horario);
-    if (isNaN(start.getTime())) return false;
-    const end = getEventEndDateTime(rawDate, e.Horario || e.horario);
-
-    // O evento só permanece como próximo/ativo se o término ainda não passou
-    return end.getTime() >= now.getTime();
-  }).sort((a, b) => {
+  const future = events.filter(e => !isEventPast(e)).sort((a, b) => {
     return parseEventDateTime(a.Data || a.data, a.Horario || a.horario).getTime() - 
            parseEventDateTime(b.Data || b.data, b.Horario || b.horario).getTime();
   });
@@ -1508,21 +1517,26 @@ function renderDashboard() {
     const jsonEvent = appData.Configuracoes?.ProximoEvento;
     const isEventActive = !jsonEvent || jsonEvent.ativo !== false;
 
-    // Se o organizador configurou título e data explícitos em config.json, usa a configuração manual;
+    // Se o organizador configurou título e data explícitos em config.json, usa a configuração manual APENAS se ainda não passou;
     // caso contrário, busca dinamicamente o próximo evento futuro oficial do calendário
     let eventConf = null;
     if (isEventActive) {
       if (jsonEvent && jsonEvent.title && jsonEvent.date) {
-        eventConf = {
-          title: jsonEvent.title,
-          date: normalizeDateISO(jsonEvent.date),
-          time: jsonEvent.time || '14:00',
-          location: jsonEvent.location || 'Livraria Atlântica +',
-          locationUrl: jsonEvent.locationUrl || '',
-          description: jsonEvent.description || '',
-          signupLink: jsonEvent.signupLink || '',
-          active: true
-        };
+        const manualEnd = getEventEndDateTime(jsonEvent.date, jsonEvent.time || '14:00');
+        if (manualEnd.getTime() >= new Date().getTime()) {
+          eventConf = {
+            title: jsonEvent.title,
+            date: normalizeDateISO(jsonEvent.date),
+            time: jsonEvent.time || '14:00',
+            location: jsonEvent.location || 'Livraria Atlântica +',
+            locationUrl: jsonEvent.locationUrl || '',
+            description: jsonEvent.description || '',
+            signupLink: jsonEvent.signupLink || '',
+            active: true
+          };
+        } else {
+          eventConf = getNextEventFromCalendar();
+        }
       } else {
         eventConf = getNextEventFromCalendar();
       }
@@ -1970,12 +1984,13 @@ function renderCalendarCard(evt, isNext = false, isPast = false) {
   const eventPhoto = evt.Foto || evt.foto || '';
   const eventHour = evt.Horario || evt.horario || '14:00';
   
-  const statusKey = isPast 
+  const actuallyPast = isPast || isEventPast(evt);
+  const statusKey = actuallyPast 
     ? 'concluido' 
     : (['confirmado', 'concluido', 'pendente'].includes(String(evt.Status || evt.status || '').toLowerCase()) 
         ? String(evt.Status || evt.status).toLowerCase() 
         : 'pendente');
-  const statusLabel = isPast ? 'Concluído' : getStatusLabel(statusKey);
+  const statusLabel = actuallyPast ? 'Concluído' : getStatusLabel(statusKey);
   const eventType = detectCalendarEventType(evt.Evento || evt.evento);
 
   let photoHtml = '';
@@ -1991,13 +2006,13 @@ function renderCalendarCard(evt, isNext = false, isPast = false) {
   }
 
   const premierConfig = appData.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || null;
-  const isPremierActiveForEvent = !isPast && (premierConfig && premierConfig.abertas === true) && (
+  const isPremierActiveForEvent = !actuallyPast && (premierConfig && premierConfig.abertas === true) && (
     (premierConfig.eventoData && (iso === premierConfig.eventoData || rawDate === premierConfig.eventoData)) ||
     (premierConfig.eventoNome && eventTitle.toLowerCase().includes((premierConfig.eventoTipo || 'cup').toLowerCase()))
   );
 
   let actionHtml = '';
-  if (!isPast) {
+  if (!actuallyPast) {
     if (isPremierActiveForEvent) {
       actionHtml = `
         <button type="button" class="btn btn-whatsapp" onclick="openDecklistModal('${escapeHTML(iso)}')" style="font-size:0.8rem; padding: 0.5rem 0.9rem; font-weight:700; background:var(--accent-yellow); color:#000; border-color:var(--accent-yellow); display:inline-flex; align-items:center; gap:0.4rem; box-shadow: 0 2px 10px rgba(255,203,5,0.25);">
@@ -2017,7 +2032,7 @@ function renderCalendarCard(evt, isNext = false, isPast = false) {
   }
 
   return `
-    <div class="calendar-card ${isNext ? 'calendar-card-highlight' : ''} ${isPast ? 'calendar-card-past' : ''}">
+    <div class="calendar-card ${isNext && !actuallyPast ? 'calendar-card-highlight' : ''} ${actuallyPast ? 'calendar-card-past' : ''}">
       <div class="calendar-card-date">
         <span class="cal-weekday">${escapeHTML(dateBadge.weekday)}</span>
         <span class="cal-day">${escapeHTML(dateBadge.day)}</span>
@@ -2028,8 +2043,8 @@ function renderCalendarCard(evt, isNext = false, isPast = false) {
 
       <div class="calendar-card-content">
         <div class="calendar-card-badges">
-          ${isNext ? '<span class="calendar-badge-next">🔥 Próximo Torneio</span>' : ''}
-          ${isPremierActiveForEvent ? '<span class="calendar-status confirmado" style="background:rgba(16,185,129,0.2); color:#10b981; border:1px solid rgba(16,185,129,0.4); font-weight:700;">🟢 Inscrições Abertas</span>' : ''}
+          ${isNext && !actuallyPast ? '<span class="calendar-badge-next">🔥 Próximo Torneio</span>' : ''}
+          ${isPremierActiveForEvent && !actuallyPast ? '<span class="calendar-status confirmado" style="background:rgba(16,185,129,0.2); color:#10b981; border:1px solid rgba(16,185,129,0.4); font-weight:700;">🟢 Inscrições Abertas</span>' : ''}
           <span class="calendar-tag ${eventType.class}">${eventType.label}</span>
           <span class="calendar-status ${statusKey}">${escapeHTML(statusLabel)}</span>
           <span class="calendar-time">🕒 ${escapeHTML(eventHour)}</span>
@@ -2046,7 +2061,7 @@ function renderCalendarCard(evt, isNext = false, isPast = false) {
         </div>
       </div>
 
-      ${actionHtml ? `<div class="calendar-card-action">${actionHtml}</div>` : ''}
+      ${actionHtml && !actuallyPast ? `<div class="calendar-card-action">${actionHtml}</div>` : ''}
     </div>
   `;
 }
@@ -2076,12 +2091,11 @@ function renderCalendar() {
     return;
   }
 
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-
-  // 2. Separação de eventos futuros (ou hoje) vs passados
-  const upcomingEvents = validEvents.filter(e => parseDateSafe(e.Data || e.data) >= startOfToday);
-  const pastEvents = validEvents.filter(e => parseDateSafe(e.Data || e.data) < startOfToday);
+  // 2. Separação sincronizada de eventos futuros vs passados com base em isEventPast
+  const upcomingEvents = validEvents.filter(e => !isEventPast(e));
+  const pastEvents = validEvents.filter(e => isEventPast(e)).sort((a, b) => {
+    return parseDateSafe(b.Data || b.data) - parseDateSafe(a.Data || a.data);
+  });
 
   // Se não houver eventos futuros agendados
   if (upcomingEvents.length === 0) {
