@@ -1,18 +1,29 @@
 [
     {
+        "data": "19-09-2026",
+        "evento": "League Challenge (Etapa #21) [5ª Temporada]",
+        "local": "Livraria Atlântica +",
+        "horario": "14:00",
+        "status": "concluido",
+        "descricao": "Torneio Premier Oficial com multiplicador 1.5x.",
+        "linkMaps": "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6",
+        "linkInscricao": "",
+        "foto": ""
+    },
+    {
         "data": "24-09-2026",
-        "evento": "Sessão #21 de Liga (Torneio TBT)  [5ª Temporada]",
+        "evento": "Sessão Especial (TBT) (Etapa #22) [5ª Temporada]",
         "local": "Livraria Atlântica +",
         "horario": "18:30",
         "status": "concluido",
-        "descricao": "",
+        "descricao": "Sessão Temática Retrô / TBT.",
         "linkMaps": "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6",
         "linkInscricao": "",
         "foto": ""
     },
     {
         "data": "26-09-2026",
-        "evento": "Sessão #22 de Liga [5ª Temporada]",
+        "evento": "Sessão #23 de Liga [5ª Temporada]",
         "local": "Livraria Atlântica +",
         "horario": "14:00",
         "status": "concluido",
@@ -23,7 +34,7 @@
     },
     {
         "data": "01-10-2026",
-        "evento": "Sessão #23 de Liga [5ª Temporada]",
+        "evento": "Sessão #24 de Liga [5ª Temporada]",
         "local": "Livraria Atlântica +",
         "horario": "18:30",
         "status": "pendente",
@@ -34,17 +45,6 @@
     },
     {
         "data": "03-10-2026",
-        "evento": "Sessão #24 de Liga [5ª Temporada]",
-        "local": "Livraria Atlântica +",
-        "horario": "14:00",
-        "status": "pendente",
-        "descricao": "",
-        "linkMaps": "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6",
-        "linkInscricao": "",
-        "foto": ""
-    },
-    {
-        "data": "08-10-2026",
         "evento": "Sessão #25 de Liga [5ª Temporada]",
         "local": "Livraria Atlântica +",
         "horario": "14:00",
@@ -55,10 +55,10 @@
         "foto": ""
     },
     {
-        "data": "10-10-2026",
+        "data": "08-10-2026",
         "evento": "Sessão #26 de Liga [5ª Temporada]",
         "local": "Livraria Atlântica +",
-        "horario": "14:00",
+        "horario": "18:30",
         "status": "pendente",
         "descricao": "",
         "linkMaps": "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6",
@@ -66,7 +66,7 @@
         "foto": ""
     },
     {
-        "data": "15-10-2026",
+        "data": "10-10-2026",
         "evento": "Sessão #27 de Liga [5ª Temporada]",
         "local": "Livraria Atlântica +",
         "horario": "14:00",
@@ -77,10 +77,10 @@
         "foto": ""
     },
     {
-        "data": "17-10-2026",
+        "data": "15-10-2026",
         "evento": "Sessão #28 de Liga [5ª Temporada]",
         "local": "Livraria Atlântica +",
-        "horario": "14:00",
+        "horario": "18:30",
         "status": "pendente",
         "descricao": "",
         "linkMaps": "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6",
@@ -88,7 +88,7 @@
         "foto": ""
     },
     {
-        "data": "22-10-2026",
+        "data": "17-10-2026",
         "evento": "Sessão #29 de Liga [5ª Temporada]",
         "local": "Livraria Atlântica +",
         "horario": "14:00",
@@ -99,10 +99,10 @@
         "foto": ""
     },
     {
-        "data": "24-10-2026",
-        "evento": "Sessão #30 - Especial  [5ª Temporada]",
+        "data": "22-10-2026",
+        "evento": "Sessão #30 de Liga [5ª Temporada]",
         "local": "Livraria Atlântica +",
-        "horario": "14:00",
+        "horario": "18:30",
         "status": "pendente",
         "descricao": "",
         "linkMaps": "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6",
@@ -110,7 +110,7 @@
         "foto": ""
     },
     {
-        "data": "29-10-2026",
+        "data": "24-10-2026",
         "evento": "Sessão #31 de Liga [5ª Temporada]",
         "local": "Livraria Atlântica +",
         "horario": "14:00",
@@ -121,8 +121,19 @@
         "foto": ""
     },
     {
-        "data": "31-10-2026",
+        "data": "29-10-2026",
         "evento": "Sessão #32 de Liga [5ª Temporada]",
+        "local": "Livraria Atlântica +",
+        "horario": "18:30",
+        "status": "pendente",
+        "descricao": "",
+        "linkMaps": "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6",
+        "linkInscricao": "",
+        "foto": ""
+    },
+    {
+        "data": "31-10-2026",
+        "evento": "Sessão #33 de Liga [5ª Temporada]",
         "local": "Livraria Atlântica +",
         "horario": "14:00",
         "status": "pendente",
@@ -133,9 +144,9 @@
     },
     {
         "data": "05-11-2026",
-        "evento": "Sessão #33 de Liga [5ª Temporada]",
+        "evento": "Sessão #34 de Liga [5ª Temporada]",
         "local": "Livraria Atlântica +",
-        "horario": "14:00",
+        "horario": "18:30",
         "status": "pendente",
         "descricao": "",
         "linkMaps": "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6",
@@ -148,7 +159,7 @@
         "local": "Livraria Atlântica +",
         "horario": "14:00",
         "status": "pendente",
-        "descricao": "",
+        "descricao": "Grande Final da Temporada 5 da Liga Atlântica TCG!",
         "linkMaps": "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6",
         "linkInscricao": "",
         "foto": ""
@@ -157,7 +168,7 @@
         "data": "12-11-2026",
         "evento": "Sessão #1 de Liga [6ª Temporada]",
         "local": "Livraria Atlântica +",
-        "horario": "14:00",
+        "horario": "18:30",
         "status": "pendente",
         "descricao": "",
         "linkMaps": "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6",
@@ -179,7 +190,7 @@
         "data": "19-11-2026",
         "evento": "Sessão #3 de Liga [6ª Temporada]",
         "local": "Livraria Atlântica +",
-        "horario": "14:00",
+        "horario": "18:30",
         "status": "pendente",
         "descricao": "",
         "linkMaps": "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6",
@@ -201,7 +212,7 @@
         "data": "26-11-2026",
         "evento": "Sessão #5 de Liga [6ª Temporada]",
         "local": "Livraria Atlântica +",
-        "horario": "14:00",
+        "horario": "18:30",
         "status": "pendente",
         "descricao": "",
         "linkMaps": "https://maps.app.goo.gl/PNzqi2VsaCmUd3vY6",

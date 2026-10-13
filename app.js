@@ -3156,21 +3156,22 @@ function calculatePokebolaDeOuroCandidates(rankingData) {
 }
 
 /* ==========================================================================
-   CÁLCULO DA POKÉBOLA MURCHA - DÉFICIT DE VITÓRIAS (D - V) & ASSIDUIDADE
+   CÁLCULO DA POKÉBOLA MURCHA - JOGOS SEM VENCER (D + E), ZERO PÓDIOS & 40% ETAPAS
    ========================================================================== */
 function calculatePokebolaMurchaCandidates(rankingData, cleanStages = []) {
+  const totalStagesCount = (cleanStages && cleanStages.length > 0)
+    ? cleanStages.length
+    : ((appData.Etapas && appData.Etapas.length > 0) 
+        ? appData.Etapas.length 
+        : (rankingData && rankingData.length > 0 ? Math.max(...rankingData.map(r => toNumber(r.Participacoes || 0))) : 20));
+
   const minEtapas = appData.Configuracoes?.MinEtapasPokebolaMurcha !== undefined 
     ? toNumber(appData.Configuracoes.MinEtapasPokebolaMurcha) 
-    : 4;
+    : Math.max(4, Math.floor(totalStagesCount * 0.40));
 
-  const cupChallengeStages = (cleanStages || []).filter(s => {
-    const t = String(s.tipo || '').toLowerCase();
-    return t.includes('cup') || t.includes('challenge') || t.includes('copa') || t.includes('desafio');
-  });
-
-  // Filtra quem disputou no mínimo o corte de etapas e tem mais derrotas do que vitórias (D > V)
-  let baseList = (rankingData || []).filter(r => r && toNumber(r.Participacoes) >= minEtapas && toNumber(r.Derrotas) > toNumber(r.Vitorias));
-  // Fallback se ninguém tiver D > V com o corte
+  // Filtra quem disputou no mínimo 40% das etapas e NUNCA subiu no pódio (Zero Pódios)
+  let baseList = (rankingData || []).filter(r => r && toNumber(r.Participacoes) >= minEtapas && toNumber(r.Podio || 0) === 0);
+  // Fallback se ninguém tiver 0 pódios com o corte
   if (baseList.length === 0) {
     baseList = (rankingData || []).filter(r => r && toNumber(r.Participacoes) >= minEtapas);
   }
@@ -3181,10 +3182,11 @@ function calculatePokebolaMurchaCandidates(rankingData, cleanStages = []) {
     const losses = toNumber(r.Derrotas);
     const draws = toNumber(r.Empates);
     const total = wins + losses + draws;
+    const tropecos = losses + draws; // Jogos sem vencer (Derrotas + Empates)
+    const tropecoRate = total > 0 ? (tropecos / total) : 0;
     const lossRate = total > 0 ? (losses / total) : 0;
     const participations = toNumber(r.Participacoes);
-    const deficit = losses - wins;
-    const assiduidadeCupChal = cupChallengeStages.filter(stage => stage && stage.data && getDeckForStage(playerName, stage.data, r.ID) !== null).length;
+    const podios = toNumber(r.Podio || 0);
 
     return {
       player: playerName,
@@ -3194,20 +3196,20 @@ function calculatePokebolaMurchaCandidates(rankingData, cleanStages = []) {
       defeats: losses,
       draws,
       total,
+      tropecos,
+      tropecoRate,
       lossRate,
       participations,
-      deficit,
-      ratio: participations > 0 ? (losses / participations) : 0,
-      assiduidade: assiduidadeCupChal
+      podios,
+      minEtapasRequired: minEtapas
     };
   });
 
   eligible.sort((a, b) => {
-    if (b.deficit !== a.deficit) return b.deficit - a.deficit; // 1º Maior Déficit de Vitórias (D - V)
-    if (b.participations !== a.participations) return b.participations - a.participations; // 2º Etapas Disputadas (Assiduidade e Persistência)
-    if (b.lossRate !== a.lossRate) return b.lossRate - a.lossRate; // 3º Maior Taxa de Derrotas %
-    if (b.defeats !== a.defeats) return b.defeats - a.defeats; // 4º Total de Derrotas
-    return b.assiduidade - a.assiduidade;
+    if (b.tropecos !== a.tropecos) return b.tropecos - a.tropecos; // 1º Mais Jogos Sem Vencer (Derrotas + Empates)
+    if (b.participations !== a.participations) return b.participations - a.participations; // 2º Mais Etapas Disputadas
+    if (a.wins !== b.wins) return a.wins - b.wins; // 3º Menor Número de Vitórias
+    return b.tropecoRate - a.tropecoRate; // 4º Maior Taxa de Tropeços %
   });
 
   return eligible;
@@ -3483,7 +3485,7 @@ function renderTvSlide(slideIdx) {
           <div class="tv-award-icon">🥀</div>
           <div class="tv-award-title">Pokébola Murcha</div>
           <div class="tv-award-player">${bestMurcha ? escapeHTML(bestMurcha.player) : '-'}</div>
-          <div class="tv-award-stat">${bestMurcha ? `Déficit +${bestMurcha.deficit} (${bestMurcha.defeats}D vs ${bestMurcha.wins}V em ${bestMurcha.participations} et)` : 'Em disputa'}</div>
+          <div class="tv-award-stat">${bestMurcha ? `${bestMurcha.tropecos} Tropeços (${bestMurcha.defeats}D / ${bestMurcha.draws}E em ${bestMurcha.participations} et - 0 pódios)` : 'Em disputa'}</div>
         </div>
       </div>
     `;
@@ -3872,27 +3874,28 @@ window.openAwardModal = function(awardKey) {
     const murchaCandidates = calculatePokebolaMurchaCandidates(appData.Ranking || [], appData.Etapas || []);
     const top = murchaCandidates[0];
     winnerName = top ? top.player : 'Nenhum';
-    description = 'Prêmio de consolação e resiliência para o treinador frequente com o maior déficit de vitórias (mais derrotas do que vitórias acumuladas), utilizando a quantidade de etapas jogadas como critério de persistência.';
+    description = 'Prêmio de consolação e persistência para o treinador frequente (mínimo de 40% das etapas) que mais enfrentou rodadas sem vencer e nunca alcançou um pódio.';
     formulaHtml = `
       <div style="font-size:0.8rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:4px; color:var(--text-secondary); margin-top:8px;">
-        <div style="color:var(--accent-yellow); font-weight:700;">Critérios de Ordenação (Déficit D − V):</div>
+        <div style="color:var(--accent-yellow); font-weight:700;">Critérios de Elegibilidade e Ordenação:</div>
         <div style="font-size:0.75rem; margin-top:4px; line-height:1.4;">
-          • <strong>1º Critério Principal:</strong> Maior Déficit de Vitórias (<strong>Derrotas − Vitórias</strong>).<br>
-          • <strong>2º Desempate:</strong> Maior <strong>Quantidade de Etapas Disputadas</strong> (persistência de quem comparece à loja).<br>
-          • <strong>3º Desempate:</strong> Maior <strong>Taxa de Derrotas %</strong> (D ÷ Total de Partidas).<br>
-          • <strong>4º Desempate:</strong> Maior Total Absoluto de <strong>Derrotas</strong>.
+          • <strong>Filtro Obrigatório:</strong> Ter disputado no mínimo <strong>40% das etapas</strong> da temporada e <strong>Zero Pódios</strong> conquistados.<br>
+          • <strong>1º Critério Principal:</strong> Mais <strong>Jogos Sem Vencer</strong> (Derrotas + Empates acumulados).<br>
+          • <strong>2º Desempate:</strong> Maior Quantidade de <strong>Etapas Disputadas</strong> (Persistência / Presença).<br>
+          • <strong>3º Desempate:</strong> Menor Número de <strong>Vitórias</strong>.<br>
+          • <strong>4º Desempate:</strong> Maior <strong>Taxa de Tropeços %</strong> ((D + E) ÷ Total de Partidas).
         </div>
-        <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">* Exige corte mínimo de 4 etapas disputadas e mais derrotas do que vitórias (D > V).</div>
+        <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">* Exige corte mínimo de 40% das etapas (${top ? top.minEtapasRequired : 8} etapas) e 0 pódios conquistados.</div>
       </div>
     `;
     if (top) {
       detailHtml = `
         <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; margin-top:8px;">
           <div style="font-weight:600; color:#fff; font-size:1rem; margin-bottom:4px;">Cálculo do Vencedor (${escapeHTML(top.player)}):</div>
-          <div style="display:flex; justify-content:space-between;"><span>Déficit de Vitórias (D − V):</span><strong style="color:#f87171; font-size:1.05rem;">+${top.deficit} Derrotas</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Jogos Sem Vencer (D + E):</span><strong style="color:#f87171; font-size:1.05rem;">${top.tropecos} partidas (${(top.tropecoRate * 100).toFixed(1)}%)</strong></div>
           <div style="display:flex; justify-content:space-between;"><span>Assiduidade / Presença:</span><strong style="color:var(--accent-yellow);">${top.participations} etapas disputadas</strong></div>
-          <div style="display:flex; justify-content:space-between;"><span>Cartel Real:</span><strong style="color:#fff;">${top.defeats}D vs ${top.wins}V (${(top.lossRate * 100).toFixed(1)}% Derrotas)</strong></div>
-          <div style="display:flex; justify-content:space-between; margin-top:4px;"><span>Presença em Cup/Challenge:</span><strong style="color:#fff;">${top.assiduidade} etapas</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Pódios Conquistados:</span><strong style="color:#fff;">0 pódios</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>Cartel Real:</span><strong style="color:#fff;">${top.defeats}D - ${top.draws}E - ${top.wins}V (Total: ${top.total} jogos)</strong></div>
         </div>
       `;
     }
@@ -3908,8 +3911,8 @@ window.openAwardModal = function(awardKey) {
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase;">
                 <th style="padding: 4px 6px;">Pos</th>
                 <th style="padding: 4px 6px;">Jogador</th>
-                <th style="padding: 4px 6px; text-align: center;">Déficit</th>
-                <th style="padding: 4px 6px; text-align: right;">Cartel (Derrotas / Etapas)</th>
+                <th style="padding: 4px 6px; text-align: center;">Sem Vencer (D+E)</th>
+                <th style="padding: 4px 6px; text-align: right;">Cartel (Etapas / Pódios)</th>
               </tr>
             </thead>
             <tbody>
@@ -3917,10 +3920,10 @@ window.openAwardModal = function(awardKey) {
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); color: ${i === 0 ? 'var(--accent-yellow)' : '#fff'}">
                   <td style="padding: 4px 6px; font-weight: bold;">${i + 1}º</td>
                   <td style="padding: 4px 6px;">${escapeHTML(c.player)}</td>
-                  <td style="padding: 4px 6px; text-align: center; font-weight: bold; color:#f87171;">+${c.deficit}</td>
+                  <td style="padding: 4px 6px; text-align: center; font-weight: bold; color:#f87171;">${c.tropecos} jogos</td>
                   <td style="padding: 4px 6px; text-align: right; font-weight: bold;">
-                    ${c.defeats}D vs ${c.wins}V 
-                    <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">(${(c.lossRate * 100).toFixed(1)}% em ${c.participations}et)</span>
+                    ${c.defeats}D / ${c.draws}E / ${c.wins}V 
+                    <span style="font-size:0.7rem; font-weight: normal; color:var(--text-secondary);">(${c.participations} et - ${c.podios} pódios)</span>
                   </td>
                 </tr>
               `).join('')}
@@ -4938,11 +4941,11 @@ function updateMetagameDisplay() {
             </div>
           </div>
           <div style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">
-            Maior déficit de derrotas (+${murchaPlayer.deficit}) e persistência nas etapas.
+            Maior persistência sem pódios na temporada (${murchaPlayer.participations} etapas disputadas).
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); font-size:0.8rem;">
-            <div>Déficit: <strong style="color:#f87171; font-size:1.05rem;">+${murchaPlayer.deficit}</strong></div>
-            <div>Cartel: <strong>${murchaPlayer.defeats}D vs ${murchaPlayer.wins}V (${murchaPlayer.participations} et.)</strong></div>
+            <div>Tropeços: <strong style="color:#f87171; font-size:1.05rem;">${murchaPlayer.tropecos} jogos</strong></div>
+            <div>Cartel: <strong>${murchaPlayer.defeats}D / ${murchaPlayer.draws}E (${murchaPlayer.participations} et.)</strong></div>
           </div>
           <div style="font-size:0.7rem; color:var(--accent-yellow); text-align:right; margin-top:2px;">Ver classificação e detalhes ➔</div>
         </div>
