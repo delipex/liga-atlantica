@@ -1,6 +1,7 @@
 {
     "leagueName": "Liga Atlântica",
     "leagueSubtitle": "Liga de Pokémon TCG - FSA",
+    "adminPin": "fsa2026",
     "temporadaAtual": 5,
     "statusTemporada": "ativa",
     "statusPodio": "auto",
