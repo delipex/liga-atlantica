@@ -1441,6 +1441,7 @@
                 <select id="adm-premier-tipo" class="search-input" style="width: 100%;">
                   <option value="Challenge">League Challenge (1.5x)</option>
                   <option value="Cup">League Cup (1.5x)</option>
+                  <option value="Pre-Release">🎉 Pré-Release / Selado</option>
                   <option value="Especial">Torneio Especial / Comemorativo</option>
                   <option value="Liga">Sessão Regular de Liga</option>
                 </select>
@@ -7654,7 +7655,8 @@
       // Detecção inteligente de tipo
       const tLow = title.toLowerCase();
       let tipo = 'Challenge';
-      if (tLow.includes('cup')) tipo = 'Cup';
+      if (tLow.includes('release')) tipo = 'Pre-Release';
+      else if (tLow.includes('cup')) tipo = 'Cup';
       else if (tLow.includes('challenge')) tipo = 'Challenge';
       else if (tLow.includes('especial')) tipo = 'Especial';
       else tipo = 'Liga';
@@ -7667,23 +7669,43 @@
       const localEl = document.getElementById('adm-premier-local');
       const abertasEl = document.getElementById('adm-premier-abertas');
       const obsEl = document.getElementById('adm-premier-obs');
+      const exigirDlEl = document.getElementById('adm-premier-exigir-decklist');
 
       if (nomeEl) nomeEl.value = title;
       if (subtituloEl && !subtituloEl.value) {
-        subtituloEl.value = tipo === 'Cup' ? 'Valendo 50 Championship Points (CP) + Troféu Oficial' : 'Valendo 15 Championship Points (CP) + Premiação';
+        subtituloEl.value = tipo === 'Cup' ? 'Valendo 50 Championship Points (CP) + Troféu Oficial' : tipo === 'Pre-Release' ? 'Torneio Oficial no Formato Selado (Build & Battle Box)' : 'Valendo 15 Championship Points (CP) + Premiação';
       }
       if (dataEl) dataEl.value = dateIso;
       if (tipoEl) tipoEl.value = tipo;
       if (horarioEl) horarioEl.value = `Check-in às ${time} • Início da R1 logo em seguida`;
       if (localEl) localEl.value = local;
       if (abertasEl) abertasEl.value = 'true';
-      if (obsEl && !obsEl.value) {
-        obsEl.value = `Traga sua decklist impressa ou preencha diretamente pelo formulário online até o início da 1ª rodada.\nFormato: Standard (Padrão Oficial).`;
+      if (tipo === 'Pre-Release') {
+        if (exigirDlEl) exigirDlEl.value = 'false';
+        if (obsEl) obsEl.value = 'Torneio de Pré-Release Oficial no Formato Selado com Build & Battle Box (40 cartas montadas na hora). Não é necessário enviar lista de cartas antecipada.';
+      } else {
+        if (exigirDlEl) exigirDlEl.value = 'true';
+        if (obsEl && !obsEl.value) {
+          obsEl.value = `Traga sua decklist impressa ou preencha diretamente pelo formulário online até o início da 1ª rodada.\nFormato: Standard (Padrão Oficial).`;
+        }
       }
 
       updateAdminPremierStatusPill();
       showSuccess(`⚡ Dados do evento "${title}" vinculados! Ajuste taxa/vagas e clique em "Salvar Configurações do Premier".`);
     }
+
+    // Ouvinte para desativar automaticamente decklist se o tipo for Pré-Release
+    document.getElementById('adm-premier-tipo')?.addEventListener('change', (e) => {
+      const selected = e.target.value;
+      const exigirDlEl = document.getElementById('adm-premier-exigir-decklist');
+      const obsEl = document.getElementById('adm-premier-obs');
+      if (selected === 'Pre-Release') {
+        if (exigirDlEl) exigirDlEl.value = 'false';
+        if (obsEl && (!obsEl.value || obsEl.value.includes('Traga sua decklist'))) {
+          obsEl.value = 'Torneio de Pré-Release Oficial no Formato Selado com Build & Battle Box (40 cartas montadas na hora). Não é necessário enviar lista de cartas antecipada.';
+        }
+      }
+    });
 
     function activatePremierFromCalendar(index) {
       const ev = (cachedCalendario || [])[index];

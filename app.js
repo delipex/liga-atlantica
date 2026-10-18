@@ -5929,8 +5929,13 @@ window.openDecklistModal = function(defaultStageDate = '') {
     }
   }
 
+  const isPreRelease = Boolean(
+    (premierConfig.eventoTipo && String(premierConfig.eventoTipo).toLowerCase().includes('release')) ||
+    (premierConfig.eventoNome && String(premierConfig.eventoNome).toLowerCase().includes('release'))
+  );
+
   if (reqNote) {
-    reqNote.innerText = premierConfig.exigirDecklist === false ? '(Opcional no envio da inscrição)' : '(Obrigatória - 60 cartas)';
+    reqNote.innerText = isPreRelease ? '(Dispensada - Formato Selado / Pré-Release)' : premierConfig.exigirDecklist === false ? '(Opcional no envio da inscrição)' : '(Obrigatória - 60 cartas)';
   }
 
   if (statusEl) {
@@ -6047,11 +6052,15 @@ window.submitDecklistWhatsApp = async function() {
   }
 
   const premierConfig = appData?.Configuracoes?.inscricoesPremier || window.CONFIG?.inscricoesPremier || {};
-  const isDlMandatory = premierConfig.exigirDecklist !== false;
+  const isPreRelease = Boolean(
+    (premierConfig.eventoTipo && String(premierConfig.eventoTipo).toLowerCase().includes('release')) ||
+    (premierConfig.eventoNome && String(premierConfig.eventoNome).toLowerCase().includes('release'))
+  );
+  const isDlMandatory = !isPreRelease && premierConfig.exigirDecklist !== false;
 
   const parsed = parseDecklistText(cardsText);
 
-  if (isDlMandatory && !cardsText && !limitlessUrl) {
+  if (!isPreRelease && isDlMandatory && !cardsText && !limitlessUrl) {
     if (!confirm("Aviso: A submissão da lista de 60 cartas é recomendada para este torneio. Deseja enviar a inscrição mesmo assim e entregar a lista pessoalmente?")) {
       return;
     }
